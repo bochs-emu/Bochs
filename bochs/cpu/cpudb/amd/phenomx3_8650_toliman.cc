@@ -148,7 +148,7 @@ void phenom_8650_toliman_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, 
 Bit32u phenom_8650_toliman_t::get_svm_extensions_bitmask(void) const
 {
   return BX_CPUID_SVM_NESTED_PAGING |
-         BX_CPUID_SVM_LBR_VIRTUALIZATION |
+//       BX_CPUID_SVM_LBR_VIRTUALIZATION | // not implemented yet
          BX_CPUID_SVM_SVM_LOCK;
 }
 #endif

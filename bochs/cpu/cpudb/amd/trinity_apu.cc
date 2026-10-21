@@ -178,7 +178,7 @@ void trinity_apu_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_fu
 Bit32u trinity_apu_t::get_svm_extensions_bitmask(void) const
 {
   return BX_CPUID_SVM_NESTED_PAGING |
-         BX_CPUID_SVM_LBR_VIRTUALIZATION |
+//       BX_CPUID_SVM_LBR_VIRTUALIZATION | // not implemented yet
          BX_CPUID_SVM_SVM_LOCK |
          BX_CPUID_SVM_NRIP_SAVE |
          BX_CPUID_SVM_TSCRATE |

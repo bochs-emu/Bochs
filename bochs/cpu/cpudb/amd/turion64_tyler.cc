@@ -366,7 +366,7 @@ void turion64_tyler_t::get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const
   leaf->ecx = 0;
 
   //   [0:0]   NP - Nested paging support
-  // * [1:1]   LBR virtualization
+  // ! [1:1]   LBR virtualization
   //   [2:2]   SVM Lock
   //   [3:3]   NRIPS - Next RIP save on VMEXIT
   //   [4:4]   TscRate - MSR based TSC ratio control
@@ -379,7 +379,7 @@ void turion64_tyler_t::get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const
   //   [12:12] Pause filter threshold support
   //   [31:13] Reserved
 
-  leaf->edx = BX_CPUID_SVM_LBR_VIRTUALIZATION;
+  leaf->edx = 0; // LBR virtualization (BX_CPUID_SVM_LBR_VIRTUALIZATION) is not implemented yet
 }
 
 #endif
