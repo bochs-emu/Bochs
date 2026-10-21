@@ -374,16 +374,21 @@ bool BX_CPU_C::SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls)
 
   ctrls->exceptions_intercept = vmcb_read32(SVM_CONTROL32_INTERCEPT_EXCEPTIONS);
 
+  // The MSR or IOIO intercept table must not extend to a physical address that is greater
+  // than or equal to the maximum supported physical address:
+  //  - IOPM is 64K+3 bits, its last byte is at offset 0x2000 (APM 15.10.1)
+  //  - MSRPM is 8K bytes, the address following the table (offset 0x2000) is checked
+
   // force 4K page alignment
   ctrls->iopm_base = PPFOf(vmcb_read64(SVM_CONTROL64_IOPM_BASE_PHY_ADDR));
-  if (! IsValidPhyAddr(ctrls->iopm_base)) {
+  if (! IsValidPhyAddr(ctrls->iopm_base) || ! IsValidPhyAddr(ctrls->iopm_base + 0x2000)) {
     BX_ERROR(("VMRUN: invalid IOPM Base Address !"));
     return false;
   }
 
   // force 4K page alignment
   ctrls->msrpm_base = PPFOf(vmcb_read64(SVM_CONTROL64_MSRPM_BASE_PHY_ADDR));
-  if (! IsValidPhyAddr(ctrls->msrpm_base)) {
+  if (! IsValidPhyAddr(ctrls->msrpm_base) || ! IsValidPhyAddr(ctrls->msrpm_base + 0x2000)) {
     BX_ERROR(("VMRUN: invalid MSRPM Base Address !"));
     return false;
   }
