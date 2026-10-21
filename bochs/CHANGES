@@ -1,6 +1,6 @@
 Changes after Bochs 3.1 release:
 
-(up to date with commits done till 19 Oct 2026)
+(up to date with commits done till 21 Oct 2026)
 
 - CPU emulation and instrumentation
   ! Implemented AI Compute Extensions (ACE) emulation according AI Compute Extensions (ACE) Specification rev1.16.2 from x86 Ecosystem Advisory Group
@@ -75,8 +75,11 @@ Changes after Bochs 3.1 release:
   - VGA
     - Setting wrong VBE "dispi ID" do not cause PANIC anymore
     - Fixed guest-to-host heap buffer overflow in text mode with high CRTC start address
+    - Fixed division by zero in planar memory write with zero line offset
   - Cirrus
     - Fixed guest-to-host stack buffer overflow in color expand video-to-video BitBLT
+    - Reject BitBLT operations crossing the video memory boundaries
+    - Fixed division by zero in SVGA memory write with zero pitch
   - GeForce
     - Continue to improve GeForce model
       - #846: Add volume texture support
@@ -97,6 +100,12 @@ Changes after Bochs 3.1 release:
     - Undoable/volatile images: fixed crash and double free when opening the image fails
   - CD-ROM
     - Model parameter now supports format "VENDOR:PRODUCT:REV" for ATAPI inquiry
+    - Fixed MODE SENSE(6) header and response lengths and GET PERFORMANCE maximum number of descriptors
+    - READ CD/READ(12): reject out of range LBA and too large transfer lengths
+  - Floppy
+    - Fixed parameters decoding of the RESTORE command
+    - Reject read/write/verify of sector number 0
+    - Do not continue DMA transfer after the command finished
   - PCI and chipset
     - Fixed guest-to-host heap corruption on PCI configuration space accesses crossing the 0xCFC-0xCFF window
     - i440FX: fixed write-1-to-clear handling of the PCI status register
@@ -104,6 +113,10 @@ Changes after Bochs 3.1 release:
     - Fixed loading of PCI option ROM images (partial reads, uninitialized ROM padding)
   - Interrupt controllers and timers
     - IOAPIC: implemented Remote IRR for level triggered interrupts
+    - LAPIC: clear TMR before broadcasting EOI to the IOAPIC (level triggered interrupt could be lost forever,
+      Windows Vista hang with GeForce at the display mode switch)
+    - PIC: implemented the OCW3 poll command as an interrupt acknowledge
+    - PIC: reset special mask mode and read register select on ICW1
     - HPET: interrupt routes >= 16 are delivered to the IOAPIC only (were aliased onto PIC IRQs 8-15)
     - HPET: fixed main counter and comparator state after save/restore
     - PIT: events of counters 1/2 were not scheduled while counter 0 had no pending event
@@ -127,8 +140,11 @@ Changes after Bochs 3.1 release:
     - Set Windows system timer resolution to 1ms. This help to reduce artefacts (clicking noises) during sound playback
 
 - GUI and display libraries
+    - General
+      - Allocate the tile buffer for the generic graphics update code once at init (performance)
     - win32 gui
       - Fixed crash on paste when the clipboard has no text
+      - Faster text mode character drawing
     - term gui
       - Fixed terminal init in debugger enabled mode
       - Added support for the command mode
