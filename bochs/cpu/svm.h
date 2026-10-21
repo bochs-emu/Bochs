@@ -130,8 +130,23 @@ enum SVM_intercept_codes {
 #define SVM_CONTROL32_GUEST_ASID                (0x058)
 #define SVM_CONTROL32_TLB_CONTROL               (0x05c)
 #define SVM_CONTROL_VTPR                        (0x060)
+//   [0] VIRQ, if non-zero VINTR is pending
+//   [1] VGIF
+//   [2] -
+//   [3] V_NMI, if non-zero virtual NMI is pending
+//   [4] V_NMI_MASK, if non-zero virtual NMI is masked
+// [7-5] reserved
 #define SVM_CONTROL_VIRQ                        (0x061)
+// [3-0] VINTR_PRIO - priority of virtual interrupt
+//   [4] VIGN_TPR - if non-zero, the current VINTR ignores the virtual TPR
+// [7-5] reserved
 #define SVM_CONTROL_VINTR_PRIO_IGN_TPR          (0x062)
+//   [0] VINTR_MASKING
+//   [1] VGIF_EN, virtual GIF enable
+//   [2] V_NMI_ENABLE, virtual NMI enable
+// [5-3] reserved
+//   [6] X2VAPIC enable
+//   [7] AVIC enable
 #define SVM_CONTROL_VINTR_MASKING               (0x063)
 #define SVM_CONTROL_VINTR_VECTOR                (0x064)
 #define SVM_CONTROL_INTERRUPT_SHADOW            (0x068)
