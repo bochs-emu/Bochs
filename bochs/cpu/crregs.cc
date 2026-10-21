@@ -896,6 +896,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
     if(SVM_CR_WRITE_INTERCEPTED(0)) Svm_Vmexit(SVM_VMEXIT_CR0_WRITE);
+    // LMSW treats the selective CR0 write intercept as non-selective (intercepts regardless of the value being written)
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_CR0_WRITE_NO_TS_MP)) Svm_Vmexit(SVM_VMEXIT_CR0_SEL_WRITE);
   }
 #endif
 
