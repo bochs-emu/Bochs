@@ -131,7 +131,10 @@ void BX_CPU_C::handleInterruptMaskChange(void)
 
 #if BX_SUPPORT_SVM
     if (BX_CPU_THIS_PTR in_svm_guest) {
-      if ((SVM_V_INTR_PRIO > SVM_V_TPR) || SVM_V_IGNORE_TPR)
+      // virtual interrupts are masked when Virtual GIF is enabled and VGIF is 0
+      if (SVM_V_GIF_ENABLE && ! SVM_V_GIF)
+        mask_event(BX_EVENT_SVM_VIRQ_PENDING);
+      else if ((SVM_V_INTR_PRIO > SVM_V_TPR) || SVM_V_IGNORE_TPR)
         unmask_event(BX_EVENT_SVM_VIRQ_PENDING);
     }
 #endif

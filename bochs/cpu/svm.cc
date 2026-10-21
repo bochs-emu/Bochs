@@ -358,7 +358,14 @@ void BX_CPU_C::SvmExitSaveGuestState(void)
   }
 
   vmcb_write8(SVM_CONTROL_VTPR, ctrls->v_tpr);
-  vmcb_write8(SVM_CONTROL_VIRQ, is_pending(BX_EVENT_SVM_VIRQ_PENDING));
+
+  // update V_IRQ and VGIF (when Virtual GIF is enabled), keep other bits of the VMCB field
+  Bit8u virq_control = vmcb_read8(SVM_CONTROL_VIRQ) & ~0x1;
+  if (is_pending(BX_EVENT_SVM_VIRQ_PENDING))
+    virq_control |= 0x1;
+  if (ctrls->v_gif_enable)
+    virq_control = (virq_control & ~0x2) | (ctrls->v_gif ? 0x2 : 0);
+  vmcb_write8(SVM_CONTROL_VIRQ, virq_control);
   clear_event(BX_EVENT_SVM_VIRQ_PENDING);
 }
 
@@ -409,8 +416,16 @@ bool BX_CPU_C::SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls)
   }
 
   ctrls->v_tpr = vmcb_read8(SVM_CONTROL_VTPR);
-  ctrls->v_intr_masking = vmcb_read8(SVM_CONTROL_VINTR_MASKING) & 0x1;
+  Bit8u vintr_masking = vmcb_read8(SVM_CONTROL_VINTR_MASKING);
+  ctrls->v_intr_masking = vintr_masking & 0x1;
   ctrls->v_intr_vector = vmcb_read8(SVM_CONTROL_VINTR_VECTOR);
+
+  // Virtual GIF: VGIF_EN is VMCB offset 60h bit 25, VGIF value is loaded from VMCB offset 60h bit 9
+  if (BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_VIRTUAL_GIF))
+    ctrls->v_gif_enable = (vintr_masking >> 1) & 0x1;
+  else
+    ctrls->v_gif_enable = false;
+  ctrls->v_gif = ctrls->v_gif_enable ? ((vmcb_read8(SVM_CONTROL_VIRQ) >> 1) & 0x1) : false;
 
   Bit8u vintr_control = vmcb_read8(SVM_CONTROL_VINTR_PRIO_IGN_TPR);
   ctrls->v_intr_prio = vintr_control & 0xf;
@@ -1420,6 +1435,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLGI(bxInstruction_c *i)
 
   if (BX_CPU_THIS_PTR in_svm_guest) {
     if (SVM_INTERCEPT(SVM_INTERCEPT1_CLGI)) Svm_Vmexit(SVM_VMEXIT_CLGI);
+
+    // with Virtual GIF enabled the guest CLGI clears VGIF which masks virtual interrupts
+    if (SVM_V_GIF_ENABLE) {
+      SVM_V_GIF = false;
+      handleInterruptMaskChange();
+      BX_NEXT_TRACE(i);
+    }
   }
 
   BX_CPU_THIS_PTR svm_gif = false;
@@ -1439,6 +1461,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STGI(bxInstruction_c *i)
 
   if (BX_CPU_THIS_PTR in_svm_guest) {
     if (SVM_INTERCEPT(SVM_INTERCEPT1_STGI)) Svm_Vmexit(SVM_VMEXIT_STGI);
+
+    // with Virtual GIF enabled the guest STGI sets VGIF which unmasks virtual interrupts
+    if (SVM_V_GIF_ENABLE) {
+      SVM_V_GIF = true;
+      handleInterruptMaskChange();
+      BX_CPU_THIS_PTR async_event = 1;
+      BX_NEXT_TRACE(i);
+    }
   }
 
   BX_CPU_THIS_PTR svm_gif = true;
@@ -1505,6 +1535,8 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   BXRS_PARAM_BOOL(vmcb_ctrls, v_ignore_tpr, BX_CPU_THIS_PTR vmcb->ctrls.v_ignore_tpr);
   BXRS_PARAM_BOOL(vmcb_ctrls, v_intr_masking, BX_CPU_THIS_PTR vmcb->ctrls.v_intr_masking);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, v_intr_vector, BX_CPU_THIS_PTR vmcb->ctrls.v_intr_vector);
+  BXRS_PARAM_BOOL(vmcb_ctrls, v_gif_enable, BX_CPU_THIS_PTR vmcb->ctrls.v_gif_enable);
+  BXRS_PARAM_BOOL(vmcb_ctrls, v_gif, BX_CPU_THIS_PTR vmcb->ctrls.v_gif);
   BXRS_PARAM_BOOL(vmcb_ctrls, nested_paging, BX_CPU_THIS_PTR vmcb->ctrls.nested_paging);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, ncr3, BX_CPU_THIS_PTR vmcb->ctrls.ncr3);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, pause_filter_count, BX_CPU_THIS_PTR vmcb->ctrls.pause_filter_count);

@@ -202,10 +202,10 @@ Bit32u ryzen_t::get_svm_extensions_bitmask(void) const
          BX_CPUID_SVM_FLUSH_BY_ASID |
          BX_CPUID_SVM_DECODE_ASSIST |
          BX_CPUID_SVM_PAUSE_FILTER |
-         BX_CPUID_SVM_PAUSE_FILTER_THRESHOLD;
+         BX_CPUID_SVM_PAUSE_FILTER_THRESHOLD |
+         BX_CPUID_SVM_VIRTUAL_GIF;
 //       BX_CPUID_SVM_AVIC; // not implemented yet
 //       BX_CPUID_SVM_NESTED_VIRTUALIZATION; // not implemented yet
-//       BX_CPUID_SVM_VIRTUAL_GIF; // not implemented yet
 }
 #endif
 

@@ -392,6 +392,8 @@ struct SVM_CONTROLS
   bool v_ignore_tpr;
   bool v_intr_masking;
   Bit8u v_intr_vector;
+  bool v_gif_enable;
+  bool v_gif;
 
   bool nested_paging;
   Bit64u ncr3;
@@ -408,6 +410,8 @@ struct SVM_CONTROLS
 #define SVM_V_IGNORE_TPR   (BX_CPU_THIS_PTR vmcb->ctrls.v_ignore_tpr)
 #define SVM_V_INTR_MASKING (BX_CPU_THIS_PTR vmcb->ctrls.v_intr_masking)
 #define SVM_V_INTR_VECTOR  (BX_CPU_THIS_PTR vmcb->ctrls.v_intr_vector)
+#define SVM_V_GIF_ENABLE   (BX_CPU_THIS_PTR vmcb->ctrls.v_gif_enable)
+#define SVM_V_GIF          (BX_CPU_THIS_PTR vmcb->ctrls.v_gif)
 
 #define SVM_HOST_IF (BX_CPU_THIS_PTR vmcb->host_state.eflags & EFlagsIFMask)
 
