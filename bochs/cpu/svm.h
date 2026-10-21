@@ -398,6 +398,8 @@ struct SVM_CONTROLS
   bool nested_paging;
   Bit64u ncr3;
 
+  bool virt_vmload_vmsave; // VMSAVE and VMLOAD virtualization
+
   Bit16u pause_filter_count;
   Bit16u pause_filter_threshold;
   Bit64u last_pause_time;

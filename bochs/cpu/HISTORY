@@ -13,6 +13,7 @@ Changes after Bochs 3.1:
 ! Implemented support for Intel MPX ISA extension
 ! Implemented SVM TSC Ratio MSR (TSC scaling for SVM guests), enabled in Zambezi, Trinity and Ryzen models
 ! Implemented SVM Virtual GIF (VGIF) feature, enabled in Ryzen model
+! Implemented SVM VMSAVE and VMLOAD virtualization feature, enabled in Ryzen model
 - CPUID: models reporting TCE in CPUID (Ryzen, Trinity) did not allow setting EFER.TCE (#GP on WRMSR), enable TCE for all Family 15h+ AMD models (Zambezi, Trinity, Ryzen)
 - CPUID: avoid reporting SVM LBR Virtualization CPUID 0x8000000A.EDX[1] - LBRs are not implemented yet
 - AMX: TILELOADD/TILESTORED must #UD if memory operand is encoded without SIB byte, use zero stride when SIB has no index register (was using RSP)

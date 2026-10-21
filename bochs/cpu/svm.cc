@@ -443,6 +443,12 @@ bool BX_CPU_C::SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls)
 
   ctrls->last_pause_time = 0;
 
+  // VMSAVE and VMLOAD virtualization enable is VMCB offset 0B8h bit 1
+  if (BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_NESTED_VIRTUALIZATION))
+    ctrls->virt_vmload_vmsave = (vmcb_read8(SVM_CONTROL_LBR_VIRTUALIZATION_ENABLE) >> 1) & 0x1;
+  else
+    ctrls->virt_vmload_vmsave = false;
+
   Bit32u nested_ctrls = vmcb_read32(SVM_CONTROL_NESTED_PAGING_ENABLE);
   ctrls->nested_paging = (nested_ctrls & SVM_NESTED_CTRL_NP_ENABLE) != 0;
   if (! BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_NESTED_PAGING)) {
@@ -1309,6 +1315,39 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMMCALL(bxInstruction_c *i)
   BX_NEXT_TRACE(i);
 }
 
+// Check VMLOAD/VMSAVE intercept and return physical address of the VMCB used by the instruction
+bx_phy_address BX_CPU_C::SvmVmloadVmsaveAddress(bxInstruction_c *i, bool vmsave)
+{
+  bool virtualized = false;
+
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    unsigned intercept = vmsave ? SVM_INTERCEPT1_VMSAVE : SVM_INTERCEPT1_VMLOAD;
+    int vmexit_reason = vmsave ? SVM_VMEXIT_VMSAVE : SVM_VMEXIT_VMLOAD;
+
+    if (SVM_INTERCEPT(intercept)) Svm_Vmexit(vmexit_reason);
+
+    // VMSAVE and VMLOAD virtualization requires nested paging enabled and the host in 64-bit mode
+    if (BX_CPU_THIS_PTR vmcb->ctrls.virt_vmload_vmsave) {
+      if (! SVM_NESTED_PAGING_ENABLED || ! BX_CPU_THIS_PTR vmcb->host_state.efer.get_LMA())
+        Svm_Vmexit(vmexit_reason);
+      virtualized = true;
+    }
+  }
+
+  bx_address pAddr = RAX & i->asize_mask();
+  if (! IsValidPageAlignedPhyAddr(pAddr)) {
+    BX_ERROR(("%s: invalid or not page aligned VMCB physical address !", i->getIaOpcodeNameShort()));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  // with VMSAVE and VMLOAD virtualization RAX holds guest physical address of the VMCB which is
+  // translated by nested page tables, a nested page fault causes #VMEXIT(NPF)
+  if (virtualized)
+    return nested_walk(pAddr, vmsave ? BX_WRITE : BX_READ, false);
+
+  return pAddr;
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLOAD(bxInstruction_c *i)
 {
   if (! BX_CPU_THIS_PTR efer.get_SVME())
@@ -1319,15 +1358,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLOAD(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(SVM_INTERCEPT1_VMLOAD)) Svm_Vmexit(SVM_VMEXIT_VMLOAD);
-  }
-
-  bx_address pAddr = RAX & i->asize_mask();
-  if (! IsValidPageAlignedPhyAddr(pAddr)) {
-    BX_ERROR(("VMLOAD: invalid or not page aligned VMCB physical address !"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
+  bx_phy_address pAddr = SvmVmloadVmsaveAddress(i, false);
   bx_phy_address vmcbPtr = BX_CPU_THIS_PTR vmcbptr;
   set_VMCBPTR(pAddr);
 
@@ -1370,15 +1401,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMSAVE(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(SVM_INTERCEPT1_VMSAVE)) Svm_Vmexit(SVM_VMEXIT_VMSAVE);
-  }
-
-  bx_address pAddr = RAX & i->asize_mask();
-  if (! IsValidPageAlignedPhyAddr(pAddr)) {
-    BX_ERROR(("VMSAVE: invalid or not page aligned VMCB physical address !"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
+  bx_phy_address pAddr = SvmVmloadVmsaveAddress(i, true);
   bx_phy_address vmcbPtr = BX_CPU_THIS_PTR vmcbptr;
   set_VMCBPTR(pAddr);
 
@@ -1538,6 +1561,7 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   BXRS_PARAM_BOOL(vmcb_ctrls, v_gif_enable, BX_CPU_THIS_PTR vmcb->ctrls.v_gif_enable);
   BXRS_PARAM_BOOL(vmcb_ctrls, v_gif, BX_CPU_THIS_PTR vmcb->ctrls.v_gif);
   BXRS_PARAM_BOOL(vmcb_ctrls, nested_paging, BX_CPU_THIS_PTR vmcb->ctrls.nested_paging);
+  BXRS_PARAM_BOOL(vmcb_ctrls, virt_vmload_vmsave, BX_CPU_THIS_PTR vmcb->ctrls.virt_vmload_vmsave);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, ncr3, BX_CPU_THIS_PTR vmcb->ctrls.ncr3);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, pause_filter_count, BX_CPU_THIS_PTR vmcb->ctrls.pause_filter_count);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, pause_filter_threshold, BX_CPU_THIS_PTR vmcb->ctrls.pause_filter_threshold);

@@ -6,7 +6,7 @@ Changes after Bochs 3.1 release:
   ! Implemented AI Compute Extensions (ACE) emulation according AI Compute Extensions (ACE) Specification rev1.16.2 from x86 Ecosystem Advisory Group
   ! Implemented support for Intel MPX ISA extension
   ! Implemented support for APX (Advanced Performance Extensions) new instructions, still not enabled in any CPU model
-  ! Implemented SVM Decode Assist, TSC Ratio and Virtual GIF features + CET state management under SVM
+  ! Implemented SVM Decode Assist, TSC Ratio, Virtual GIF and VMSAVE/VMLOAD virtualization features + CET state management under SVM
   ! Improved implementation of x87 transendential instructions (F2XM1/FYL2X/FYL2XP1/FPATAN/FSIN/FCOS/FSINCOS/FPTAN) to match HW
   - Bugfixes for CPU emulation correctness (critical bugfixes for emulation of AVX_NE_CONVERT, AVX512/AVX512_FP16, AMX, VMX, SVM, CET, FRED)
     full list of all CPU bugfixes can be seen in Bochs source tree @ bochs/cpu/history)
