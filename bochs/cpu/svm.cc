@@ -486,11 +486,20 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   }
   guest.cr0.set32(cr0_lo);
 
+  if (! guest.cr0.get_CD() && guest.cr0.get_NW()) {
+    BX_ERROR(("VMRUN: Guest CR0.NW=1 when CR0.CD=0"));
+    return false;
+  }
+
   // always assign EFER.LMA := EFER.LME & CR0.PG
   guest.efer.set_LMA(guest.cr0.get_PG() && guest.efer.get_LME());
 
   guest.cr2 = vmcb_read64(SVM_GUEST_CR2);
   guest.cr3 = vmcb_read64(SVM_GUEST_CR3);
+  if (! IsValidPhyAddr(guest.cr3)) {
+    BX_ERROR(("VMRUN: Guest CR3 reserved bits set"));
+    return false;
+  }
 
   Bit32u cr4_lo = vmcb_read32(SVM_GUEST_CR4);
   Bit32u cr4_hi = vmcb_read32(SVM_GUEST_CR4_HI);
@@ -503,6 +512,17 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   if (guest.cr4.get() & ~BX_CPU_THIS_PTR cr4_suppmask) {
     BX_ERROR(("VMRUN: Guest CR4 reserved bits set"));
     return false;
+  }
+
+  if (guest.efer.get_LME() && guest.cr0.get_PG()) {
+    if (! guest.cr4.get_PAE()) {
+      BX_ERROR(("VMRUN: Guest EFER.LME=1 and CR0.PG=1 when CR4.PAE=0"));
+      return false;
+    }
+    if (! guest.cr0.get_PE()) {
+      BX_ERROR(("VMRUN: Guest EFER.LME=1 and CR0.PG=1 when CR0.PE=0"));
+      return false;
+    }
   }
 
   Bit32u dr6_hi = vmcb_read32(SVM_GUEST_DR6_HI);
@@ -552,9 +572,12 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
     svm_segment_read(&guest.sregs[n], SVM_GUEST_ES_SELECTOR + n * 0x10);
   }
 
-  if (guest.sregs[BX_SEG_REG_CS].cache.u.segment.d_b && guest.sregs[BX_SEG_REG_CS].cache.u.segment.l) {
-    BX_ERROR(("VMRUN: VMCB CS.D_B/L mismatch"));
-    return false;
+  // CS.D_B and CS.L both set is illegal only when entering long mode guest
+  if (guest.efer.get_LME() && guest.cr0.get_PG() && guest.cr4.get_PAE()) {
+    if (guest.sregs[BX_SEG_REG_CS].cache.u.segment.d_b && guest.sregs[BX_SEG_REG_CS].cache.u.segment.l) {
+      BX_ERROR(("VMRUN: VMCB CS.D_B/L mismatch"));
+      return false;
+    }
   }
 
   if (! guest.cr0.get_PE() || (guest.eflags & EFlagsVMMask) != 0)
