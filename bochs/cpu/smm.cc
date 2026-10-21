@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2006-2018 Stanislav Shwartsman
+//   Copyright (c) 2006-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -34,17 +34,19 @@
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSM(bxInstruction_c *i)
 {
+#if BX_SUPPORT_SVM
+  // RSM intercept is checked before #UD for RSM outside of SMM: a hypervisor containerizing SMM
+  // runs the SMM handler as a guest (not in SMM) and emulates the intercepted RSM (APM Appendix D)
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_RSM)) Svm_Vmexit(SVM_VMEXIT_RSM);
+  }
+#endif
+
   /* If we are not in System Management Mode, then #UD should be generated */
   if (! BX_CPU_THIS_PTR smm_mode()) {
     BX_INFO(("RSM not in System Management Mode !"));
     exception(BX_UD_EXCEPTION, 0);
   }
-
-#if BX_SUPPORT_SVM
-  if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(SVM_INTERCEPT0_RSM)) Svm_Vmexit(SVM_VMEXIT_RSM);
-  }
-#endif
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx) {
