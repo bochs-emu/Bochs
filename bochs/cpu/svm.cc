@@ -228,7 +228,8 @@ void BX_CPU_C::SvmEnterSaveHostState(SVM_HOST_STATE *host)
   host->cr0 = BX_CPU_THIS_PTR cr0;
   host->cr3 = BX_CPU_THIS_PTR cr3;
   host->cr4 = BX_CPU_THIS_PTR cr4;
-  host->eflags = read_eflags();
+  // completion of the VMRUN instruction (by #VMEXIT) clears the host EFLAGS.RF
+  host->eflags = read_eflags() & ~EFlagsRFMask;
   host->rip = RIP;
   host->rsp = RSP;
   host->rax = RAX;
@@ -291,7 +292,15 @@ void BX_CPU_C::SvmExitLoadHostState(SVM_HOST_STATE *host)
   CPL = 0;
 
   BX_CPU_THIS_PTR inhibit_mask = 0;
-  BX_CPU_THIS_PTR debug_trap = 0;
+
+  // host EFLAGS.TF causes #DB trap after the VMRUN completes on the host side (after #VMEXIT)
+  if (host->eflags & EFlagsTFMask) {
+    BX_CPU_THIS_PTR debug_trap = BX_DEBUG_SINGLE_STEP_BIT;
+    BX_CPU_THIS_PTR async_event = 1;
+  }
+  else {
+    BX_CPU_THIS_PTR debug_trap = 0;
+  }
 
   BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
 
@@ -689,6 +698,10 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   }
 
   BX_CPU_THIS_PTR async_event = 0;
+
+  // host EFLAGS have no effect on the guest: single step trap of the VMRUN instruction
+  // is taken on the host side after #VMEXIT and must not be delivered to the guest
+  BX_CPU_THIS_PTR debug_trap = 0;
 
   setEFlags((Bit32u) guest.eflags);
 

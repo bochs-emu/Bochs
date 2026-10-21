@@ -76,6 +76,7 @@ Changes after Bochs 3.1:
 + SVM: Fixed VMRUN consistency checks
 + SVM: LMSW must treat the selective CR0 write intercept as non-selective (intercept regardless of the value written)
 + SVM: RSM intercept must be checked before #UD for RSM executed outside of SMM (SMM containerization)
++ SVM: host EFLAGS.TF on VMRUN must cause #DB trap on the host side right after #VMEXIT (was taken one instruction later) and must not leak into the guest, VMRUN completion clears host EFLAGS.RF
 + SVM: VMRUN didn't not load the guest CR2 from the VMCB (Debian 12 amd64 running KVM (kvm_amd) failed inside Bochs)
 + SVM: SVM VMEXIT loading host state should reset debug_trap and inhibit_mask
 + SVM: interrupt shadow lost at a #DB intercept, after STI in the guest a #DB intercept at the next boundary saved VMCB INTERRUPT_SHADOW = 0 in Bochs, 1 on real Zen 4
