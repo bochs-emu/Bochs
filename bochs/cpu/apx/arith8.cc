@@ -40,16 +40,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_BbGbEbR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_EbGbR(bxInstruction_c *i)
+// ADD Eb, Gb with NF=1 (ND=0 register form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_ADD_EbGbR(bxInstruction_c *i)
 {
   Bit32u op1 = BX_READ_8BIT_REGx(i->dst(), i->extend8bitL());
   Bit32u op2 = BX_READ_8BIT_REGx(i->src(), i->extend8bitL());
   Bit32u sum = op1 + op2;
 
   BX_WRITE_8BIT_REGx(i->dst(), i->extend8bitL(), sum);
-
-  if (! i->getApxEvexNF())
-    SET_FLAGS_OSZAPC_ADD_8(op1, op2, sum);
 
   BX_NEXT_INSTR(i);
 }
@@ -106,16 +104,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_BbGbEbR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_EbGbR(bxInstruction_c *i)
+// SUB Eb, Gb with NF=1 (ND=0 register form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SUB_EbGbR(bxInstruction_c *i)
 {
   Bit32u op1_8 = BX_READ_8BIT_REGx(i->dst(), i->extend8bitL());
   Bit32u op2_8 = BX_READ_8BIT_REGx(i->src(), i->extend8bitL());
   Bit32u diff_8 = op1_8 - op2_8;
 
   BX_WRITE_8BIT_REGx(i->dst(), i->extend8bitL(), diff_8);
-
-  if (! i->getApxEvexNF())
-    SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8);
 
   BX_NEXT_INSTR(i);
 }
@@ -134,16 +130,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_BbEbIbR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_ND0_ADD_EbIbR(bxInstruction_c *i)
+// ADD Eb, Ib with NF=1 (ND=0 register form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_ADD_EbIbR(bxInstruction_c *i)
 {
   Bit32u op1 = BX_READ_8BIT_REGx(i->dst(), i->extend8bitL());
   Bit32u op2 = i->Ib();
   Bit32u sum = op1 + op2;
 
   BX_WRITE_8BIT_REGx(i->dst(), i->extend8bitL(), sum);
-
-  if (! i->getApxEvexNF())
-    SET_FLAGS_OSZAPC_ADD_8(op1, op2, sum);
 
   BX_NEXT_INSTR(i);
 }
@@ -175,16 +169,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_BbEbIbR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_ND0_SUB_EbIbR(bxInstruction_c *i)
+// SUB Eb, Ib with NF=1 (ND=0 register form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SUB_EbIbR(bxInstruction_c *i)
 {
   Bit32u op1_8 = BX_READ_8BIT_REGx(i->dst(), i->extend8bitL());
   Bit32u op2_8 = i->Ib();
   Bit32u diff_8 = op1_8 - op2_8;
 
   BX_WRITE_8BIT_REGx(i->dst(), i->extend8bitL(), diff_8);
-
-  if (! i->getApxEvexNF())
-    SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8);
 
   BX_NEXT_INSTR(i);
 }

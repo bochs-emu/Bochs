@@ -70,6 +70,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_BwEwGwR(bxInstruction_c *i)
     }
   }
 
+  // ND=1: 16-bit result is zero extended to the full destination register (zero upper)
   BX_WRITE_32BIT_REGZ(i->dst(), result_16);
 
   BX_NEXT_INSTR(i);
@@ -140,6 +141,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_BwEwGwR(bxInstruction_c *i)
     }
   }
 
+  // ND=1: 16-bit result is zero extended to the full destination register (zero upper)
   BX_WRITE_32BIT_REGZ(i->dst(), result_16);
 
   BX_NEXT_INSTR(i);
@@ -200,6 +202,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_BwEwR(bxInstruction_c *i)
     }
   }
 
+  // ND=1: 16-bit result is zero extended to the full destination register (zero upper)
   BX_WRITE_32BIT_REGZ(i->dst(), result_16);
 
   BX_NEXT_INSTR(i);
@@ -249,6 +252,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_BwEwR(bxInstruction_c *i)
     }
   }
 
+  // ND=1: 16-bit result is zero extended to the full destination register (zero upper)
   BX_WRITE_32BIT_REGZ(i->dst(), result_16);
 
   BX_NEXT_INSTR(i);
@@ -307,6 +311,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_BwEwR(bxInstruction_c *i)
     BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(of, cf);
   }
 
+  // ND=1: 16-bit result is zero extended to the full destination register (zero upper)
   BX_WRITE_32BIT_REGZ(i->dst(), result_16);
 
   BX_NEXT_INSTR(i);
@@ -337,6 +342,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_BwEwR(bxInstruction_c *i)
     BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(of, cf);
   }
 
+  // ND=1: 16-bit result is zero extended to the full destination register (zero upper)
   BX_WRITE_32BIT_REGZ(i->dst(), result_16);
 
   BX_NEXT_INSTR(i);
@@ -374,6 +380,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_BwEwR(bxInstruction_c *i)
     }
   }
 
+  // ND=1: 16-bit result is zero extended to the full destination register (zero upper)
   BX_WRITE_32BIT_REGZ(i->dst(), result_16);
 
   BX_NEXT_INSTR(i);
@@ -429,6 +436,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_BwEwR(bxInstruction_c *i)
     }
   }
 
+  // ND=1: 16-bit result is zero extended to the full destination register (zero upper)
   BX_WRITE_32BIT_REGZ(i->dst(), result_16);
 
   BX_NEXT_INSTR(i);
@@ -480,6 +488,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_BwEwR(bxInstruction_c *i)
     }
   }
 
+  // ND=1: 16-bit result is zero extended to the full destination register (zero upper)
   BX_WRITE_32BIT_REGZ(i->dst(), result_16);
 
   BX_NEXT_INSTR(i);
