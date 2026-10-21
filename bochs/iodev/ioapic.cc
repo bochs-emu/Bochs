@@ -149,6 +149,7 @@ void bx_ioapic_c::reset(unsigned type)
   for (int i=0; i<BX_IOAPIC_NUM_PINS; i++) {
     ioredtbl[i].set_lo_part(0x00010000);
     ioredtbl[i].set_hi_part(0x00000000);
+    ioredtbl[i].clear_delivery_status();
   }
   intin = 0;
   irr = 0;
@@ -293,7 +294,19 @@ void bx_ioapic_c::set_irq_level(Bit8u int_in, bool level)
 
 void bx_ioapic_c::receive_eoi(Bit8u vector)
 {
+  bool eoi_pending = 0;
+
   BX_DEBUG(("IOAPIC: received EOI for vector %d", vector));
+  // clear remote IRR of all level triggered entries using this vector,
+  // a line which is still asserted gets delivered again
+  for (unsigned i=0; i < BX_IOAPIC_NUM_PINS; i++) {
+    bx_io_redirect_entry_t *entry = ioredtbl + i;
+    if (entry->trigger_mode() && entry->remote_irr() && (entry->vector() == vector)) {
+      entry->clear_remote_irr();
+      eoi_pending = 1;
+    }
+  }
+  if (eoi_pending) service_ioapic();
 }
 
 void bx_ioapic_c::service_ioapic()
@@ -306,6 +319,9 @@ void bx_ioapic_c::service_ioapic()
     Bit32u mask = 1<<bit;
     if (irr & mask) {
       bx_io_redirect_entry_t *entry = ioredtbl + bit;
+      // level triggered interrupt still waiting for EOI
+      if (entry->trigger_mode() && entry->remote_irr())
+        continue;
       if (! entry->is_masked()) {
         // clear irr bit and deliver
         if (entry->delivery_mode() == 7) {
@@ -317,6 +333,8 @@ void bx_ioapic_c::service_ioapic()
         if (done) {
           if (! entry->trigger_mode())
             irr &= ~mask;
+          else if (entry->delivery_mode() <= 1)
+            entry->set_remote_irr(); // fixed/lowest priority: cleared by EOI
           entry->clear_delivery_status();
           stuck = 0;
         } else {
