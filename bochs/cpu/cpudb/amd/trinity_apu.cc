@@ -177,6 +177,38 @@ void trinity_apu_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_fu
 #if BX_SUPPORT_SVM
 Bit32u trinity_apu_t::get_svm_extensions_bitmask(void) const
 {
+  // * [0:0]   NP - Nested paging support
+  // ! [1:1]   LBR virtualization
+  // ! [2:2]   SVM Lock
+  // * [3:3]   NRIPS - Next RIP save on VMEXIT
+  // * [4:4]   TscRate - MSR based TSC ratio control
+  // ! [5:5]   VMCB Clean bits support
+  // * [6:6]   Flush by ASID support
+  // * [7:7]   Decode assists support
+  //   [8:8]   PMC Virtualization
+  //   [9:9]   Reserved
+  // * [10:10] Pause filter support
+  //   [11:11] Reserved
+  // * [12:12] Pause filter threshold support
+  //   [13:13] AVIC: Advanced Virtual Interrupt Controller support
+  //   [14:14] Reserved
+  //   [15:15] Nested Virtualization
+  //   [16:16] Virtualize the Global Interrupt Flag
+  //   [17:17] GMET: Guest Mode Execution Trap
+  //   [18:18] x2AVIC
+  //   [19:19] SSSCheck: SVM supervisor shadow stack restrictions
+  //   [20:20] SPEC_CTRL virtualization
+  //   [21:21] ROGPT: Read-Only Guest Page Table feature support
+  //   [22:22] Reserved
+  //   [23:23] HOST MCE Override
+  //   [24:24] TLBiCntrl: INVLPGB/TLBSYNC hypervisor enable in VMCB and TLBSYNC intercept support
+  //   [25:25] NMI Virtualization
+  //   [26:26] IBS Virtualization
+  //   [27:27] Extended Virtual APIC Register Accesses
+  //   [28:28] NestedVirtVmcbAddrChk: Guest VMCB Address Check
+  //   [29:29] Bus Lock Threshold
+  //   [30:30] Idle HLT intercept
+  //   [31:31] Reserved
   return BX_CPUID_SVM_NESTED_PAGING |
 //       BX_CPUID_SVM_LBR_VIRTUALIZATION | // not implemented yet
          BX_CPUID_SVM_SVM_LOCK |
