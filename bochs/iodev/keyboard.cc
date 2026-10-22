@@ -442,7 +442,7 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_KEY_THIS s.kbd_controller.expecting_port60h = 0;
         /* pass byte to keyboard */
         /* ??? should conditionally pass to mouse device here ??? */
-        if (BX_KEY_THIS s.kbd_controller.kbd_clock_enabled==0) {
+        if (! BX_KEY_THIS s.kbd_controller.kbd_clock_enabled) {
           set_kbd_clock_enable(1);
         }
         kbd_ctrl_to_kbd(value);
@@ -644,12 +644,17 @@ void bx_keyb_c::gen_scancode(Bit32u key)
     BX_DEBUG(("keyboard: gen_scancode with scancode_translate cleared"));
 
   // Ignore scancode if keyboard clock is driven low
-  if (BX_KEY_THIS s.kbd_controller.kbd_clock_enabled==0)
+  if (! BX_KEY_THIS s.kbd_controller.kbd_clock_enabled)
     return;
 
   // Ignore scancode if scanning is disabled
-  if (BX_KEY_THIS s.kbd_internal_buffer.scanning_enabled==0)
+  if (! BX_KEY_THIS s.kbd_internal_buffer.scanning_enabled)
     return;
+
+  if ((key & 0xff) >= BX_KEY_NBKEYS) {
+    BX_ERROR(("gen_scancode(): invalid key code 0x%08x", key));
+    return;
+  }
 
   // Switch between make and break code
   if (key & BX_KEY_RELEASED)
@@ -1444,7 +1449,7 @@ void bx_keyb_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned but
     return;
 
   // Note: enable only applies in STREAM MODE.
-  if (BX_KEY_THIS s.mouse.enable==0)
+  if (! BX_KEY_THIS s.mouse.enable)
     return;
 
   // scale down the motion

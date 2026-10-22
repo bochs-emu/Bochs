@@ -1282,6 +1282,10 @@ void bx_devices_c::gen_scancode(Bit32u key)
 {
   bool ret = 0;
 
+  if ((key & 0xff) >= BX_KEY_NBKEYS) {
+    BX_ERROR(("gen_scancode(): invalid key code 0x%08x", key));
+    return;
+  }
   bx_keyboard[0].bxkey_state[key & 0xff] = ((key & BX_KEY_RELEASED) == 0);
   if ((paste.buf != NULL) && (!paste.service)) {
     paste.stop = 1;
