@@ -295,7 +295,9 @@ ssize_t vpc_image_t::read(void* buf, size_t count)
   int ret;
 
   if (cpu_to_be32(footer->type) == VHD_FIXED) {
-    return bx_read_image(fd, cur_sector * 512, buf, count);
+    ret = bx_read_image(fd, cur_sector * 512, buf, count);
+    if (ret > 0) cur_sector += ret / 512;
+    return ret;
   }
 
   while (scount > 0) {
@@ -331,7 +333,9 @@ ssize_t vpc_image_t::write(const void* buf, size_t count)
   int ret;
 
   if (cpu_to_be32(footer->type) == VHD_FIXED) {
-    return bx_write_image(fd, cur_sector * 512, (void*)buf, count);
+    ret = bx_write_image(fd, cur_sector * 512, (void*)buf, count);
+    if (ret > 0) cur_sector += ret / 512;
+    return ret;
   }
 
   while (scount > 0) {
