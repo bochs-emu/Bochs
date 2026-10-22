@@ -746,6 +746,7 @@ char increment_string(char *str, int diff)
 concat_image_t::concat_image_t()
 {
   curr_fd = -1;
+  maxfd = 0;
 }
 
 void concat_image_t::increment_string(char *str)
@@ -761,12 +762,16 @@ int concat_image_t::open(const char* _pathname0, int flags)
   strcpy(pathname1, pathname0);
   BX_DEBUG(("concat_image_t::open"));
   Bit64s start_offset = 0;
+  maxfd = BX_CONCAT_MAX_IMAGES;
   for (int i=0; i<BX_CONCAT_MAX_IMAGES; i++) {
     fd_table[i] = hdimage_open_file(pathname1, flags, &length_table[i], NULL);
     if (fd_table[i] < 0) {
       // open failed.
       // if no FD was opened successfully, return -1 (fail).
-      if (i==0) return -1;
+      if (i==0) {
+        delete [] pathname1;
+        return -1;
+      }
       // otherwise, it only means that all images in the series have
       // been opened.  Record the number of fds opened successfully.
       maxfd = i;
@@ -829,7 +834,7 @@ Bit64s concat_image_t::lseek(Bit64s offset, int whence)
       total_offset += offset;
       break;
     case SEEK_END:
-      total_offset = hd_size - offset;
+      total_offset = hd_size + offset;
       break;
     default:
       return -1;
