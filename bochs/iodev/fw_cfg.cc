@@ -417,6 +417,14 @@ void bx_fw_cfg_c::process_dma(Bit64u dma_addr)
     }
   }
 
+  // Handle WRITE operation - all items are read-only, report an error
+  // (the WRITE bit must be cleared, otherwise the firmware waits forever)
+  if (control & FW_CFG_DMA_CTL_WRITE) {
+    BX_ERROR(("fw_cfg DMA: write to entry 0x%04x not supported", cur_entry));
+    control |= FW_CFG_DMA_CTL_ERROR;
+    control &= ~FW_CFG_DMA_CTL_WRITE;
+  }
+
   // Handle SKIP operation
   if (control & FW_CFG_DMA_CTL_SKIP) {
     cur_offset += length;
