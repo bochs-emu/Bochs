@@ -7,7 +7,7 @@
 //
 // Copyright (c) 2005  Alex Beregszaszi
 // Copyright (c) 2009  Kevin Wolf <kwolf@suse.de>
-// Copyright (C) 2012-2021  The Bochs Project
+// Copyright (C) 2012-2026  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -310,10 +310,10 @@ ssize_t vpc_image_t::read(void* buf, size_t count)
     }
 
     if (offset == -1) {
-      memset(buf, 0, 512);
+      memset(cbuf, 0, (size_t)sectors * 512);
     } else {
       ret = bx_read_image(fd, offset, cbuf, (int)sectors * 512);
-      if (ret != 512) {
+      if (ret != sectors * 512) {
         return -1;
       }
     }
