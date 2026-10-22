@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1253,78 +1253,86 @@ void bx_x_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
   } else {
     y_size = y_tilesize;
   }
-  switch (guest_bpp) {
-    case 8:  // 8 bits per pixel
-      for (y=0; y<y_size; y++) {
-        for (x=0; x<x_tilesize; x++) {
-          color = col_vals[tile[y*x_tilesize + x]];
-          switch (imBPP) {
-            case 8:  // 8 bits per pixel
-              ximage->data[imWide*y + x] = color;
-              break;
-            case 16: // 16 bits per pixel
-              offset = imWide*y + 2*x;
-              b0 = color >> 0;
-              b1 = color >> 8;
-              if (ximage->byte_order == LSBFirst) {
-                ximage->data[offset + 0] = b0;
-                ximage->data[offset + 1] = b1;
-              }
-              else { // MSBFirst
-                ximage->data[offset + 0] = b1;
-                ximage->data[offset + 1] = b0;
-              }
-              break;
-            case 24: // 24 bits per pixel
-              offset = imWide*y + 3*x;
-              b0 = color >> 0;
-              b1 = color >> 8;
-              b2 = color >> 16;
-              if (ximage->byte_order == LSBFirst) {
-                ximage->data[offset + 0] = b0;
-                ximage->data[offset + 1] = b1;
-                ximage->data[offset + 2] = b2;
-              }
-              else { // MSBFirst
-                ximage->data[offset + 0] = b2;
-                ximage->data[offset + 1] = b1;
-                ximage->data[offset + 2] = b0;
-              }
-              break;
-            case 32: // 32 bits per pixel
-              offset = imWide*y + 4*x;
-              b0 = color >> 0;
-              b1 = color >> 8;
-              b2 = color >> 16;
-              b3 = color >> 24;
-              if (ximage->byte_order == LSBFirst) {
-                ximage->data[offset + 0] = b0;
-                ximage->data[offset + 1] = b1;
-                ximage->data[offset + 2] = b2;
-                ximage->data[offset + 3] = b3;
-              }
-              else { // MSBFirst
-                ximage->data[offset + 0] = b3;
-                ximage->data[offset + 1] = b2;
-                ximage->data[offset + 2] = b1;
-                ximage->data[offset + 3] = b0;
-              }
-              break;
-            default:
-              BX_PANIC(("X_graphics_tile_update: bits_per_pixel %u not implemented",
-                (unsigned) imBPP));
-              return;
+  if (guest_bpp == 8) {
+    switch (imBPP) {
+      case 8:  // 8 bits per pixel
+        for (y=0; y<y_size; y++) {
+          for (x=0; x<x_tilesize; x++) {
+            color = col_vals[tile[y*x_tilesize + x]];
+            ximage->data[imWide*y + x] = color;
           }
         }
-      }
-      break;
-    default:
-      BX_PANIC(("X_graphics_tile_update: bits_per_pixel %u handled by new graphics API",
-                (unsigned) guest_bpp));
-      return;
+        break;
+      case 16: // 16 bits per pixel
+        for (y=0; y<y_size; y++) {
+          for (x=0; x<x_tilesize; x++) {
+            color = col_vals[tile[y*x_tilesize + x]];
+            offset = imWide*y + 2*x;
+            b0 = color >> 0;
+            b1 = color >> 8;
+            if (ximage->byte_order == LSBFirst) {
+              ximage->data[offset + 0] = b0;
+              ximage->data[offset + 1] = b1;
+            } else { // MSBFirst
+              ximage->data[offset + 0] = b1;
+              ximage->data[offset + 1] = b0;
+            }
+          }
+        }
+        break;
+      case 24: // 24 bits per pixel
+        for (y=0; y<y_size; y++) {
+          for (x=0; x<x_tilesize; x++) {
+            color = col_vals[tile[y*x_tilesize + x]];
+            offset = imWide*y + 3*x;
+            b0 = color >> 0;
+            b1 = color >> 8;
+            b2 = color >> 16;
+            if (ximage->byte_order == LSBFirst) {
+              ximage->data[offset + 0] = b0;
+              ximage->data[offset + 1] = b1;
+              ximage->data[offset + 2] = b2;
+            } else { // MSBFirst
+              ximage->data[offset + 0] = b2;
+              ximage->data[offset + 1] = b1;
+              ximage->data[offset + 2] = b0;
+            }
+          }
+        }
+        break;
+      case 32: // 32 bits per pixel
+        for (y=0; y<y_size; y++) {
+          for (x=0; x<x_tilesize; x++) {
+            color = col_vals[tile[y*x_tilesize + x]];
+            offset = imWide*y + 4*x;
+            b0 = color >> 0;
+            b1 = color >> 8;
+            b2 = color >> 16;
+            b3 = color >> 24;
+            if (ximage->byte_order == LSBFirst) {
+              ximage->data[offset + 0] = b0;
+              ximage->data[offset + 1] = b1;
+              ximage->data[offset + 2] = b2;
+              ximage->data[offset + 3] = b3;
+            } else { // MSBFirst
+              ximage->data[offset + 0] = b3;
+              ximage->data[offset + 1] = b2;
+              ximage->data[offset + 2] = b1;
+              ximage->data[offset + 3] = b0;
+            }
+          }
+        }
+        break;
+      default:
+        BX_PANIC(("X_graphics_tile_update: bits_per_pixel %u not implemented", imBPP));
+        return;
+    }
+    XPutImage(bx_x_display, win, gc, ximage, 0, 0, x0, y0+bx_headerbar_y,
+              x_tilesize, y_size);
+  } else {
+    BX_PANIC(("X_graphics_tile_update: bits_per_pixel %u handled by new graphics API",
+              guest_bpp));
   }
-  XPutImage(bx_x_display, win, gc, ximage, 0, 0, x0, y0+bx_headerbar_y,
-            x_tilesize, y_size);
 }
 
 void bx_x_gui_c::flush(void)
