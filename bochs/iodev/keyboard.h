@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -172,7 +172,7 @@ private:
 #define BX_KBD_CONTROLLER_QSIZE 5
     Bit8u    controller_Q[BX_KBD_CONTROLLER_QSIZE];
     unsigned controller_Qsize;
-    unsigned controller_Qsource; // 0=keyboard, 1=mouse
+    Bit8u    controller_Qsource[BX_KBD_CONTROLLER_QSIZE]; // per entry: 0=keyboard, 1=mouse
   } s; // State information for saving/loading
 
   BX_KEY_SMF void resetinternals(bool powerup);
@@ -184,6 +184,7 @@ private:
   BX_KEY_SMF void kbd_enQ_imm(Bit8u val);
   BX_KEY_SMF void activate_timer(void);
   BX_KEY_SMF void controller_enQ(Bit8u data, unsigned source);
+  BX_KEY_SMF void controller_deQ(void);
   BX_KEY_SMF bool mouse_enQ_packet(Bit8u b1, Bit8u b2, Bit8u b3, Bit8u b4);
   BX_KEY_SMF void mouse_enQ(Bit8u mouse_data);
 

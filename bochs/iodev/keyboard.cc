@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2025  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -173,10 +173,11 @@ void bx_keyb_c::init(void)
   BX_KEY_THIS s.mouse.im_request      = 0; // wheel mouse mode request
   BX_KEY_THIS s.mouse.im_mode         = 0; // wheel mouse mode
 
-  for (i=0; i<BX_KBD_CONTROLLER_QSIZE; i++)
+  for (i=0; i<BX_KBD_CONTROLLER_QSIZE; i++) {
     BX_KEY_THIS s.controller_Q[i] = 0;
+    BX_KEY_THIS s.controller_Qsource[i] = 0;
+  }
   BX_KEY_THIS s.controller_Qsize = 0;
-  BX_KEY_THIS s.controller_Qsource = 0;
 
   // mouse port installed on system board
   DEV_cmos_set_reg(0x14, DEV_cmos_get_reg(0x14) | 0x04);
@@ -252,7 +253,8 @@ void bx_keyb_c::register_state(void)
   new bx_shadow_data_c(list, "controller_Q", BX_KEY_THIS s.controller_Q,
                        BX_KBD_CONTROLLER_QSIZE, 1);
   BXRS_DEC_PARAM_FIELD(list, controller_Qsize, BX_KEY_THIS s.controller_Qsize);
-  BXRS_DEC_PARAM_FIELD(list, controller_Qsource, BX_KEY_THIS s.controller_Qsource);
+  new bx_shadow_data_c(list, "controller_Qsource", BX_KEY_THIS s.controller_Qsource,
+                       BX_KBD_CONTROLLER_QSIZE, 1);
 }
 
 void bx_keyb_c::after_restore_state(void)
@@ -299,17 +301,7 @@ Bit32u bx_keyb_c::read(Bit32u address, unsigned io_len)
       BX_KEY_THIS s.kbd_controller.irq12_requested = 0;
 
       if (BX_KEY_THIS s.controller_Qsize) {
-        unsigned i;
-        BX_KEY_THIS s.kbd_controller.aux_output_buffer = BX_KEY_THIS s.controller_Q[0];
-        BX_KEY_THIS s.kbd_controller.outb = 1;
-        BX_KEY_THIS s.kbd_controller.auxb = 1;
-        if (BX_KEY_THIS s.kbd_controller.allow_irq12)
-          BX_KEY_THIS s.kbd_controller.irq12_requested = 1;
-        for (i=0; i<BX_KEY_THIS s.controller_Qsize-1; i++) {
-          // move Q elements towards head of queue by one
-          BX_KEY_THIS s.controller_Q[i] = BX_KEY_THIS s.controller_Q[i+1];
-        }
-        BX_KEY_THIS s.controller_Qsize--;
+        controller_deQ();
       }
 
       DEV_pic_lower_irq(12);
@@ -324,18 +316,8 @@ Bit32u bx_keyb_c::read(Bit32u address, unsigned io_len)
       BX_KEY_THIS s.kbd_controller.bat_in_progress = 0;
 
       if (BX_KEY_THIS s.controller_Qsize) {
-        unsigned i;
-        BX_KEY_THIS s.kbd_controller.aux_output_buffer = BX_KEY_THIS s.controller_Q[0];
-        BX_KEY_THIS s.kbd_controller.outb = 1;
-        BX_KEY_THIS s.kbd_controller.auxb = 1;
-        if (BX_KEY_THIS s.kbd_controller.allow_irq1)
-          BX_KEY_THIS s.kbd_controller.irq1_requested = 1;
-        for (i=0; i<BX_KEY_THIS s.controller_Qsize-1; i++) {
-          // move Q elements towards head of queue by one
-          BX_KEY_THIS s.controller_Q[i] = BX_KEY_THIS s.controller_Q[i+1];
-        }
         BX_DEBUG(("s.controller_Qsize: %u",BX_KEY_THIS s.controller_Qsize));
-        BX_KEY_THIS s.controller_Qsize--;
+        controller_deQ();
       }
 
       DEV_pic_lower_irq(1);
@@ -759,10 +741,12 @@ void bx_keyb_c::controller_enQ(Bit8u data, unsigned source)
   // see if we need to Q this byte from the controller
   // remember this includes mouse bytes.
   if (BX_KEY_THIS s.kbd_controller.outb) {
-    if (BX_KEY_THIS s.controller_Qsize >= BX_KBD_CONTROLLER_QSIZE)
+    if (BX_KEY_THIS s.controller_Qsize >= BX_KBD_CONTROLLER_QSIZE) {
       BX_PANIC(("controller_enq(): controller_Q full!"));
+      return;
+    }
+    BX_KEY_THIS s.controller_Qsource[BX_KEY_THIS s.controller_Qsize] = source;
     BX_KEY_THIS s.controller_Q[BX_KEY_THIS s.controller_Qsize++] = data;
-    BX_KEY_THIS s.controller_Qsource = source;
     return;
   }
 
@@ -779,6 +763,34 @@ void bx_keyb_c::controller_enQ(Bit8u data, unsigned source)
     BX_KEY_THIS s.kbd_controller.outb = 1;
     BX_KEY_THIS s.kbd_controller.auxb = 1;
     BX_KEY_THIS s.kbd_controller.inpb = 0;
+    if (BX_KEY_THIS s.kbd_controller.allow_irq12)
+      BX_KEY_THIS s.kbd_controller.irq12_requested = 1;
+  }
+}
+
+// move the oldest queued controller byte into the output buffer it was queued for
+void bx_keyb_c::controller_deQ(void)
+{
+  unsigned i;
+  Bit8u data = BX_KEY_THIS s.controller_Q[0];
+  Bit8u source = BX_KEY_THIS s.controller_Qsource[0];
+
+  for (i=0; i<BX_KEY_THIS s.controller_Qsize-1; i++) {
+    // move Q elements towards head of queue by one
+    BX_KEY_THIS s.controller_Q[i] = BX_KEY_THIS s.controller_Q[i+1];
+    BX_KEY_THIS s.controller_Qsource[i] = BX_KEY_THIS s.controller_Qsource[i+1];
+  }
+  BX_KEY_THIS s.controller_Qsize--;
+
+  BX_KEY_THIS s.kbd_controller.outb = 1;
+  if (source == 0) { // keyboard
+    BX_KEY_THIS s.kbd_controller.kbd_output_buffer = data;
+    BX_KEY_THIS s.kbd_controller.auxb = 0;
+    if (BX_KEY_THIS s.kbd_controller.allow_irq1)
+      BX_KEY_THIS s.kbd_controller.irq1_requested = 1;
+  } else { // mouse
+    BX_KEY_THIS s.kbd_controller.aux_output_buffer = data;
+    BX_KEY_THIS s.kbd_controller.auxb = 1;
     if (BX_KEY_THIS s.kbd_controller.allow_irq12)
       BX_KEY_THIS s.kbd_controller.irq12_requested = 1;
   }
