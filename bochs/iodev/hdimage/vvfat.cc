@@ -928,7 +928,7 @@ int vvfat_image_t::read_directory(int mapping_index)
       set_begin_of_direntry(direntry, first_cluster);
     else
       direntry->begin = 0; // do that later
-    if (finddata.nFileSizeLow > 0x7fffffff) {
+    if ((finddata.nFileSizeHigh != 0) || (finddata.nFileSizeLow > 0x7fffffff)) {
       BX_ERROR(("File '%s' is larger than 2GB", buffer));
       free(buffer);
       FindClose(hFind);
