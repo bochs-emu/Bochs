@@ -130,6 +130,8 @@ enum MSR_Register {
   BX_MSR_IA32_USER_MSR_CTL = 0x01c,
 #endif
 
+  BX_MSR_CORE_THREAD_COUNT = 0x035,
+
   BX_MSR_TSC_ADJUST     = 0x03b,
   BX_MSR_TSC_DEADLINE   = 0x6e0,
 

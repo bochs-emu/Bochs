@@ -244,6 +244,16 @@ void BX_CPU_C::init_MSRs()
   BX_CPU_THIS_PTR msr_desc[BX_MSR_TSC] = new TscMSR(BX_CPU_THIS);
   BX_CPU_THIS_PTR msr_desc[BX_MSR_PLATFORM_ID] = new ConstMSR("MSR_PLATFORM_ID", BX_ISA_PENTIUM, 0); // read only
 
+#if BX_CPU_LEVEL >= 6
+  // Intel processors starting from Nehalem (first Intel cpu with SSE4.2, SYSENTER in long mode is Intel only)
+  if (is_cpu_extension_supported(BX_ISA_SSE4_2) && is_cpu_extension_supported(BX_ISA_SYSENTER_SYSEXIT_LONGMODE)) {
+    // read only, [31:16] enabled cores and [15:0] enabled logical processors in the package
+    Bit64u ncores = BX_CPU_THIS_PTR cpuid->get_ncores();
+    Bit64u nthreads = BX_CPU_THIS_PTR cpuid->get_nthreads();
+    BX_CPU_THIS_PTR msr_desc[BX_MSR_CORE_THREAD_COUNT] = new ConstMSR("MSR_CORE_THREAD_COUNT", BX_ISA_SSE4_2, (ncores << 16) | (ncores * nthreads));
+  }
+#endif
+
 #if BX_SUPPORT_APIC
   BX_CPU_THIS_PTR msr_desc[BX_MSR_APICBASE] = new ApicBaseMSR(BX_CPU_THIS);
 #endif

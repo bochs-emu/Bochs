@@ -67,6 +67,10 @@ public:
     return ia_extensions_bitmask[extension / 32] & (1 << (extension % 32));
   }
 
+  unsigned get_nprocessors() const { return nprocessors; }
+  unsigned get_ncores() const { return ncores; }
+  unsigned get_nthreads() const { return nthreads; }
+
 #if BX_SUPPORT_VMX
   virtual Bit32u get_vmx_extensions_bitmask(void) const { return 0; }
 #endif
