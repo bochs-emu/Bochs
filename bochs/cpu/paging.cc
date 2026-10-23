@@ -1372,7 +1372,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
     // hack: ignore isExecute attribute in SMM mode under SVM virtualization
     if (BX_CPU_THIS_PTR in_smm && rw == BX_EXECUTE) rw = BX_READ;
 
-    paddress = nested_walk(paddress, rw, 0);
+    paddress = nested_walk(paddress, rw, 0, (isShadowStack && !user));
   }
 #endif
   paddress = A20ADDR(paddress);
@@ -1396,6 +1396,11 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
       tlbEntry->accessBits |= TLB_SysReadOK | TLB_SysReadShadowStackOK;
       if (isWrite)
         tlbEntry->accessBits |= TLB_SysWriteShadowStackOK;
+#if BX_SUPPORT_SVM
+      // with supervisor shadow stack restrictions the page might be accessible only by supervisor shadow stack
+      if (! user && BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED && BX_CPU_THIS_PTR vmcb->ctrls.sss_check)
+        tlbEntry->accessBits &= ~TLB_SysReadOK;
+#endif
     }
     else
 #endif
@@ -1629,13 +1634,20 @@ BxMemtype BX_CPP_AttrRegparmN(2) BX_CPU_C::resolve_memtype(BxMemtype mtrr_memtyp
 
 #if BX_SUPPORT_SVM
 
-void BX_CPU_C::nested_page_fault(unsigned fault, bx_phy_address guest_paddr, unsigned rw, unsigned is_page_walk)
+// EXITINFO1 bit 37: the leaf nested page table entry designates supervisor shadow stack page
+#define BX_NPF_SSS_PAGE (BX_CONST64(1) << 37)
+
+void BX_CPU_C::nested_page_fault(Bit64u fault, bx_phy_address guest_paddr, unsigned rw, unsigned is_page_walk)
 {
   unsigned isWrite = rw & 1;
 
   Bit64u error_code = fault | (1 << 2) | (isWrite << 1);
   if (rw == BX_EXECUTE)
     error_code |= ERROR_CODE_ACCESS; // I/D = 1
+#if BX_SUPPORT_CET
+  if (rw & 4)
+    error_code |= ERROR_SHADOW_STACK;
+#endif
 
   if (is_page_walk)
     error_code |= BX_CONST64(1) << 33;
@@ -1645,7 +1657,7 @@ void BX_CPU_C::nested_page_fault(unsigned fault, bx_phy_address guest_paddr, uns
   Svm_Vmexit(SVM_VMEXIT_NPF, error_code, guest_paddr);
 }
 
-bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk)
+bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk, bool supervisor_shadow_stack)
 {
   bx_phy_address entry_addr[5];
   Bit64u entry[5];
@@ -1657,6 +1669,9 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
   bx_phy_address ppf = ctrls->ncr3 & BX_CR3_PAGING_MASK;
   Bit64u offset_mask = ((BX_CONST64(1) << BX_CPU_THIS_PTR linaddr_width) - 1);
   Bit32u combined_access = BX_COMBINED_ACCESS_WRITE | BX_COMBINED_ACCESS_USER;
+#if BX_SUPPORT_CET
+  Bit32u nonleaf_access = BX_COMBINED_ACCESS_WRITE | BX_COMBINED_ACCESS_USER;
+#endif
 
   Bit64u reserved = PAGING_PAE_RESERVED_BITS;
   if (! host_state->efer.get_NXE())
@@ -1688,6 +1703,10 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
 
       break;
     }
+
+#if BX_SUPPORT_CET
+    nonleaf_access &= curr_entry; // U/S and R/W
+#endif
   }
 
   bool isWrite = (rw & 1); // write or r-m-w
@@ -1696,8 +1715,27 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
         (combined_access & (BX_COMBINED_ACCESS_WRITE | BX_COMBINED_ACCESS_USER)) |
         (unsigned) isWrite;
 
-  if (!priv_check[priv_index] || (nx_page && rw == BX_EXECUTE))
-    nested_page_fault(ERROR_PROTECTION, guest_paddr, rw, is_page_walk);
+  bool fault = !priv_check[priv_index] || (nx_page && rw == BX_EXECUTE);
+
+  Bit64u sss_page = 0;
+#if BX_SUPPORT_CET
+  if (ctrls->sss_check) {
+    // supervisor shadow stack page: NX=1 and U/S=0 in the leaf entry, R/W=1 in all non-leaf entries
+    if ((entry[leaf] & PAGE_DIRECTORY_NX_BIT) != 0 && (entry[leaf] & 0x4) == 0 && (nonleaf_access & BX_COMBINED_ACCESS_WRITE) != 0)
+      sss_page = BX_NPF_SSS_PAGE;
+
+    // supervisor shadow stack accesses are allowed only to supervisor shadow stack pages,
+    // shadow stack writes are allowed to complete even if R/W=0 in the leaf entry
+    if (supervisor_shadow_stack) {
+      fault = (sss_page == 0);
+      // the dirty bit is never set in the leaf entry with R/W=0
+      if (! (entry[leaf] & 0x2)) isWrite = false;
+    }
+  }
+#endif
+
+  if (fault)
+    nested_page_fault(ERROR_PROTECTION | sss_page, guest_paddr, rw, is_page_walk);
 
   // Update A/D bits if needed
   update_access_dirty_PAE(entry_addr, entry, entry_memtype, start_leaf, leaf, isWrite);
@@ -1706,7 +1744,7 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
   return ppf | (bx_phy_address)(guest_paddr & offset_mask);
 }
 
-bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk)
+bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk, bool supervisor_shadow_stack)
 {
   bx_phy_address entry_addr[2];
   Bit64u entry[2];
@@ -1715,6 +1753,9 @@ bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw
   int leaf;
 
   Bit32u combined_access = BX_COMBINED_ACCESS_WRITE | BX_COMBINED_ACCESS_USER;
+#if BX_SUPPORT_CET
+  Bit32u nonleaf_access = BX_COMBINED_ACCESS_WRITE | BX_COMBINED_ACCESS_USER;
+#endif
 
   SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb->ctrls;
   SVM_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcb->host_state;
@@ -1766,6 +1807,10 @@ bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw
       ppf = (bx_phy_address)((curr_entry & BX_CONST64(0x000fffffffe00000)) | (guest_paddr & 0x001ff000));
       break;
     }
+
+#if BX_SUPPORT_CET
+    nonleaf_access &= curr_entry; // U/S and R/W
+#endif
   }
 
   bool isWrite = (rw & 1); // write or r-m-w
@@ -1774,8 +1819,27 @@ bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw
         (combined_access & (BX_COMBINED_ACCESS_WRITE | BX_COMBINED_ACCESS_USER)) |
         (unsigned) isWrite;
 
-  if (!priv_check[priv_index] || (nx_page && rw == BX_EXECUTE))
-    nested_page_fault(ERROR_PROTECTION, guest_paddr, rw, is_page_walk);
+  bool fault = !priv_check[priv_index] || (nx_page && rw == BX_EXECUTE);
+
+  Bit64u sss_page = 0;
+#if BX_SUPPORT_CET
+  if (ctrls->sss_check) {
+    // supervisor shadow stack page: NX=1 and U/S=0 in the leaf entry, R/W=1 in all non-leaf entries
+    if ((entry[leaf] & PAGE_DIRECTORY_NX_BIT) != 0 && (entry[leaf] & 0x4) == 0 && (nonleaf_access & BX_COMBINED_ACCESS_WRITE) != 0)
+      sss_page = BX_NPF_SSS_PAGE;
+
+    // supervisor shadow stack accesses are allowed only to supervisor shadow stack pages,
+    // shadow stack writes are allowed to complete even if R/W=0 in the leaf entry
+    if (supervisor_shadow_stack) {
+      fault = (sss_page == 0);
+      // the dirty bit is never set in the leaf entry with R/W=0
+      if (! (entry[leaf] & 0x2)) isWrite = false;
+    }
+  }
+#endif
+
+  if (fault)
+    nested_page_fault(ERROR_PROTECTION | sss_page, guest_paddr, rw, is_page_walk);
 
   // Update A/D bits if needed
   update_access_dirty_PAE(entry_addr, entry, entry_memtype, BX_LEVEL_PDE, leaf, isWrite);
@@ -1842,16 +1906,16 @@ bx_phy_address BX_CPU_C::nested_walk_legacy(bx_phy_address guest_paddr, unsigned
   return ppf | page_offset;
 }
 
-bx_phy_address BX_CPU_C::nested_walk(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk)
+bx_phy_address BX_CPU_C::nested_walk(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk, bool supervisor_shadow_stack)
 {
   SVM_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcb->host_state;
 
   BX_DEBUG(("Nested walk for guest paddr 0x" FMT_PHY_ADDRX, guest_paddr));
 
   if (host_state->efer.get_LMA())
-    return nested_walk_long_mode(guest_paddr, rw, is_page_walk);
+    return nested_walk_long_mode(guest_paddr, rw, is_page_walk, supervisor_shadow_stack);
   else if (host_state->cr4.get_PAE())
-    return nested_walk_PAE(guest_paddr, rw, is_page_walk);
+    return nested_walk_PAE(guest_paddr, rw, is_page_walk, supervisor_shadow_stack);
   else
     return nested_walk_legacy(guest_paddr, rw, is_page_walk);
 }

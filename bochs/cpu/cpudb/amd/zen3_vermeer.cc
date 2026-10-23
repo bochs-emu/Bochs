@@ -264,7 +264,7 @@ Bit32u zen3_vermeer_t::get_svm_extensions_bitmask(void) const
          BX_CPUID_SVM_NESTED_VIRTUALIZATION |
          BX_CPUID_SVM_VIRTUAL_GIF |
 //       BX_CPUID_SVM_GMET | // not implemented yet
-//       BX_CPUID_SVM_SSS_CHECK | // not implemented yet
+         BX_CPUID_SVM_SSS_CHECK |
 //       BX_CPUID_SVM_SPEC_CTRL_VIRT | // not implemented yet
          BX_CPUID_SVM_NESTED_VMCB_ADDR_CHECK;
 }

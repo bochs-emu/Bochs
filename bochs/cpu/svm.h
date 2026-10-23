@@ -397,6 +397,9 @@ struct SVM_CONTROLS
 
   bool nested_paging;
   Bit64u ncr3;
+#if BX_SUPPORT_CET
+  bool sss_check;          // Supervisor Shadow Stack restrictions in nested page tables
+#endif
 
   bool virt_vmload_vmsave; // VMSAVE and VMLOAD virtualization
 

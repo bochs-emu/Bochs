@@ -458,6 +458,20 @@ bool BX_CPU_C::SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls)
      }
   }
 
+#if BX_SUPPORT_CET
+  ctrls->sss_check = false;
+  if (BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_SSS_CHECK) && (nested_ctrls & SVM_NESTED_CTRL_SSS_CHECK_ENABLE) != 0) {
+    if (! ctrls->nested_paging) {
+      BX_ERROR(("VMRUN: attempt to enable supervisor shadow stack restrictions with nested paging disabled !"));
+      return false;
+    }
+
+    // silently ignored if the host is in legacy non-PAE mode or host EFER.NXE=0
+    if (BX_CPU_THIS_PTR cr4.get_PAE() && BX_CPU_THIS_PTR efer.get_NXE())
+      ctrls->sss_check = true;
+  }
+#endif
+
   if (ctrls->nested_paging) {
     if (! BX_CPU_THIS_PTR cr0.get_PG()) {
       BX_ERROR(("VMRUN: attempt to enter nested paging mode when host paging is disabled !"));
@@ -1563,6 +1577,9 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   BXRS_PARAM_BOOL(vmcb_ctrls, nested_paging, BX_CPU_THIS_PTR vmcb->ctrls.nested_paging);
   BXRS_PARAM_BOOL(vmcb_ctrls, virt_vmload_vmsave, BX_CPU_THIS_PTR vmcb->ctrls.virt_vmload_vmsave);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, ncr3, BX_CPU_THIS_PTR vmcb->ctrls.ncr3);
+#if BX_SUPPORT_CET
+  BXRS_PARAM_BOOL(vmcb_ctrls, sss_check, BX_CPU_THIS_PTR vmcb->ctrls.sss_check);
+#endif
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, pause_filter_count, BX_CPU_THIS_PTR vmcb->ctrls.pause_filter_count);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, pause_filter_threshold, BX_CPU_THIS_PTR vmcb->ctrls.pause_filter_threshold);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, last_pause_time, BX_CPU_THIS_PTR vmcb->ctrls.last_pause_time);
