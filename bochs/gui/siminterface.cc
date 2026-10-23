@@ -1242,8 +1242,9 @@ bool bx_real_sim_c::save_state(const char *checkpoint_path)
     sprintf(sr_file, "%s/%s", checkpoint_path, sr_list->get(dev)->get_name());
     fp = fopen(sr_file, "w");
     if (fp != NULL) {
-      save_sr_param(fp, sr_list->get(dev), checkpoint_path, 0);
+      bool ret = save_sr_param(fp, sr_list->get(dev), checkpoint_path, 0);
       fclose(fp);
+      if (!ret) return 0;
     } else {
       return 0;
     }
@@ -1289,6 +1290,7 @@ bool bx_real_sim_c::restore_logopts()
         while (ptr) {
           p = 0;
           while (isspace(ptr[p])) p++;
+          if (!ptr[p]) break;
           strcpy(string, ptr+p);
           while (isspace(string[strlen(string)-1])) string[strlen(string)-1] = 0;
           if (i == 0) {
@@ -1453,6 +1455,7 @@ bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path, co
                       fp2 = fopen(devdata, "rb");
                       if (fp2 != NULL) {
                         if (!bx_shadow_data_read(fp2, dparam->getptr(), dparam->get_size(), devdata)) {
+                          fclose(fp);
                           fclose(fp2);
                           return 0;
                         }
@@ -1563,7 +1566,7 @@ bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_pat
         if (!dparam->is_text_format()) {
           node->get_param_path(pname, BX_PATHNAME_LEN);
           if (!strncmp(pname, "bochs.", 6)) {
-            strcpy(pname, pname+6);
+            memmove(pname, pname+6, strlen(pname) - 6);
           }
           fprintf(fp, "%s\n", pname);
           if (sr_path)
@@ -1631,7 +1634,9 @@ bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_pat
         fprintf(fp, "{\n");
         bx_list_c *list = (bx_list_c*)node;
         for (i=0; i < list->get_size(); i++) {
-          save_sr_param(fp, list->get(i), sr_path, level+1);
+          if (!save_sr_param(fp, list->get(i), sr_path, level+1)) {
+            return 0;
+          }
         }
         for (i=0; i<level; i++)
           fprintf(fp, "  ");
