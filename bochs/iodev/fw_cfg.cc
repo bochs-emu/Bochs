@@ -93,7 +93,7 @@ PLUGIN_ENTRY_FOR_MODULE(fw_cfg)
 // Constructor
 bx_fw_cfg_c::bx_fw_cfg_c()
 {
-  put("FW_CFG", "FWCFG");
+  put("fw_cfg", "FWCFG");
   file_dir = NULL;
   file_count = 0;
 }
