@@ -9,29 +9,34 @@ Legend:
 -------------------------------------------------------------------------
 Changes after Bochs 3.1:
 
+! Implemented support for APX (Advanced Performance Extensions) new instructions, still not enabled in any CPU model
 ! Implemented AI Compute Extensions (ACE) emulation according AI Compute Extensions (ACE) Specification rev1.16.2 from x86 Ecosystem Advisory Group
 ! Implemented support for Intel MPX ISA extension
 ! Implemented SVM TSC Ratio MSR (TSC scaling for SVM guests), enabled in Zambezi, Trinity and Ryzen models
 ! Implemented SVM Virtual GIF (VGIF) feature, enabled in Ryzen model
 ! Implemented SVM VMSAVE and VMLOAD virtualization feature, enabled in Ryzen model
 ! Implemented SVM Supervisor Shadow Stack restrictions (SSSCheck) feature, enabled in Zen3 model
-! Implemented MSR_CORE_THREAD_COUNT (0x35) for Intel Nehalem and later cpu models, reports the configured number of cores and threads
 ! Implemented SVM SPEC_CTRL virtualization and AMD speculation control (spec_ctrl_amd), enabled in Zen3 model
+! Implemented SVM Decode Assist feature and enabled in all CPUID models featuring SVM
+! Implemented MSR_CORE_THREAD_COUNT (0x35) for Intel Nehalem and later cpu models, reports the configured number of cores and threads
 ! CPUDB: Added AMD Zen3 (Vermeer) CPUID model (features X2APIC, CLWB, UMIP, PKU, CET, VAES, RDPID + introduces CPUID 0x80000021: AMD Extended Feature Identification 2), extra SVM features not implemented yet
 - CPUID: fixed CPUID 0x8000001E: Extended Topology leaf + CPUID 0x80000008[ECX] for all AMD models that support it
 - CPUID: models reporting TCE in CPUID (Ryzen, Trinity) did not allow setting EFER.TCE (#GP on WRMSR), enable TCE for all Family 15h+ AMD models (Zambezi, Trinity, Ryzen)
 - CPUID: avoid reporting SVM LBR Virtualization CPUID 0x8000000A.EDX[1] - LBRs are not implemented yet, avoid reporting Data breakpoint extension for Ryzen - it is not implemented yet
 - CPUID: do not report SEV capabilities through CPUID leaf 0x8000001F on Ryzen, SEV is not supported
+- CPUID: add std leaf 7 ECX/EDX calculation to CPUID models which support std leaf 7 but have nothing to report there (ECX/EDX reported=0), required for correct CET reporting after using add_features="cet"
+- CPUID: correctly report presence of subleaf=1 in CPUID Leaf 0x0000001E: AMX: TMUL Information Main leaf (when present)
 - AMX: TILELOADD/TILESTORED must #UD if memory operand is encoded without SIB byte, use zero stride when SIB has no index register (was using RSP)
-- AVX/AVX-512: VGATHER/VSCATTER instructions must #UD if memory operand is encoded without VSIB byte
 + AMX-FP8: rewrite TDPBF8PS/TDPHF8PS/TDPBHF8PS/TDPHBF8PS to match SDM: they must accumulate FP8 products exactly in fixed point over the whole K dimension with single rounding to FP32
 - AMX-AVX512: TCVTROWPS2PHH/TCVTROWPS2PHL should allow to produce FP16 denormal outputs instead of flushing them to zero
 - AMX-AVX512: TILEMOVROW/TCVTROW* must return zero for elements beyond configured tile row width and zero TILECFG.start_row also when the row is out of range
 - AMX-COMPLEX: fixed NaN propagation priority in TCMMIMFP16PS instruction to match Intel SDE
 - AMX-AVX512/ACE: TILEMOVROW/TCVTROW*/TILEMOVCOL with general purpose register in EVEX.vvvv must #UD if EVEX.V' != 1
 - AMX-FP16/AMX-COMPLEX: TDPFP16PS/TCMMRLFP16PS/TCMMIMFP16PS must not treat FP32 srcdest denormals as zero (matching Intel SDE)
++ AVX512_OPMASK: Fixed behavior of KSHIFTLW/KSHIFTRW instructions with shift count = 15
 + AMX: STTILECFG instruction should be encoded with VEX.W0, the bug had VEX.W1 encoding
 - AMX: LDTILECFG/STTILECFG must #UD if ModRM.reg != 0
+- AVX/AVX-512: VGATHER/VSCATTER instructions must #UD if memory operand is encoded without VSIB byte
 + AVX512_FP16: VCVTTPH2DQ/VCVTTPH2UDQ/VCVTTPH2QQ/VCVTTPH2UQQ instructions were mapped into their non-truncating forms and therefore used MXCSR rounding instead of truncation
 + AVX512_FP16: FP16 instructions must ignore MXCSR.DAZ for FP16 inputs and MXCSR.FUZ for FP16 outputs (matching Intel SDE)
 - AVX10.2: VCVT2PS2PHX must update MXCSR flags (as if all exceptions are masked, without generating #XM) and flush FP16 denormal outputs when MXCSR.FUZ=1 regardless of MXCSR.UM (matching Intel SDE)
@@ -54,7 +59,6 @@ Changes after Bochs 3.1:
 - AVX: Fixed order of unmasked exceptions handling in VDPPS instruction. VDPPS must determine SIMD floating-point exceptions separately for each multiply and add operation in execution order.
 - x86-64: implement ENTER and LEAVE instructions with OperandSize=16 and StackSize=64
 - AES_AVX: Enforce AES feature flag in cpu to make sure these are disabled when AES gets disabled
-+ AVX512_OPMASK: Fixed behavior of KSHIFTLW/KSHIFTRW instructions with shift count = 15
 - AVX-512: VPBROADCASTMB2Q/VPBROADCASTMW2D instructions should require AVX512_CD
 - AVX-512: VPCMPB/VPCMPUB/VPCMPW/VPCMPUW instructions should require AVX512_BW
 + AVX-512: Fix boundary conditions of write mask calculation for VPCOMPRESSB/VPCOMPRESSW instructions
@@ -66,7 +70,6 @@ Changes after Bochs 3.1:
 + x87: fixed unmasked underflow/overflow corner cases for FSCALE x87 instruction
 - Legacy: fixed broken CR2 register initialization in reset() method, CR2 contained garbage value at the beginning instead of being initialized to 0
 - Legacy: swap order of memory accesses in CMPSB/CMPSW/CMPSD/CMPSQ instructions to match real HW: access ES:EDI first and seg:ESI later
-- VMX: Fixed typo in VMXON #GP(0) condition
 + AVX-512/AVX512_FP16: fixed corner case correctness issue for VRNDSCALE* instructions with denormal operand
 + AVX-512/AVX512_FP16: fixed corner case correctness issue for VRCPSH/VRCPPH and VRCP14* instructions
 + AVX-512/AVX512_FP16: fixed corner case correctness issue for VRSQRTSH/VRSQRTPH and VRSQRT14* instructions
@@ -81,7 +84,6 @@ Changes after Bochs 3.1:
 + CET: far CALL through call gate to more privilege and interrupt to inner privilege or through IST did the shadow stack switch and push after loading new CS, if they faulted new CS/CPL was left loaded with old RIP
 + VMX: vmcs.shadow_stack_prematurely_busy was not initialized on reset, until the first VMEXIT a stale value could suppress convertible EPT violation #VE or set exit reason bit 25 (shadow stack prematurely busy)
 + VMX: EPTP index VM-execution control was not loaded on VM entry, #VE information area reported stale or uninitialized EPTP index unless the guest executed VMFUNC EPTP switching
-! SVM: implemented CET state management - guest S_CET, SSP and ISST_ADDR are loaded by VMRUN and saved on #VMEXIT, VMRUN CET consistency checks
 + SVM: Fixed VMRUN consistency checks
 + SVM: LMSW must treat the selective CR0 write intercept as non-selective (intercept regardless of the value written)
 + SVM: RSM intercept must be checked before #UD for RSM executed outside of SMM (SMM containerization)
@@ -97,11 +99,10 @@ Changes after Bochs 3.1:
 - SVM: task switch intercept must be checked before new TSS limit checks (Zen 5 takes the intercept with TSS limit 0x67 and CR4.CET=1)
 - SVM: PAUSE filter threshold of zero must select count only PAUSE filter mode (was resetting the PAUSE filter count on every PAUSE)
 - SVM: correctly handle DR6 reserved bits
+- SVM: implemented CET state management - guest S_CET, SSP and ISST_ADDR are loaded by VMRUN and saved on #VMEXIT, VMRUN CET consistency checks
 - SYSENTER/SYSEXIT: SYSENTER/SYSEXIT are not allowed in long mode on AMD
 - SYSCALL/SYSRET: SYSCALL whose SFMASK clears TF takes no single-step trap, SYSRET takes the single-step trap by the TF it loads
 - CPUID: allow configuring i486dx4 model without x87 using cpu exclude_features
-! SVM: Implemented SVM Decode Assist feature and enabled in all CPUID models featuring SVM
-! SVM: Implemented TSC Ratio SVM feature and enabled in Trinity, Zambezi and Ryzen CPUID models
 - FRED: Fixed reserved bits checking for MSR_IA32_FRED_CONFIG (0x1d4), bug was introduced in Bochs 3.1 release
 - MTRR: Fixed reserved bits checking for MSR_MTRR_DEFTYPE (0x2ff)
 - MSR: enforce reserved bits checking for MSR_TSX_AUX (0xc0000103), MSR_IA32_UMWAIT_CONTROL (0xe1), MSR_IA32_PKRS (0x6e1), MSR_IA32_USER_MSR_CTL (0x1c) and MSR_IA32_FEATURE_CONTROL (0x3a)
@@ -118,7 +119,6 @@ Changes after Bochs 3.1:
 - AMX: failed LDTILECFG or XRSTOR of TILECFG state should not reset TILEDATA and SCALEDATA
 + AMX: added missing reset of AMX state on hardware reset
 - MSR: reset MSR IA32_XSS only on hardware reset, unchanged on INIT
-- CPUID: correctly report presence of subleaf=1 in CPUID Leaf 0x0000001E: AMX: TMUL Information Main leaf (when present)
 - URDMSR/UWRMSR: missing #GP(0) if MSR address bits [63:14] are not all zero
 + VMX: fix VM-exit info for URDMSR, UWRMSR and immediate RDMSR/WRMSRNS + save VM-exit instruction information (bits 6:3 = data register operand)
 + VMX: exit reason 85 is the WRMSRNS immediate form only, legacy WRMSRNS exits with WRMSR basic reason (32) and qualification 1
@@ -174,12 +174,12 @@ Changes after Bochs 3.1:
 - SMAP: implicit supervisor-mode accesses (GDT, LDT, IDT, TSS, UPID ...) to user pages must cause #PF regardless of RFLAGS.AC
 - XSAVE: make sure XRSTOR/XRSTORS always end trace, updating state like PKRS might require re-fetch after XRSTOR/XRSTORS execution
 - Legacy: MOV Sreg,r/m and MOV r/m,Sreg must ignore REX.R in 64-bit mode (was generating #UD)
-- VMX: MOV DR8-DR15 must #UD before checking for MOV-DR VM exit
 - EVEX: #UD if EVEX.R'=0 for GPR encoded in ModRM.reg, EVEX.X is ignored for GPR encoded in ModRM.rm (was accessing RIP/internal registers)
-- CPUID: add std leaf 7 ECX/EDX calculation to CPUID models which support std leaf 7 but have nothing to report there (ECX/EDX reported=0), required for correct CET reporting after using add_features="cet"
+- VMX: MOV DR8-DR15 must #UD before checking for MOV-DR VM exit
 - VMX: VM-exit instruction information for RDRAND/RDSEED reported address size instead of operand size
 - VMX: TPAUSE/UMWAIT VM exit must save VM-exit instruction information (bits 6:3 = source register operand)
 - VMX: VM-exit instruction information for LIDT/LGDT/SIDT/SGDT must report operand size in bit 11
+- VMX: Fixed typo in VMXON #GP(0) condition
 - MONITOR/MWAIT: write to the last byte of the monitored cache line did not wake up the monitor (off-by-one in monitor range check)
 + LAPIC: TSC-deadline timer compared the deadline with system time instead of the guest TSC (interrupt storm after hardware reset or TSC write), clear IA32_TSC_DEADLINE when the timer fires
 + LAPIC: allow local APIC to be re-enabled after clearing APIC global enable bit in IA32_APIC_BASE MSR, also #GP on attempt to switch directly from disabled APIC to x2APIC mode
