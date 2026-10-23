@@ -451,7 +451,7 @@ void ryzen_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [23:23] PerfCtrExtCore: core perf counter extensions support
   // * [24:24] PerfCtrExtNB: NB perf counter extensions support
   //   [25:25] Reserved
-  // * [26:26] Data breakpoint extension. Indicates support for MSR 0xC0011027 and MSRs 0xC001101[B:9]
+  // ! [26:26] Data breakpoint extension. Indicates support for MSR 0xC0011027 and MSRs 0xC001101[B:9]
   //   [27:27] Performance time-stamp counter. Indicates support for MSR 0xC0010280
   // * [28:28] PerfCtrExtL2I: L2I performance counter extensions support
   // * [29:29] MONITORX/MWAITX instructions support
@@ -465,7 +465,7 @@ void ryzen_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
                                        BX_CPUID_EXT1_ECX_TOPOLOGY_EXTENSIONS |
                                        BX_CPUID_EXT1_ECX_PERFCTR_EXT_CORE |
                                        BX_CPUID_EXT1_ECX_PERFCTR_EXT_NB |
-                                       BX_CPUID_EXT1_ECX_DATA_BREAKPOINT_EXT |
+//                                     BX_CPUID_EXT1_ECX_DATA_BREAKPOINT_EXT | // not implemented
                                        BX_CPUID_EXT1_ECX_PERFCTR_EXT_L2I);
 
   // EDX:

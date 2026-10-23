@@ -137,6 +137,7 @@
 #  zambezi                    AMD FX(tm)-4100 Quad-Core Processor (Zambezi)
 #  trinity_apu                AMD A8-5600K APU (Trinity)
 #  ryzen                      AMD Ryzen 7 1700
+#  zen3_vermeer               AMD Ryzen 7 5800X (Vermeer)
 #  corei7_ivy_bridge_3770k    Intel(R) Core(TM) i7-3770K CPU (Ivy Bridge)
 #  corei7_haswell_4770        Intel(R) Core(TM) i7-4770 CPU (Haswell)
 #  broadwell_ult              Intel(R) Processor 5Y70 CPU (Broadwell)

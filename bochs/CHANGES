@@ -3,6 +3,7 @@ Changes after Bochs 3.1 release:
 (up to date with commits done till 21 Oct 2026)
 
 - CPU emulation and instrumentation
+  ! CPUDB: Added AMD Zen3 (Vermeer) CPUID model (features X2APIC, CLWB, UMIP, PKU, CET, VAES, RDPID + introduces CPUID 0x80000021: AMD Extended Feature Identification 2)
   ! Implemented AI Compute Extensions (ACE) emulation according AI Compute Extensions (ACE) Specification rev1.16.2 from x86 Ecosystem Advisory Group
   ! Implemented support for Intel MPX ISA extension
   ! Implemented support for APX (Advanced Performance Extensions) new instructions, still not enabled in any CPU model
