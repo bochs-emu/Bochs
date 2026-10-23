@@ -778,7 +778,10 @@ void zen3_vermeer_t::get_ext_cpuid_leaf_21(cpuid_function_t *leaf) const
   //   [29:29] SRSO_NO: The processor is not affected by Speculative Return Stack Overflow vulnerability
   //   [30:30] SRSO_USER_KERNEL_NO: The processor is not affected by Speculative Return Stack Overflow vulnerability across user/kernel boundaries
   //   [31:31] SRSO_MSR_FIX: Software may use MSR_BP_CFG[BpSpecReduce] to mitigate Speculative Return Stack Overflow vulnerability
-  leaf->eax = 0x4d;
+  leaf->eax = BX_CPUID_EXT21_EAX_NO_NESTED_DATA_BP |
+              BX_CPUID_EXT21_EAX_LFENCE_ALWAYS_SERIALIZING |
+              BX_CPUID_EXT21_EAX_SMM_PG_CFG_LOCK |
+              BX_CPUID_EXT21_EAX_NULL_SELECT_CLEARS_BASE;
   leaf->ebx = 0;
   leaf->ecx = 0;
   leaf->edx = 0;

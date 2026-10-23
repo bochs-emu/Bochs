@@ -892,6 +892,75 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT8_EBX_IBPB_RET               (1 << 30)
 #define BX_CPUID_EXT8_EBX_RESERVED31             (1 << 31)
 
+// CPUID defines - extended features CPUID[0x80000021].EAX
+// ----------------------------
+
+// [0:0]   NoNestedDataBp: Processor ignores nested data breakpoints
+// [1:1]   FsGsBaseWriteNotSerializing: WRMSR to FS.Base, GS.Base and KernelGSBase MSRs is not serializing
+// [2:2]   LFenceAlwaysSerializing: LFENCE is always dispatch serializing
+// [3:3]   SmmPgCfgLock: SMM paging configuration lock supported
+// [4:4]   reserved
+// [5:5]   reserved
+// [6:6]   NullSelectClearsBase: Null segment selector loads also clear the destination segment register base and limit
+// [7:7]   UpperAddressIgnore: Upper Address Ignore is supported
+// [8:8]   AutomaticIBRS: Automatic IBRS
+// [9:9]   NoSmmCtlMSR: SMM_CTL MSR (C001_0116h) is not supported
+// [10:10] FastShortRepStosb: Fast short REP STOSB supported
+// [11:11] FastShortRepeCmpsb: Fast short REPE CMPSB supported
+// [12:12] PreciseRetirePmc2: PerfEvtSel2[PREC_RET] is supported
+// [13:13] PrefetchCtlMsr: Prefetch control MSR supported
+// [14:14] L2TlbSizeX32: L2TLB sizes are encoded as multiples of 32
+// [15:15] AMD_ERMSB: AMD implementation of Enhanced REP MOVSB/STOSB is supported
+// [16:16] Opcode0F017Reclaim: 0F 01/7 opcode space is reserved for AMD use
+// [17:17] CpuidUserDis: CPUID disable for non-privileged software
+// [18:18] EPSF: Enhanced Predictive Store Forwarding supported
+// [19:19] FAST_REP_SCASB: Fast short REP SCASB supported
+// [20:20] PREFETCHI: IC prefetch supported
+// [21:21] FP512_DOWNGRADE: FP512 is downgraded to FP256
+// [22:22] reserved
+// [23:23] AVX512_BMM: Bit Matrix Multiply instructions supported
+// [24:24] ERAPS: Enhanced Return Address Predictor Security supported
+// [25:25] reserved
+// [26:26] reserved
+// [27:27] SBPB: Selective Branch Predictor Barrier supported
+// [28:28] IBPB_BRTYPE: PRED_CMD[IBPB] clears all branch type predictions from the branch predictor
+// [29:29] SRSO_NO: The processor is not affected by Speculative Return Stack Overflow vulnerability
+// [30:30] SRSO_USER_KERNEL_NO: The processor is not affected by SRSO vulnerability across user/kernel boundaries
+// [31:31] SRSO_MSR_FIX: Software may use MSR_BP_CFG[BpSpecReduce] to mitigate SRSO vulnerability
+
+#define BX_CPUID_EXT21_EAX_NO_NESTED_DATA_BP          (1 <<  0)
+#define BX_CPUID_EXT21_EAX_FSGSBASE_NOT_SERIALIZING   (1 <<  1)
+#define BX_CPUID_EXT21_EAX_LFENCE_ALWAYS_SERIALIZING  (1 <<  2)
+#define BX_CPUID_EXT21_EAX_SMM_PG_CFG_LOCK            (1 <<  3)
+#define BX_CPUID_EXT21_EAX_RESERVED4                  (1 <<  4)
+#define BX_CPUID_EXT21_EAX_RESERVED5                  (1 <<  5)
+#define BX_CPUID_EXT21_EAX_NULL_SELECT_CLEARS_BASE    (1 <<  6)
+#define BX_CPUID_EXT21_EAX_UPPER_ADDRESS_IGNORE       (1 <<  7)
+#define BX_CPUID_EXT21_EAX_AUTOMATIC_IBRS             (1 <<  8)
+#define BX_CPUID_EXT21_EAX_NO_SMM_CTL_MSR             (1 <<  9)
+#define BX_CPUID_EXT21_EAX_FAST_SHORT_REP_STOSB       (1 << 10)
+#define BX_CPUID_EXT21_EAX_FAST_SHORT_REPE_CMPSB      (1 << 11)
+#define BX_CPUID_EXT21_EAX_PRECISE_RETIRE_PMC2        (1 << 12)
+#define BX_CPUID_EXT21_EAX_PREFETCH_CTL_MSR           (1 << 13)
+#define BX_CPUID_EXT21_EAX_L2TLB_SIZE_X32             (1 << 14)
+#define BX_CPUID_EXT21_EAX_AMD_ERMSB                  (1 << 15)
+#define BX_CPUID_EXT21_EAX_OPCODE_0F017_RECLAIM       (1 << 16)
+#define BX_CPUID_EXT21_EAX_CPUID_USER_DIS             (1 << 17)
+#define BX_CPUID_EXT21_EAX_EPSF                       (1 << 18)
+#define BX_CPUID_EXT21_EAX_FAST_REP_SCASB             (1 << 19)
+#define BX_CPUID_EXT21_EAX_PREFETCHI                  (1 << 20)
+#define BX_CPUID_EXT21_EAX_FP512_DOWNGRADE            (1 << 21)
+#define BX_CPUID_EXT21_EAX_RESERVED22                 (1 << 22)
+#define BX_CPUID_EXT21_EAX_AVX512_BMM                 (1 << 23)
+#define BX_CPUID_EXT21_EAX_ERAPS                      (1 << 24)
+#define BX_CPUID_EXT21_EAX_RESERVED25                 (1 << 25)
+#define BX_CPUID_EXT21_EAX_RESERVED26                 (1 << 26)
+#define BX_CPUID_EXT21_EAX_SBPB                       (1 << 27)
+#define BX_CPUID_EXT21_EAX_IBPB_BRTYPE                (1 << 28)
+#define BX_CPUID_EXT21_EAX_SRSO_NO                    (1 << 29)
+#define BX_CPUID_EXT21_EAX_SRSO_USER_KERNEL_NO        (1 << 30)
+#define BX_CPUID_EXT21_EAX_SRSO_MSR_FIX               (1 << 31)
+
 // CPUID defines - SVM features CPUID[0x8000000A].EDX
 // ----------------------------
 
