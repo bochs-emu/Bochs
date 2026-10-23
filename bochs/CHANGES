@@ -1,6 +1,6 @@
 Changes after Bochs 3.1 release:
 
-(up to date with commits done till 21 Oct 2026)
+(up to date with commits done till 23 Oct 2026)
 
 - CPU emulation and instrumentation
   ! CPUDB: Added AMD Zen3 (Vermeer) CPUID model (features X2APIC, CLWB, UMIP, PKU, CET, VAES, RDPID + introduces CPUID 0x80000021: AMD Extended Feature Identification 2)
@@ -9,9 +9,12 @@ Changes after Bochs 3.1 release:
   ! Implemented support for APX (Advanced Performance Extensions) new instructions, still not enabled in any CPU model
   ! Implemented SVM Decode Assist, TSC Ratio, Virtual GIF and VMSAVE/VMLOAD virtualization and Supervisor Shadow Stack restrictions (SSSCheck) features + CET state management under SVM
   ! Implemented SVM SPEC_CTRL virtualization and AMD speculation control (spec_ctrl_amd), enabled in Zen3 model
+    - CPU feature 'sca_mitigations' renamed to 'spec_ctrl' (Intel speculation control), new 'spec_ctrl_amd' feature for AMD speculation control
+  ! Implemented MSR_CORE_THREAD_COUNT (0x35) for Intel Nehalem and later cpu models, reports the configured number of cores and threads
   ! Improved implementation of x87 transendential instructions (F2XM1/FYL2X/FYL2XP1/FPATAN/FSIN/FCOS/FSINCOS/FPTAN) to match HW
   - Bugfixes for CPU emulation correctness (critical bugfixes for emulation of AVX_NE_CONVERT, AVX512/AVX512_FP16, AMX, VMX, SVM, CET, FRED)
     full list of all CPU bugfixes can be seen in Bochs source tree @ bochs/cpu/history)
+
 
 - Bochs debugger
   - Invalidate SMC pages after debugger memory writes
@@ -100,6 +103,9 @@ Changes after Bochs 3.1 release:
     - VBOX: Fixed data corruption in images with more than 4GB of allocated data
     - VMWARE3: Fixed data corruption on Windows hosts (image files were opened in text mode)
     - Undoable/volatile images: fixed crash and double free when opening the image fails
+    - VPC: fixed multi-sector reads of dynamic VHD images and sequential read/write of fixed VHD images
+    - VVFAT: reject files of 4 GB and more on Windows hosts (were mapped with a wrong size)
+    - CONCAT: fixed uninitialized number of parts, lseek(SEEK_END) and a memory leak
   - CD-ROM
     - Model parameter now supports format "VENDOR:PRODUCT:REV" for ATAPI inquiry
     - Fixed MODE SENSE(6) header and response lengths and GET PERFORMANCE maximum number of descriptors
@@ -117,6 +123,8 @@ Changes after Bochs 3.1 release:
     - IOAPIC: implemented Remote IRR for level triggered interrupts
     - LAPIC: clear TMR before broadcasting EOI to the IOAPIC (level triggered interrupt could be lost forever,
       Windows Vista hang with GeForce at the display mode switch)
+    - LAPIC: TSC-deadline timer compared the deadline with system time instead of the guest TSC (interrupt storm after
+      hardware reset or TSC write), IA32_TSC_DEADLINE is cleared when the timer fires
     - PIC: implemented the OCW3 poll command as an interrupt acknowledge
     - PIC: reset special mask mode and read register select on ICW1
     - HPET: interrupt routes >= 16 are delivered to the IOAPIC only (were aliased onto PIC IRQs 8-15)
@@ -128,6 +136,13 @@ Changes after Bochs 3.1 release:
     - Fixed 64K DMA transfers (transfer length overflow)
   - Keyboard / mouse
     - PS/2 mouse "Set Scaling 1:1" command selected 2:1 scaling
+    - Bytes queued while the 8042 output buffer was full are delivered to the right (keyboard or AUX) output buffer
+    - Range check key codes received from the GUI
+  - USB
+    - Fixed USB SCSI disk seek truncated to int (USB disks larger than 2GB failed past 2GB)
+    - USB HID: deactivate the idle timer before unregistering it (PANIC on exit after guest set HID idle rate)
+  - fw_cfg
+    - Fail DMA write requests instead of leaving them pending (matches QEMU)
   - Serial port
     - Raw serial mode (Win32): the 1 stop bit setting was ignored
   - Sound
@@ -147,6 +162,8 @@ Changes after Bochs 3.1 release:
     - win32 gui
       - Fixed crash on paste when the clipboard has no text
       - Faster text mode character drawing
+    - x11 gui
+      - Faster graphics tile update
     - term gui
       - Fixed terminal init in debugger enabled mode
       - Added support for the command mode
