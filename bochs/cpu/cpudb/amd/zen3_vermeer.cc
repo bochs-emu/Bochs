@@ -730,12 +730,12 @@ void zen3_vermeer_t::get_ext_cpuid_leaf_1D(Bit32u subfunction, cpuid_function_t 
 
 void zen3_vermeer_t::get_ext_cpuid_leaf_1F(cpuid_function_t *leaf) const
 {
-  // CPUID function 0x80000001E - SEV Capabilities (not implemented)
+  // CPUID function 0x80000001F - SEV Capabilities (not implemented)
 
-  // zen3_vermeer reports: EAX = 0x00000007
-  //                EBX = 0x0000016f
-  //                ECX = 0x0000000f
-  //                EDX = 0
+  // zen3_vermeer reports: EAX = 0x0001780F
+  //                       EBX = 0x00000173
+  //                       ECX = 0x000001FD
+  //                       EDX = 0x00000001
 
   get_reserved_leaf(leaf);
 }
