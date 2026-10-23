@@ -246,7 +246,7 @@ Bit32u zen3_vermeer_t::get_svm_extensions_bitmask(void) const
   //   [25:25] NMI Virtualization
   //   [26:26] IBS Virtualization
   //   [27:27] Extended Virtual APIC Register Accesses
-  // ! [28:28] NestedVirtVmcbAddrChk: Guest VMCB Address Check
+  // * [28:28] NestedVirtVmcbAddrChk: Guest VMCB Address Check againt SMM_ADDR/SMM_MASK (C001_0112h/C001_0113h), the MSRs are implemented
   //   [29:29] Bus Lock Threshold
   //   [30:30] Idle HLT intercept
   //   [31:31] Reserved
@@ -262,11 +262,11 @@ Bit32u zen3_vermeer_t::get_svm_extensions_bitmask(void) const
          BX_CPUID_SVM_PAUSE_FILTER_THRESHOLD |
 //       BX_CPUID_SVM_AVIC | // not implemented yet
          BX_CPUID_SVM_NESTED_VIRTUALIZATION |
-         BX_CPUID_SVM_VIRTUAL_GIF;
+         BX_CPUID_SVM_VIRTUAL_GIF |
 //       BX_CPUID_SVM_GMET | // not implemented yet
 //       BX_CPUID_SVM_SSS_CHECK | // not implemented yet
 //       BX_CPUID_SVM_SPEC_CTRL_VIRT | // not implemented yet
-//       BX_CPUID_SVM_NESTED_VMCB_ADDR_CHECK | // not implemented yet
+         BX_CPUID_SVM_NESTED_VMCB_ADDR_CHECK;
 }
 #endif
 
