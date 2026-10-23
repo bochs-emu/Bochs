@@ -593,15 +593,6 @@ void trinity_apu_t::get_ext_cpuid_leaf_1D(Bit32u subfunction, cpuid_function_t *
   }
 }
 
-void trinity_apu_t::get_ext_cpuid_leaf_1E(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x80000001E - Topology Extensions
-  leaf->eax = 0;
-  leaf->ebx = (ncores - 1) << 8;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-}
-
 void trinity_apu_t::dump_cpuid(void) const
 {
   bx_cpuid_t::dump_cpuid(0xD, 0x8000001E);

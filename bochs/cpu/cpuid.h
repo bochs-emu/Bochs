@@ -161,6 +161,8 @@ protected:
 
   void get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const;
 
+  void get_ext_cpuid_leaf_1E(cpuid_function_t *leaf) const;
+
   // CPUID leaves 0x15/0x16 declare the TSC and processor base frequencies of
   // the CPU the model was dumped from, while the emulated TSC advances at the
   // 'ips' rate; the 'cpu: cpuid_freq=' option chooses how they are reported.

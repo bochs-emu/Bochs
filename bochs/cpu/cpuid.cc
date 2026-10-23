@@ -1672,6 +1672,18 @@ void bx_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
   leaf->edx = 0;
 }
 
+// CPUID function 0x80000001E - Topology Extensions
+void bx_cpuid_t::get_ext_cpuid_leaf_1E(cpuid_function_t *leaf) const
+{
+  Bit32u apic_id = cpu->get_apic_id();
+  Bit32u core_id = (apic_id / nthreads) % ncores;
+
+  leaf->eax = apic_id;
+  leaf->ebx = ((nthreads - 1) << 8) | core_id;
+  leaf->ecx = 0;
+  leaf->edx = 0;
+}
+
 void bx_cpuid_t::get_cpuid_hidden_level(cpuid_function_t *leaf, const char *magic_string) const
 {
   memcpy(&(leaf->eax), magic_string     , 4);

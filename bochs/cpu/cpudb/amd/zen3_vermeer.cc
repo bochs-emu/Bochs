@@ -728,15 +728,6 @@ void zen3_vermeer_t::get_ext_cpuid_leaf_1D(Bit32u subfunction, cpuid_function_t 
   }
 }
 
-void zen3_vermeer_t::get_ext_cpuid_leaf_1E(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x80000001E - Topology Extensions
-  leaf->eax = cpu->get_apic_id();
-  leaf->ebx = ncores | (nthreads - 1) << 8;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-}
-
 void zen3_vermeer_t::get_ext_cpuid_leaf_1F(cpuid_function_t *leaf) const
 {
   // CPUID function 0x80000001E - SEV Capabilities (not implemented)
