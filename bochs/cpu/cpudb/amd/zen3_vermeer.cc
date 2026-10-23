@@ -115,6 +115,7 @@ zen3_vermeer_t::zen3_vermeer_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_XAPIC_EXT);
   enable_cpu_extension(BX_ISA_TCE);
   enable_cpu_extension(BX_ISA_CLZERO);
+  enable_cpu_extension(BX_ISA_SPEC_CTRL_AMD);
 #if BX_SUPPORT_MONITOR_MWAIT
   enable_cpu_extension(BX_ISA_MONITORX_MWAITX);
 #endif
@@ -150,7 +151,7 @@ void zen3_vermeer_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_f
     get_ext_cpuid_leaf_7(leaf);
     return;
   case 0x80000008:
-    get_ext_cpuid_leaf_8_amd(leaf);
+    get_ext_cpuid_leaf_8(leaf);
     return;
 #if BX_SUPPORT_SVM
   case 0x8000000A:
@@ -265,7 +266,7 @@ Bit32u zen3_vermeer_t::get_svm_extensions_bitmask(void) const
          BX_CPUID_SVM_VIRTUAL_GIF |
 //       BX_CPUID_SVM_GMET | // not implemented yet
          BX_CPUID_SVM_SSS_CHECK |
-//       BX_CPUID_SVM_SPEC_CTRL_VIRT | // not implemented yet
+         BX_CPUID_SVM_SPEC_CTRL_VIRT |
          BX_CPUID_SVM_NESTED_VMCB_ADDR_CHECK;
 }
 #endif
@@ -628,6 +629,31 @@ void zen3_vermeer_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
   leaf->ebx = 0x0000003b;
   leaf->ecx = 0;
   leaf->edx = 0x00006599;
+}
+
+// leaf 0x80000008 - Address Sizes and Extended Feature Identifiers //
+void zen3_vermeer_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
+{
+  get_ext_cpuid_leaf_8_amd(leaf);
+
+  // EBX: speculation control features
+  //   [12:12] IBPB: Indirect Branch Prediction Barrier
+  //   [14:14] IBRS: Indirect Branch Restricted Speculation
+  //   [15:15] STIBP: Single Thread Indirect Branch Prediction mode
+  //   [17:17] StibpAlwaysOn: Processor prefers that STIBP is left on
+  //   [18:18] IbrsPreferred: IBRS is preferred over software solution
+  //   [19:19] IbrsSameMode: IBRS provides same mode speculation limits
+  //   [24:24] SSBD: Speculative Store Bypass Disable
+  //   [28:28] PSFD: Predictive Store Forward Disable
+  if (is_cpu_extension_supported(BX_ISA_SPEC_CTRL_AMD))
+    leaf->ebx |= BX_CPUID_EXT8_EBX_IBPB |
+                 BX_CPUID_EXT8_EBX_IBRS |
+                 BX_CPUID_EXT8_EBX_STIBP |
+                 BX_CPUID_EXT8_EBX_STIBP_ALWAYS_ON |
+                 BX_CPUID_EXT8_EBX_IBRS_PREFERRED |
+                 BX_CPUID_EXT8_EBX_IBRS_SAME_MODE |
+                 BX_CPUID_EXT8_EBX_SSBD |
+                 BX_CPUID_EXT8_EBX_PSFD;
 }
 
 #if BX_SUPPORT_SVM

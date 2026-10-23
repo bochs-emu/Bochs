@@ -823,6 +823,75 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT1_ECX_CODEBP_ADDRMASK_EXT    (1 << 30)
 #define BX_CPUID_EXT1_ECX_RESERVED31             (1 << 31)
 
+// CPUID defines - extended features CPUID[0x80000008].EBX
+// ----------------------------
+
+// [0:0]   CLZERO instruction support
+// [1:1]   InstRetCntMsr: Instruction Retired Counter MSR available
+// [2:2]   RstrFpErrPtrs: FP Error Pointers Restored by XRSTOR
+// [3:3]   INVLPGB and TLBSYNC instruction support
+// [4:4]   RDPRU instruction support
+// [5:5]   reserved
+// [6:6]   BE: Bandwidth Enforcement Extension
+// [7:7]   reserved
+// [8:8]   MCOMMIT instruction support
+// [9:9]   WBNOINVD instruction support
+// [10:10] reserved
+// [11:11] reserved
+// [12:12] IBPB: Indirect Branch Prediction Barrier
+// [13:13] INT_WBINVD: WBINVD/WBNOINVD instructions are interruptible
+// [14:14] IBRS: Indirect Branch Restricted Speculation
+// [15:15] STIBP: Single Thread Indirect Branch Prediction mode
+// [16:16] IbrsAlwaysOn: Setting IBRS to 1 once is recommended
+// [17:17] StibpAlwaysOn: Setting STIBP to 1 once is recommended
+// [18:18] IbrsPreferred: IBRS is preferred to software solution
+// [19:19] IbrsSameMode: IBRS provides same mode speculation limits
+// [20:20] EferLmsleUnsupported: EFER.LMSLE is unsupported
+// [21:21] INVLPGBnestedPages: INVLPGB support for invalidating guest nested translations
+// [22:22] reserved
+// [23:23] reserved
+// [24:24] SSBD: Speculative Store Bypass Disable
+// [25:25] SsbdVirtSpecCtrl: Use VIRT_SPEC_CTL MSR (C001_011Fh) for SSBD
+// [26:26] SsbdNotRequired: SSBD not needed on this processor
+// [27:27] CPPC: Collaborative Processor Performance Control
+// [28:28] PSFD: Predictive Store Forward Disable
+// [29:29] BTC_NO: The processor is not affected by branch type confusion
+// [30:30] IBPB_RET: IBPB clears return address predictor
+// [31:31] reserved
+
+#define BX_CPUID_EXT8_EBX_CLZERO                 (1 <<  0)
+#define BX_CPUID_EXT8_EBX_INST_RET_CNT_MSR       (1 <<  1)
+#define BX_CPUID_EXT8_EBX_RSTR_FP_ERR_PTRS       (1 <<  2)
+#define BX_CPUID_EXT8_EBX_INVLPGB                (1 <<  3)
+#define BX_CPUID_EXT8_EBX_RDPRU                  (1 <<  4)
+#define BX_CPUID_EXT8_EBX_RESERVED5              (1 <<  5)
+#define BX_CPUID_EXT8_EBX_BE                     (1 <<  6)
+#define BX_CPUID_EXT8_EBX_RESERVED7              (1 <<  7)
+#define BX_CPUID_EXT8_EBX_MCOMMIT                (1 <<  8)
+#define BX_CPUID_EXT8_EBX_WBNOINVD               (1 <<  9)
+#define BX_CPUID_EXT8_EBX_RESERVED10             (1 << 10)
+#define BX_CPUID_EXT8_EBX_RESERVED11             (1 << 11)
+#define BX_CPUID_EXT8_EBX_IBPB                   (1 << 12)
+#define BX_CPUID_EXT8_EBX_INT_WBINVD             (1 << 13)
+#define BX_CPUID_EXT8_EBX_IBRS                   (1 << 14)
+#define BX_CPUID_EXT8_EBX_STIBP                  (1 << 15)
+#define BX_CPUID_EXT8_EBX_IBRS_ALWAYS_ON         (1 << 16)
+#define BX_CPUID_EXT8_EBX_STIBP_ALWAYS_ON        (1 << 17)
+#define BX_CPUID_EXT8_EBX_IBRS_PREFERRED         (1 << 18)
+#define BX_CPUID_EXT8_EBX_IBRS_SAME_MODE         (1 << 19)
+#define BX_CPUID_EXT8_EBX_EFER_LMSLE_UNSUPPORTED (1 << 20)
+#define BX_CPUID_EXT8_EBX_INVLPGB_NESTED_PAGES   (1 << 21)
+#define BX_CPUID_EXT8_EBX_RESERVED22             (1 << 22)
+#define BX_CPUID_EXT8_EBX_RESERVED23             (1 << 23)
+#define BX_CPUID_EXT8_EBX_SSBD                   (1 << 24)
+#define BX_CPUID_EXT8_EBX_SSBD_VIRT_SPEC_CTRL    (1 << 25)
+#define BX_CPUID_EXT8_EBX_SSBD_NOT_REQUIRED      (1 << 26)
+#define BX_CPUID_EXT8_EBX_CPPC                   (1 << 27)
+#define BX_CPUID_EXT8_EBX_PSFD                   (1 << 28)
+#define BX_CPUID_EXT8_EBX_BTC_NO                 (1 << 29)
+#define BX_CPUID_EXT8_EBX_IBPB_RET               (1 << 30)
+#define BX_CPUID_EXT8_EBX_RESERVED31             (1 << 31)
+
 // CPUID defines - SVM features CPUID[0x8000000A].EDX
 // ----------------------------
 

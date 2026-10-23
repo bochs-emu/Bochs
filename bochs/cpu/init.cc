@@ -544,7 +544,7 @@ void BX_CPU_C::register_state(void)
     BXRS_HEX_PARAM_FIELD(MSR, ia32_pl3_ssp, msr.ia32_pl_ssp[3]);
   }
 #endif
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SCA_MITIGATIONS)) {
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SPEC_CTRL) || BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SPEC_CTRL_AMD)) {
     BXRS_HEX_PARAM_FIELD(MSR, ia32_spec_ctrl, msr.ia32_spec_ctrl);
   }
 #if BX_SUPPORT_VMX

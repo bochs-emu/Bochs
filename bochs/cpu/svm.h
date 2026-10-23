@@ -336,6 +336,8 @@ struct SVM_HOST_STATE
   Bit64u msr_ia32_s_cet;
   Bit64u interrupt_ssp_table_address;
 #endif
+
+  Bit32u spec_ctrl; // host SPEC_CTRL value with SPEC_CTRL virtualization
 };
 
 struct SVM_GUEST_STATE

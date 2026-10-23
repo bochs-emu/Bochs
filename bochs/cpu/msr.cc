@@ -104,14 +104,16 @@ public:
 };
 
 bool isValidMSR_IA32_SPEC_CTRL(Bit64u val_64);
+bool isValidMSR_SPEC_CTRL_AMD(Bit64u val_64);
 
-// IA32_SPEC_CTRL MSR, could be virtualized by VMX
+// IA32_SPEC_CTRL MSR, could be virtualized by VMX or SVM
+// present with either Intel (spec_ctrl) or AMD (spec_ctrl_amd) speculation control feature
 class SpecCtrlMSR : public MSR_Descriptor {
 private:
   BX_CPU_C *cpu;
 
 public:
-  SpecCtrlMSR(BX_CPU_C *cpu_ptr): MSR_Descriptor("MSR_IA32_SPEC_CTRL", BX_ISA_SCA_MITIGATIONS), cpu(cpu_ptr) {}
+  SpecCtrlMSR(BX_CPU_C *cpu_ptr, unsigned feature): MSR_Descriptor("MSR_IA32_SPEC_CTRL", feature), cpu(cpu_ptr) {}
 
   virtual bool get(Bit64u *val) {
 #if BX_SUPPORT_VMX >= 2
@@ -130,7 +132,8 @@ public:
     if (cpu->in_vmx_guest && vm->vmexec_ctrls3.VIRTUALIZE_IA32_SPEC_CTRL())
       val = (cpu->msr.ia32_spec_ctrl & vm->ia32_spec_ctrl_mask) | (val & ~vm->ia32_spec_ctrl_mask);
 #endif
-    if (! isValidMSR_IA32_SPEC_CTRL(val)) {
+    bool valid = (get_cpu_feature() == BX_ISA_SPEC_CTRL_AMD) ? isValidMSR_SPEC_CTRL_AMD(val) : isValidMSR_IA32_SPEC_CTRL(val);
+    if (! valid) {
       BX_ERROR(("WRMSR: attempt to set reserved bits of IA32_SPEC_CTRL: 0x" FMT_LL "x", val));
       return false;
     }
@@ -401,16 +404,19 @@ void BX_CPU_C::init_MSRs()
   //     [3]: SKIP_L1DFL_VMENTRY: indicates the hypervisor need not flush the L1D on VM entry
   //     [4]: SSB_NO: Processor is not susceptible to Speculative Store Bypass
   //  [63:5]: reserved
-  BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_ARCH_CAPABILITIES] = new ConstMSR("MSR_IA32_ARCH_CAPABILITIES", BX_ISA_SCA_MITIGATIONS, 0x1F); // read only, set bits [4:0]
-  BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_SPEC_CTRL] = new SpecCtrlMSR(BX_CPU_THIS);
+  BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_ARCH_CAPABILITIES] = new ConstMSR("MSR_IA32_ARCH_CAPABILITIES", BX_ISA_SPEC_CTRL, 0x1F); // read only, set bits [4:0]
+  // SPEC_CTRL and PRED_CMD MSRs are present with either Intel or AMD speculation control feature
+  // (both features are never enabled together)
+  unsigned spec_ctrl_feature = is_cpu_extension_supported(BX_ISA_SPEC_CTRL_AMD) ? BX_ISA_SPEC_CTRL_AMD : BX_ISA_SPEC_CTRL;
+  BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_SPEC_CTRL] = new SpecCtrlMSR(BX_CPU_THIS, spec_ctrl_feature);
   // IA32_PRED_CMD MSR:
   //    [0] - Indirect Branch Prediction Barrier (IBPB)
   // [63:1] - reserved
-  BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_PRED_CMD] = new WriteOnlyMSR("MSR_IA32_PRED_CMD", BX_ISA_SCA_MITIGATIONS, ~BX_CONST64(1));
+  BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_PRED_CMD] = new WriteOnlyMSR("MSR_IA32_PRED_CMD", spec_ctrl_feature, ~BX_CONST64(1));
   // IA32_FLUSH_CMD MSR:
   //    [0] - WBINVD DL1 Cache
   // [63:1] - reserved
-  BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_FLUSH_CMD] = new WriteOnlyMSR("MSR_IA32_FLUSH_CMD", BX_ISA_SCA_MITIGATIONS, ~BX_CONST64(1));
+  BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_FLUSH_CMD] = new WriteOnlyMSR("MSR_IA32_FLUSH_CMD", BX_ISA_SPEC_CTRL, ~BX_CONST64(1));
 
 #if BX_SUPPORT_VMX
   // IA32_FEATURE_CONTROL MSR, locked for writes once the lock bit is set
@@ -745,6 +751,20 @@ bool isValidMSR_IA32_SPEC_CTRL(Bit64u val_64)
   //    [10] - BHI_DIS_S: Enables BHI_DIS_S behavior
   // [63:11] - reserved
   if (val_64 & ~(BX_CONST64(0x5FF)))
+    return false;
+
+  return true;
+}
+
+bool isValidMSR_SPEC_CTRL_AMD(Bit64u val_64)
+{
+  //     [0] - IBRS: Indirect Branch Restricted Speculation
+  //     [1] - STIBP: Single Thread Indirect Branch Predictor
+  //     [2] - SSBD: Speculative Store Bypass Disable
+  //   [6:3] - reserved
+  //     [7] - PSFD: Predictive Store Forwarding Disable
+  //  [63:8] - reserved
+  if (val_64 & ~(BX_CONST64(0x87)))
     return false;
 
   return true;

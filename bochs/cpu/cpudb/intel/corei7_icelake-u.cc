@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2019 Stanislav Shwartsman
+//   Copyright (c) 2019-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -129,7 +129,7 @@ corei7_icelake_t::corei7_icelake_t(BX_CPU_C *cpu):
 #endif
   enable_cpu_extension(BX_ISA_UMIP);
   enable_cpu_extension(BX_ISA_RDPID);
-  enable_cpu_extension(BX_ISA_SCA_MITIGATIONS);
+  enable_cpu_extension(BX_ISA_SPEC_CTRL);
 
   max_std_leaf = 0x1B;
   max_ext_leaf = 0x80000008;
@@ -510,7 +510,7 @@ void corei7_icelake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t
     // * [31:31]    SSBD: Speculative Store Bypass Disable
     leaf->edx = get_std_cpuid_leaf_7_edx(BX_CPUID_STD7_SUBLEAF0_EDX_FAST_SHORT_REP_MOV);
 
-    if (is_cpu_extension_supported(BX_ISA_SCA_MITIGATIONS))
+    if (is_cpu_extension_supported(BX_ISA_SPEC_CTRL))
       leaf->edx |= BX_CPUID_STD7_SUBLEAF0_EDX_SCA_IBRS_IBPB |
                    BX_CPUID_STD7_SUBLEAF0_EDX_SCA_STIBP |
                    BX_CPUID_STD7_SUBLEAF0_EDX_L1D_FLUSH |

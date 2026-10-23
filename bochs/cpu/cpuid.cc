@@ -1664,9 +1664,9 @@ void bx_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
   // [31:31] reserved
   leaf->ebx = 0;
   if (is_cpu_extension_supported(BX_ISA_LONG_MODE))
-    leaf->ebx = (1<<9); // I don't add CPUID feature for WBNOINVD but also don't want to report it for really old processors
+    leaf->ebx = BX_CPUID_EXT8_EBX_WBNOINVD; // I don't add CPUID feature for WBNOINVD but also don't want to report it for really old processors
   if (is_cpu_extension_supported(BX_ISA_CLZERO))
-    leaf->ebx |= 0x1;
+    leaf->ebx |= BX_CPUID_EXT8_EBX_CLZERO;
 
   leaf->ecx = 0; // Reserved, undefined for Intel
   leaf->edx = 0;
@@ -1763,6 +1763,10 @@ void bx_cpuid_t::warning_messages(unsigned extension) const
 
 void bx_cpuid_t::sanity_checks() const
 {
+  // Intel and AMD speculation control define different SPEC_CTRL MSR bits
+  if (is_cpu_extension_supported(BX_ISA_SPEC_CTRL) && is_cpu_extension_supported(BX_ISA_SPEC_CTRL_AMD))
+    BX_FATAL(("PANIC: Intel and AMD speculation control features (spec_ctrl and spec_ctrl_amd) cannot be enabled together !"));
+
   // P6 -> PENTIUM -> 486 -> 386
   if (is_cpu_extension_supported(BX_ISA_486) && ! is_cpu_extension_supported(BX_ISA_386))
     BX_FATAL(("PANIC: 80386 ISA must be enabled for any 80486 ad above CPU model !"));

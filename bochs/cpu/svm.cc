@@ -243,6 +243,10 @@ void BX_CPU_C::SvmEnterSaveHostState(SVM_HOST_STATE *host)
     host->interrupt_ssp_table_address = BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table;
   }
 #endif
+
+  // with SPEC_CTRL virtualization the processor implements separate host and guest SPEC_CTRL registers
+  if (BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_SPEC_CTRL_VIRT))
+    host->spec_ctrl = BX_CPU_THIS_PTR msr.ia32_spec_ctrl;
 }
 
 void BX_CPU_C::SvmExitLoadHostState(SVM_HOST_STATE *host)
@@ -288,6 +292,9 @@ void BX_CPU_C::SvmExitLoadHostState(SVM_HOST_STATE *host)
     BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table = host->interrupt_ssp_table_address;
   }
 #endif
+
+  if (BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_SPEC_CTRL_VIRT))
+    BX_CPU_THIS_PTR msr.ia32_spec_ctrl = host->spec_ctrl;
 
   CPL = 0;
 
@@ -346,6 +353,9 @@ void BX_CPU_C::SvmExitSaveGuestState(void)
     vmcb_write64(SVM_GUEST_ISST_ADDR, BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table);
   }
 #endif
+
+  if (BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_SPEC_CTRL_VIRT))
+    vmcb_write64(SVM_GUEST_SPEC_CTRL, BX_CPU_THIS_PTR msr.ia32_spec_ctrl);
 
   vmcb_write8(SVM_GUEST_CPL, CPL);
 
@@ -725,6 +735,10 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
     BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table = guest.interrupt_ssp_table_address;
   }
 #endif
+
+  // guest SPEC_CTRL register is in effect (logically ORed with the host SPEC_CTRL) until #VMEXIT
+  if (BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_SPEC_CTRL_VIRT))
+    BX_CPU_THIS_PTR msr.ia32_spec_ctrl = (Bit32u) vmcb_read64(SVM_GUEST_SPEC_CTRL);
 
   CPL = guest.cpl;
 
@@ -1631,6 +1645,7 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(host, s_cet, BX_CPU_THIS_PTR vmcb->host_state.msr_ia32_s_cet);
   BXRS_HEX_PARAM_FIELD(host, interrupt_ssp_table_address, BX_CPU_THIS_PTR vmcb->host_state.interrupt_ssp_table_address);
 #endif
+  BXRS_HEX_PARAM_FIELD(host, spec_ctrl, BX_CPU_THIS_PTR vmcb->host_state.spec_ctrl);
 }
 
 #endif // BX_SUPPORT_SVM
