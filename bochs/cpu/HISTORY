@@ -94,6 +94,8 @@ Changes after Bochs 3.1:
 + SVM: An intercepted #DB has already updated DR6 and leaves RF clear (AMD APM vol. 2, 15.12)
 - SVM: EXITINTINFO was not recorded for INTn, ICEBP, external/virtual interrupt and NMI delivery (stale value reported) and recorded 2nd exception instead of prior event on intercepted #DF
 - SVM: task switch intercept must be checked before new TSS limit checks (Zen 5 takes the intercept with TSS limit 0x67 and CR4.CET=1)
+- SVM: PAUSE filter threshold of zero must select count only PAUSE filter mode (was resetting the PAUSE filter count on every PAUSE)
+- SVM: correctly handle DR6 reserved bits
 - SYSENTER/SYSEXIT: SYSENTER/SYSEXIT are not allowed in long mode on AMD
 - SYSCALL/SYSRET: SYSCALL whose SFMASK clears TF takes no single-step trap, SYSRET takes the single-step trap by the TF it loads
 - CPUID: allow configuring i486dx4 model without x87 using cpu exclude_features
@@ -170,7 +172,6 @@ Changes after Bochs 3.1:
 - LASS: implicit supervisor-mode accesses (GDT, LDT, IDT, TSS, UPID, UITT, USER_MSR bitmap) must cause LASS violation regardless of RFLAGS.AC
 - SMAP: implicit supervisor-mode accesses (GDT, LDT, IDT, TSS, UPID ...) to user pages must cause #PF regardless of RFLAGS.AC
 - XSAVE: make sure XRSTOR/XRSTORS always end trace, updating state like PKRS might require re-fetch after XRSTOR/XRSTORS execution
-- SVM: correctly handle DR6 reserved bits
 - Legacy: MOV Sreg,r/m and MOV r/m,Sreg must ignore REX.R in 64-bit mode (was generating #UD)
 - VMX: MOV DR8-DR15 must #UD before checking for MOV-DR VM exit
 - EVEX: #UD if EVEX.R'=0 for GPR encoded in ModRM.reg, EVEX.X is ignored for GPR encoded in ModRM.rm (was accessing RIP/internal registers)

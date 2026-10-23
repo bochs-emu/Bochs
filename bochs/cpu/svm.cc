@@ -1213,7 +1213,8 @@ void BX_CPU_C::SvmInterceptPAUSE(void)
 {
   if (BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_PAUSE_FILTER)) {
     SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb->ctrls;
-    if (BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_PAUSE_FILTER_THRESHOLD)) {
+    // with PAUSE filter threshold set to zero the filter operates in count only mode
+    if (BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_PAUSE_FILTER_THRESHOLD) && ctrls->pause_filter_threshold != 0) {
       Bit64u currtime = bx_pc_system.time_ticks();
       Bit64u time_from_last_pause = currtime - ctrls->last_pause_time;
       ctrls->last_pause_time = currtime;
