@@ -221,6 +221,7 @@
     <ClCompile Include="..\cpu\cpudb\amd\athlon64_venice.cc" />
     <ClCompile Include="..\cpu\cpudb\amd\phenomx3_8650_toliman.cc" />
     <ClCompile Include="..\cpu\cpudb\amd\ryzen.cc" />
+    <ClCompile Include="..\cpu\cpudb\amd\zen3_vermeer.cc" />
     <ClCompile Include="..\cpu\cpudb\amd\trinity_apu.cc" />
     <ClCompile Include="..\cpu\cpudb\amd\turion64_tyler.cc" />
     <ClCompile Include="..\cpu\cpudb\amd\zambezi.cc" />
@@ -258,6 +259,7 @@
     <ClInclude Include="..\cpu\cpudb\amd\athlon64_venice.h" />
     <ClInclude Include="..\cpu\cpudb\amd\phenomx3_8650_toliman.h" />
     <ClInclude Include="..\cpu\cpudb\amd\ryzen.h" />
+    <ClInclude Include="..\cpu\cpudb\amd\zen3_vermeer.h" />
     <ClInclude Include="..\cpu\cpudb\amd\trinity_apu.h" />
     <ClInclude Include="..\cpu\cpudb\amd\turion64_tyler.h" />
     <ClInclude Include="..\cpu\cpudb\amd\zambezi.h" />

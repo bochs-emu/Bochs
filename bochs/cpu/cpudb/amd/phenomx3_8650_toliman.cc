@@ -438,21 +438,6 @@ void phenom_8650_toliman_t::get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const
   leaf->eax = 0x01; /* SVM revision ID */
   leaf->ebx = 0x40; /* number of ASIDs */
   leaf->ecx = 0;
-
-  // * [0:0]   NP - Nested paging support
-  // * [1:1]   LBR virtualization
-  // * [2:2]   SVM Lock
-  //   [3:3]   NRIPS - Next RIP save on VMEXIT
-  //   [4:4]   TscRate - MSR based TSC ratio control
-  //   [5:5]   VMCB Clean bits support
-  //   [6:6]   Flush by ASID support
-  //   [7:7]   Decode assists support
-  //   [9:8]   Reserved
-  //   [10:10] Pause filter support
-  //   [11:11] Reserved
-  //   [12:12] Pause filter threshold support
-  //   [31:13] Reserved
-
   leaf->edx = get_svm_extensions_bitmask();
 }
 
