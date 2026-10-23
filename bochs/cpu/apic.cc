@@ -1071,6 +1071,9 @@ void bx_local_apic_c::periodic(void)
     // one-shot mode
     timer_current = 0;
     timer_active = false;
+    // TSC-deadline mode: the expired timer clears IA32_TSC_DEADLINE (read as zero if TSC-deadline timer is disabled)
+    if (timervec & 0x40000)
+      ticksInitial = 0;
     BX_DEBUG(("local apic timer(one-shot) triggered int"));
     bx_pc_system.deactivate_timer(timer_handle);
   }
@@ -1157,7 +1160,9 @@ void bx_local_apic_c::set_tsc_deadline(Bit64u deadline)
   ticksInitial = deadline;
   if (deadline != 0) {
     BX_DEBUG(("APIC: TSC-Deadline is set to " FMT_LL "d", deadline));
-    Bit64u currtime = bx_pc_system.time_ticks();
+    // the deadline is compared with the guest TSC (which is reset on hardware
+    // reset and changed by WRMSR to TSC/TSC_ADJUST), not with the system time
+    Bit64u currtime = cpu->get_TSC();
     timer_active = true;
     bx_pc_system.activate_timer_ticks(timer_handle, (deadline > currtime) ? (deadline - currtime) : 1 , 0);
   }
