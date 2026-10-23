@@ -16,7 +16,7 @@ Changes after Bochs 3.1:
 ! Implemented SVM VMSAVE and VMLOAD virtualization feature, enabled in Ryzen model
 ! Implemented MSR_CORE_THREAD_COUNT (0x35) for Intel Nehalem and later cpu models, reports the configured number of cores and threads
 ! CPUDB: Added AMD Zen3 (Vermeer) CPUID model (features X2APIC, CLWB, UMIP, PKU, CET, VAES, RDPID + introduces CPUID 0x80000021: AMD Extended Feature Identification 2), extra SVM features not implemented yet
-- CPUID: fixed CPUID 0x8000001E: Extended Topology leaf for all AMD models that support it
+- CPUID: fixed CPUID 0x8000001E: Extended Topology leaf + CPUID 0x80000008[ECX] for all AMD models that support it
 - CPUID: models reporting TCE in CPUID (Ryzen, Trinity) did not allow setting EFER.TCE (#GP on WRMSR), enable TCE for all Family 15h+ AMD models (Zambezi, Trinity, Ryzen)
 - CPUID: avoid reporting SVM LBR Virtualization CPUID 0x8000000A.EDX[1] - LBRs are not implemented yet, avoid reporting Data breakpoint extension for Ryzen - it is not implemented yet
 - CPUID: do not report SEV capabilities through CPUID leaf 0x8000001F on Ryzen, SEV is not supported

@@ -125,7 +125,7 @@ void trinity_apu_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_fu
     get_ext_cpuid_leaf_7(leaf);
     return;
   case 0x80000008:
-    get_ext_cpuid_leaf_8(leaf);
+    get_ext_cpuid_leaf_8_amd(leaf);
     return;
 #if BX_SUPPORT_SVM
   case 0x8000000A:
@@ -500,21 +500,6 @@ void trinity_apu_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
   leaf->ecx = 0;
   leaf->edx = 0x000007D9;
 }
-
-// leaf 0x80000008 //
-void trinity_apu_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
-{
-  bx_cpuid_t::get_ext_cpuid_leaf_8(leaf);
-
-  // [17..16] Performance time-stamp counter size.
-  // [15..12] APIC ID size, Zero value indicates that legacy methods must be
-  //          used to derive the maximum number of cores.
-  //  [11..8] (reserved)
-  //   [7..0] Number of physical cores - 1.
-  leaf->ecx = ncores - 1;
-}
-
-// leaf 0x80000009 : Reserved //
 
 #if BX_SUPPORT_SVM
 

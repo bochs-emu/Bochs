@@ -1672,6 +1672,27 @@ void bx_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
   leaf->edx = 0;
 }
 
+void bx_cpuid_t::get_ext_cpuid_leaf_8_amd(cpuid_function_t *leaf) const
+{
+  bx_cpuid_t::get_ext_cpuid_leaf_8(leaf);
+
+  // leaf 0x80000008 ECX (AMD): logical processor count and APIC ID size
+  //   [17:16] PerfTscSize: performance time-stamp counter size (PTSC is not supported, report 0)
+  //   [15:12] ApicIdSize: number of APIC ID bits that identify logical processor within the package,
+  //                       zero means legacy method (number of logical processors = NC+1)
+  //    [11:8] reserved
+  //     [7:0] NC: number of logical processors (threads) in the package - 1
+  Bit32u n_logical_processors = ncores * nthreads;
+  Bit32u apic_id_size = 0;
+
+#if BX_SUPPORT_SMP
+  if (n_logical_processors > 1)
+    apic_id_size = ilog2(n_logical_processors - 1) + 1;
+#endif
+
+  leaf->ecx = (apic_id_size << 12) | (n_logical_processors - 1);
+}
+
 // CPUID function 0x80000001E - Topology Extensions
 void bx_cpuid_t::get_ext_cpuid_leaf_1E(cpuid_function_t *leaf) const
 {
