@@ -679,10 +679,14 @@ void ryzen_t::get_ext_cpuid_leaf_1E(cpuid_function_t *leaf) const
 
 void ryzen_t::get_ext_cpuid_leaf_1F(cpuid_function_t *leaf) const
 {
-  leaf->eax = 0x00000007;
-  leaf->ebx = 0x0000016f;
-  leaf->ecx = 0x0000000f;
-  leaf->edx = 0;
+  // CPUID function 0x80000001E - SVE Capabilities (not implemented)
+
+  // Ryzen reports: EAX = 0x00000007
+  //                EBX = 0x0000016f
+  //                ECX = 0x0000000f
+  //                EDX = 0
+
+  get_reserved_leaf(leaf);
 }
 
 void ryzen_t::dump_cpuid(void) const
