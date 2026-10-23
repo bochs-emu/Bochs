@@ -138,7 +138,7 @@ void zambezi_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_functi
     get_ext_cpuid_leaf_1B(leaf);
     return;
   case 0x8000001C:
-    get_ext_cpuid_leaf_1C(leaf);
+    get_reserved_leaf(leaf); // Lightweight Profiling Capabilities (not implemented)
     return;
   case 0x8000001D:
     get_ext_cpuid_leaf_1D(subfunction, leaf);
@@ -488,15 +488,6 @@ void zambezi_t::get_ext_cpuid_leaf_1B(cpuid_function_t *leaf) const
   leaf->edx = 0;
 
   BX_INFO(("WARNING: Instruction Based Sampling is not implemented"));
-}
-
-void zambezi_t::get_ext_cpuid_leaf_1C(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x80000001C - Lightweight Profiling Capabilities (not implemented)
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
 }
 
 void zambezi_t::get_ext_cpuid_leaf_1D(Bit32u subfunction, cpuid_function_t *leaf) const
