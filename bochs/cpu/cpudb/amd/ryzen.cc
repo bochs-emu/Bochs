@@ -671,15 +671,15 @@ void ryzen_t::get_ext_cpuid_leaf_1D(Bit32u subfunction, cpuid_function_t *leaf) 
 void ryzen_t::get_ext_cpuid_leaf_1E(cpuid_function_t *leaf) const
 {
   // CPUID function 0x80000001E - Topology Extensions
-  leaf->eax = 0;
-  leaf->ebx = (ncores - 1) << 8;
+  leaf->eax = cpu->get_apic_id();
+  leaf->ebx = ncores | (nthreads - 1) << 8;
   leaf->ecx = 0;
   leaf->edx = 0;
 }
 
 void ryzen_t::get_ext_cpuid_leaf_1F(cpuid_function_t *leaf) const
 {
-  // CPUID function 0x80000001E - SVE Capabilities (not implemented)
+  // CPUID function 0x80000001E - SEV Capabilities (not implemented)
 
   // Ryzen reports: EAX = 0x00000007
   //                EBX = 0x0000016f

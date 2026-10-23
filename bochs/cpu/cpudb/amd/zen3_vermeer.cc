@@ -161,7 +161,7 @@ void zen3_vermeer_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_f
     get_ext_cpuid_leaf_19(leaf);
     return;
   case 0x8000001A: // CPUID leaf 0x8000001A - Performance Optimization Identifiers
-    get_leaf(leaf, 0x00000003, 0x00000000, 0x00000000, 0x00000000);
+    get_leaf(leaf, 0x00000006, 0x00000000, 0x00000000, 0x00000000);
     return;
   case 0x8000001B:
     get_ext_cpuid_leaf_1B(leaf);
@@ -764,15 +764,15 @@ void zen3_vermeer_t::get_ext_cpuid_leaf_1D(Bit32u subfunction, cpuid_function_t 
 void zen3_vermeer_t::get_ext_cpuid_leaf_1E(cpuid_function_t *leaf) const
 {
   // CPUID function 0x80000001E - Topology Extensions
-  leaf->eax = 0;
-  leaf->ebx = (ncores - 1) << 8;
+  leaf->eax = cpu->get_apic_id();
+  leaf->ebx = ncores | (nthreads - 1) << 8;
   leaf->ecx = 0;
   leaf->edx = 0;
 }
 
 void zen3_vermeer_t::get_ext_cpuid_leaf_1F(cpuid_function_t *leaf) const
 {
-  // CPUID function 0x80000001E - SVE Capabilities (not implemented)
+  // CPUID function 0x80000001E - SEV Capabilities (not implemented)
 
   // zen3_vermeer reports: EAX = 0x00000007
   //                EBX = 0x0000016f

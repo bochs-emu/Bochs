@@ -1633,15 +1633,35 @@ void bx_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
 
   leaf->eax = phy_addr_width | (lin_addr_width << 8);
 
-  // [0:0] CLZERO support
-  // [1:1] Instruction Retired Counter MSR available
-  // [2:2] FP Error Pointers Restored by XRSTOR
-  // [3:3] reserved
-  // [4:4] RDPRU support
-  // [5:5] reserved
-  // [6:6] Memory Bandwidth Enforcement (MBE) support
-  // [8:7] reserved
-  // [9:9] WBNOINVD support - when not supported fall back to legacy WBINVD
+  //   [0:0] CLZERO support
+  //   [1:1] Instruction Retired Counter MSR available
+  //   [2:2] FP Error Pointers Restored by XRSTOR
+  //   [3:3] reserved
+  //   [4:4] RDPRU support
+  //   [5:5] reserved
+  //   [6:6] Memory Bandwidth Enforcement (MBE) support
+  //   [8:7] reserved
+  //   [9:9] WBNOINVD support - when not supported fall back to legacy WBINVD
+  // [11:10] reserved
+  // [12:12] IBTB: Indirect Branch Prediction Barrier
+  // [13:13] INT_WBINVD: WBINVD/WBNOINVD instructions are interruptible
+  // [14:14] IBRS: Indirect Branch Restricted Speculation
+  // [15:15] STIBP: Single Thread Indirect Branch Prediction mode
+  // [16:16] IbrsAlwaysOn
+  // [17:17] StibpAlwaysOn
+  // [18:18] IbrsPreferred
+  // [19:19] IbrsSameMode
+  // [20:20] EferLmsleUnsupported: EFER.LMSLE is unsupported
+  // [21:21] INVLPGBnestedPages: INVLPGB support for invalidating guest nested translations
+  // [23:22] reserved
+  // [24:24] SSBD: Speculative Store Bypass Disable
+  // [25:25] SsbdVirtSpecCtrl: use VIRT_SPEC_CTL MSR (C001_011Fh) for SSBD
+  // [26:26] SsbdNotRequired: SSBD not needed on this processor
+  // [27:27] CPPC: Collaborative Processor Performance Control
+  // [28:28] PSFD: Predictive Store Forward Disable
+  // [29:29] BTC_NO: The processor is not affected by branch type confusion
+  // [30:30] IBPB_RET: IBPB clears return address predictor
+  // [31:31] reserved
   leaf->ebx = 0;
   if (is_cpu_extension_supported(BX_ISA_LONG_MODE))
     leaf->ebx = (1<<9); // I don't add CPUID feature for WBNOINVD but also don't want to report it for really old processors
