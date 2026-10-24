@@ -92,7 +92,7 @@ bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned le
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
   BX_ASSERT(vm->vmexec_ctrls2.VIRTUALIZE_APIC_ACCESSES());
-  BX_INFO(("Virtual Apic RD 0x" FMT_ADDRX " len = %d", paddr, len));
+  BX_DEBUG(("Virtual Apic RD 0x" FMT_ADDRX " len = %d", paddr, len));
 
   Bit32u offset = PAGE_OFFSET(paddr);
 
@@ -176,7 +176,7 @@ void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
   BX_ASSERT(vm->vmexec_ctrls2.VIRTUALIZE_APIC_ACCESSES());
-  BX_INFO(("Virtual Apic WR 0x" FMT_ADDRX " len = %d", paddr, len));
+  BX_DEBUG(("Virtual Apic WR 0x" FMT_ADDRX " len = %d", paddr, len));
 
   Bit32u offset = PAGE_OFFSET(paddr);
 
@@ -282,11 +282,11 @@ void BX_CPU_C::VMX_Evaluate_Pending_Virtual_Interrupts(void)
 
   if (! vm->vmexec_ctrls1.INTERRUPT_WINDOW_VMEXIT() && ((vm->rvi >> 4) > (vm->vppr >> 4)))
   {
-    BX_INFO(("Pending Virtual Interrupt Vector 0x%x", vm->rvi));
+    BX_DEBUG(("Pending Virtual Interrupt Vector 0x%x", vm->rvi));
     signal_event(BX_EVENT_PENDING_VMX_VIRTUAL_INTR);
   }
   else {
-    BX_INFO(("Clear Virtual Interrupt Vector 0x%x", vm->rvi));
+    BX_DEBUG(("Clear Virtual Interrupt Vector 0x%x", vm->rvi));
     clear_event(BX_EVENT_PENDING_VMX_VIRTUAL_INTR);
   }
 }
