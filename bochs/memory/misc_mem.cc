@@ -885,27 +885,28 @@ BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
   }
 #endif
   bool ro_handler = (!write_handler && !da_handler);
+  bool overlap = false;
   BX_INFO(("Register memory access handlers: 0x" FMT_PHY_ADDRX " - 0x" FMT_PHY_ADDRX, begin_addr, end_addr));
-  for (Bit32u page_idx = (Bit32u)(begin_addr >> 20); page_idx <= (Bit32u)(end_addr >> 20); page_idx++) {
-    Bit16u bitmap = 0xffff;
-    bool overlap = false;
-    if (begin_addr > (page_idx << 20)) {
-      bitmap &= (0xffff << ((begin_addr >> 16) & 0xf));
-    }
-    if (end_addr < ((page_idx + 1) << 20)) {
-      bitmap &= (0xffff >> (0x0f - ((end_addr >> 16) & 0xf)));
-    }
-    if (BX_MEM_THIS memory_handlers[page_idx] != NULL) {
-      if (((bitmap & BX_MEM_THIS memory_handlers[page_idx]->bitmap) == bitmap) && ro_handler) {
-        BX_INFO(("Registering overlapping r/o memory handler"));
-        overlap = true;
-      } else if ((bitmap & BX_MEM_THIS memory_handlers[page_idx]->bitmap) != 0) {
-        BX_ERROR(("Register failed: overlapping memory handlers!"));
-        return false;
-      } else {
-        bitmap |= BX_MEM_THIS memory_handlers[page_idx]->bitmap;
+  // check all pages first, so nothing is registered if the range conflicts
+  Bit32u page_idx;
+  for (page_idx = (Bit32u)(begin_addr >> 20); page_idx <= (Bit32u)(end_addr >> 20); page_idx++) {
+    for (struct memory_handler_struct *h = BX_MEM_THIS memory_handlers[page_idx]; h != NULL; h = h->next) {
+      if (begin_addr <= h->end && end_addr >= h->begin) {
+        // a r/o handler (PCI ROM) may share the address range of an existing
+        // handler if it is completely inside of it
+        if (ro_handler && begin_addr >= h->begin && end_addr <= h->end) {
+          overlap = true;
+        } else {
+          BX_ERROR(("Register failed: overlapping memory handlers!"));
+          return false;
+        }
       }
     }
+  }
+  if (overlap) {
+    BX_INFO(("Registering overlapping r/o memory handler"));
+  }
+  for (page_idx = (Bit32u)(begin_addr >> 20); page_idx <= (Bit32u)(end_addr >> 20); page_idx++) {
     struct memory_handler_struct *memory_handler = new struct memory_handler_struct;
     memory_handler->next = BX_MEM_THIS memory_handlers[page_idx];
     BX_MEM_THIS memory_handlers[page_idx] = memory_handler;
@@ -915,7 +916,6 @@ BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
     memory_handler->param = param;
     memory_handler->begin = begin_addr;
     memory_handler->end = end_addr;
-    memory_handler->bitmap = bitmap;
     memory_handler->overlap = overlap;
     if ((begin_addr >= 0xc0000) && (end_addr < 0xe0000)) {
       bx_pc_system.MemoryMappingChanged();
@@ -929,13 +929,6 @@ bool BX_MEM_C::unregisterMemoryHandlers(void *param, bx_phy_address begin_addr, 
   bool ret = true;
   BX_INFO(("Memory access handlers unregistered: 0x" FMT_PHY_ADDRX " - 0x" FMT_PHY_ADDRX, begin_addr, end_addr));
   for (Bit32u page_idx = (Bit32u)(begin_addr >> 20); page_idx <= (Bit32u)(end_addr >> 20); page_idx++) {
-    Bit16u bitmap = 0xffff;
-    if (begin_addr > (page_idx << 20)) {
-      bitmap &= (0xffff << ((begin_addr >> 16) & 0xf));
-    }
-    if (end_addr < ((page_idx + 1) << 20)) {
-      bitmap &= (0xffff >> (0x0f - ((end_addr >> 16) & 0xf)));
-    }
     struct memory_handler_struct *memory_handler = BX_MEM_THIS memory_handlers[page_idx];
     struct memory_handler_struct *prev = NULL;
     // Fixed: Use || (OR) to continue searching until we find an EXACT match
@@ -946,7 +939,6 @@ bool BX_MEM_C::unregisterMemoryHandlers(void *param, bx_phy_address begin_addr, 
           memory_handler->begin != begin_addr ||
           memory_handler->end != end_addr))
     {
-      memory_handler->bitmap &= ~bitmap;
       prev = memory_handler;
       memory_handler = memory_handler->next;
     }

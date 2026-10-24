@@ -134,7 +134,6 @@ struct memory_handler_struct {
   void *param;
   bx_phy_address begin;
   bx_phy_address end;
-  Bit16u bitmap;
   bool overlap;
   memory_handler_t read_handler;
   memory_handler_t write_handler;
