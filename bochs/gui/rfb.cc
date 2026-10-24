@@ -7,7 +7,7 @@
 //    Donald Becker
 //    http://www.psyon.org
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -133,7 +133,10 @@ static struct _rfbKeyboardEvent {
     int z;
 } rfbKeyboardEvent[MAX_KEY_EVENTS];
 static unsigned long rfbKeyboardEvents = 0;
-static bool bKeyboardInUse = 0;
+// protects the event queue shared by the server thread and handle_events()
+static BX_MUTEX(bKeyboardInUse);
+// x position of a headerbar click, handled after releasing the event queue
+static int rfbHeaderbarClickX = -1;
 
 // Misc Stuff
 static struct _rfbUpdateRegion {
@@ -274,6 +277,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   keep_alive = 1;
   client_connected = 0;
   desktop_resizable = 0;
+  BX_INIT_MUTEX(bKeyboardInUse);
   rfbStartThread();
 
 #ifdef WIN32
@@ -318,20 +322,29 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
 void bx_rfb_gui_c::handle_events(void)
 {
-  while (bKeyboardInUse) ;
+  int hbar_x;
 
-  bKeyboardInUse = 1;
+  BX_LOCK(bKeyboardInUse);
+  rfbHeaderbarClickX = -1;
   if (rfbKeyboardEvents > 0) {
     for (unsigned i = 0; i < rfbKeyboardEvents; i++) {
       if (rfbKeyboardEvent[i].type == KEYBOARD) {
         rfbKeyPressed(rfbKeyboardEvent[i].key, rfbKeyboardEvent[i].down);
       } else { //type == MOUSE;
         rfbMouseMove(rfbKeyboardEvent[i].x, rfbKeyboardEvent[i].y, rfbKeyboardEvent[i].z, rfbKeyboardEvent[i].down);
+        // a headerbar click discards the remaining events
+        if (rfbHeaderbarClickX >= 0) break;
       }
     }
     rfbKeyboardEvents = 0;
   }
-  bKeyboardInUse = 0;
+  hbar_x = rfbHeaderbarClickX;
+  BX_UNLOCK(bKeyboardInUse);
+  // the headerbar handlers may open dialogs, so call them without holding
+  // the event queue lock
+  if (hbar_x >= 0) {
+    headerbar_click(hbar_x);
+  }
 
 #if BX_SHOW_IPS
   if (rfbIPSupdate) {
@@ -710,9 +723,8 @@ void bx_rfb_gui_c::rfbMouseMove(int x, int y, int z, int bmask)
     oldy = y;
   } else {
     if (bmask == 1) {
-      bKeyboardInUse = 0;
-      rfbKeyboardEvents = 0;
-      headerbar_click(x);
+      // called from handle_events() with the event queue locked
+      rfbHeaderbarClickX = x;
     }
   }
 }
@@ -1214,6 +1226,23 @@ void rfbStartThread()
   UNUSED(thread_var);
 }
 
+// read a complete client message, returns false if the connection is closed
+// or broken (the caller must stop handling this client then)
+static bool rfbReadMessage(SOCKET sClient, char *buf, int len)
+{
+  int n = ReadExact(sClient, buf, len);
+  if (n <= 0) {
+    if (n == 0) {
+      // client closed connection
+      client_connected = 0;
+    } else {
+      BX_ERROR(("error receiving data."));
+    }
+    return false;
+  }
+  return true;
+}
+
 void HandleRfbClient(SOCKET sClient)
 {
   char rfbName[] = "Bochs-RFB";
@@ -1295,7 +1324,8 @@ void HandleRfbClient(SOCKET sClient)
       case rfbSetPixelFormat:
         {
           rfbSetPixelFormatMessage spf;
-          ReadExact(sClient, (char *)&spf, sizeof(rfbSetPixelFormatMessage));
+          if (!rfbReadMessage(sClient, (char *)&spf, sizeof(rfbSetPixelFormatMessage)))
+            return;
 
           spf.pixelFormat.trueColourFlag = (spf.pixelFormat.trueColourFlag ? 1 : 0);
           spf.pixelFormat.bigEndianFlag = (spf.pixelFormat.bigEndianFlag ? 1 : 0);
@@ -1323,7 +1353,8 @@ void HandleRfbClient(SOCKET sClient)
       case rfbFixColourMapEntries:
         {
           rfbFixColourMapEntriesMessage fcme;
-          ReadExact(sClient, (char *)&fcme, sizeof(rfbFixColourMapEntriesMessage));
+          if (!rfbReadMessage(sClient, (char *)&fcme, sizeof(rfbFixColourMapEntriesMessage)))
+            return;
           break;
         }
       case rfbSetEncodings:
@@ -1338,7 +1369,8 @@ void HandleRfbClient(SOCKET sClient)
             clientEncodingsCount = 0;
           }
 
-          ReadExact(sClient, (char *)&se, sizeof(rfbSetEncodingsMessage));
+          if (!rfbReadMessage(sClient, (char *)&se, sizeof(rfbSetEncodingsMessage)))
+            return;
 
           // Alloc new clientEncodings
           clientEncodingsCount = ntohs(se.numberOfEncodings);
@@ -1380,7 +1412,8 @@ void HandleRfbClient(SOCKET sClient)
         {
           rfbFramebufferUpdateRequestMessage fur;
 
-          ReadExact(sClient, (char *)&fur, sizeof(rfbFramebufferUpdateRequestMessage));
+          if (!rfbReadMessage(sClient, (char *)&fur, sizeof(rfbFramebufferUpdateRequestMessage)))
+            return;
           if(!fur.incremental) {
             rfbSetUpdateRegion(0, 0, rfbWindowX, rfbWindowY);
           } //else {
@@ -1395,10 +1428,11 @@ void HandleRfbClient(SOCKET sClient)
       case rfbKeyEvent:
         {
           rfbKeyEventMessage ke;
-          ReadExact(sClient, (char *)&ke, sizeof(rfbKeyEventMessage));
+          if (!rfbReadMessage(sClient, (char *)&ke, sizeof(rfbKeyEventMessage)))
+            return;
           ke.key = ntohl(ke.key);
-          while (bKeyboardInUse) ;
 
+          mouse_toggle = 0;
           if ((ke.key == XK_Control_L) || (ke.key == XK_Control_R)) {
             mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_CTRL, ke.downFlag);
           } else if (ke.key == XK_Alt_L) {
@@ -1413,27 +1447,33 @@ void HandleRfbClient(SOCKET sClient)
           if (mouse_toggle) {
             bx_gui->toggle_mouse_enable();
           } else {
-            bKeyboardInUse = 1;
-            if (rfbKeyboardEvents >= MAX_KEY_EVENTS) break;
-            rfbKeyboardEvent[rfbKeyboardEvents].type = KEYBOARD;
-            rfbKeyboardEvent[rfbKeyboardEvents].key  = ke.key;
-            rfbKeyboardEvent[rfbKeyboardEvents].down = ke.downFlag;
-            rfbKeyboardEvents++;
-            bKeyboardInUse = 0;
+            BX_LOCK(bKeyboardInUse);
+            if (rfbKeyboardEvents < MAX_KEY_EVENTS) {
+              rfbKeyboardEvent[rfbKeyboardEvents].type = KEYBOARD;
+              rfbKeyboardEvent[rfbKeyboardEvents].key  = ke.key;
+              rfbKeyboardEvent[rfbKeyboardEvents].down = ke.downFlag;
+              rfbKeyboardEvents++;
+            }
+            // else: queue full (simulation not handling events), drop it
+            BX_UNLOCK(bKeyboardInUse);
           }
           break;
         }
       case rfbPointerEvent:
         {
           rfbPointerEventMessage pe;
-          ReadExact(sClient, (char *)&pe, sizeof(rfbPointerEventMessage));
-          while (bKeyboardInUse) ;
+          if (!rfbReadMessage(sClient, (char *)&pe, sizeof(rfbPointerEventMessage)))
+            return;
 
           if (bx_gui->mouse_toggle_check(BX_MT_MBUTTON, (pe.buttonMask & 0x02) > 0)) {
             bx_gui->toggle_mouse_enable();
           } else {
-            bKeyboardInUse = 1;
-            if (rfbKeyboardEvents >= MAX_KEY_EVENTS) break;
+            BX_LOCK(bKeyboardInUse);
+            if (rfbKeyboardEvents >= MAX_KEY_EVENTS) {
+              // queue full (simulation not handling events), drop it
+              BX_UNLOCK(bKeyboardInUse);
+              break;
+            }
             rfbKeyboardEvent[rfbKeyboardEvents].type = MOUSE;
             rfbKeyboardEvent[rfbKeyboardEvents].x    = ntohs(pe.xPosition);
             rfbKeyboardEvent[rfbKeyboardEvents].y    = ntohs(pe.yPosition);
@@ -1450,16 +1490,31 @@ void HandleRfbClient(SOCKET sClient)
               wheel_status = pe.buttonMask & 0x18;
             }
             rfbKeyboardEvents++;
-            bKeyboardInUse = 0;
+            BX_UNLOCK(bKeyboardInUse);
           }
           break;
         }
       case rfbClientCutText:
         {
           rfbClientCutTextMessage cct;
-          ReadExact(sClient, (char *)&cct, sizeof(rfbClientCutTextMessage));
+          char buffer[256];
+          if (!rfbReadMessage(sClient, (char *)&cct, sizeof(rfbClientCutTextMessage)))
+            return;
+          // the clipboard text follows the header, it is not used - skip it
+          Bit32u len = ntohl(cct.length);
+          while (len > 0) {
+            int chunk = (len > sizeof(buffer)) ? (int)sizeof(buffer) : (int)len;
+            if (!rfbReadMessage(sClient, buffer, chunk))
+              return;
+            len -= chunk;
+          }
           break;
         }
+      default:
+        // the message length is unknown, so the stream cannot be resynced
+        BX_ERROR(("unknown client message type %u, closing connection", msgType));
+        client_connected = 0;
+        return;
     }
   }
 }
