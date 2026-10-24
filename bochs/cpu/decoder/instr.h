@@ -197,6 +197,7 @@ public:
   BX_CPP_INLINE Bit32s displ32s() const { return (Bit32s) modRMForm.displ32u; }
   BX_CPP_INLINE Bit16s displ16s() const { return (Bit16s) modRMForm.displ16u; }
   BX_CPP_INLINE Bit32u Id() const  { return modRMForm.Id; }
+  BX_CPP_INLINE Bit32s sId() const { return (Bit32s) modRMForm.Id; }
   BX_CPP_INLINE Bit16u Iw() const  { return modRMForm.Iw[0]; }
   BX_CPP_INLINE Bit8u  Ib() const  { return modRMForm.Ib[0]; }
   BX_CPP_INLINE Bit16u Id2() const { return modRMForm.Id2; }

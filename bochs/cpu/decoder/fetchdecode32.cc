@@ -954,6 +954,7 @@ int fetchImmediate(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, Bit1
         }
         break;
       case BX_IMMD:
+      case BX_IMMDQ_SE: // 32-bit value, sign extended to 64-bit on use
       case BX_JIMMD:
         if (remain > 3) {
           i->modRMForm.Id = FetchDWORD(iptr);

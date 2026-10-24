@@ -198,34 +198,35 @@ enum {
   BX_IMMB = 2,
   BX_IMMBW_SE = 3,
   BX_IMMBD_SE = 4,
-  BX_IMMW = 5,
-  BX_IMMD = 6,
-  BX_IMMQ = 7,
-  BX_IMMB2 = 8,
-  BX_DIRECT_PTR = 9,
-  BX_DIRECT_MEMREF_B = 10,
-  BX_DIRECT_MEMREF_W = 11,
-  BX_DIRECT_MEMREF_D = 12,
-  BX_DIRECT_MEMREF_Q = 13,
+  BX_IMMDQ_SE = 5,
+  BX_IMMW = 6,
+  BX_IMMD = 7,
+  BX_IMMQ = 8,
+  BX_IMMB2 = 9,
+  BX_DIRECT_PTR = 10,
+  BX_DIRECT_MEMREF_B = 11,
+  BX_DIRECT_MEMREF_W = 12,
+  BX_DIRECT_MEMREF_D = 13,
+  BX_DIRECT_MEMREF_Q = 14,
 
-  BX_JIMMBW_SE = 14,    // same widths as BX_IMMBW_SE.. above, own codes since
-  BX_JIMMBD_SE = 15,    // origin no longer separates plain imm from branch imm
-  BX_JIMMW = 16,
-  BX_JIMMD = 17,
+  BX_JIMMBW_SE = 15,    // same widths as BX_IMMBW_SE.. above, own codes since
+  BX_JIMMBD_SE = 16,    // origin no longer separates plain imm from branch imm
+  BX_JIMMW = 17,
+  BX_JIMMD = 18,
 
-  BX_RSIREF_B = 18,
-  BX_RSIREF_W = 19,
-  BX_RSIREF_D = 20,
-  BX_RSIREF_Q = 21,
-  BX_RDIREF_B = 22,
-  BX_RDIREF_W = 23,
-  BX_RDIREF_D = 24,
-  BX_RDIREF_Q = 25,
-  BX_MMX_RDIREF = 26,
-  BX_VEC_RDIREF = 27,
-  BX_USECL = 28,
-  BX_USEDX = 29,
-  // 30, 31 free
+  BX_RSIREF_B = 19,
+  BX_RSIREF_W = 20,
+  BX_RSIREF_D = 21,
+  BX_RSIREF_Q = 22,
+  BX_RDIREF_B = 23,
+  BX_RDIREF_W = 24,
+  BX_RDIREF_D = 25,
+  BX_RDIREF_Q = 26,
+  BX_MMX_RDIREF = 27,
+  BX_VEC_RDIREF = 28,
+  BX_USECL = 29,
+  BX_USEDX = 30,
+  // 31 is free
 };
 
 #define BX_FORM_SRC(type, src) (((type) << 3) | (src))
@@ -262,7 +263,7 @@ const Bit8u OP_sIbw = BX_FORM_SRC(BX_IMMBW_SE, BX_SRC_NONE);
 const Bit8u OP_sIbd = BX_FORM_SRC(BX_IMMBD_SE, BX_SRC_NONE);
 const Bit8u OP_Iw = BX_FORM_SRC(BX_IMMW, BX_SRC_NONE);
 const Bit8u OP_Id = BX_FORM_SRC(BX_IMMD, BX_SRC_NONE);
-const Bit8u OP_sId = BX_FORM_SRC(BX_IMMD, BX_SRC_NONE);
+const Bit8u OP_sId = BX_FORM_SRC(BX_IMMDQ_SE, BX_SRC_NONE);
 const Bit8u OP_Iq = BX_FORM_SRC(BX_IMMQ, BX_SRC_NONE);
 const Bit8u OP_Ib2 = BX_FORM_SRC(BX_IMMB2, BX_SRC_NONE);
 

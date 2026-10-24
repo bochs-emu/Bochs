@@ -602,16 +602,23 @@ char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_t
     break;
 
   case BX_IMMD:
+    disbufptr = dis_sprintf(disbufptr, "0x%08x", i->Id());
+    break;
+
   case BX_IMMBD_SE: // 8-bit signed value sign extended to 32-bit size
 #if BX_SUPPORT_X86_64
     if (i->os64L())
-      disbufptr = dis_sprintf(disbufptr, "0x" FMT_ADDRX64, (Bit64u) (Bit32s) i->Id());
+      disbufptr = dis_sprintf(disbufptr, "0x" FMT_ADDRX64, (Bit64u) (Bit64s) i->sId());
     else
 #endif
       disbufptr = dis_sprintf(disbufptr, "0x%08x", i->Id());
     break;
 
 #if BX_SUPPORT_X86_64
+  case BX_IMMDQ_SE: // 32-bit signed value sign extended to 64-bit size
+    disbufptr = dis_sprintf(disbufptr, "0x" FMT_ADDRX64, (Bit64u) (Bit64s) i->sId());
+    break;
+
   case BX_IMMQ:
     disbufptr = dis_sprintf(disbufptr, "0x" FMT_ADDRX64, i->Iq());
     break;
