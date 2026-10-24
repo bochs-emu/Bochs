@@ -190,7 +190,8 @@ Changes after Bochs 3.1:
 - LAPIC: APIC errors never generated the LVT Error interrupt, generate it on the first error after ESR write (ESR write rearms it)
 - LAPIC: IPI or x2APIC SELF IPI with illegal vector (0-15) must set Send Illegal Vector in the ESR of the sender
 - LAPIC: pending interrupt of the same priority class as the in-service interrupt raised INTR and was acknowledged as spurious interrupt, deliver only if the priority class is higher than the PPR
-- LAPIC: ExtINT interrupts from the IOAPIC were queued in IRR/ISR (ISR never cleared as ExtINT handler does not EOI the local APIC, vectors < 16 from the 8259 rejected), deliver ExtINT bypassing IRR/ISR and processor priority
+- LAPIC: INIT must keep IA32_APIC_BASE and only reinitialize the local APIC registers
++ LAPIC: ExtINT interrupts from the IOAPIC were queued in IRR/ISR (ISR never cleared as ExtINT handler does not EOI the local APIC, vectors < 16 from the 8259 rejected), deliver ExtINT bypassing IRR/ISR and processor priority
 + LAPIC: EOI was ignored when the in-service vector number matched the spurious interrupt vector (spurious interrupt never enters the ISR, no need to check for the spurious vector)
 + LAPIC: TSC-deadline timer compared the deadline with system time instead of the guest TSC (interrupt storm after hardware reset or TSC write), clear IA32_TSC_DEADLINE when the timer fires
 + LAPIC: allow local APIC to be re-enabled after clearing APIC global enable bit in IA32_APIC_BASE MSR, also #GP on attempt to switch directly from disabled APIC to x2APIC mode

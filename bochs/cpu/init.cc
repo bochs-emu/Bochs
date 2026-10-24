@@ -1191,9 +1191,11 @@ void BX_CPU_C::reset(unsigned source)
 /* initialise MSR registers to defaults */
 #if BX_SUPPORT_APIC
   /* APIC Address, APIC enabled and BSP is default, we'll fill in the rest later */
-  BX_CPU_THIS_PTR msr.apicbase = BX_LAPIC_BASE_ADDR;
+  // INIT keeps IA32_APIC_BASE (base address, global enable and x2APIC mode),
+  // only the local APIC registers are reinitialized (SDM 13.12.5)
+  if (source == BX_RESET_HARDWARE)
+    BX_CPU_THIS_PTR msr.apicbase = BX_LAPIC_BASE_ADDR | 0x900;
   BX_CPU_THIS_PTR lapic->reset(source);
-  BX_CPU_THIS_PTR msr.apicbase |= 0x900;
   BX_CPU_THIS_PTR lapic->set_base(BX_CPU_THIS_PTR msr.apicbase);
 #if BX_CPU_LEVEL >= 6
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XAPIC_EXT))
