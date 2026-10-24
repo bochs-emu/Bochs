@@ -154,6 +154,14 @@ void bx_piix3_c::reset(unsigned type)
     BX_P2I_THIS pci_conf[0x60 + i] = 0x80;
   }
 
+#if BX_SUPPORT_APIC
+  // undo an I/O APIC relocation done through APICBASE (0x80), back to the
+  // power-on state set up by bx_ioapic_c::init()
+  if (DEV_ioapic_present()) {
+    DEV_ioapic_set_enabled(1, 0x0000);
+  }
+#endif
+
   BX_P2I_THIS s.elcr1 = 0x00;
   BX_P2I_THIS s.elcr2 = 0x00;
   BX_P2I_THIS s.pci_reset = 0x00;
