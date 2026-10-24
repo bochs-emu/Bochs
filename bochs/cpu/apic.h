@@ -176,7 +176,7 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
     APIC_ERR_ILLEGAL_ADDR       = 0x80,
     APIC_ERR_RX_ILLEGAL_VEC     = 0x40,
     APIC_ERR_TX_ILLEGAL_VEC     = 0x20,
-    X2APIC_ERR_REDIRECTIBLE_IPI = 0x08,
+    X2APIC_ERR_REDIRECTIBLE_IPI = 0x10,
     APIC_ERR_RX_ACCEPT_ERR      = 0x08,
     APIC_ERR_TX_ACCEPT_ERR      = 0x04,
     APIC_ERR_RX_CHECKSUM        = 0x02,

@@ -678,6 +678,12 @@ void bx_local_apic_c::send_ipi(apic_dest_t dest, Bit32u lo_cmd)
     }
   }
 
+  // Self and All-including-self shorthands are valid only with Fixed delivery mode
+  if ((dest_shorthand == 1 || dest_shorthand == 2) && delivery_mode != APIC_DM_FIXED) {
+    BX_ERROR(("send_ipi: delivery mode %d is invalid with destination shorthand %d, IPI ignored", delivery_mode, dest_shorthand));
+    return;
+  }
+
   switch(dest_shorthand) {
   case 0:  // no shorthand, use real destination value
     accepted = apic_bus_deliver_interrupt(vector, dest, delivery_mode, logical_dest, level, trig_mode);
@@ -730,17 +736,16 @@ void bx_local_apic_c::receive_EOI(Bit32u value)
     BX_DEBUG(("EOI written without any bit in ISR"));
   }
   else {
-    if ((Bit32u) vec != spurious_vector) {
-       BX_DEBUG(("local apic received EOI, hopefully for vector 0x%02x", vec));
-       clear_vector(isr, vec);
-       if(get_vector(tmr, vec)) {
-           clear_vector(tmr, vec);
-           // the EOI may cause an immediate re-delivery of a still asserted
-           // level triggered interrupt which sets the TMR bit again
-           apic_bus_broadcast_eoi(vec);
-       }
-       service_local_apic();
+    // spurious interrupt never enters the ISR, no need to check for the spurious vector
+    BX_DEBUG(("local apic received EOI, hopefully for vector 0x%02x", vec));
+    clear_vector(isr, vec);
+    if(get_vector(tmr, vec)) {
+      clear_vector(tmr, vec);
+      // the EOI may cause an immediate re-delivery of a still asserted
+      // level triggered interrupt which sets the TMR bit again
+      apic_bus_broadcast_eoi(vec);
     }
+    service_local_apic();
   }
 
   if(bx_dbg.apic) print_status();
