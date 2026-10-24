@@ -135,7 +135,7 @@ Bit64s memory_param_save_handler(void *devptr, bx_param_c *param)
     if (BX_MEM_THIS flash_modified) {
       param->get_param_path(imgname, BX_PATHNAME_LEN);
       if (!strncmp(imgname, "bochs.", 6)) {
-        strcpy(imgname, imgname+6);
+        memmove(imgname, imgname+6, strlen(imgname) - 6);
       }
       if (SIM->get_param_string(BXPN_RESTORE_PATH)->isempty()) {
         return 0;
@@ -174,7 +174,7 @@ void memory_param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
     if (BX_MEM_THIS flash_modified && val) {
       param->get_param_path(imgname, BX_PATHNAME_LEN);
       if (!strncmp(imgname, "bochs.", 6)) {
-        strcpy(imgname, imgname+6);
+        memmove(imgname, imgname+6, strlen(imgname) - 6);
       }
       if (SIM->get_param_string(BXPN_RESTORE_PATH)->isempty()) {
         return;
