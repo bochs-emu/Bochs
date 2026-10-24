@@ -166,6 +166,11 @@ static void sdl_set_status_text(int element, const char *text, bool active, Bit8
   disp = sdl_screen->pitch/4;
   xleft = statusitem_pos[element] + 2;
   xsize = statusitem_pos[element+1] - xleft - 1;
+  // the item positions are fixed, clip them to the window width
+  if ((xleft + xsize) > (int)res_x) {
+    xsize = (int)res_x - xleft;
+  }
+  if (xsize < 8) return;
   buf = (Uint32 *)sdl_screen->pixels + (res_y + headerbar_height + 1) * disp + xleft;
   rowsleft = statusbar_height - 2;
   fgcolor = active?headerbar_fg:status_gray_text;
@@ -188,11 +193,14 @@ static void sdl_set_status_text(int element, const char *text, bool active, Bit8
   } else {
     textlen = strlen(text);
   }
+  if (textlen > (xsize / 8)) {
+    textlen = xsize / 8;
+  }
   buf = (Uint32 *)sdl_screen->pixels + (res_y + headerbar_height + 5) * disp + xleft;
   x = 0;
-  do
+  while (textlen > 0)
   {
-    pfont_row = &menufont[(unsigned)text[x]][0];
+    pfont_row = &menufont[(Bit8u)text[x]][0];
     buf_row = buf;
     rowsleft = 8;
     do
@@ -211,7 +219,8 @@ static void sdl_set_status_text(int element, const char *text, bool active, Bit8
     } while(--rowsleft);
     buf = buf_row + 8;
     x++;
-  } while (--textlen);
+    textlen--;
+  }
   item.x = xleft;
   item.y = res_y + headerbar_height + 1;
   item.w = xsize;
@@ -1277,10 +1286,11 @@ void bx_sdl2_gui_c::show_headerbar(void)
 int bx_sdl2_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
   char *tmp = SDL_GetClipboardText();
-  int len = strlen(tmp) + 1;
-  Bit8u *buf = new Bit8u[len];
-  memcpy(buf, tmp, len);
+  int len = strlen(tmp);
+  Bit8u *buf = new Bit8u[len + 1];
+  memcpy(buf, tmp, len + 1);
   *bytes = buf;
+  // the terminating zero must not be pasted to the guest
   *nbytes = len;
   SDL_free(tmp);
   return 1;
@@ -1303,8 +1313,12 @@ void bx_sdl2_gui_c::mouse_enabled_changed_specific(bool val)
 void bx_sdl2_gui_c::exit(void)
 {
   set_mouse_capture(0);
+#if defined(WIN32) && BX_SHOW_IPS
+  SDL_RemoveTimer(timer_id);
+#endif
   while (n_sdl_bitmaps) {
     SDL_FreeSurface(sdl_bitmaps[n_sdl_bitmaps-1]->surface);
+    delete sdl_bitmaps[n_sdl_bitmaps-1];
     n_sdl_bitmaps--;
   }
 
