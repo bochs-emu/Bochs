@@ -43,7 +43,9 @@ const unsigned BX_LAPIC_LAST_VECTOR  = 0xff;
 
 ///////////// APIC BUS /////////////
 
-bool apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mode, bool logical_dest, bool level, bool trig_mode)
+// x2apic_dest: 32-bit destination sent by a local APIC in x2APIC mode, only 0xffffffff
+// is the physical broadcast (8-bit xAPIC/IOAPIC destination: 0xff is the broadcast)
+bool apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mode, bool logical_dest, bool level, bool trig_mode, bool x2apic_dest)
 {
   if(delivery_mode == APIC_DM_LOWPRI)
   {
@@ -60,7 +62,8 @@ bool apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_m
   // determine destination local apics and deliver
   if(! logical_dest) {
     // physical destination mode
-    if((dest & apic_id_mask) == apic_id_mask) {
+    bool broadcast = x2apic_dest ? (dest == 0xffffffff) : ((dest & apic_id_mask) == apic_id_mask);
+    if(broadcast) {
        return apic_bus_broadcast_interrupt(vector, delivery_mode, trig_mode, apic_id_mask);
     }
     else {
@@ -686,7 +689,7 @@ void bx_local_apic_c::send_ipi(apic_dest_t dest, Bit32u lo_cmd)
 
   switch(dest_shorthand) {
   case 0:  // no shorthand, use real destination value
-    accepted = apic_bus_deliver_interrupt(vector, dest, delivery_mode, logical_dest, level, trig_mode);
+    accepted = apic_bus_deliver_interrupt(vector, dest, delivery_mode, logical_dest, level, trig_mode, mode == BX_APIC_X2APIC_MODE);
     break;
   case 1:  // self
     trigger_irq(vector, trig_mode);

@@ -329,7 +329,8 @@ void bx_ioapic_c::service_ioapic()
         } else {
           vector = entry->vector();
         }
-        bool done = apic_bus_deliver_interrupt(vector, entry->destination(), entry->delivery_mode(), entry->destination_mode(), entry->pin_polarity(), entry->trigger_mode());
+        // IOAPIC sends 8-bit destination, 0xff is the broadcast also with CPUs in x2APIC mode
+        bool done = apic_bus_deliver_interrupt(vector, entry->destination(), entry->delivery_mode(), entry->destination_mode(), entry->pin_polarity(), entry->trigger_mode(), false);
         if (done) {
           if (! entry->trigger_mode())
             irr &= ~mask;
