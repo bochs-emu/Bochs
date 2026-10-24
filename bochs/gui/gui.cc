@@ -1475,7 +1475,7 @@ void bx_gui_c::graphics_tile_update_common(Bit8u *tile, unsigned x, unsigned y)
       }
       pitch = BX_GUI_THIS guest_xres * pixel_bytes;
       src = tile;
-      dst = BX_GUI_THIS snapshot_buffer + (y * pitch) + x;
+      dst = BX_GUI_THIS snapshot_buffer + (y * pitch) + x * pixel_bytes;
       for (i = 0; i < y_tilesize; i++) {
         memcpy(dst, src, nbytes);
         src += tilebytes;
