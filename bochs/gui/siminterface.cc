@@ -1566,7 +1566,7 @@ bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_pat
         if (!dparam->is_text_format()) {
           node->get_param_path(pname, BX_PATHNAME_LEN);
           if (!strncmp(pname, "bochs.", 6)) {
-            memmove(pname, pname+6, strlen(pname) - 6);
+            memmove(pname, pname+6, strlen(pname) - 6 + 1); // include terminating zero
           }
           fprintf(fp, "%s\n", pname);
           if (sr_path)

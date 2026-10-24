@@ -135,12 +135,12 @@ Bit64s memory_param_save_handler(void *devptr, bx_param_c *param)
     if (BX_MEM_THIS flash_modified) {
       param->get_param_path(imgname, BX_PATHNAME_LEN);
       if (!strncmp(imgname, "bochs.", 6)) {
-        memmove(imgname, imgname+6, strlen(imgname) - 6);
+        memmove(imgname, imgname+6, strlen(imgname) - 6 + 1); // include terminating zero
       }
       if (SIM->get_param_string(BXPN_RESTORE_PATH)->isempty()) {
         return 0;
       }
-      sprintf(path, "%s/%s", SIM->get_param_string(BXPN_RESTORE_PATH)->getptr(), imgname);
+      snprintf(path, sizeof(path), "%s/%s", SIM->get_param_string(BXPN_RESTORE_PATH)->getptr(), imgname);
       ret = BX_MEM_THIS save_flash_data(path);
     }
     return ret;
@@ -174,12 +174,12 @@ void memory_param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
     if (BX_MEM_THIS flash_modified && val) {
       param->get_param_path(imgname, BX_PATHNAME_LEN);
       if (!strncmp(imgname, "bochs.", 6)) {
-        memmove(imgname, imgname+6, strlen(imgname) - 6);
+        memmove(imgname, imgname+6, strlen(imgname) - 6 + 1); // include terminating zero
       }
       if (SIM->get_param_string(BXPN_RESTORE_PATH)->isempty()) {
         return;
       }
-      sprintf(path, "%s/%s", SIM->get_param_string(BXPN_RESTORE_PATH)->getptr(), imgname);
+      snprintf(path, sizeof(path), "%s/%s", SIM->get_param_string(BXPN_RESTORE_PATH)->getptr(), imgname);
       BX_MEM_THIS load_flash_data(path);
     }
   }
