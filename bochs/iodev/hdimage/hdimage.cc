@@ -484,7 +484,7 @@ Bit64s hdimage_save_handler(void *class_ptr, bx_param_c *param)
 
   param->get_param_path(imgname, BX_PATHNAME_LEN);
   if (!strncmp(imgname, "bochs.", 6)) {
-    strcpy(imgname, imgname+6);
+    memmove(imgname, imgname+6, strlen(imgname+6) + 1);
   }
   if (SIM->get_param_string(BXPN_RESTORE_PATH)->isempty()) {
     return 0;
@@ -501,7 +501,7 @@ void hdimage_restore_handler(void *class_ptr, bx_param_c *param, Bit64s value)
   if (value != 0) {
     param->get_param_path(imgname, BX_PATHNAME_LEN);
     if (!strncmp(imgname, "bochs.", 6)) {
-      strcpy(imgname, imgname+6);
+      memmove(imgname, imgname+6, strlen(imgname+6) + 1);
     }
     sprintf(path, "%s/%s", SIM->get_param_string(BXPN_RESTORE_PATH)->getptr(), imgname);
     ((device_image_t*)class_ptr)->restore_state(path);
