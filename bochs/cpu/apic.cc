@@ -1139,7 +1139,22 @@ void bx_local_apic_c::set_divide_configuration(Bit32u value)
   // move bit 3 down to bit 0
   value = ((value & 8) >> 1) | (value & 3);
   BX_ASSERT(value >= 0 && value <= 7);
-  timer_divide_factor = (value==7) ? 1 : (2 << value);
+  Bit32u new_divide_factor = (value==7) ? 1 : (2 << value);
+
+  // the counting timer continues from its current count with the new divider:
+  // rebase the start time for get_current_timer_count() and re-arm the timer
+  // for the remaining count (not in TSC-deadline mode, ticksInitial holds the deadline)
+  if(timer_active && (lvt[APIC_LVT_TIMER] & 0x40000) == 0 && new_divide_factor != timer_divide_factor) {
+    Bit32u remaining = get_current_timer_count(); // computed with the old divider
+    timer_divide_factor = new_divide_factor;
+    ticksInitial = bx_pc_system.time_ticks() - Bit64u(timer_initial - remaining) * Bit64u(timer_divide_factor);
+    bx_pc_system.activate_timer_ticks(timer_handle,
+            remaining ? Bit64u(remaining) * Bit64u(timer_divide_factor) : 1, 0);
+  }
+  else {
+    timer_divide_factor = new_divide_factor;
+  }
+
   BX_DEBUG(("set timer divide factor to %d", timer_divide_factor));
 }
 
