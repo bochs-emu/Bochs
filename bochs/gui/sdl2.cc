@@ -120,6 +120,35 @@ static void *old_callback_arg = NULL;
 #if defined(WIN32) && BX_DEBUGGER && BX_DEBUGGER_GUI
 bool sdl2_enh_dbg_global_ini;
 #endif
+// area of the window surface modified since the last flush()
+static SDL_Rect sdl_dirty;
+static bool sdl_dirty_valid = 0;
+
+static void sdl_add_dirty_area(int x, int y, int w, int h)
+{
+  if (!sdl_dirty_valid) {
+    sdl_dirty.x = x;
+    sdl_dirty.y = y;
+    sdl_dirty.w = w;
+    sdl_dirty.h = h;
+    sdl_dirty_valid = 1;
+  } else {
+    int x2 = sdl_dirty.x + sdl_dirty.w;
+    int y2 = sdl_dirty.y + sdl_dirty.h;
+    if ((x + w) > x2) x2 = x + w;
+    if ((y + h) > y2) y2 = y + h;
+    if (x < sdl_dirty.x) sdl_dirty.x = x;
+    if (y < sdl_dirty.y) sdl_dirty.y = y;
+    sdl_dirty.w = x2 - sdl_dirty.x;
+    sdl_dirty.h = y2 - sdl_dirty.y;
+  }
+}
+
+// whole window, clipped to the surface size in flush()
+static void sdl_add_dirty_all(void)
+{
+  sdl_add_dirty_area(0, 0, 0x7fff, 0x7fff);
+}
 
 
 static void sdl_set_status_text(int element, const char *text, bool active, Bit8u color = 0)
@@ -528,9 +557,11 @@ void bx_sdl2_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc
   if (sdl_screen) {
     pitch = sdl_screen->pitch/4;
     buf = (Uint32 *)sdl_screen->pixels + (headerbar_height + yc) * pitch + xc;
+    sdl_add_dirty_area(xc, headerbar_height + yc, fw, fh);
   } else {
     pitch = sdl_fullscreen->pitch/4;
     buf = (Uint32 *)sdl_fullscreen->pixels + yc * pitch + xc;
+    sdl_add_dirty_area(xc, yc, fw, fh);
   }
   fgcolor = sdl_palette[fc];
   bgcolor = sdl_palette[bc];
@@ -596,6 +627,7 @@ void bx_sdl2_gui_c::graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y
   // FIXME
   if (i<=0) return;
 
+  sdl_add_dirty_area(x, sdl_screen ? (headerbar_height + y) : y, x_tilesize, i);
   switch (disp_bpp) {
     case 8: /* 8 bpp */
       do {
@@ -942,7 +974,24 @@ void bx_sdl2_gui_c::handle_events(void)
 
 void bx_sdl2_gui_c::flush(void)
 {
-  SDL_UpdateWindowSurface(window);
+  SDL_Surface *surface = (sdl_screen != NULL) ? sdl_screen : sdl_fullscreen;
+
+  // only copy the modified area of the surface to the window
+  if (!sdl_dirty_valid || (surface == NULL)) return;
+  sdl_dirty_valid = 0;
+  if (sdl_dirty.x < 0) {
+    sdl_dirty.w += sdl_dirty.x;
+    sdl_dirty.x = 0;
+  }
+  if (sdl_dirty.y < 0) {
+    sdl_dirty.h += sdl_dirty.y;
+    sdl_dirty.y = 0;
+  }
+  if ((sdl_dirty.x + sdl_dirty.w) > surface->w) sdl_dirty.w = surface->w - sdl_dirty.x;
+  if ((sdl_dirty.y + sdl_dirty.h) > surface->h) sdl_dirty.h = surface->h - sdl_dirty.y;
+  if ((sdl_dirty.w > 0) && (sdl_dirty.h > 0)) {
+    SDL_UpdateWindowSurfaceRects(window, &sdl_dirty, 1);
+  }
 }
 
 
@@ -1032,6 +1081,8 @@ void bx_sdl2_gui_c::dimension_update(unsigned x, unsigned y,
   res_y = y;
   half_res_x = x/2;
   half_res_y = y/2;
+  // new window surface: copy all of it on the next flush()
+  sdl_add_dirty_all();
   bx_gui->show_headerbar();
   host_xres = x;
   host_yres = y;
@@ -1215,6 +1266,8 @@ void bx_sdl2_gui_c::show_headerbar(void)
     buf = buf_row + disp;
   } while (--rowsleft);
   SDL_UpdateWindowSurfaceRects(window, &hb_rect, 1);
+  // the statusbar background is copied to the window by the next flush()
+  sdl_add_dirty_area(0, res_y + headerbar_height, res_x, statusbar_height);
   for (unsigned i=0; i<statusitem_count; i++) {
     sdl_set_status_text(i+1, statusitem[i].text, statusitem_active[i+1]);
   }
@@ -1325,7 +1378,8 @@ Bit8u *bx_sdl2_gui_c::graphics_tile_get(unsigned x0, unsigned y0, unsigned *w, u
 void bx_sdl2_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
                                         unsigned w, unsigned h)
 {
-  // Nothing to do here
+  // the tile was written directly to the surface, just mark it modified
+  sdl_add_dirty_area(x0, sdl_screen ? (headerbar_height + y0) : y0, w, h);
 }
 
 // Optional bx_gui_c methods
