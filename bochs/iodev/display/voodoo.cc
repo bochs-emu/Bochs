@@ -585,11 +585,18 @@ void bx_voodoo_base_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
   if (v->banshee.needs_update_mode) {
     return;
   }
+  // nothing to do for an empty area (no display mode set yet), the tile
+  // range calculation below would wrap around
+  if ((width == 0) || (height == 0)) {
+    return;
+  }
 
   xt0 = x0 / X_TILESIZE;
   yt0 = y0 / Y_TILESIZE;
   xt1 = (x0 + width  - 1) / X_TILESIZE;
   yt1 = (y0 + height - 1) / Y_TILESIZE;
+  if (xt1 >= s.num_x_tiles) xt1 = s.num_x_tiles - 1;
+  if (yt1 >= s.num_y_tiles) yt1 = s.num_y_tiles - 1;
   for (yti=yt0; yti<=yt1; yti++) {
     for (xti=xt0; xti<=xt1; xti++) {
       SET_TILE_UPDATED(BX_VOODOO_THIS, xti, yti, 1);
