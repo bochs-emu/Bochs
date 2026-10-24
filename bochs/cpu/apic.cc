@@ -856,13 +856,10 @@ void bx_local_apic_c::service_local_apic(void)
   // find first interrupt in irr.
   int first_irr = highest_priority_irr();
   if (first_irr < 0) return;   // no interrupts, leave INTR=0
-  int first_isr = highest_priority_int(isr);
-  if (first_isr >= 0 && first_irr <= first_isr) {
-    BX_DEBUG(("lapic(%d): not delivering int 0x%02x because int 0x%02x is in service", apic_id, first_irr, first_isr));
-    return;
-  }
-  if(((Bit32u)(first_irr) & 0xf0) <= (task_priority & 0xf0)) {
-    BX_DEBUG(("lapic(%d): not delivering int 0x%02X because task_priority is 0x%02X", apic_id, first_irr, task_priority));
+  // deliver only if the priority class of the interrupt is higher than the processor priority class
+  Bit8u ppr = get_ppr();
+  if(((Bit32u)(first_irr) & 0xf0) <= (ppr & 0xf0)) {
+    BX_DEBUG(("lapic(%d): not delivering int 0x%02X because processor priority is 0x%02X", apic_id, first_irr, ppr));
     return;
   }
   // interrupt has appeared in irr. Raise INTR. When the CPU
