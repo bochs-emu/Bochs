@@ -622,14 +622,15 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
 
 void bx_local_apic_c::set_lvt_entry(unsigned apic_reg, Bit32u value)
 {
+  // delivery status (bit 12) and LINT remote IRR (bit 14) are read only
   static Bit32u lvt_mask[] = {
-    0x000710ff, /* TIMER */
-    0x000117ff, /* THERMAL */
-    0x000117ff, /* PERFMON */
-    0x0001f7ff, /* LINT0 */
-    0x0001f7ff, /* LINT1 */
-    0x000110ff, /* ERROR */
-    0x000117ff, /* CMCI */
+    0x000700ff, /* TIMER */
+    0x000107ff, /* THERMAL */
+    0x000107ff, /* PERFMON */
+    0x0001a7ff, /* LINT0 */
+    0x0001a7ff, /* LINT1 */
+    0x000100ff, /* ERROR */
+    0x000107ff, /* CMCI */
   };
 
   unsigned lvt_entry = (apic_reg == BX_LAPIC_LVT_CMCI) ? APIC_LVT_CMCI : (apic_reg - BX_LAPIC_LVT_TIMER) >> 4;
@@ -800,11 +801,25 @@ int bx_local_apic_c::highest_priority_int(const Bit32u *array) const
 {
   for (int reg=7; reg>=0; reg--) {
     Bit32u tmp = array[reg];
+// ignore of interrupt vectors < 16 happen naturally as there is no way to ISR to it
+//  if (reg == 0) tmp &= 0xffff0000;
+    if (tmp) {
+      int vector = (reg * 32) + most_significant_bitd(tmp);
+      return vector;
+    }
+  }
+
+  return -1;
+}
+
+// highest priority pending interrupt, only vectors enabled in IER participate
+int bx_local_apic_c::highest_priority_irr(void) const
+{
+  for (int reg=7; reg>=0; reg--) {
+    Bit32u tmp = irr[reg];
 #if BX_CPU_LEVEL >= 6
     tmp &= ier[reg];
 #endif
-// ignore of interrupt vectors < 16 happen naturally as there is no way to ISR to it
-//  if (reg == 0) tmp &= 0xffff0000;
     if (tmp) {
       int vector = (reg * 32) + most_significant_bitd(tmp);
       return vector;
@@ -824,7 +839,7 @@ void bx_local_apic_c::service_local_apic(void)
   if(cpu->is_pending(BX_EVENT_PENDING_LAPIC_INTR)) return;  // INTR already up; do nothing
 
   // find first interrupt in irr.
-  int first_irr = highest_priority_int(irr);
+  int first_irr = highest_priority_irr();
   if (first_irr < 0) return;   // no interrupts, leave INTR=0
   int first_isr = highest_priority_int(isr);
   if (first_isr >= 0 && first_irr <= first_isr) {
@@ -921,7 +936,7 @@ Bit8u bx_local_apic_c::acknowledge_int(void)
   if(! cpu->is_pending(BX_EVENT_PENDING_LAPIC_INTR))
     BX_PANIC(("APIC %d acknowledged an interrupt, but INTR=0", apic_id));
 
-  int vector = highest_priority_int(irr);
+  int vector = highest_priority_irr();
   if (vector < 0 || (vector & 0xf0) <= get_ppr()) {
     cpu->clear_event(BX_EVENT_PENDING_LAPIC_INTR);
     return spurious_vector;
@@ -1017,7 +1032,7 @@ Bit8u bx_local_apic_c::get_apr(void)
   Bit32u tpr  = (task_priority >> 4) & 0xf;
   int first_isr = highest_priority_int(isr);
   if (first_isr < 0) first_isr = 0;
-  int first_irr = highest_priority_int(irr);
+  int first_irr = highest_priority_irr();
   if (first_irr < 0) first_irr = 0;
   Bit32u isrv = (first_isr >> 4) & 0xf;
   Bit32u irrv = (first_irr >> 4) & 0xf;

@@ -249,6 +249,7 @@ public:
   void untrigger_irq(Bit8u vector, unsigned trigger_mode);
   Bit8u acknowledge_int(void);  // only the local CPU should call this
   int highest_priority_int(const Bit32u *array) const;
+  int highest_priority_irr(void) const;
   void receive_EOI(Bit32u value = 0);
   void send_ipi(apic_dest_t dest, Bit32u lo_cmd);
   void write_spurious_interrupt_register(Bit32u value);
