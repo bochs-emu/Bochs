@@ -571,20 +571,14 @@ char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_t
   case BX_DIRECT_MEMREF_B:
     disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR8);
     break;
-  case BX_DIRECT_MEMREF_W:
-    disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR16);
-    break;
-  case BX_DIRECT_MEMREF_D:
-    disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR32);
-    break;
-  case BX_DIRECT_MEMREF_Q:
-    disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR64);
+  case BX_DIRECT_MEMREF_OSIZE:
+    disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, i->os64L() ? BX_GPR64 : (i->os32L() ? BX_GPR32 : BX_GPR16));
     break;
   default: break;
   };
 
   if (style == BX_DISASM_GAS)
-    if(src_type != BX_DIRECT_MEMREF_B && src_type != BX_DIRECT_MEMREF_W && src_type != BX_DIRECT_MEMREF_D && src_type != BX_DIRECT_MEMREF_Q)
+    if(src_type != BX_DIRECT_MEMREF_B && src_type != BX_DIRECT_MEMREF_OSIZE)
       disbufptr = dis_sprintf(disbufptr, "$");
 
   switch(src_type) {
@@ -656,9 +650,7 @@ char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_t
     break;
 
   case BX_DIRECT_MEMREF_B:
-  case BX_DIRECT_MEMREF_W:
-  case BX_DIRECT_MEMREF_D:
-  case BX_DIRECT_MEMREF_Q:
+  case BX_DIRECT_MEMREF_OSIZE:
     disbufptr = dis_sprintf(disbufptr, "%s%s:",
      (style == BX_DISASM_GAS) ? "%" : "", segment_name[i->seg()]);
 #if BX_SUPPORT_X86_64
@@ -872,7 +864,7 @@ char* disasm_source(char *disbufptr, unsigned n, bool srcs_used, const bxInstruc
     if (src_index == BX_SRC_VECTOR_RM) src_type = BX_VMM_REG;
 
     if (src_index == BX_SRC_NONE) {
-      if (src_type <= BX_DIRECT_MEMREF_Q) {
+      if (src_type <= BX_DIRECT_MEMREF_OSIZE) {
         // this is immediate value
         disbufptr = disasm_immediate(disbufptr, i, src_type, style);
       }

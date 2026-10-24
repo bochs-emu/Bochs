@@ -1011,9 +1011,7 @@ int fetchImmediate(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, Bit1
         break;
 
       case BX_DIRECT_MEMREF_B:
-      case BX_DIRECT_MEMREF_W:
-      case BX_DIRECT_MEMREF_D:
-      case BX_DIRECT_MEMREF_Q:
+      case BX_DIRECT_MEMREF_OSIZE:
 #if BX_SUPPORT_X86_64
         if (is_64) {
           // For instructions which embed the address in the opcode.

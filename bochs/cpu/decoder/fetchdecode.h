@@ -205,28 +205,26 @@ enum {
   BX_IMMB2 = 9,
   BX_DIRECT_PTR = 10,
   BX_DIRECT_MEMREF_B = 11,
-  BX_DIRECT_MEMREF_W = 12,
-  BX_DIRECT_MEMREF_D = 13,
-  BX_DIRECT_MEMREF_Q = 14,
+  BX_DIRECT_MEMREF_OSIZE = 12, // word/dword/qword, size taken from operand size
 
-  BX_JIMMBW_SE = 15,    // same widths as BX_IMMBW_SE.. above, own codes since
-  BX_JIMMBD_SE = 16,    // origin no longer separates plain imm from branch imm
-  BX_JIMMW = 17,
-  BX_JIMMD = 18,
+  BX_JIMMBW_SE = 13,    // same widths as BX_IMMBW_SE.. above, own codes since
+  BX_JIMMBD_SE = 14,    // origin no longer separates plain imm from branch imm
+  BX_JIMMW = 15,
+  BX_JIMMD = 16,
 
-  BX_RSIREF_B = 19,
-  BX_RSIREF_W = 20,
-  BX_RSIREF_D = 21,
-  BX_RSIREF_Q = 22,
-  BX_RDIREF_B = 23,
-  BX_RDIREF_W = 24,
-  BX_RDIREF_D = 25,
-  BX_RDIREF_Q = 26,
-  BX_MMX_RDIREF = 27,
-  BX_VEC_RDIREF = 28,
-  BX_USECL = 29,
-  BX_USEDX = 30,
-  // 31 is free
+  BX_RSIREF_B = 17,
+  BX_RSIREF_W = 18,
+  BX_RSIREF_D = 19,
+  BX_RSIREF_Q = 20,
+  BX_RDIREF_B = 21,
+  BX_RDIREF_W = 22,
+  BX_RDIREF_D = 23,
+  BX_RDIREF_Q = 24,
+  BX_MMX_RDIREF = 25,
+  BX_VEC_RDIREF = 26,
+  BX_USECL = 27,
+  BX_USEDX = 28,
+  // 29, 30, 31 are free
 };
 
 #define BX_FORM_SRC(type, src) (((type) << 3) | (src))
@@ -361,9 +359,9 @@ const Bit8u OP_Dq = BX_FORM_SRC(BX_DREG, BX_SRC_NNN);
 const Bit8u OP_Sw = BX_FORM_SRC(BX_SEGREG, BX_SRC_NNN);
 
 const Bit8u OP_Ob = BX_FORM_SRC(BX_DIRECT_MEMREF_B, BX_SRC_NONE);
-const Bit8u OP_Ow = BX_FORM_SRC(BX_DIRECT_MEMREF_W, BX_SRC_NONE);
-const Bit8u OP_Od = BX_FORM_SRC(BX_DIRECT_MEMREF_D, BX_SRC_NONE);
-const Bit8u OP_Oq = BX_FORM_SRC(BX_DIRECT_MEMREF_Q, BX_SRC_NONE);
+const Bit8u OP_Ow = BX_FORM_SRC(BX_DIRECT_MEMREF_OSIZE, BX_SRC_NONE);
+const Bit8u OP_Od = BX_FORM_SRC(BX_DIRECT_MEMREF_OSIZE, BX_SRC_NONE);
+const Bit8u OP_Oq = BX_FORM_SRC(BX_DIRECT_MEMREF_OSIZE, BX_SRC_NONE);
 
 const Bit8u OP_Ap = BX_FORM_SRC(BX_DIRECT_PTR, BX_SRC_NONE);
 
