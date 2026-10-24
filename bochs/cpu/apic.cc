@@ -229,6 +229,8 @@ void bx_local_apic_c::reset(unsigned type)
   icr_hi = 0;
   icr_lo = 0;
   task_priority = 0;
+  extint_pending = false;
+  extint_vector = 0;
 
   for(i=0; i<8; i++) {
     irr[i] = isr[i] = tmr[i] = 0;
@@ -894,8 +896,15 @@ bool bx_local_apic_c::deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_mode
     startup_msg(vector);
     break;
   case APIC_DM_EXTINT:
+    // ExtINT bypasses IRR and ISR and is not subject to processor priority,
+    // the vector was supplied by the 8259 and the handler does not write the
+    // local APIC EOI (SDM 13.8.2/13.8.5)
     BX_DEBUG(("Deliver EXTINT vector %02x", vector));
-    trigger_irq(vector, trig_mode, 1);
+    if (extint_pending)
+      BX_ERROR(("ExtINT vector %02x not acknowledged yet, replaced by vector %02x", extint_vector, vector));
+    extint_vector = vector;
+    extint_pending = true;
+    cpu->signal_event(BX_EVENT_PENDING_LAPIC_INTR);
     break;
   default:
     return false;
@@ -904,7 +913,7 @@ bool bx_local_apic_c::deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_mode
   return true;
 }
 
-void bx_local_apic_c::trigger_irq(Bit8u vector, unsigned trigger_mode, bool bypass_irr_isr)
+void bx_local_apic_c::trigger_irq(Bit8u vector, unsigned trigger_mode)
 {
   BX_DEBUG(("trigger interrupt vector=0x%02x", vector));
 
@@ -916,11 +925,9 @@ void bx_local_apic_c::trigger_irq(Bit8u vector, unsigned trigger_mode, bool bypa
 
   BX_DEBUG(("triggered vector %#02x", vector));
 
-  if(! bypass_irr_isr) {
-    if(get_vector(irr, vector)) {
-      BX_DEBUG(("triggered vector %#02x not accepted", vector));
-      return;
-    }
+  if(get_vector(irr, vector)) {
+    BX_DEBUG(("triggered vector %#02x not accepted", vector));
+    return;
   }
 
   set_vector(irr, vector);
@@ -947,6 +954,15 @@ Bit8u bx_local_apic_c::acknowledge_int(void)
   // CPU calls this when it is ready to service one interrupt
   if(! cpu->is_pending(BX_EVENT_PENDING_LAPIC_INTR))
     BX_PANIC(("APIC %d acknowledged an interrupt, but INTR=0", apic_id));
+
+  // ExtINT is serviced first, without IRR/ISR update and priority check
+  if (extint_pending) {
+    extint_pending = false;
+    BX_DEBUG(("acknowledge_int() returning ExtINT vector 0x%02x", extint_vector));
+    cpu->clear_event(BX_EVENT_PENDING_LAPIC_INTR);
+    service_local_apic();  // will set INTR again if a fixed interrupt is ready
+    return extint_vector;
+  }
 
   int vector = highest_priority_irr();
   if (vector < 0 || (vector & 0xf0) <= get_ppr()) {
@@ -1459,6 +1475,8 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
   BXRS_HEX_PARAM_SIMPLE(lapic, task_priority);
   BXRS_HEX_PARAM_SIMPLE(lapic, ldr);
   BXRS_HEX_PARAM_SIMPLE(lapic, dest_format);
+  BXRS_PARAM_BOOL(lapic, extint_pending, extint_pending);
+  BXRS_HEX_PARAM_SIMPLE(lapic, extint_vector);
 
   for (i=0; i<8; i++) {
     sprintf(name, "isr%u", i);

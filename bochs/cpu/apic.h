@@ -191,6 +191,11 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
 
   Bit32u lvt[APIC_LVT_ENTRIES];
 
+  // ExtINT interrupt delivered by the I/O APIC, bypasses IRR/ISR and the
+  // processor priority, the vector was supplied by the 8259
+  bool extint_pending;
+  Bit8u extint_vector;
+
   Bit32u timer_initial;         // Initial timer count (in order to reload periodic timer)
   Bit32u timer_current;         // Current timer count
   Bit64u ticksInitial;          // Timer value when it started to count, also holds TSC-Deadline value
@@ -245,7 +250,7 @@ public:
   // on local APIC, trigger means raise the CPU's INTR line. For now
   // I also have to raise pc_system.INTR but that should be replaced
   // with the cpu-specific INTR signals.
-  void trigger_irq(Bit8u vector, unsigned trigger_mode, bool bypass_irr_isr = 0);
+  void trigger_irq(Bit8u vector, unsigned trigger_mode);
   void untrigger_irq(Bit8u vector, unsigned trigger_mode);
   Bit8u acknowledge_int(void);  // only the local CPU should call this
   int highest_priority_int(const Bit32u *array) const;
