@@ -255,6 +255,7 @@ public:
   void write_spurious_interrupt_register(Bit32u value);
   void service_local_apic(void);
   void print_status(void);
+  void signal_error(Bit32u error);
   bool match_logical_addr(apic_dest_t address);
   bool deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_mode);
   Bit8u get_tpr(void) const { return task_priority; }

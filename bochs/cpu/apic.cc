@@ -488,7 +488,7 @@ Bit32u bx_local_apic_c::read_aligned(bx_phy_address addr)
     }
 #endif
   default:
-      shadow_error_status |= APIC_ERR_ILLEGAL_ADDR;
+      signal_error(APIC_ERR_ILLEGAL_ADDR);
       // but for now I want to know about it in case I missed some.
       BX_ERROR(("APIC read: register %x not implemented", apic_reg));
   }
@@ -614,7 +614,7 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
       break;
 #endif
     default:
-      shadow_error_status |= APIC_ERR_ILLEGAL_ADDR;
+      signal_error(APIC_ERR_ILLEGAL_ADDR);
       // but for now I want to know about it in case I missed some.
       BX_ERROR(("APIC write: register %x not implemented", apic_reg));
   }
@@ -688,6 +688,10 @@ void bx_local_apic_c::send_ipi(apic_dest_t dest, Bit32u lo_cmd)
     return;
   }
 
+  // the IPI with illegal vector is still sent, the receivers report Receive Illegal Vector
+  if ((delivery_mode == APIC_DM_FIXED || delivery_mode == APIC_DM_LOWPRI) && (unsigned) vector < BX_LAPIC_FIRST_VECTOR)
+    signal_error(APIC_ERR_TX_ILLEGAL_VEC);
+
   switch(dest_shorthand) {
   case 0:  // no shorthand, use real destination value
     accepted = apic_bus_deliver_interrupt(vector, dest, delivery_mode, logical_dest, level, trig_mode, mode == BX_APIC_X2APIC_MODE);
@@ -708,8 +712,19 @@ void bx_local_apic_c::send_ipi(apic_dest_t dest, Bit32u lo_cmd)
 
   if(! accepted) {
     BX_DEBUG(("An IPI wasn't accepted, raise APIC_ERR_TX_ACCEPT_ERR"));
-    shadow_error_status |= APIC_ERR_TX_ACCEPT_ERR;
+    signal_error(APIC_ERR_TX_ACCEPT_ERR);
   }
+}
+
+void bx_local_apic_c::signal_error(Bit32u error)
+{
+  // the error interrupt is generated on the first error after the last ESR
+  // write (an ESR write rearms it), record the error first so an illegal
+  // vector in the LVT Error entry cannot recurse
+  bool rearmed = (shadow_error_status == 0);
+  shadow_error_status |= error;
+  if (rearmed && (lvt[APIC_LVT_ERROR] & 0x10000) == 0)
+    trigger_irq(lvt[APIC_LVT_ERROR] & 0xff, APIC_EDGE_TRIGGERED);
 }
 
 void bx_local_apic_c::write_spurious_interrupt_register(Bit32u value)
@@ -897,7 +912,7 @@ void bx_local_apic_c::trigger_irq(Bit8u vector, unsigned trigger_mode, bool bypa
   BX_DEBUG(("trigger interrupt vector=0x%02x", vector));
 
   if(/* vector > BX_LAPIC_LAST_VECTOR || */ vector < BX_LAPIC_FIRST_VECTOR) {
-    shadow_error_status |= APIC_ERR_RX_ILLEGAL_VEC;
+    signal_error(APIC_ERR_RX_ILLEGAL_VEC);
     BX_INFO(("bogus vector %#x, ignoring ...", vector));
     return;
   }
@@ -1386,6 +1401,8 @@ bool bx_local_apic_c::write_x2apic(unsigned index, Bit32u val32_hi, Bit32u val32
     return false;
   // send self ipi
   case BX_LAPIC_SELF_IPI:
+    if ((val32_lo & 0xff) < BX_LAPIC_FIRST_VECTOR)
+      signal_error(APIC_ERR_TX_ILLEGAL_VEC);
     trigger_irq(val32_lo & 0xff, APIC_EDGE_TRIGGERED);
     return true;
   case BX_LAPIC_ICR_LO:
