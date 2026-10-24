@@ -98,6 +98,7 @@ Changes after Bochs 3.1:
 - SVM: EXITINTINFO was not recorded for INTn, ICEBP, external/virtual interrupt and NMI delivery (stale value reported) and recorded 2nd exception instead of prior event on intercepted #DF
 - SVM: task switch intercept must be checked before new TSS limit checks (Zen 5 takes the intercept with TSS limit 0x67 and CR4.CET=1)
 - SVM: PAUSE filter threshold of zero must select count only PAUSE filter mode (was resetting the PAUSE filter count on every PAUSE)
+- SVM: nRIP must be saved only for instruction, MSR and IOIO intercepts and exceptions caused by INT3, INTO and BOUND, reset to zero for all other intercepts
 - SVM: correctly handle DR6 reserved bits
 - SVM: implemented CET state management - guest S_CET, SSP and ISST_ADDR are loaded by VMRUN and saved on #VMEXIT, VMRUN CET consistency checks
 - SYSENTER/SYSEXIT: SYSENTER/SYSEXIT are not allowed in long mode on AMD

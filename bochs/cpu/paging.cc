@@ -1637,11 +1637,14 @@ BxMemtype BX_CPP_AttrRegparmN(2) BX_CPU_C::resolve_memtype(BxMemtype mtrr_memtyp
 // EXITINFO1 bit 37: the leaf nested page table entry designates supervisor shadow stack page
 #define BX_NPF_SSS_PAGE (BX_CONST64(1) << 37)
 
-void BX_CPU_C::nested_page_fault(Bit64u fault, bx_phy_address guest_paddr, unsigned rw, unsigned is_page_walk)
+void BX_CPU_C::nested_page_fault(Bit64u fault, bx_phy_address guest_paddr, unsigned rw, unsigned is_page_walk, bool supervisor)
 {
   unsigned isWrite = rw & 1;
 
-  Bit64u error_code = fault | (1 << 2) | (isWrite << 1);
+  // nested page table accesses are treated as user accesses unless there are features enabled that override this
+  Bit64u error_code = fault | (isWrite << 1);
+  if (! supervisor)
+    error_code |= ERROR_USER_ACCESS;
   if (rw == BX_EXECUTE)
     error_code |= ERROR_CODE_ACCESS; // I/D = 1
 #if BX_SUPPORT_CET
@@ -1666,6 +1669,12 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
 
   SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb->ctrls;
   SVM_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcb->host_state;
+
+  // with supervisor shadow stack restrictions supervisor shadow stack accesses are reported as supervisor accesses
+  bool npf_supervisor = false;
+#if BX_SUPPORT_CET
+  if (ctrls->sss_check) npf_supervisor = supervisor_shadow_stack;
+#endif
   bx_phy_address ppf = ctrls->ncr3 & BX_CR3_PAGING_MASK;
   Bit64u offset_mask = ((BX_CONST64(1) << BX_CPU_THIS_PTR linaddr_width) - 1);
   Bit32u combined_access = BX_COMBINED_ACCESS_WRITE | BX_COMBINED_ACCESS_USER;
@@ -1687,7 +1696,7 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
     Bit64u curr_entry = entry[leaf];
     int fault = check_entry_PAE(bx_paging_level[leaf], leaf, curr_entry, reserved, rw, &nx_page);
     if (fault >= 0)
-      nested_page_fault(fault, guest_paddr, rw, is_page_walk);
+      nested_page_fault(fault, guest_paddr, rw, is_page_walk, npf_supervisor);
 
     combined_access &= curr_entry; // U/S and R/W
     ppf = curr_entry & BX_CONST64(0x000ffffffffff000);
@@ -1698,7 +1707,7 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
       ppf &= BX_CONST64(0x000fffffffffe000);
       if (ppf & offset_mask) {
         BX_DEBUG(("Nested PAE Walk %s: reserved bit is set: 0x" FMT_ADDRX64, bx_paging_level[leaf], curr_entry));
-        nested_page_fault(ERROR_RESERVED | ERROR_PROTECTION, guest_paddr, rw, is_page_walk);
+        nested_page_fault(ERROR_RESERVED | ERROR_PROTECTION, guest_paddr, rw, is_page_walk, npf_supervisor);
       }
 
       break;
@@ -1735,7 +1744,7 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
 #endif
 
   if (fault)
-    nested_page_fault(ERROR_PROTECTION | sss_page, guest_paddr, rw, is_page_walk);
+    nested_page_fault(ERROR_PROTECTION | sss_page, guest_paddr, rw, is_page_walk, npf_supervisor);
 
   // Update A/D bits if needed
   update_access_dirty_PAE(entry_addr, entry, entry_memtype, start_leaf, leaf, isWrite);
@@ -1759,6 +1768,12 @@ bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw
 
   SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb->ctrls;
   SVM_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcb->host_state;
+
+  // with supervisor shadow stack restrictions supervisor shadow stack accesses are reported as supervisor accesses
+  bool npf_supervisor = false;
+#if BX_SUPPORT_CET
+  if (ctrls->sss_check) npf_supervisor = supervisor_shadow_stack;
+#endif
   bx_phy_address ncr3 = ctrls->ncr3 & 0xffffffe0;
   unsigned index = (guest_paddr >> 30) & 0x3;
   Bit64u pdptr;
@@ -1768,12 +1783,12 @@ bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw
 
   if (! (pdptr & 0x1)) {
     BX_DEBUG(("Nested PAE Walk PDPTE%d entry not present !", index));
-    nested_page_fault(ERROR_NOT_PRESENT, guest_paddr, rw, is_page_walk);
+    nested_page_fault(ERROR_NOT_PRESENT, guest_paddr, rw, is_page_walk, npf_supervisor);
   }
 
   if (pdptr & PAGING_PAE_PDPTE_RESERVED_BITS) {
     BX_DEBUG(("Nested PAE Walk PDPTE%d entry reserved bits set: 0x" FMT_ADDRX64, index, pdptr));
-    nested_page_fault(ERROR_RESERVED | ERROR_PROTECTION, guest_paddr, rw, is_page_walk);
+    nested_page_fault(ERROR_RESERVED | ERROR_PROTECTION, guest_paddr, rw, is_page_walk, npf_supervisor);
   }
 
   Bit64u reserved = PAGING_LEGACY_PAE_RESERVED_BITS;
@@ -1789,7 +1804,7 @@ bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw
     Bit64u curr_entry = entry[leaf];
     int fault = check_entry_PAE(bx_paging_level[leaf], leaf, curr_entry, reserved, rw, &nx_page);
     if (fault >= 0)
-      nested_page_fault(fault, guest_paddr, rw, is_page_walk);
+      nested_page_fault(fault, guest_paddr, rw, is_page_walk, npf_supervisor);
 
     combined_access &= curr_entry; // U/S and R/W
     ppf = curr_entry & BX_CONST64(0x000ffffffffff000);
@@ -1800,7 +1815,7 @@ bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw
     if (curr_entry & 0x80) {
       if (curr_entry & PAGING_PAE_PDE2M_RESERVED_BITS) {
         BX_DEBUG(("PAE PDE2M: reserved bit is set PDE=0x" FMT_ADDRX64, curr_entry));
-        nested_page_fault(ERROR_RESERVED | ERROR_PROTECTION, guest_paddr, rw, is_page_walk);
+        nested_page_fault(ERROR_RESERVED | ERROR_PROTECTION, guest_paddr, rw, is_page_walk, npf_supervisor);
       }
 
       // Make up the physical page frame address
@@ -1839,7 +1854,7 @@ bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw
 #endif
 
   if (fault)
-    nested_page_fault(ERROR_PROTECTION | sss_page, guest_paddr, rw, is_page_walk);
+    nested_page_fault(ERROR_PROTECTION | sss_page, guest_paddr, rw, is_page_walk, npf_supervisor);
 
   // Update A/D bits if needed
   update_access_dirty_PAE(entry_addr, entry, entry_memtype, BX_LEVEL_PDE, leaf, isWrite);

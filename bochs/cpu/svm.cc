@@ -834,6 +834,34 @@ unsigned BX_CPU_C::SvmFetchGuestInstructionBytes(Bit8u *bytes)
   return fetched;
 }
 
+// nRIP is saved on #VMEXITs due to instruction intercepts (APM Table 15-7), MSR and IOIO intercepts
+// and exceptions caused by the INT3, INTO and BOUND instructions, for all other intercepts it is reset to zero
+static bool svm_vmexit_saves_nrip(int reason)
+{
+  if (reason < SVM_VMEXIT_EXCEPTION) return true; // CR and DR accesses
+
+  switch(reason) {
+  case SVM_VMEXIT_EXCEPTION + BX_BP_EXCEPTION:
+  case SVM_VMEXIT_EXCEPTION + BX_OF_EXCEPTION:
+  case SVM_VMEXIT_EXCEPTION + BX_BR_EXCEPTION:
+    return true;
+
+  case SVM_VMEXIT_TASK_SWITCH:
+  case SVM_VMEXIT_FERR_FREEZE:
+  case SVM_VMEXIT_SHUTDOWN:
+    return false;
+
+  case SVM_VMEXIT_IDLE_HLT:
+    return true;
+  }
+
+  if (reason >= SVM_VMEXIT_CR0_SEL_WRITE && reason <= SVM_VMEXIT_MSR) return true;
+  if (reason >= SVM_VMEXIT_VMRUN && reason <= SVM_VMEXIT_RDPRU) return true;
+  if (reason >= SVM_VMEXIT_INVLPGB && reason <= SVM_VMEXIT_TLBSYNC) return true;
+
+  return false;
+}
+
 void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1, Bit64u exitinfo2)
 {
   BX_DEBUG(("SVM VMEXIT reason=%d exitinfo1=%08x%08x exitinfo2=%08x%08x", reason,
@@ -846,7 +874,7 @@ void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1, Bit64u exitinfo2)
 
   if (reason != SVM_VMEXIT_INVALID) {
     if (BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_NRIP_SAVE))
-      vmcb_write64(SVM_CONTROL64_NRIP, RIP);
+      vmcb_write64(SVM_CONTROL64_NRIP, svm_vmexit_saves_nrip(reason) ? RIP : 0);
 
     if (BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_DECODE_ASSIST)) {
       //

@@ -5693,7 +5693,7 @@ public: // for now...
   BX_SMF bool spp_walk(bx_phy_address guest_paddr, bx_address guest_laddr, BxMemtype memtype);
 #endif
 #if BX_SUPPORT_SVM
-  BX_SMF void nested_page_fault(Bit64u fault, bx_phy_address guest_paddr, unsigned rw, unsigned is_page_walk);
+  BX_SMF void nested_page_fault(Bit64u fault, bx_phy_address guest_paddr, unsigned rw, unsigned is_page_walk, bool supervisor = false);
   BX_SMF bx_phy_address nested_walk_long_mode(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk, bool supervisor_shadow_stack);
   BX_SMF bx_phy_address nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk, bool supervisor_shadow_stack);
   BX_SMF bx_phy_address nested_walk_legacy(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk);
