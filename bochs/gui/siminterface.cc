@@ -1410,7 +1410,7 @@ bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path, co
     return 0;
   }
 
-  sprintf(devstate, "%s/%s", sr_path, restore_name);
+  snprintf(devstate, sizeof(devstate), "%s/%s", sr_path, restore_name);
   BX_INFO(("restoring '%s'", devstate));
   bx_list_c *base = root;
   fp = fopen(devstate, "r");
@@ -1451,7 +1451,7 @@ bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path, co
                   {
                     bx_shadow_data_c *dparam = (bx_shadow_data_c*)param;
                     if (!dparam->is_text_format()) {
-                      sprintf(devdata, "%s/%s", sr_path, ptr);
+                      snprintf(devdata, sizeof(devdata), "%s/%s", sr_path, ptr);
                       fp2 = fopen(devdata, "rb");
                       if (fp2 != NULL) {
                         if (!bx_shadow_data_read(fp2, dparam->getptr(), dparam->get_size(), devdata)) {
@@ -1482,7 +1482,7 @@ bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path, co
                   }
                   break;
                 case BXT_PARAM_FILEDATA:
-                  sprintf(devdata, "%s/%s", sr_path, ptr);
+                  snprintf(devdata, sizeof(devdata), "%s/%s", sr_path, ptr);
                   fp2 = fopen(devdata, "rb");
                   if (fp2 != NULL) {
                     FILE **fpp = ((bx_shadow_filedata_c*)param)->get_fpp();
@@ -1570,7 +1570,7 @@ bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_pat
           }
           fprintf(fp, "%s\n", pname);
           if (sr_path)
-            sprintf(tmpstr, "%s/%s", sr_path, pname);
+            snprintf(tmpstr, sizeof(tmpstr), "%s/%s", sr_path, pname);
           else
             strcpy(tmpstr, pname);
           fp2 = fopen(tmpstr, "wb");
@@ -1609,9 +1609,9 @@ bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_pat
     case BXT_PARAM_FILEDATA:
       fprintf(fp, "%s.%s\n", node->get_parent()->get_name(), node->get_name());
       if (sr_path)
-        sprintf(tmpstr, "%s/%s.%s", sr_path, node->get_parent()->get_name(), node->get_name());
+        snprintf(tmpstr, sizeof(tmpstr), "%s/%s.%s", sr_path, node->get_parent()->get_name(), node->get_name());
       else
-        sprintf(tmpstr, "%s.%s", node->get_parent()->get_name(), node->get_name());
+        snprintf(tmpstr, sizeof(tmpstr), "%s.%s", node->get_parent()->get_name(), node->get_name());
       fp2 = fopen(tmpstr, "wb");
       if (fp2 != NULL) {
         FILE **fpp = ((bx_shadow_filedata_c*)node)->get_fpp();
