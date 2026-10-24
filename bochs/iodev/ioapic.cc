@@ -222,10 +222,18 @@ void bx_ioapic_c::write_aligned(bx_phy_address address, Bit32u value)
       int index = (ioregsel - 0x10) >> 1;
       if (index >= 0 && index < BX_IOAPIC_NUM_PINS) {
         bx_io_redirect_entry_t *entry = ioredtbl + index;
-        if (ioregsel&1)
+        if (ioregsel & 1) {
           entry->set_hi_part(value);
-        else
+        }
+        else {
           entry->set_lo_part(value);
+          // a level triggered input is sampled continuously: a line which is
+          // already asserted (e.g. asserted while the entry was edge triggered)
+          // is pending now
+          Bit32u bit = 1 << index;
+          if (entry->trigger_mode() && (intin & bit))
+            irr |= bit;
+        }
         char buf[1024];
         entry->sprintf_self(buf);
         BX_DEBUG(("IOAPIC: now entry[%d] is %s", index, buf));
