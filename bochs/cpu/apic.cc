@@ -636,22 +636,25 @@ void bx_local_apic_c::set_lvt_entry(unsigned apic_reg, Bit32u value)
   };
 
   unsigned lvt_entry = (apic_reg == BX_LAPIC_LVT_CMCI) ? APIC_LVT_CMCI : (apic_reg - BX_LAPIC_LVT_TIMER) >> 4;
-#if BX_CPU_LEVEL >= 6
   if (apic_reg == BX_LAPIC_LVT_TIMER) {
+#if BX_CPU_LEVEL >= 6
     if (! cpu->is_cpu_extension_supported(BX_ISA_TSC_DEADLINE)) {
       value &= ~0x40000; // cannot enable TSC-Deadline when not supported
     }
-    else {
-      if ((value ^ lvt[lvt_entry]) & 0x40000) {
-         // Transition between TSC-Deadline and other timer modes disarm the timer
-         if(timer_active) {
-            bx_pc_system.deactivate_timer(timer_handle);
-            timer_active = false;
-         }
+#endif
+    if ((value ^ lvt[lvt_entry]) & 0x60000) {
+      // a change of the timer mode field disarms the timer and initializes the
+      // initial count and current count registers, ticksInitial also holds the
+      // TSC-deadline value
+      if(timer_active) {
+        bx_pc_system.deactivate_timer(timer_handle);
+        timer_active = false;
       }
+      timer_initial = 0;
+      timer_current = 0;
+      ticksInitial = 0;
     }
   }
-#endif
 
   lvt[lvt_entry] = value & lvt_mask[lvt_entry];
   if(! software_enabled) {
