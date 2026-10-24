@@ -84,6 +84,7 @@ Changes after Bochs 3.1:
 + CET: far CALL through call gate to more privilege and interrupt to inner privilege or through IST did the shadow stack switch and push after loading new CS, if they faulted new CS/CPL was left loaded with old RIP
 + VMX: vmcs.shadow_stack_prematurely_busy was not initialized on reset, until the first VMEXIT a stale value could suppress convertible EPT violation #VE or set exit reason bit 25 (shadow stack prematurely busy)
 + VMX: EPTP index VM-execution control was not loaded on VM entry, #VE information area reported stale or uninitialized EPTP index unless the guest executed VMFUNC EPTP switching
+- VMX: posted-interrupt processing with empty PIR and VIRR set RVI to 0xFF and delivered a bogus virtual interrupt 0xFF (instead should keep RVI unchanged when VIRR is empty)
 + SVM: Fixed VMRUN consistency checks
 + SVM: LMSW must treat the selective CR0 write intercept as non-selective (intercept regardless of the value written)
 + SVM: RSM intercept must be checked before #UD for RSM executed outside of SMM (SMM containerization)

@@ -578,8 +578,9 @@ bool BX_CPU_C::VMX_Posted_Interrupt_Processing(Bit8u vector)
     VMX_Write_Virtual_APIC(BX_LAPIC_IRR1 + 16*n, virr[n]);
   }
 
-  vector = BX_CPU_THIS_PTR lapic->highest_priority_int(virr);
-  if (vector >= vm->rvi) vm->rvi = vector;
+  // RVI is unchanged if VIRR is empty
+  int highest = BX_CPU_THIS_PTR lapic->highest_priority_int(virr);
+  if (highest >= 0 && highest > vm->rvi) vm->rvi = highest;
 
   VMX_Evaluate_Pending_Virtual_Interrupts();
 
