@@ -1294,7 +1294,9 @@ bool bx_real_sim_c::restore_logopts()
           strcpy(string, ptr+p);
           while (isspace(string[strlen(string)-1])) string[strlen(string)-1] = 0;
           if (i == 0) {
-            strcpy(devname, string);
+            // module names are short, don't overflow on a malformed file
+            strncpy(devname, string, sizeof(devname) - 1);
+            devname[sizeof(devname) - 1] = 0;
             dev = get_logfn_id(devname);
           } else if (dev >= 0) {
             j = 6;
