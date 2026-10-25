@@ -625,7 +625,7 @@ void ResizeDialog(HWND hDlg, SIZE size)
 
 void MainMenuSetTitle(HWND hDlg, const char *rcfile)
 {
-  char title[BX_PATHNAME_LEN];
+  char title[BX_PATHNAME_LEN + 32];
 
   if (lstrlen(rcfile) > 0) {
     wsprintf(title, "Bochs Start Menu (%s)", rcfile);
