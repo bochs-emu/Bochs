@@ -1673,8 +1673,16 @@ void enq_mouse_event(void)
     QueueEvent& current=keyevents[tail];
     current.key_event=MOUSE_MOTION;
     if (win32MouseModeAbsXY) {
-      current.mouse_x = ms_lastx * 0x7fff / dimension_x;
-      current.mouse_y = ms_lasty * 0x7fff / dimension_y;
+      // client coordinates: the guest screen is scaled by stretch_factor
+      // (in fullscreen mode the client area may be larger than the image)
+      int abs_x = ms_lastx * 0x7fff / (int)(dimension_x * stretch_factor);
+      int abs_y = ms_lasty * 0x7fff / (int)(dimension_y * stretch_factor);
+      if (abs_x < 0) abs_x = 0;
+      if (abs_x > 0x7fff) abs_x = 0x7fff;
+      if (abs_y < 0) abs_y = 0;
+      if (abs_y > 0x7fff) abs_y = 0x7fff;
+      current.mouse_x = abs_x;
+      current.mouse_y = abs_y;
     } else {
       current.mouse_x = ms_xdelta;
       current.mouse_y = ms_ydelta;
@@ -1902,12 +1910,26 @@ int bx_win32_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 int bx_win32_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
   if (OpenClipboard(stInfo.simWnd)) {
-    HANDLE hMem = GlobalAlloc(GMEM_ZEROINIT, len);
+    // clipboard data must be movable memory, owned by the system after
+    // a successful SetClipboardData()
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len + 1);
+    if (hMem == NULL) {
+      CloseClipboard();
+      BX_ERROR(("copy: could not allocate clipboard memory"));
+      return 0;
+    }
+    char *data = (char *)GlobalLock(hMem);
+    memcpy(data, text_snapshot, len);
+    data[len] = 0;
+    GlobalUnlock(hMem);
     EmptyClipboard();
-    lstrcpy((char *)hMem, text_snapshot);
-    SetClipboardData(CF_TEXT, hMem);
+    if (SetClipboardData(CF_TEXT, hMem) == NULL) {
+      GlobalFree(hMem);
+      CloseClipboard();
+      BX_ERROR(("copy: could not set clipboard data"));
+      return 0;
+    }
     CloseClipboard();
-    GlobalFree(hMem);
     return 1;
   } else {
     BX_ERROR (("copy: could not open clipboard"));
