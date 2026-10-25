@@ -1,6 +1,6 @@
 Changes after Bochs 3.1 release:
 
-(up to date with commits done till 23 Oct 2026)
+(up to date with commits done till 25 Oct 2026)
 
 - CPU emulation and instrumentation
   ! CPUDB: Added AMD Zen3 (Vermeer) CPUID model (features X2APIC, CLWB, UMIP, PKU, CET, VAES, RDPID + introduces CPUID 0x80000021: AMD Extended Feature Identification 2)
@@ -69,6 +69,7 @@ Changes after Bochs 3.1 release:
   - Allow copy text from the output window (^c copies the selected text, ^c without selection still breaks the simulation)
     - win32: output window is read only and keeps the selection visible, ^a selects all output text
     - GTK: select the text with the mouse, "Select All" and "Copy" are also available in the right-click menu
+  - win32: much faster Output window updates for long debugger output
 
 - Configure and compile
   - Bochs now require C++11 support for compilation, enforced via configure
@@ -80,6 +81,10 @@ Changes after Bochs 3.1 release:
     - Setting wrong VBE "dispi ID" do not cause PANIC anymore
     - Fixed guest-to-host heap buffer overflow in text mode with high CRTC start address
     - Fixed division by zero in planar memory write with zero line offset
+  - Voodoo
+    - Fixed crash when the screen is redrawn (e.g. by the debugger) before a display mode is set (#666)
+  - Banshee
+    - Two small fixes in blt_polygon_fill
   - Cirrus
     - Fixed guest-to-host stack buffer overflow in color expand video-to-video BitBLT
     - Reject BitBLT operations crossing the video memory boundaries
@@ -94,8 +99,6 @@ Changes after Bochs 3.1 release:
       - #871: Implement 2D lines
       - #873: Implement bump mapping with luminance
       - #928: Add back-transform support for NV20
-  - Banshee
-      - Two small fixes in blt_polygon_fill
   - Hard drive / HD image
     - VVFAT: Fixed LongName handling in vvfat disks
     - VVFAT: Adding path prefix "fat32:" forces using FAT32 file system
@@ -105,6 +108,7 @@ Changes after Bochs 3.1 release:
     - VPC: fixed multi-sector reads of dynamic VHD images and sequential read/write of fixed VHD images
     - VVFAT: reject files of 4 GB and more on Windows hosts (were mapped with a wrong size)
     - CONCAT: fixed uninitialized number of parts, lseek(SEEK_END) and a memory leak
+    - VVFAT: do not crash on blank or malformed lines in vvfat_attr.cfg
   - CD-ROM
     - Model parameter now supports format "VENDOR:PRODUCT:REV" for ATAPI inquiry
     - Fixed MODE SENSE(6) header and response lengths and GET PERFORMANCE maximum number of descriptors
@@ -118,12 +122,26 @@ Changes after Bochs 3.1 release:
     - i440FX: fixed write-1-to-clear handling of the PCI status register
     - PIIX3: asserted PCI interrupt lines now follow PIRQ routing changes
     - Fixed loading of PCI option ROM images (partial reads, uninitialized ROM padding)
+    - PIIX3: restore the default I/O APIC base on reset
+    - ACPI: unmap the PM/SMBus I/O windows when reset clears their BARs
+    - Fixed spurious rejection of read-only memory handlers (e.g. PCI option ROM) after other memory handlers were unregistered (#932)
   - Interrupt controllers and timers
     - IOAPIC: implemented Remote IRR for level triggered interrupts
+    - IOAPIC: a level triggered entry programmed while its input line is already asserted now delivers the interrupt
     - LAPIC: clear TMR before broadcasting EOI to the IOAPIC (level triggered interrupt could be lost forever,
-      Windows Vista hang with GeForce at the display mode switch)
+             Windows Vista hang with GeForce at the display mode switch)
     - LAPIC: TSC-deadline timer compared the deadline with system time instead of the guest TSC (interrupt storm after
-      hardware reset or TSC write), IA32_TSC_DEADLINE is cleared when the timer fires
+             hardware reset or TSC write), IA32_TSC_DEADLINE is cleared when the timer fires
+    - LAPIC: many fixes for SDM compliance:
+      - ExtINT interrupts are delivered bypassing IRR/ISR and processor priority
+      - APIC errors generate the LVT Error interrupt, illegal IPI vector sets Send Illegal Vector in the ESR
+      - Pending interrupt is delivered only if its priority class is higher than the PPR
+      - Self and All-including-self IPI shorthands send only Fixed interrupts
+      - Only 0xFFFFFFFF is x2APIC broadcast destination
+      - INIT keeps IA32_APIC_BASE and only reinitializes the local APIC registers
+      - LVT delivery status and LINT0/LINT1 remote IRR bits are read only
+      - Fixed BX_PANIC when the timer Divide Configuration is changed while the timer counts
+      - Change of the LVT timer mode disarms the timer
     - PIC: implemented the OCW3 poll command as an interrupt acknowledge
     - PIC: reset special mask mode and read register select on ICW1
     - HPET: interrupt routes >= 16 are delivered to the IOAPIC only (were aliased onto PIC IRQs 8-15)
@@ -154,19 +172,30 @@ Changes after Bochs 3.1 release:
     - VDE: fix networking on FreeBSD
   - General
     - Set Windows system timer resolution to 1ms. This help to reduce artefacts (clicking noises) during sound playback
+    - Save/restore: failures while saving the simulation state are reported instead of being ignored
 
 - GUI and display libraries
-    - General
-      - Allocate the tile buffer for the generic graphics update code once at init (performance)
-    - win32 gui
-      - Fixed crash on paste when the clipboard has no text
-      - Faster text mode character drawing
-    - x11 gui
-      - Faster graphics tile update
-    - term gui
-      - Fixed terminal init in debugger enabled mode
-      - Added support for the command mode
-      - Added keyboard mapping support and german keymap
+  - General
+    - Allocate the tile buffer for the generic graphics update code once at init (performance)
+  - win32 gui
+    - Fixed crash on paste when the clipboard has no text
+    - Faster text mode character drawing
+    - Fixed heap overflow on clipboard copy
+    - Fixed absolute mouse (USB tablet) coordinates in stretched modes (small modes, autoscale, fullscreen)
+  - sdl2 gui
+    - Faster screen update: only the modified area is copied to the window
+    - Fixed paste (an extra NUL byte was sent to the guest)
+    - Fixed mouse wheel event in absolute mouse mode
+    - Fixed status bar drawing past the window width in narrow video modes
+  - rfb / vncsrv
+    - Fixed hangs and deadlocks when the event queue is full or the headerbar is clicked
+    - Fixed RFB protocol handling: client clipboard text is skipped, unknown message type closes the connection (was 100% CPU loop)
+  - x11 gui
+    - Faster graphics tile update
+  - term gui
+    - Fixed terminal init in debugger enabled mode
+    - Added support for the command mode
+    - Added keyboard mapping support and german keymap
 
 - BIOS
   - ACPI: restore missing IDE0 and IDE1 entries (PNP0600, matching the legacy primary/secondary IDE controller I/O ports and IRQs) in acpi-dsdt.dsl
