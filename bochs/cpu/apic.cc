@@ -210,6 +210,7 @@ bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu, unsigned id)
             bx_local_apic_c::mwaitx_timer_expired, 0, 0, 0, "mwaitx_timer");
   BX_DEBUG(("mwaitx_timer is = %d", mwaitx_timer_handle));
   mwaitx_timer_active = false;
+  mwaitx_timer_os_deadline = false;
 #endif
 
   xapic = simulate_xapic; // xAPIC or legacy APIC
@@ -1286,9 +1287,10 @@ void bx_local_apic_c::vmx_preemption_timer_expired(void *this_ptr)
 
 #if BX_SUPPORT_MONITOR_MWAIT
 
-void bx_local_apic_c::set_mwaitx_timer(Bit64u value)
+void bx_local_apic_c::set_mwaitx_timer(Bit64u value, bool os_deadline)
 {
   if (mwaitx_timer_active) deactivate_mwaitx_timer();
+  mwaitx_timer_os_deadline = os_deadline;
   if (value) {
     BX_DEBUG(("MWAITX timer: delay value = " FMT_LL "u", value));
     bx_pc_system.activate_timer_ticks(mwaitx_timer_handle, value, 0);
@@ -1307,8 +1309,11 @@ void bx_local_apic_c::deactivate_mwaitx_timer(void)
 void bx_local_apic_c::mwaitx_timer_expired(void *this_ptr)
 {
   bx_local_apic_c *class_ptr = (bx_local_apic_c *) this_ptr;
+  bool os_deadline = class_ptr->mwaitx_timer_os_deadline;
   class_ptr->cpu->wakeup_monitor();
   class_ptr->deactivate_mwaitx_timer();
+  // UMWAIT/TPAUSE woken up by expiration of the OS time limit set RFLAGS.CF
+  if (os_deadline) class_ptr->cpu->assert_CF();
 }
 
 #endif
@@ -1544,6 +1549,7 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
 
 #if BX_SUPPORT_MONITOR_MWAIT
   BXRS_PARAM_BOOL(lapic, mwaitx_timer_active, mwaitx_timer_active);
+  BXRS_PARAM_BOOL(lapic, mwaitx_timer_os_deadline, mwaitx_timer_os_deadline);
 #endif
 }
 

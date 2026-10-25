@@ -72,8 +72,9 @@ bool BX_CPU_C::handleWaitForEvent(void)
     {
       // interrupt ends the HALT condition
 #if BX_SUPPORT_MONITOR_MWAIT
+      // wakeup from MWAIT/UMWAIT/TPAUSE state also cancels MWAITX/UMWAIT/TPAUSE timer
       if (BX_CPU_THIS_PTR activity_state >= BX_ACTIVITY_STATE_MWAIT)
-        BX_CPU_THIS_PTR monitor.reset_monitor();
+        BX_CPU_THIS_PTR wakeup_monitor();
 #endif
       BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
       break;

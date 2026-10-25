@@ -369,10 +369,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMWAIT_Ed(bxInstruction_c *i)
   Bit64u instr_delay = instr_deadline - tsc;
 
   Bit32u umwait_control_max_delay = (BX_CPU_THIS_PTR msr.ia32_umwait_ctrl & ~0x3);
-//bool using_os_deadline = false; // FIXME
+  bool using_os_deadline = false;
   if (umwait_control_max_delay && umwait_control_max_delay < instr_delay) {
     instr_delay = umwait_control_max_delay;
-//  using_os_deadline = true;
+    using_os_deadline = true;
   }
 
   BX_ASSERT(instr_delay > 0);
@@ -382,13 +382,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMWAIT_Ed(bxInstruction_c *i)
 
   if (instr_delay == 0) {
     BX_DEBUG(("%s: requested delay is 0", i->getIaOpcodeNameShort()));
+    // the OS time limit is already reached
+    if (using_os_deadline) assert_CF();
     BX_CPU_THIS_PTR monitor.reset_umonitor();
     BX_NEXT_TRACE(i);
   }
 
   BX_DEBUG(("%s entering sleep state with delay=" FMT_LL "d", i->getIaOpcodeNameShort(), instr_delay));
 
-  BX_CPU_THIS_PTR lapic->set_mwaitx_timer(instr_delay);
+  // RFLAGS.CF is set when the timer expires if the delay was limited by the OS time limit
+  BX_CPU_THIS_PTR lapic->set_mwaitx_timer(instr_delay, using_os_deadline);
 
   // An external interrupt causes the processor to exit the implementation-dependent optimized state 
   // regardless of whether maskable-interrupts are inhibited (EFLAGS.IF =0)
@@ -397,9 +400,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMWAIT_Ed(bxInstruction_c *i)
   BX_INSTR_MWAIT(BX_CPU_ID, BX_CPU_THIS_PTR monitor.monitor_addr, CACHE_LINE_SIZE, sleep_state);
 
   enter_sleep_state(sleep_state);
-
-//if (using_os_deadline && tsc >= deadline)
-//  assert_CF();
 #endif
 
   BX_NEXT_TRACE(i);

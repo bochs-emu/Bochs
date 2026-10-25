@@ -219,6 +219,7 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
 #if BX_SUPPORT_MONITOR_MWAIT
   int mwaitx_timer_handle;
   bool mwaitx_timer_active;
+  bool mwaitx_timer_os_deadline; // UMWAIT/TPAUSE delay limited by IA32_UMWAIT_CONTROL, set CF on expiration
 #endif
 
   BX_CPU_C *cpu;
@@ -293,7 +294,7 @@ public:
 #endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  void set_mwaitx_timer(Bit64u value);
+  void set_mwaitx_timer(Bit64u value, bool os_deadline = false);
   void deactivate_mwaitx_timer(void);
   static void mwaitx_timer_expired(void *);
 #endif
