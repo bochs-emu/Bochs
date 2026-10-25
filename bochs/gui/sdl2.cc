@@ -764,7 +764,14 @@ void bx_sdl2_gui_c::handle_events(void)
         if ((sdl_grab != 0) && !console_running()) {
           wheel_status = sdl_event.wheel.y;
           if (sdl_mouse_mode_absxy) {
-            DEV_mouse_motion(old_mousex, old_mousey, wheel_status, old_mousebuttons, 1);
+            dx = old_mousex * 0x7fff / res_x;
+            if (sdl_fullscreen_toggle) {
+              dy = old_mousey * 0x7fff / res_y;
+              DEV_mouse_motion(dx, dy, wheel_status, old_mousebuttons, 1);
+            } else if ((old_mousey >= headerbar_height) && (old_mousey < ((int)res_y + headerbar_height))) {
+              dy = (old_mousey - headerbar_height) * 0x7fff / res_y;
+              DEV_mouse_motion(dx, dy, wheel_status, old_mousebuttons, 1);
+            }
           } else {
             DEV_mouse_motion(0, 0, wheel_status, old_mousebuttons, 0);
           }
