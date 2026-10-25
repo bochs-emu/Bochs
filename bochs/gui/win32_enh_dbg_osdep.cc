@@ -1077,6 +1077,8 @@ void MakeListsGray()
     InvalidateRect(hL[REG_WND],0,TRUE);     // Invalidate all 3 of the ListViews --
     InvalidateRect(hL[ASM_WND],0,TRUE);     // to force a redraw with the new background
     InvalidateRect(hL[DUMP_WND],0,TRUE);
+
+    EnableMenuItem(hCmdMenu, CMD_DETACH, AtBreak ? MF_ENABLED:MF_GRAYED);
 }
 
 // ParseIDText calls this for every line of debugger output (mostly from the bochs
