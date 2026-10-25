@@ -652,6 +652,9 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
     case WM_INITDIALOG:
       runtime = (bool)lParam;
       opts_ptr = NULL;
+      optedit = FALSE;
+      plugin_update = FALSE;
+      optnum = -1;
       if (runtime) {
         SetWindowText(hDlg, "Bochs Runtime Menu");
         EnableWindow(GetDlgItem(hDlg, IDREADRC), FALSE);
