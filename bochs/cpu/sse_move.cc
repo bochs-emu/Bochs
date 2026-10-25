@@ -352,17 +352,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   else
     clear_unmasked_fpu_exception();
 
-#if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR efer.get_FFXSR() && CPL == 0 && long64_mode()) {
-    BX_NEXT_INSTR(i); // skip restore of the XMM state
-  }
-#endif
-
   if (is_cpu_extension_supported(BX_ISA_SSE)) {
+    /* MXCSR is restored even in fast FXSAVE/FXRSTOR mode */
     BX_MXCSR_REGISTER = new_mxcsr;
 
+#if BX_SUPPORT_X86_64
+    if (BX_CPU_THIS_PTR efer.get_FFXSR() && CPL == 0 && long64_mode()) {
+      BX_NEXT_INSTR(i); // skip restore of the XMM state
+    }
+#endif
+
     /* If the OSFXSR bit in CR4 is not set, the FXRSTOR instruction does
-       not restore the states of the XMM and MXCSR registers. */
+       not restore the states of the XMM registers. */
     if (BX_CPU_THIS_PTR cr4.get_OSFXSR()) {
       /* load XMM register file */
       xrstor_sse_state(i, eaddr+160);
