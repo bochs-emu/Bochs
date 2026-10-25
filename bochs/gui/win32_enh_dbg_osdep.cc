@@ -150,6 +150,7 @@ Bit32u SelectedBID;
 #define MULTICPU_BTN_BASE   1030
 
 bool UpdInProgress[3];       // flag -- list update incomplete (not OK to paint)
+static bool UpdateOWflag = FALSE;   // Output window text changed, update on the next timer tick
 
 INT_PTR CALLBACK A_DP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
 {
@@ -1078,9 +1079,17 @@ void MakeListsGray()
     InvalidateRect(hL[DUMP_WND],0,TRUE);
 }
 
+// ParseIDText calls this for every line of debugger output (mostly from the bochs
+// thread). Replacing the whole window text each time is slow for long outputs, so
+// only set a flag -- the GUI thread timer (like in the GTK version) updates the window.
+void SetOutWinTxt()
+{
+    UpdateOWflag = TRUE;
+}
+
 // the following routine needs to replace the entire window's text,
 // and then scroll the window to the end of the text
-void SetOutWinTxt()
+static void UpdateOutWinTxt()
 {
     SetWindowText(hE_O,OutWindow);  // replace all text with modified buffer
 //  SendMessage(hE_O,EM_SETSEL,0,-1);   // invisibly selects all, sets caret to end
@@ -1434,6 +1443,7 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
             hCursResize = LoadCursor (NULL,IDC_SIZEWE);
             hCursDock = LoadCursor (NULL,IDC_CROSS);
             SetTimer(hh,2,500,NULL);    // request timer ticks every half a second (to update VGAW)
+            SetTimer(hh,3,50,NULL);     // fast timer ticks to update the Output window text
             UpdInProgress[0] = FALSE;
             UpdInProgress[1] = FALSE;
             UpdInProgress[2] = FALSE;
@@ -1755,6 +1765,15 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
         }
         case WM_TIMER:
         {
+            if (ww == 3)            // fast timer: update the Output window if its text changed
+            {
+                if (UpdateOWflag != FALSE)
+                {
+                    UpdateOWflag = FALSE;
+                    UpdateOutWinTxt();
+                }
+                break;
+            }
             if (PO_Tdelay > 0)      // output window is delaying display of a partial line?
             {
                 if (--PO_Tdelay == 0)   // on a timeout, add a lf to complete the line
@@ -1778,6 +1797,7 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
                 GetWindowRect(hY, &rY);
                 SIM->debug_break();
                 KillTimer(hh,2);
+                KillTimer(hh,3);
                 if (*CustomFont != DefFont)
                     DeleteObject (*CustomFont);
                 DeleteObject(CustomFont[1]);
