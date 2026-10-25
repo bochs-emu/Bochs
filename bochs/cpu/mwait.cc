@@ -339,12 +339,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMWAIT_Ed(bxInstruction_c *i)
 
   clearEFlagsOSZAPC();
 
-  static bool mwait_is_nop = SIM->get_param_bool(BXPN_MWAIT_IS_NOP)->get();
-  if (mwait_is_nop) {
-    BX_CPU_THIS_PTR monitor.reset_umonitor();
-    BX_NEXT_TRACE(i);
-  }
-
   if (i->getIaOpcode() != BX_IA_TPAUSE_Ed) {
     // If monitor has already triggered, we just return.
     if (! BX_CPU_THIS_PTR monitor.armed_by_umonitor()) {
@@ -353,7 +347,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMWAIT_Ed(bxInstruction_c *i)
     }
   }
   else {
+    // TPAUSE resets all address-range monitors (MONITOR, MONITORX and UMONITOR),
+    // stores to a monitored range must not wake TPAUSE
+    BX_CPU_THIS_PTR monitor.reset_monitor();
+  }
+
+  static bool mwait_is_nop = SIM->get_param_bool(BXPN_MWAIT_IS_NOP)->get();
+  if (mwait_is_nop) {
     BX_CPU_THIS_PTR monitor.reset_umonitor();
+    BX_NEXT_TRACE(i);
   }
 
   Bit64u tsc = get_Virtual_TSC();
