@@ -35,7 +35,6 @@ extern const char *stringify_EFLAGS(Bit32u eflags, char *s);
 #define MATCH_FALSE 0
 #define MATCH_ABORT -1
 
-#define NEGATE_CLASS
 #define OPTIMIZE_JUST_STAR
 
 const char* DC0txt[2] = {"P.Address","L.Address"};    // DumpMode definitions in text
@@ -454,22 +453,22 @@ void UpdateStatus()
 {
     static bool PrevAtBreak = FALSE;
 
-    if (StatusChange == FALSE) return;  // avoid sending unnecessary messages/invalidations
+    if (! StatusChange) return;  // avoid sending unnecessary messages/invalidations
     StatusChange = FALSE;
 
-    if (AtBreak != FALSE)   // modify status line only during a break
+    if (AtBreak)   // modify status line only during a break
     {
         char eflags_buf[80];
         ShowEflags(eflags_buf);         // prints out eflags
         SetStatusText(3, eflags_buf);   // display eflags
 
-        if (CpuModeChange != FALSE)     // Did CR0 bits or EFER bits change value?
+        if (CpuModeChange)     // Did CR0 bits or EFER bits change value?
         {
             CpuModeChange = FALSE;
             char mode[32];
             switch (CpuMode) {
                 case BX_MODE_IA32_REAL:
-                    if (In32Mode == FALSE)
+                    if (! In32Mode)
                         strcpy (mode, "CPU: Real Mode 16");
                     else
                         strcpy (mode, "CPU: Real Mode 32");
@@ -478,14 +477,14 @@ void UpdateStatus()
                     strcpy (mode, "CPU: V8086 Mode");
                     break;
                 case BX_MODE_IA32_PROTECTED:
-                    if (In32Mode == FALSE) {
-                        if (InPaging != 0)
+                    if (! In32Mode) {
+                        if (InPaging)
                             strcpy (mode, "CPU: Protected Mode 16 (PG)");
                         else
                             strcpy (mode, "CPU: Protected Mode 16");
                     }
                     else {
-                        if (InPaging != 0)
+                        if (InPaging)
                             strcpy (mode, "CPU: Protected Mode 32 (PG)");
                         else
                             strcpy (mode, "CPU: Protected Mode 32");
@@ -520,7 +519,7 @@ Bit64u cvthex(const char *p, Bit64u errval)
 {
     Bit64u ret = 0;
     bool end = FALSE;
-    while (end == FALSE)
+    while (! end)
     {
         if (*p >= '0' && *p <= '9')             // test for digits
             ret = (ret << 4) | (*(p++) - '0');
@@ -562,7 +561,7 @@ Bit64u cvt64(const char *nstr, bool negok)
 // "singlestep" disassembly lines from the internal debugger are sometimes ignored
 bool isSSDisasm(const char *s)
 {
-    if (ignSSDisasm == FALSE)   // ignoring those lines?
+    if (! ignSSDisasm)   // ignoring those lines?
         return FALSE;
 
     while (*s == ' ')   // need to parse the line to see if it is ASM
@@ -609,12 +608,12 @@ void ParseIDText(const char *x)
 
     // restart DbgAppendPtr at the beginning of a new line buffer
     char *s = DbgAppendPtr = bigbuf;    // s -> raw text line from debugger
-    if (ignoreNxtT != FALSE)
+    if (ignoreNxtT)
     {
         if (strncmp(s,"Next at t",9) == 0)
             return;
     }
-    if (isSSDisasm(s) != FALSE)
+    if (isSSDisasm(s))
         return;
 
     while ((*s >= ' ' || *s == '\t') && i < 204)    // scan out to eol, count chars
@@ -711,7 +710,7 @@ void ParseBkpt()
     int i = bx_guard.iaddr.num_linear;
     while (--i >= 0)
     {
-        if (bx_guard.iaddr.lin[i].enabled != FALSE)
+        if (bx_guard.iaddr.lin[i].enabled)
         {
             BrkLAddr[j] = bx_guard.iaddr.lin[i].addr;
             BrkIdx[j] = bx_guard.iaddr.lin[i].bpoint_id;
@@ -872,7 +871,7 @@ int FillDebugRegs(int itemnum)
     char drtxt[24];
 
     strcpy (drtxt,"dr0");
-    if (UprCase != FALSE)
+    if (UprCase)
     {
         *drtxt = 'D';
         drtxt[1] = 'R';
@@ -926,7 +925,7 @@ void FillAsm(Bit64u LAddr, int MaxLines)
     if (MaxLines > MAX_ASM)     // just for protection
         MaxLines = MAX_ASM;
 
-    while (Go != FALSE)
+    while (Go)
     {
         // copydown buffer -- buffer size must be 4K + 16
         s= AsmData;
@@ -942,7 +941,7 @@ void FillAsm(Bit64u LAddr, int MaxLines)
             break;
         BufEmpty = FALSE;
         p= AsmData;         // start at the beginning of the new buffer
-        while (AsmLineCount < MaxLines && BufEmpty == FALSE)
+        while (AsmLineCount < MaxLines && ! BufEmpty)
         {
             // disassemble 1 line with a direct call, into asmtxt
             len = bx_dbg_disasm_wrapper(In32Mode, In64Mode, (bx_address) 0,
@@ -982,7 +981,7 @@ void FillAsm(Bit64u LAddr, int MaxLines)
                 *s = 0;     // zero terminate the "bytes" string
 
                 // then, finalize the ASM disassembly text
-                if (UprCase != FALSE)   // do any requested uppercase conversion on the text
+                if (UprCase)   // do any requested uppercase conversion on the text
                     upr(cols[2]);
                 InsertListRow(cols, 3, ASM_WND, AsmLineCount, 8);   // 3 cols, "no" group
                 ++AsmLineCount;
@@ -995,7 +994,7 @@ void FillAsm(Bit64u LAddr, int MaxLines)
         if (In64Mode == FALSE && ReadAddr > 0xffffffff)
             break;
     }
-    if (ResizeColmns != FALSE)
+    if (ResizeColmns)
         RedrawColumns(ASM_WND);
     EndListUpdate(ASM_WND);
 }
@@ -1037,7 +1036,7 @@ void LoadRegList()
 #endif
 
     // then 32bit GP registers (if appropriate)
-    if (showEreg != FALSE)
+    if (showEreg)
     {
         for (i = EAX_Rnum; i <= EIP_Rnum; i++)
         {
@@ -1079,10 +1078,10 @@ void LoadRegList()
     }
     // display System registers (if requested)
     // displaying these once may be necessary for column resizing
-    if (SeeReg[2] || (ResizeColmns != FALSE && NeedSysRresize != FALSE))
+    if (SeeReg[2] || (ResizeColmns != FALSE && NeedSysRresize))
     {
         int j = TRRnum;
-        if (In32Mode == FALSE)      // don't show lgdt or tr in Real mode
+        if (! In32Mode)      // don't show lgdt or tr in Real mode
             j= IDTRnum;
         for(i = GDTRnum; i <= j; i++)
         {
@@ -1382,7 +1381,7 @@ void doUpdate()
     void FillStack();
     void RefreshDataDump(Bit8u *buffer);
 
-    if (doSimuInit != FALSE)
+    if (doSimuInit)
         SpecialInit();
     // begin an autoupdate of Register and Asm windows
     LoadRegList();      // build and show ListView
@@ -1778,7 +1777,7 @@ void FillStack()
         PStackLA = StackLA ^ 0x4000; // force a non-match below (kludge)
 
     wordsize = 4;       // assume Pmode
-    if (In32Mode == FALSE)
+    if (! In32Mode)
         wordsize = 2;
     else if (In64Mode)
         wordsize = 8;
@@ -1859,9 +1858,9 @@ void FillStack()
     j = len / wordsize;
     while (--j >= 0)
         UpdateDisp |= StackEntChg[j];
-    if (UpdateDisp == FALSE)            // Don't need to update the list? (no changes?)
+    if (! UpdateDisp)            // Don't need to update the list? (no changes?)
     {
-        if (StkInvOnce == FALSE)
+        if (! StkInvOnce)
             Invalidate(DUMP_WND);       // Invalidate ONCE to turn off all the red stuff
         StkInvOnce = TRUE;
         return;
@@ -1895,7 +1894,7 @@ void FillStack()
         {
             int tmp;
             sprintf (cols[0],Fmt32b[1],(Bit32u) StackLA);
-            if (In32Mode == FALSE)
+            if (! In32Mode)
             {
                 tmp = *((Bit16s *) cp);
                 sprintf (cols[1],Fmt16b[UprCase],(Bit16u) tmp);    // 16-bit stack entry, no sign extension
@@ -1921,7 +1920,7 @@ void FillStack()
 void prtbrk (Bit32u seg, Bit64u addy, unsigned int id, bool enabled, char *cols[])
 {
     int i = 0;
-    if (enabled == FALSE)
+    if (! enabled)
         *cols[1] = 'n';
     else
         *cols[1] = 'y';
@@ -2067,14 +2066,14 @@ void FillDataX(char* t, unsigned char C, bool doHex)
 {
     char tmpbuf[40];
     char *d = tmpbuf;
-    if (isLittleEndian == FALSE || doHex == FALSE)
+    if (! isLittleEndian || ! doHex)
         d = t + strlen(t);  // bigendian can always be appended directly
     *d = C;
     d[1] = 0;
     if (isprint(C) == 0)
         *d = '.';
 
-    if (doHex != FALSE)
+    if (doHex)
     {
         *d = AsciiHex[2*C];
         d[1] = AsciiHex[2*C + 1];
@@ -2212,7 +2211,7 @@ void DoAllInit()
     doSimuInit = TRUE;
     CpuModeChange = TRUE;
     CurrentCPU = 0;     // need to init CPU info once only
-    if (SingleCPU == FALSE)
+    if (! SingleCPU)
         TotCPUs = BX_SMP_PROCESSORS;
     else
         TotCPUs = 1;
@@ -2267,7 +2266,7 @@ void RefreshDataWin()
     switch (DViewMode)
     {
         case VIEW_MEMDUMP:
-            if (DumpInitted != FALSE)
+            if (DumpInitted)
                 ShowData();
             else
                 EndListUpdate(2);   // list is empty, so end (show) it!
@@ -2332,7 +2331,7 @@ void OnBreak()
 #if BX_SUPPORT_X86_64
     if (CpuMode == BX_MODE_LONG_64)
     {
-        if (In64Mode == FALSE)          // Entering LongMode?
+        if (! In64Mode)          // Entering LongMode?
         {
             CpuModeChange = TRUE;
             In64Mode = TRUE;
@@ -2358,7 +2357,7 @@ void OnBreak()
         StatusChange = TRUE;
     }
     doUpdate();     // do a full "autoupdate"
-    if (doDumpRefresh != FALSE)
+    if (doDumpRefresh)
         RefreshDataWin();
 }
 
@@ -2393,7 +2392,7 @@ static bool FindHex(const unsigned char* b1,int bs,int avail,const unsigned char
                 break;
             }
         }
-        if (Match != FALSE)
+        if (Match)
             return TRUE;
     }
     return FALSE;
@@ -2413,7 +2412,7 @@ bool InitDataDump(bool isLinear, Bit64u newDS)
 {
     bool retval = TRUE;
     bool MsgOnErr = FALSE;
-    if (AtBreak == FALSE)
+    if (! AtBreak)
         return FALSE;
     if (((int) newDS & 0xf) != 0)       // legal addys must be on 16byte boundary
     {
@@ -2451,7 +2450,7 @@ bool InitDataDump(bool isLinear, Bit64u newDS)
     if (retval == FALSE)
     {
         // assume that the DataDump array is still valid -- fetch_mem should error without damage
-        if (MsgOnErr != FALSE)
+        if (MsgOnErr)
             DispMessage ("Address range was not legal memory","Memory Error");
         return retval;
     }
@@ -2476,7 +2475,7 @@ void ToggleSeeReg(int cmd)
 
     SeeReg[i] ^= TRUE;
     SetMenuCheckmark ((int) SeeReg[i], i + CHK_CMD_EREG);
-    if (AtBreak != FALSE)
+    if (AtBreak)
         LoadRegList();  // do a register window update
 }
 
@@ -2493,9 +2492,9 @@ void doNewWSize(int i)
         ToggleWSchecks(i, j);
         DumpWSIndex = i;
         DumpAlign = 1<<i;
-        if (DViewMode == VIEW_MEMDUMP && DumpInitted != FALSE)
+        if (DViewMode == VIEW_MEMDUMP && DumpInitted)
         {
-            if (AtBreak == FALSE)
+            if (! AtBreak)
                 doDumpRefresh = TRUE;
             else
                 ShowData();
@@ -2505,7 +2504,7 @@ void doNewWSize(int i)
 
 void ToggleGDT()
 {
-    if (AtBreak == FALSE)
+    if (! AtBreak)
         return;
     GrayMenuItem (0, CMD_WPTWR);
     GrayMenuItem (0, CMD_WPTRD);
@@ -2525,7 +2524,7 @@ void ToggleGDT()
 
 void ToggleIDT()
 {
-    if (AtBreak == FALSE)
+    if (! AtBreak)
         return;
     GrayMenuItem (0, CMD_WPTWR);
     GrayMenuItem (0, CMD_WPTRD);
@@ -2545,11 +2544,11 @@ void ToggleIDT()
 
 void TogglePAGE()
 {
-    if (AtBreak == FALSE)
+    if (! AtBreak)
         return;
     GrayMenuItem (0, CMD_WPTWR);
     GrayMenuItem (0, CMD_WPTRD);
-    if (DViewMode == VIEW_PAGING || InPaging == FALSE)
+    if (DViewMode == VIEW_PAGING || ! InPaging)
         ShowMemData(FALSE);
     else
     {
@@ -2561,7 +2560,7 @@ void TogglePAGE()
 
 void ToggleStack()
 {
-    if (AtBreak == FALSE)
+    if (! AtBreak)
         return;
     GrayMenuItem (0, CMD_WPTWR);
     GrayMenuItem (0, CMD_WPTRD);
@@ -2578,7 +2577,7 @@ void ToggleStack()
 
 void ToggleBrkpt()
 {
-    if (AtBreak == FALSE)
+    if (! AtBreak)
         return;
     GrayMenuItem (0, CMD_WPTWR);
     GrayMenuItem (0, CMD_WPTRD);
@@ -2594,7 +2593,7 @@ void ToggleBrkpt()
 
 void TogglePTree()
 {
-    if (AtBreak == FALSE)
+    if (! AtBreak)
         return;
     GrayMenuItem (0, CMD_WPTWR);
     GrayMenuItem (0, CMD_WPTRD);
@@ -2613,11 +2612,11 @@ void doFind()
     unsigned int i, L;
     bool Select;
     char srchstr[ASKTEXT_MAX + 2];  // the reply text, possibly wrapped in "*...*"
-    if (AtBreak == FALSE)
+    if (! AtBreak)
         return;
     *tmpcb = 0;
         // read ASM text or MemDump data, find matches, select all matching lines
-    if (DumpHasFocus == FALSE)
+    if (! DumpHasFocus)
     {
         if (AskText("Find text in mnemonic lines","ASM Search text:",tmpcb) == FALSE)
             return;
@@ -2626,13 +2625,13 @@ void doFind()
         else
             strcpy(srchstr,tmpcb);
 
-        if (UprCase != FALSE)   // convert search string to uppercase if ASM is that way
+        if (UprCase)   // convert search string to uppercase if ASM is that way
             upr(srchstr);
         for(i = 0; i < (unsigned) AsmLineCount; i++)
         {
             GetLIText(ASM_WND, i, 2, tmpcb);       // retrieve the ASM column 2 text for row i
             Select = FALSE;
-            if (IsMatching(tmpcb, srchstr, TRUE) != FALSE)
+            if (IsMatching(tmpcb, srchstr, TRUE))
                 Select = TRUE;
             SetLIState(ASM_WND, i, Select);
         }
@@ -2668,7 +2667,7 @@ void doFind()
 void doStepOver()
 {
     // can't run sim until everything is ready
-    if (AtBreak == FALSE || debug_cmd_ready != FALSE)
+    if (! AtBreak || debug_cmd_ready)
         return;
 
     // The VGAW *MUST* be refreshed periodically -- it's best to use the timer.
@@ -2683,7 +2682,7 @@ void doStepOver()
 void doStepN()
 {
     // can't run sim until everything is ready
-    if (AtBreak == FALSE || debug_cmd_ready != FALSE)
+    if (! AtBreak || debug_cmd_ready)
         return;
 
     sprintf (tmpcb,"%d",PrevStepNSize);
@@ -2703,7 +2702,7 @@ void doStepN()
 void doDisAsm()
 {
     int NumLines = DefaultAsmLines;
-    if (AtBreak == FALSE)
+    if (! AtBreak)
         return;
     sprintf (tmpcb,"0x" FMT_LL "X",CurrentAsmLA);
     if (AskText("Disassemble",
@@ -2730,9 +2729,10 @@ void doDisAsm()
 // Toggle all "selected" items as linear breakpoint on the ASM window
 void SetBreak(int OneEntry)
 {
-    int L;
-    if (AtBreak == FALSE)
+    if (! AtBreak)
         return;
+
+    int L;
     if (OneEntry >= 0)
         L = OneEntry;
     else
@@ -2800,7 +2800,7 @@ void SetWatchpoint(unsigned *num_watchpoints, bx_watchpoint *watchpoint)
 {
     int iExist1 = -1;
     int i = (int) *num_watchpoints;
-    if (AtBreak == FALSE || SA_valid == FALSE)
+    if (! AtBreak || ! SA_valid)
         return;
     // the list is unsorted -- test all of them
     while (--i >= 0)
@@ -2835,7 +2835,7 @@ void ChangeReg()
 {
     // Change a register -- search for the first selected register
     int L = GetNextSelectedLI(REG_WND, -1);
-    if (AtBreak == FALSE || L == -1 || L >= STD_REG_NUM+EXTRA_REGS)
+    if (! AtBreak || L == -1 || L >= STD_REG_NUM+EXTRA_REGS)
         return;
 
     int i = RitemToRnum[L];
@@ -2851,7 +2851,7 @@ void ChangeReg()
 #endif
         RegObject[CurrentCPU][i]->set(val); // the set function should be a bool, not a void
 //      bool worked = RegObject[CurrentCPU][i]->set(val);
-//      if (worked == FALSE)
+//      if (! worked)
 //          DispMessage ("Bochs does not allow you to set that register","Selection Error");
 //      else
             LoadRegList();      // update the register window
@@ -2864,10 +2864,10 @@ void SetMemLine(int L)
     // get base address of "line" of data -- each line (L) is 16 bytes
     char addrstr[64];
     Bit64u h = DumpStart + (L<<4);
-    if (AtBreak == FALSE || L >= 256)
+    if (! AtBreak || L >= 256)
         return;
 
-    if (LinearDump == FALSE)
+    if (! LinearDump)
         sprintf(addrstr,"Physical Address: 0x" FMT_LL "X",h);
     else
         sprintf(addrstr,"Linear Address: 0x" FMT_LL "X",h);
@@ -2912,7 +2912,7 @@ void SetMemLine(int L)
                     written = bx_dbg_write_linear(CurrentCPU, (bx_address) h, 1, &newval);
                 else
                     written = bx_mem.dbg_set_mem(BX_CPU(CurrentCPU), (bx_phy_address) h, 1, &newval);
-                if (written == FALSE)
+                if (! written)
                     err = 2;
                 else
                     *u++ = newval;      // update DataDump array so it will refresh on the screen
@@ -2955,7 +2955,7 @@ int HotKey (int ww, int Alt, int Shift, int Control)
 #endif
         else if (ww == VK_F6)       // AltF6 = Read Watchpt
         {
-            if (DumpHasFocus != FALSE)
+            if (DumpHasFocus)
                 SetWatchpoint(&num_read_watchpoints,read_watchpoint);
         }
         else if (ww == VK_F7)           // Alt+F7 memdump hex toggle
@@ -2969,9 +2969,9 @@ int HotKey (int ww, int Alt, int Shift, int Control)
                 SetMenuCheckmark (i, CHK_CMD_MHEX);
                 GrayMenuItem (i, CMD_MASCII);
                 PrevDAD = 0;        // force columns to resize
-                if (DViewMode == VIEW_MEMDUMP && DumpInitted != FALSE)
+                if (DViewMode == VIEW_MEMDUMP && DumpInitted)
                 {
-                    if (AtBreak == FALSE)
+                    if (! AtBreak)
                         doDumpRefresh = TRUE;
                     else
                         ShowData();
@@ -3000,13 +3000,13 @@ int HotKey (int ww, int Alt, int Shift, int Control)
 
         case VK_PRIOR:
             // Page up on the MemDump window by 2K
-            if (DumpInitted != FALSE)
+            if (DumpInitted)
                 InitDataDump(LinearDump, DumpStart - 2048);
             break;
 
         case VK_NEXT:
             // Page down on the MemDump window by 2K
-            if (DumpInitted != FALSE)
+            if (DumpInitted)
                 InitDataDump(LinearDump, DumpStart + 2048);
             break;
 
@@ -3025,7 +3025,7 @@ int HotKey (int ww, int Alt, int Shift, int Control)
             else
             {
                 bx_dbg_disassemble_switch_mode();
-                if (AtBreak != FALSE)
+                if (AtBreak)
                 {
                     // do the standard ASM window fill sequence
                     Bit64u h = CurrentAsmLA;
@@ -3045,7 +3045,7 @@ int HotKey (int ww, int Alt, int Shift, int Control)
                 BottomAsmLA = ~0;       // force an ASM autoload
                 ResizeColmns = TRUE;    // force everything to repaint
                 doDumpRefresh = TRUE;   // force a data window reload on a break
-                if (AtBreak != FALSE)   // can't refresh the windows until a break!
+                if (AtBreak)   // can't refresh the windows until a break!
                 {
                     doUpdate();         // refresh the ASM and Register windows
                     RefreshDataWin();   // and whichever data window is up
@@ -3070,7 +3070,7 @@ int HotKey (int ww, int Alt, int Shift, int Control)
             else
             {
                 // can't continue until everything is ready
-                if (AtBreak != FALSE && debug_cmd_ready == FALSE)
+                if (AtBreak && ! debug_cmd_ready)
                 {
                     // The VGAW *MUST* be refreshed periodically -- it's best to use the timer.
                     // Which means that the sim cannot be directly run from this msglp thread.
@@ -3097,9 +3097,9 @@ int HotKey (int ww, int Alt, int Shift, int Control)
                     SetMenuCheckmark (i, CHK_CMD_MASCII);
                     GrayMenuItem (i, CMD_MHEX);
                     PrevDAD = 0;        // force columns to resize
-                    if (DViewMode == VIEW_MEMDUMP && DumpInitted != FALSE)
+                    if (DViewMode == VIEW_MEMDUMP && DumpInitted)
                     {
-                        if (AtBreak == FALSE)
+                        if (! AtBreak)
                             doDumpRefresh = TRUE;
                         else
                             ShowData();
@@ -3115,14 +3115,14 @@ int HotKey (int ww, int Alt, int Shift, int Control)
                 ToggleBrkpt();
             else if (Shift < 0)     // ShiftF6 = Write Watchpt
             {
-                if (DumpHasFocus == FALSE)
+                if (! DumpHasFocus)
                     SetBreak(-1); // set or delete breakpoint(s) at the selected address(es)
                 else
                     SetWatchpoint(&num_write_watchpoints,write_watchpoint);
             }
             else
             {
-                if (DumpHasFocus == FALSE)      // F6 = Brkpt
+                if (! DumpHasFocus)      // F6 = Brkpt
                     SetBreak(-1); // set or delete breakpoint(s) at the selected address(es)
                 else
                     SetWatchpoint(&num_write_watchpoints,write_watchpoint);
@@ -3134,7 +3134,7 @@ int HotKey (int ww, int Alt, int Shift, int Control)
             break;
 
         case VK_F11:
-            if (AtBreak != FALSE && debug_cmd_ready == FALSE)
+            if (AtBreak && ! debug_cmd_ready)
             {
                 bx_dbg_stepN_command(CurrentCPU, 1);        // singlestep
                 StatusChange = TRUE;
@@ -3172,7 +3172,7 @@ int HotKey (int ww, int Alt, int Shift, int Control)
 
         case VK_RETURN:
             // can't run a command until everything is ready
-            if (AtBreak != FALSE && debug_cmd_ready == FALSE)
+            if (AtBreak && ! debug_cmd_ready)
             {
                 *tmpcb = 0;
                 GetInputEntry(tmpcb);
@@ -3213,7 +3213,7 @@ void ActivateMenuItem (int cmd)
     switch(cmd)
     {
         case CMD_CONT: // run/go/continue
-            if (AtBreak != FALSE && debug_cmd_ready == FALSE)
+            if (AtBreak && ! debug_cmd_ready)
             {
                 // The VGAW *MUST* be refreshed periodically -- it's best to use the timer.
                 // Which means that the sim cannot be directly run from this msglp thread.
@@ -3226,7 +3226,7 @@ void ActivateMenuItem (int cmd)
             break;
 
         case CMD_STEP1: // step 1
-            if (AtBreak != FALSE && debug_cmd_ready == FALSE)
+            if (AtBreak && ! debug_cmd_ready)
             {
                 bx_dbg_stepN_command(CurrentCPU, 1);        // singlestep
                 StatusChange = TRUE;
@@ -3267,7 +3267,7 @@ void ActivateMenuItem (int cmd)
             BottomAsmLA = ~0;       // force an ASM autoload
             ResizeColmns = TRUE;    // force everything to repaint
             doDumpRefresh = TRUE;   // force a data window reload on a break
-            if (AtBreak != FALSE)   // can't refresh the windows until a break!
+            if (AtBreak)   // can't refresh the windows until a break!
             {
                 doUpdate();         // refresh the ASM and Register windows
                 RefreshDataWin();   // and whichever data window is up
@@ -3332,18 +3332,18 @@ void ActivateMenuItem (int cmd)
         }
 
         case CMD_ONECPU:    // toggle whether to show SMP CPUs
-            if (AtBreak == FALSE)
+            if (! AtBreak)
                 break;
             SingleCPU ^= TRUE;
             TotCPUs = 1;
-            if (SingleCPU == FALSE)
+            if (! SingleCPU)
                 TotCPUs = BX_SMP_PROCESSORS;
             SetMenuCheckmark ((int) SingleCPU, CHK_CMD_ONECPU);
             VSizeChange();
             break;
 
         case CMD_DADEF: // set default # of disassembly lines in a list
-            if (AtBreak == FALSE)
+            if (! AtBreak)
                 break;
             sprintf (tmpcb,"%d",DefaultAsmLines);
             if (AskText("Disassembly default linecount","Max. 2048:",tmpcb) == FALSE)
@@ -3357,7 +3357,7 @@ void ActivateMenuItem (int cmd)
 
         case CMD_ATTI:      // Toggle ASM Syntax
             bx_dbg_disassemble_switch_mode();
-            if (AtBreak != FALSE)
+            if (AtBreak)
             {
                 // do the standard ASM window fill sequence
                 Bit64u h = CurrentAsmLA;
@@ -3369,7 +3369,7 @@ void ActivateMenuItem (int cmd)
             break;
 
         case CMD_IOWIN:  // toggle display of internal debugger Input and Output windows
-            if (AtBreak == FALSE)
+            if (! AtBreak)
                 break;
             ShowIOWindows ^= TRUE;
             SetMenuCheckmark ((int) ShowIOWindows, CHK_CMD_IOWIN);
@@ -3377,7 +3377,7 @@ void ActivateMenuItem (int cmd)
             break;
 
         case CMD_SBTN:      // Toggle showing top pushbutton-row
-            if (AtBreak == FALSE)
+            if (! AtBreak)
                 break;
             ShowButtons ^= TRUE;
             SetMenuCheckmark ((int) ShowButtons, CHK_CMD_SBTN);
@@ -3388,7 +3388,7 @@ void ActivateMenuItem (int cmd)
             UprCase ^= 1;
             SetMenuCheckmark ((int) UprCase, CHK_CMD_UCASE);
             MakeRDnames();
-            if (AtBreak != FALSE)
+            if (AtBreak)
             {
                 LoadRegList();
                 // do the standard ASM window fill sequence
@@ -3410,9 +3410,9 @@ void ActivateMenuItem (int cmd)
                 SetMenuCheckmark (i, CHK_CMD_MHEX);
                 GrayMenuItem (i, CMD_MASCII);
                 PrevDAD = 0;        // force columns to resize
-                if (DViewMode == VIEW_MEMDUMP && DumpInitted != FALSE)
+                if (DViewMode == VIEW_MEMDUMP && DumpInitted)
                 {
-                    if (AtBreak == FALSE)
+                    if (! AtBreak)
                         doDumpRefresh = TRUE;
                     else
                         ShowData();
@@ -3430,9 +3430,9 @@ void ActivateMenuItem (int cmd)
                 SetMenuCheckmark (i, CHK_CMD_MASCII);
                 GrayMenuItem (i, CMD_MHEX);
                 PrevDAD = 0;        // force columns to resize
-                if (DViewMode == VIEW_MEMDUMP && DumpInitted != FALSE)
+                if (DViewMode == VIEW_MEMDUMP && DumpInitted)
                 {
-                    if (AtBreak == FALSE)
+                    if (! AtBreak)
                         doDumpRefresh = TRUE;
                     else
                         ShowData();
@@ -3443,9 +3443,9 @@ void ActivateMenuItem (int cmd)
         case CMD_LEND:      // Toggle Endianness for the MemDumps
             isLittleEndian ^= TRUE;
             SetMenuCheckmark ((int) isLittleEndian, CHK_CMD_LEND);
-            if (DViewMode == VIEW_MEMDUMP && DumpInitted != FALSE)
+            if (DViewMode == VIEW_MEMDUMP && DumpInitted)
             {
-                if (AtBreak == FALSE)
+                if (! AtBreak)
                     doDumpRefresh = TRUE;
                 else
                     ShowData();
@@ -3486,7 +3486,7 @@ void ActivateMenuItem (int cmd)
         case CMD_RCLR:      // Toggle Register Coloring
             SeeRegColors ^= TRUE;
             SetMenuCheckmark ((int) SeeRegColors, CHK_CMD_RCLR);
-            if (AtBreak != FALSE)
+            if (AtBreak)
                 LoadRegList();
             break;
 
@@ -3773,7 +3773,7 @@ void CloseDebugDialog()
 bool DetachDebugger()
 {
     // can't run sim until everything is ready
-    if (AtBreak == FALSE || debug_cmd_ready != FALSE)
+    if (! AtBreak || debug_cmd_ready)
         return FALSE;
 
     AtBreak = FALSE;
