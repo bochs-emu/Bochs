@@ -4343,11 +4343,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
   }
 
   Bit16u pcid = invpcid_desc.xmm16u(0) & 0xfff;
+  bx_address invpcid_addr = (bx_address) invpcid_desc.xmm64u(1);
 
   switch(type) {
   case BX_INVPCID_INDIVIDUAL_ADDRESS_NON_GLOBAL_INVALIDATION:
 #if BX_SUPPORT_X86_64
-    if (! IsCanonical(invpcid_desc.xmm64u(1))) {
+    if (! IsCanonical(invpcid_addr)) {
       BX_ERROR(("INVPCID: non canonical LADDR single context invalidation"));
       exception(BX_GP_EXCEPTION, 0);
     }
@@ -4356,7 +4357,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
       BX_ERROR(("INVPCID: invalid PCID"));
       exception(BX_GP_EXCEPTION, 0);
     }
-    TLB_flushNonGlobal(); // Invalidate all mappings for LADDR tagged with PCID except globals
+    // Invalidate all mappings for LADDR tagged with PCID except globals.
+    // The TLB is not PCID tagged and only holds mappings of the current PCID (MOV to CR3 flushes
+    // non-global entries), invalidating the LADDR mapping (even if global) is enough.
+    TLB_invlpg(invpcid_addr);
     break;
 
   case BX_INVPCID_SINGLE_CONTEXT_NON_GLOBAL_INVALIDATION:
