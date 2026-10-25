@@ -198,6 +198,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
   // Address-range monitoring is always clear after MWAIT completes executing,
   // if the processor did not enter the optimized state
 
+  static bool mwait_is_nop = SIM->get_param_bool(BXPN_MWAIT_IS_NOP)->get();
+  if (mwait_is_nop) {
+    BX_CPU_THIS_PTR monitor.reset_monitor();
+    BX_NEXT_TRACE(i);
+  }
+
   if (! (ECX & BX_MWAIT_MONITORLESS_MWAIT)) {
     // If monitor has already triggered, we just return.
     bool monitor_armed = true;
@@ -218,12 +224,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
   }
   else {
     BX_CPU_THIS_PTR monitor.reset_monitor(); // Monitorless MWAIT
-  }
-
-  static bool mwait_is_nop = SIM->get_param_bool(BXPN_MWAIT_IS_NOP)->get();
-  if (mwait_is_nop) {
-    BX_CPU_THIS_PTR monitor.reset_monitor();
-    BX_NEXT_TRACE(i);
   }
 
   // stops instruction execution and places the processor in a optimized
@@ -339,6 +339,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMWAIT_Ed(bxInstruction_c *i)
 
   clearEFlagsOSZAPC();
 
+  static bool mwait_is_nop = SIM->get_param_bool(BXPN_MWAIT_IS_NOP)->get();
+  if (mwait_is_nop) {
+    BX_CPU_THIS_PTR monitor.reset_umonitor();
+    BX_NEXT_TRACE(i);
+  }
+
   if (i->getIaOpcode() != BX_IA_TPAUSE_Ed) {
     // If monitor has already triggered, we just return.
     if (! BX_CPU_THIS_PTR monitor.armed_by_umonitor()) {
@@ -350,15 +356,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMWAIT_Ed(bxInstruction_c *i)
     BX_CPU_THIS_PTR monitor.reset_umonitor();
   }
 
-  static bool mwait_is_nop = SIM->get_param_bool(BXPN_MWAIT_IS_NOP)->get();
-  if (mwait_is_nop) {
-    BX_NEXT_TRACE(i);
-  }
-
   Bit64u tsc = get_Virtual_TSC();
   Bit64u instr_deadline = GET64_FROM_HI32_LO32(EDX, EAX);
   if (instr_deadline <= tsc) {
     BX_DEBUG(("%s: requested deadline is in the past", i->getIaOpcodeNameShort()));
+    BX_CPU_THIS_PTR monitor.reset_umonitor();
     BX_NEXT_TRACE(i);
   }
   Bit64u instr_delay = instr_deadline - tsc;
@@ -377,6 +379,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMWAIT_Ed(bxInstruction_c *i)
 
   if (instr_delay == 0) {
     BX_DEBUG(("%s: requested delay is 0", i->getIaOpcodeNameShort()));
+    BX_CPU_THIS_PTR monitor.reset_umonitor();
     BX_NEXT_TRACE(i);
   }
 

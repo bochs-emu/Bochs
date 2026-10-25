@@ -196,7 +196,7 @@ Changes after Bochs 3.1:
 + MONITOR/UMONITOR: direct host access to the monitored page was not disabled in the TLB (physical address was used as linear for invalidation), stores through cached host pointers missed the monitor + MONITOR also no longer wakes and disarms other processors
 - SVM: MONITOR/MONITORX on non-WB memory skipped the MONITOR intercept check
 - MONITOR/MWAIT: extensions operand is RCX only in 64-bit mode and ECX otherwise, MONITORX/MWAITX always use 32-bit ECX (stale RCX[63:32] caused #GP)
-- MWAIT: address-range monitoring must be cleared after MWAIT completes if the processor did not enter the optimized state
+- MWAIT/UMWAIT: address-range monitoring must be cleared after MWAIT/UMWAIT completes if the processor did not enter the optimized state
 - INVPCID: #GP(0) for CPL != 0 must have priority over VM exit due to "INVLPG exiting" in VMX guest
 - INVPCID/INVEPT/INVVPID: the type register operand is always 64-bit in 64-bit mode (was read as 32-bit without REX.W)
 - LAPIC_EXT: AMD IER masked in-service vectors as well, EOI/PPR ignored in-service vectors disabled in IER (IER only applies to pending interrupts)
