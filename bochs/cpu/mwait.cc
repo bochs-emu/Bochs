@@ -92,7 +92,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 #endif
   }
 
-  if (RCX != 0) {
+  // RCX specifies optional extensions in 64-bit mode, ECX otherwise,
+  // MONITORX extensions operand is always 32-bit ECX
+  Bit64u extensions = RCX;
+  if (i->getIaOpcode() == BX_IA_MONITORX || ! long64_mode())
+    extensions = ECX;
+
+  if (extensions != 0) {
     BX_ERROR(("%s: no optional extensions supported", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -102,17 +108,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
   // MONITOR/MONITORX performs the same segmentation and paging checks as a 1-byte read
   tickle_read_virtual(i->seg(), eaddr);
 
+#if BX_SUPPORT_SVM
+  // MONITOR intercept is checked after all exceptions (APM Table 15-7)
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(SVM_INTERCEPT1_MONITOR)) Svm_Vmexit(SVM_VMEXIT_MONITOR);
+  }
+#endif
+
   bx_phy_address paddr = BX_CPU_THIS_PTR address_xlation.paddress1;
 #if BX_SUPPORT_MEMTYPE
   if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) {
     BX_DEBUG(("%s for non-WB memory type phys_addr=0x" FMT_PHY_ADDRX, i->getIaOpcodeNameShort(), paddr));
     BX_NEXT_INSTR(i);
-  }
-#endif
-
-#if BX_SUPPORT_SVM
-  if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(SVM_INTERCEPT1_MONITOR)) Svm_Vmexit(SVM_VMEXIT_MONITOR);
   }
 #endif
 
@@ -168,7 +175,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MONITORLESS_MWAIT))
     supported_bits |= BX_MWAIT_MONITORLESS_MWAIT;
 
-  if (RCX & ~supported_bits) {
+  // RCX specifies optional extensions in 64-bit mode, ECX otherwise,
+  // MWAITX extensions operand is always 32-bit ECX
+  Bit64u extensions = RCX;
+  if (i->getIaOpcode() == BX_IA_MWAITX || ! long64_mode())
+    extensions = ECX;
+
+  if (extensions & ~supported_bits) {
     BX_ERROR(("%s: incorrect optional extensions in RCX", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -181,6 +194,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
     if (SVM_INTERCEPT(SVM_INTERCEPT1_MWAIT)) Svm_Vmexit(SVM_VMEXIT_MWAIT);
   }
 #endif
+
+  // Address-range monitoring is always clear after MWAIT completes executing,
+  // if the processor did not enter the optimized state
 
   if (! (ECX & BX_MWAIT_MONITORLESS_MWAIT)) {
     // If monitor has already triggered, we just return.
@@ -196,6 +212,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 
     if (! monitor_armed) {
       BX_DEBUG(("%s: the MONITOR was not armed or already triggered", i->getIaOpcodeNameShort()));
+      BX_CPU_THIS_PTR monitor.reset_monitor();
       BX_NEXT_TRACE(i);
     }
   }
@@ -205,6 +222,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 
   static bool mwait_is_nop = SIM->get_param_bool(BXPN_MWAIT_IS_NOP)->get();
   if (mwait_is_nop) {
+    BX_CPU_THIS_PTR monitor.reset_monitor();
     BX_NEXT_TRACE(i);
   }
 
@@ -222,6 +240,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
     // won't cause the processor to enter sleep state with EFLAGS.IF = 0
     if (BX_CPU_THIS_PTR in_vmx_guest) {
       if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls1.INTERRUPT_WINDOW_VMEXIT() && ! BX_CPU_THIS_PTR get_IF()) {
+        BX_CPU_THIS_PTR monitor.reset_monitor();
         BX_NEXT_TRACE(i);
       }
     }
