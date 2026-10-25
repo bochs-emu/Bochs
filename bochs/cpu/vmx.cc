@@ -2448,7 +2448,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   handleCpuContextChange();
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  BX_CPU_THIS_PTR monitor.reset_monitor();
+  BX_CPU_THIS_PTR wakeup_monitor();
 #endif
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);
@@ -3090,10 +3090,6 @@ void BX_CPU_C::VMexitLoadHostState(void)
 
   handleCpuContextChange();
 
-#if BX_SUPPORT_MONITOR_MWAIT
-  BX_CPU_THIS_PTR monitor.reset_monitor();
-#endif
-
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);
 }
 
@@ -3304,7 +3300,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXON(bxInstruction_c *i)
     // block and disable A20M;
 
 #if BX_SUPPORT_MONITOR_MWAIT
-    BX_CPU_THIS_PTR monitor.reset_monitor();
+    BX_CPU_THIS_PTR wakeup_monitor();
 #endif
 
     VMsucceed();
@@ -3352,7 +3348,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXOFF(bxInstruction_c *i)
     unmask_event(BX_EVENT_INIT);
      // unblock and enable A20M;
 #if BX_SUPPORT_MONITOR_MWAIT
-    BX_CPU_THIS_PTR monitor.reset_monitor();
+    BX_CPU_THIS_PTR wakeup_monitor();
 #endif
     VMsucceed();
   }

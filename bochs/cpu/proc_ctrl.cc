@@ -1048,10 +1048,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-#if BX_SUPPORT_MONITOR_MWAIT
-  BX_CPU_THIS_PTR monitor.reset_umonitor();
-#endif
-
   BX_INSTR_FAR_BRANCH_ORIGIN();
 
 #if BX_SUPPORT_X86_64
@@ -1234,10 +1230,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
   }
 
   invalidate_prefetch_q();
-
-#if BX_SUPPORT_MONITOR_MWAIT
-  BX_CPU_THIS_PTR monitor.reset_umonitor();
-#endif
 
   BX_INSTR_FAR_BRANCH_ORIGIN();
 

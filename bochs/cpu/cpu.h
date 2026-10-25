@@ -908,11 +908,6 @@ struct monitor_addr_t {
           armed_by = BX_MONITOR_NOT_ARMED;
     }
 
-    BX_CPP_INLINE void reset_monitorx(void) {
-      if (armed_by == BX_MONITOR_ARMED_BY_MONITORX)
-          armed_by = BX_MONITOR_NOT_ARMED;
-    }
-
     BX_CPP_INLINE bool armed(void) const { return armed_by != BX_MONITOR_NOT_ARMED; }
     BX_CPP_INLINE bool armed_by_monitor(void) const { return armed_by == BX_MONITOR_ARMED_BY_MONITOR; }
     BX_CPP_INLINE bool armed_by_monitorx(void) const { return armed_by == BX_MONITOR_ARMED_BY_MONITORX; }

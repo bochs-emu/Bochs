@@ -314,7 +314,7 @@ void BX_CPU_C::SvmExitLoadHostState(SVM_HOST_STATE *host)
   handleCpuContextChange();
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  BX_CPU_THIS_PTR monitor.reset_monitor();
+  BX_CPU_THIS_PTR wakeup_monitor();
 #endif
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);
@@ -762,7 +762,7 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   handleCpuContextChange();
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  BX_CPU_THIS_PTR monitor.reset_monitor();
+  BX_CPU_THIS_PTR wakeup_monitor();
 #endif
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);

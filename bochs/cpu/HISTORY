@@ -192,11 +192,12 @@ Changes after Bochs 3.1:
 - PKU/PKS: PKRU change by XRSTOR or PKRS change by WRMSR did not invalidate the stack cache (stack accesses ignored the new protection keys rights), WRPKRU no longer flushes the TLB
 - PKU/PKS: separate TLB protection key masks for user (PKRU) and supervisor (PKRS) pages, PKRU access disable must block supervisor accesses to user pages cached in the TLB
 - PAT/PCID: memory type of the PML4/PML5 table access must use PAT entry 0 when CR4.PCIDE=1 (CR3 PCID bits were used as PCD/PWT)
-- MONITOR/MWAIT: write to the last byte of the monitored cache line did not wake up the monitor (off-by-one in monitor range check)
-+ MONITOR/UMONITOR: direct host access to the monitored page was not disabled in the TLB (physical address was used as linear for invalidation), stores through cached host pointers missed the monitor + MONITOR also no longer wakes and disarms other processors
-- SVM: MONITOR/MONITORX on non-WB memory skipped the MONITOR intercept check
+- MWAIT/WAITPKG: write to the last byte of the monitored cache line did not wake up the monitor (off-by-one in monitor range check)
++ MWAIT/WAITPKG: direct host access to the monitored page was not disabled in the TLB (physical address was used as linear for invalidation), stores through cached host pointers missed the monitor + MONITOR also no longer wakes and disarms other processors
+- MWAIT/WAITPKG: address-range monitoring must be cleared after MWAIT/UMWAIT completes if the processor did not enter the optimized state
+- MWAIT/WAITPKG: reset all address-range monitors (and wake up from MWAIT state) on every far control transfer (any CS load, including interrupts, IRET/far RET, SYSENTER/SYSEXIT/SYSCALL/SYSRET and task switch), FRED event delivery/ERETU/ERETS, user interrupt delivery/UIRET, VMX/SVM transitions and SMM entry/RSM
 - MONITOR/MWAIT: extensions operand is RCX only in 64-bit mode and ECX otherwise, MONITORX/MWAITX always use 32-bit ECX (stale RCX[63:32] caused #GP)
-- MWAIT/UMWAIT: address-range monitoring must be cleared after MWAIT/UMWAIT completes if the processor did not enter the optimized state
+- SVM: MONITOR/MONITORX on non-WB memory skipped the MONITOR intercept check
 - INVPCID: #GP(0) for CPL != 0 must have priority over VM exit due to "INVLPG exiting" in VMX guest
 - INVPCID/INVEPT/INVVPID: the type register operand is always 64-bit in 64-bit mode (was read as 32-bit without REX.W)
 - LAPIC_EXT: AMD IER masked in-service vectors as well, EOI/PPR ignored in-service vectors disabled in IER (IER only applies to pending interrupts)

@@ -76,6 +76,10 @@ void BX_CPU_C::deliver_UINTR()
   BX_CPU_THIS_PTR clear_RF();
   RIP = BX_CPU_THIS_PTR uintr.ui_handler;
 
+#if BX_SUPPORT_MONITOR_MWAIT
+  BX_CPU_THIS_PTR wakeup_monitor();
+#endif
+
   uintr_control(); // UIF changed
 }
 
@@ -115,7 +119,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UIRET(bxInstruction_c *i)
   RSP = new_rsp;
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  BX_CPU_THIS_PTR monitor.reset_monitor();
+  BX_CPU_THIS_PTR wakeup_monitor();
 #endif
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_FLEXIBLE_UIRET))

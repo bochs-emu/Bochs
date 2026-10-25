@@ -511,6 +511,10 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 
   writeEFlags(newEFLAGS, EFlagsValidMask);
 
+#if BX_SUPPORT_MONITOR_MWAIT
+  BX_CPU_THIS_PTR wakeup_monitor();
+#endif
+
   // Fill in selectors for all segment registers.  If errors
   // occur later, the selectors will at least be loaded.
   parse_selector(raw_cs_selector, &cs_selector);

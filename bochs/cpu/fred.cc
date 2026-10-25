@@ -37,6 +37,10 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
   // exception encountered during delivery of SYSCALL or SYSENTER should not report STI blocking
   BX_CPU_THIS_PTR inhibit_mask = 0;
 
+#if BX_SUPPORT_MONITOR_MWAIT
+  BX_CPU_THIS_PTR wakeup_monitor();
+#endif
+
   Bit32u old_CPL = CPL;
   Bit32u old_CSL = (CPL == 3) ? 0 : CSL;
 
@@ -317,6 +321,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETS(bxInstruction_c *i)
   }
 #endif
 
+#if BX_SUPPORT_MONITOR_MWAIT
+  BX_CPU_THIS_PTR wakeup_monitor();
+#endif
+
   RSP_COMMIT;
 
   RIP = new_RIP;
@@ -512,7 +520,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETU(bxInstruction_c *i)
 #endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  BX_CPU_THIS_PTR monitor.reset_umonitor();
+  BX_CPU_THIS_PTR wakeup_monitor();
 #endif
 
   bool pending_DB = (temp_SS >> 17) & 0x1;

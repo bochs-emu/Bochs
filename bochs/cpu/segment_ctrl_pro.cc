@@ -27,6 +27,12 @@
   void BX_CPP_AttrRegparmN(2)
 BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 {
+#if BX_SUPPORT_MONITOR_MWAIT
+  if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS]) {
+    BX_CPU_THIS_PTR wakeup_monitor();
+  }
+#endif
+
   if (protected_mode())
   {
     if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS])
@@ -730,6 +736,10 @@ void BX_CPU_C::setup_flat_CS(unsigned dpl, bool longmode)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b          = !longmode;
 #if BX_SUPPORT_X86_64
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l            =  longmode;
+#endif
+
+#if BX_SUPPORT_MONITOR_MWAIT
+  BX_CPU_THIS_PTR wakeup_monitor();
 #endif
 
 #if BX_SUPPORT_X86_64
