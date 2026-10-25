@@ -57,6 +57,7 @@ Changes after Bochs 3.1:
 - POPCNT: fix POPCNT instruction to depend on its own (already existing) CPUID feature flags and not SSE4.2
 - MISALIGNED_SSE: CVTPD2PI with memory operand ignored AMD misaligned SSE mode (MXCSR.MM) and required 16-byte alignment
 - FFXSR: FXRSTOR in FFXSR mode (EFER.FFXSR=1) must still restore MXCSR, only restore of XMM registers is skipped
++ FMA4/XOP: four operand FMA4, VPCMOV, VPPERM and VPERMIL2PS/PD instructions had second and third source operands swapped (VEX.W0 must take src2 from ModRM.r/m and src3 from imm8[7:4], VEX.W1 the opposite)
 - REP_MOVSW/D/Q: Each MOVSD or MOVSQ iteration must read one complete source dword or qword before writing it to the destination. Do not allow copying partial words/dword/qwords.
 - AVX: Fixed order of unmasked exceptions handling in VDPPS instruction. VDPPS must determine SIMD floating-point exceptions separately for each multiply and add operation in execution order.
 - x86-64: implement ENTER and LEAVE instructions with OperandSize=16 and StackSize=64

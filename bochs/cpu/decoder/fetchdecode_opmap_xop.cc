@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2024 Stanislav Shwartsman
+//   Copyright (c) 2011-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -75,13 +75,13 @@ static const Bit64u BxOpcodeGroup_XOP_0x8_9E[] = { last_opcode(ATTR_VEX_W0 | ATT
 static const Bit64u BxOpcodeGroup_XOP_0x8_9F[] = { last_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VPMACSDQH_VdqHdqWdqVIb) };
 
 static const Bit64u BxOpcodeGroup_XOP_0x8_A2[] = {
-  form_opcode(ATTR_VEX_W0, BX_IA_VPCMOV_VdqHdqVIbWdq),
-  last_opcode(ATTR_VEX_W1, BX_IA_VPCMOV_VdqHdqWdqVIb)
+  form_opcode(ATTR_VEX_W1, BX_IA_VPCMOV_VdqHdqVIbWdq),
+  last_opcode(ATTR_VEX_W0, BX_IA_VPCMOV_VdqHdqWdqVIb)
 };
 
 static const Bit64u BxOpcodeGroup_XOP_0x8_A3[] = {
-  form_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VPPERM_VdqHdqVIbWdq),
-  last_opcode(ATTR_VEX_W1 | ATTR_VEX_L0, BX_IA_VPPERM_VdqHdqWdqVIb)
+  form_opcode(ATTR_VEX_W1 | ATTR_VEX_L0, BX_IA_VPPERM_VdqHdqVIbWdq),
+  last_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VPPERM_VdqHdqWdqVIb)
 };
 
 static const Bit64u BxOpcodeGroup_XOP_0x8_A6[] = { last_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VPMADCSSWD_VdqHdqWdqVIb) };
