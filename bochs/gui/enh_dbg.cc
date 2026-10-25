@@ -23,7 +23,6 @@
 #include "pc_system.h"
 #include "cpu/cpu.h"
 
-extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base, bx_address rip);
 extern const char *stringify_EFLAGS(Bit32u eflags, char *s);
 
 #include "enh_dbg.h"
@@ -35,8 +34,6 @@ extern const char *stringify_EFLAGS(Bit32u eflags, char *s);
 #define MATCH_FALSE 0
 #define MATCH_ABORT -1
 
-#define OPTIMIZE_JUST_STAR
-
 const char* DC0txt[2] = {"P.Address","L.Address"};    // DumpMode definitions in text
 
 const char* BTxt[NBUTTONS] = {
@@ -46,7 +43,6 @@ const char* BTxt[NBUTTONS] = {
   "Step Over",
   "Refresh",
   "Break [^C]",
-//"Break All"
 };
 
 int BtnLkup[NBUTTONS] = {
@@ -292,9 +288,7 @@ static int DoMatch(const char *text, const char *p, bool IsCaseSensitive)
 {
     // probably the MOST DIFFICULT FUNCTION in TurboIRC
     // Thanks to BitchX for copying this function
-    //int last;
     int matched;
-    //int reverse;
     int pT = 0;
     int pP = 0;
 
@@ -304,10 +298,6 @@ static int DoMatch(const char *text, const char *p, bool IsCaseSensitive)
             return MATCH_ABORT;
         switch (p[pP])
         {
-            //         case '\\': // Match with following char
-            //                pP++;
-            // NO BREAK HERE
-
             default:
                 if (IsCaseSensitive)
                 {
@@ -341,19 +331,11 @@ static int DoMatch(const char *text, const char *p, bool IsCaseSensitive)
     return (text[pT] == '\0');
 }
 
-// This will be called from the other funcs
-static int VMatching(const char *text, const char *p, bool IsCaseSensitive)
-{
-#ifdef OPTIMIZE_JUST_STAR
-    if (p[0] == '*' && p[1] == '\0')
-        return MATCH_TRUE;
-#endif
-    return (DoMatch(text, p, IsCaseSensitive) == MATCH_TRUE);
-}
-
 static int IsMatching(const char *text, const char *p, bool IsCaseSensitive)
 {
-    return VMatching(text, p, IsCaseSensitive);
+    if (p[0] == '*' && p[1] == '\0')
+        return MATCH_TRUE;
+    return (DoMatch(text, p, IsCaseSensitive) == MATCH_TRUE);
 }
 
 // utility function for list resizing operation -- set LoX and HiX
@@ -441,13 +423,6 @@ static void upr(char* d)
     }
 }
 
-// create EFLAGS display for Status line
-static void ShowEflags(char *buf)
-{
-    Bit32u Efl = (Bit32u) rV[EFL_Rnum];
-    stringify_EFLAGS(Efl, buf);
-}
-
 // change the display on the status line if anything has changed
 void UpdateStatus()
 {
@@ -459,7 +434,7 @@ void UpdateStatus()
     if (AtBreak)   // modify status line only during a break
     {
         char eflags_buf[80];
-        ShowEflags(eflags_buf);         // prints out eflags
+        stringify_EFLAGS((Bit32u) rV[EFL_Rnum], eflags_buf);     // prints out eflags
         SetStatusText(3, eflags_buf);   // display eflags
 
         if (CpuModeChange)     // Did CR0 bits or EFER bits change value?
@@ -505,13 +480,6 @@ void UpdateStatus()
         // switch window color ("active"=white or gray), depending on AtBreak value
         MakeListsGray();
     PrevAtBreak = AtBreak;
-}
-
-// Read a copy of some emulated linear bochs memory
-// Note: laddr + len must not cross a 4K boundary -- otherwise, there are no limits
-static bool ReadBxLMem(Bit64u laddr, unsigned len, Bit8u *buf)
-{
-    return bx_dbg_read_linear(CurrentCPU, laddr, len, buf);
 }
 
 // binary conversion (and validity testing) on hex/decimal char string inputs
@@ -934,7 +902,7 @@ static void FillAsm(Bit64u LAddr, int MaxLines)
             *(s++)= *(p++);
         // load buffer, up to the next 4k boundary
         len = 4096 - (((int) ReadAddr) & 0xfff);    // calculate read amount
-        Go = ReadBxLMem(ReadAddr, len, (Bit8u *) s);
+        Go = bx_dbg_read_linear(CurrentCPU, ReadAddr, len, (Bit8u *) s);
         BufLen += len;
         ReadAddr += len;
         if (Go == FALSE)
@@ -1255,8 +1223,7 @@ static void InitRegObjects()
         sprintf (pname,"bochs.cpu%d", cpu);    // set the "cpu number" for cpu_list
         cpu_list = (bx_list_c *) SIM->get_param(pname, root_param);
 
-        // TODO: in the next version, put all the names in an array, and loop
-        // -- but that method is not compatible with bochs 2.3.7 or earlier
+        // TODO: put all the names in an array, and loop
 #if BX_SUPPORT_X86_64 == 0
         RegObject[cpu][EAX_Rnum] = SIM->get_param_num("EAX", cpu_list);
         RegObject[cpu][EBX_Rnum] = SIM->get_param_num("EBX", cpu_list);
@@ -1475,7 +1442,7 @@ static void FillGDT()
     {
         // read 2 dwords from bochs linear mem into "buffer"
         sprintf(cols[0], "%02u (Selector 0x%04X)", i, i << 3);
-        if (ReadBxLMem(laddr, 8, gdtbuf) == FALSE)      // abort the current GDT dump on a memory error
+        if (bx_dbg_read_linear(CurrentCPU, laddr, 8, gdtbuf) == FALSE)      // abort the current GDT dump on a memory error
         {
             cols[1]= gdttxt;    // ERROR - blank out cols #2 - 4 for this new row
             cols[2]= gdttxt;
@@ -1495,7 +1462,7 @@ static void FillGDT()
             unsigned type = gdtbuf[5] & 0xf;
             if (type == 0x2 || type == 0x9 || type == 0xb || type == 0xc)
             {
-                if (ReadBxLMem(laddr, 8, gdtbuf + 8) != FALSE)
+                if (bx_dbg_read_linear(CurrentCPU, laddr, 8, gdtbuf + 8) != FALSE)
                 {
                     Desc16 = TRUE;
                     laddr += 8;
@@ -1621,7 +1588,7 @@ static void FillIDT()
         idttxt[1] = AsciiHex[2*i];
         idttxt[2] = AsciiHex[2*i+1];
         idttxt[3] = 0;
-        if (ReadBxLMem(laddr, entrysize, idtbuf) == FALSE)      // abort the current IDT dump on a memory error
+        if (bx_dbg_read_linear(CurrentCPU, laddr, entrysize, idtbuf) == FALSE)      // abort the current IDT dump on a memory error
         {
             strcpy (cols[17],"illegal address");
             InsertListRow(cols, 18, DUMP_WND, i, 8);    // 18 cols, "no group"
@@ -1809,7 +1776,7 @@ static void FillStack()
     {
         unsigned int ReadSize = 0x1000 - i;
         // read up to the 4K boundary, then try to read the last chunk
-        if (ReadBxLMem(StackLA, ReadSize, (Bit8u *) cp) == FALSE)
+        if (bx_dbg_read_linear(CurrentCPU, StackLA, ReadSize, (Bit8u *) cp) == FALSE)
         {
             // no data to show -- just one error message
             sprintf (cols[17],"illegal address");
@@ -1818,12 +1785,12 @@ static void FillStack()
             EndListUpdate(DUMP_WND);
             return;
         }
-        LglAddy = ReadBxLMem(StackLA + ReadSize, len + i - 0x1000, (Bit8u *) cp + ReadSize);
+        LglAddy = bx_dbg_read_linear(CurrentCPU, StackLA + ReadSize, len + i - 0x1000, (Bit8u *) cp + ReadSize);
         if (LglAddy == FALSE)
             len = ReadSize;
     }
     else
-        ReadBxLMem(StackLA, len, (Bit8u *) cp);
+        bx_dbg_read_linear(CurrentCPU, StackLA, len, (Bit8u *) cp);
 
     UpdateDisp = CpuModeChange;     // calculate which stack entries have changed
     cp = CurStack;
@@ -2115,16 +2082,16 @@ static void RefreshDataDump(Bit8u *buffer)
         unsigned len = (int) DumpStart & 0xfff;
         unsigned i = 4096 - len;
         Bit64u h = DumpStart + i;
-        retval = ReadBxLMem(DumpStart, i, buffer);
+        retval = bx_dbg_read_linear(CurrentCPU, DumpStart, i, buffer);
         if (retval != FALSE && len != 0)
-            retval = ReadBxLMem(h, len, buffer + i);
+            retval = bx_dbg_read_linear(CurrentCPU, h, len, buffer + i);
     } else {
         retval = bx_mem.dbg_fetch_mem(BX_CPU(CurrentCPU),
             (bx_phy_address)DumpStart, 4096, buffer);
     }
 }
 
-// do the ShowData display work asynchronously, as a thread
+// display the MemDump window
 void ShowData()
 {
     unsigned int i;
@@ -2457,9 +2424,9 @@ static bool InitDataDump(bool isLinear, Bit64u newDS)
         unsigned len = (int) newDS & 0xfff;
         unsigned i = 4096 - len;
         Bit64u h = newDS + i;
-        retval = ReadBxLMem(newDS,i,(Bit8u *)DataDump);
+        retval = bx_dbg_read_linear(CurrentCPU, newDS,i,(Bit8u *)DataDump);
         if (retval != FALSE && len != 0)
-            retval = ReadBxLMem(h,len,(Bit8u *)DataDump + i);
+            retval = bx_dbg_read_linear(CurrentCPU, h,len,(Bit8u *)DataDump + i);
     }
     else {
         retval = (bool) bx_mem.dbg_fetch_mem(BX_CPU(CurrentCPU),
@@ -2887,12 +2854,8 @@ void ChangeReg()
         if (i >= EAX_Rnum && i <= EIP_Rnum) // must use RAX-RIP when setting 32b registers
             i -= EAX_Rnum - RAX_Rnum;
 #endif
-        RegObject[CurrentCPU][i]->set(val); // the set function should be a bool, not a void
-//      bool worked = RegObject[CurrentCPU][i]->set(val);
-//      if (! worked)
-//          DispMessage ("Bochs does not allow you to set that register","Selection Error");
-//      else
-            LoadRegList();      // update the register window
+        RegObject[CurrentCPU][i]->set(val);
+        LoadRegList();      // update the register window
     }
 }
 
