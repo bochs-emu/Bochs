@@ -326,7 +326,7 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
  Dependency: longmode
 
-- CPU Feature: RDTSCP
+- CPU Feature: rdtscp
 
  Enables CPUID[0x80000001].EDX[27] flag.
  Enables MSR_TSC_AUX register.
