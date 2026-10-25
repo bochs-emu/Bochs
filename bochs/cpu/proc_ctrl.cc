@@ -1494,6 +1494,10 @@ void BX_CPU_C::set_PKeys(Bit32u pkru_val, Bit32u pkrs_val)
     BX_CPU_THIS_PTR wr_pkey[i] |= BX_CPU_THIS_PTR wr_pkey[i]<<4;
 #endif
   }
+
+  // TLB entries are checked against rd_pkey/wr_pkey on every access and don't
+  // need to be invalidated, but the stack cache was validated with old values
+  invalidate_stack_cache();
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPKRU(bxInstruction_c *i)
@@ -1519,8 +1523,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRPKRU(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
 
   BX_CPU_THIS_PTR set_PKeys(EAX, BX_CPU_THIS_PTR pkrs);
-
-  TLB_flush();
 
   BX_NEXT_TRACE(i);
 }
