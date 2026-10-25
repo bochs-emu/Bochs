@@ -235,10 +235,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
   Bit32u new_state = BX_ACTIVITY_STATE_MWAIT;
   if (ECX & 0x1) {
 #if BX_SUPPORT_VMX
-    // When "interrupt window exiting" VMX control is set MWAIT instruction
-    // won't cause the processor to enter sleep state with EFLAGS.IF = 0
+    // When "interrupt window exiting" VMX control is set or the logical processor has recognized
+    // a pending virtual interrupt MWAIT instruction won't cause the processor to enter sleep state with EFLAGS.IF = 0
     if (BX_CPU_THIS_PTR in_vmx_guest) {
-      if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls1.INTERRUPT_WINDOW_VMEXIT() && ! BX_CPU_THIS_PTR get_IF()) {
+      if ((BX_CPU_THIS_PTR vmcs.vmexec_ctrls1.INTERRUPT_WINDOW_VMEXIT() || is_pending(BX_EVENT_PENDING_VMX_VIRTUAL_INTR)) &&
+          ! BX_CPU_THIS_PTR get_IF())
+      {
         BX_CPU_THIS_PTR monitor.reset_monitor();
         BX_NEXT_TRACE(i);
       }

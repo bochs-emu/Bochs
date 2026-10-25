@@ -199,6 +199,8 @@ Changes after Bochs 3.1:
 - MONITOR/MWAIT: extensions operand is RCX only in 64-bit mode and ECX otherwise, MONITORX/MWAITX always use 32-bit ECX (stale RCX[63:32] caused #GP)
 - SVM: MONITOR/MONITORX on non-WB memory skipped the MONITOR intercept check
 - SVM: conditional MWAIT/MWAITX intercept must be taken only if the instruction would enter the low-power state (monitor armed by matching MONITOR/MONITORX, or monitorless MWAIT)
+- VMX: virtual-interrupt delivery must wake the logical processor from HLT and MWAIT
+- MWAIT/VMX: MWAIT with ECX[0]=1 and EFLAGS.IF=0 must not enter the optimized state when a pending virtual interrupt is recognized
 - INVPCID: #GP(0) for CPL != 0 must have priority over VM exit due to "INVLPG exiting" in VMX guest
 - INVPCID/INVEPT/INVVPID: the type register operand is always 64-bit in 64-bit mode (was read as 32-bit without REX.W)
 - LAPIC_EXT: AMD IER masked in-service vectors as well, EOI/PPR ignored in-service vectors disabled in IER (IER only applies to pending interrupts)

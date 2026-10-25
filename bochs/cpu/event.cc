@@ -56,8 +56,10 @@ bool BX_CPU_C::handleWaitForEvent(void)
     // it never wakes from HLT/MWAIT which can be executed only with CPL=0
     // external interrupt masking is tracked by the event mask: EFLAGS.IF, or host EFLAGS.IF for SVM guest
     // with V_INTR_MASKING, or not masked at all for VMX guest with external-interrupt exiting
-    if (is_unmasked_event_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR) ||
-        (is_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR) && BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF) ||
+    // virtual-interrupt delivery wakes the logical processor from the same states as an external interrupt
+    if (is_unmasked_event_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR | BX_EVENT_PENDING_VMX_VIRTUAL_INTR) ||
+        (is_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR | BX_EVENT_PENDING_VMX_VIRTUAL_INTR) &&
+            BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF) ||
 #if BX_SUPPORT_UINTR
          is_unmasked_event_pending(BX_EVENT_PENDING_UINTR) ||
 #endif
