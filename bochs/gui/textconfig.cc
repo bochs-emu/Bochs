@@ -941,6 +941,8 @@ int text_ask(bx_param_c *param)
   const char *help = param->get_description();
   Bit32u options = param->get_options();
 
+  if (help == NULL) help = "No help available";
+
   bx_printf("\n");
   switch (param->get_type()) {
     case BXT_PARAM_NUM:
