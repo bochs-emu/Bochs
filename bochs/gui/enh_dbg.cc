@@ -3166,9 +3166,8 @@ void ActivateMenuItem (int cmd)
         case CMD_STEP1: // step 1
             if (AtBreak && ! debug_cmd_ready)
             {
-                bx_dbg_stepN_command(CurrentCPU, 1);        // singlestep
-                StatusChange = TRUE;
-                OnBreak();
+                sprintf(tmpcb, "s %d 1", CurrentCPU);       // singlestep
+                SendDebugCmd(tmpcb);
             }
             break;
 
