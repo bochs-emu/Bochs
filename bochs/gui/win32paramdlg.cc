@@ -462,7 +462,14 @@ void CleanupParamDialog(bx_list_c *list)
   if (!embedded || (list == NULL)) {
     DeleteObject(DlgFont);
     DlgFont = NULL;
-    DestroyWindow(hwndTT);
+    if (hwndTT != NULL) {
+      DestroyWindow(hwndTT);
+      hwndTT = NULL;
+    }
+    if (tt_hhk != NULL) {
+      UnhookWindowsHookEx(tt_hhk);
+      tt_hhk = NULL;
+    }
     embedded = false;
   }
   cleanupDlgList(list);
