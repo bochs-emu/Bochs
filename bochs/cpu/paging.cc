@@ -1616,13 +1616,15 @@ BxMemtype BX_CPP_AttrRegparmN(2) BX_CPU_C::resolve_memtype(BxMemtype mtrr_memtyp
     case BX_MEMTYPE_WT:
     case BX_MEMTYPE_WP:
       if (mtrr_memtype == BX_MEMTYPE_WC) return BX_MEMTYPE_UC;
+      if (mtrr_memtype == BX_MEMTYPE_WT && pat_memtype == BX_MEMTYPE_WP) return BX_MEMTYPE_WP;
       return (mtrr_memtype < pat_memtype) ? mtrr_memtype : pat_memtype;
 
     case BX_MEMTYPE_WB:
       return mtrr_memtype;
 
     case BX_MEMTYPE_UC_WEAK:
-      return (mtrr_memtype == BX_MEMTYPE_WC) ? BX_MEMTYPE_WC : BX_MEMTYPE_UC;
+      // MTRR WC and WP memory types combined with PAT UC- result in WC (SDM Table 14-7)
+      return (mtrr_memtype == BX_MEMTYPE_WC || mtrr_memtype == BX_MEMTYPE_WP) ? BX_MEMTYPE_WC : BX_MEMTYPE_UC;
 
     default:
       BX_PANIC(("unexpected PAT memory type: %u", (unsigned) pat_memtype));

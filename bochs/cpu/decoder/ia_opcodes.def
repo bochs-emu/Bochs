@@ -1760,6 +1760,10 @@ bx_define_opcode(BX_IA_VMWRITE_GqEq, "vmwrite", "vmwriteq", &BX_CPU_C::VMWRITE_G
 #if BX_CPU_LEVEL >= 6
 bx_define_opcode(BX_IA_INVEPT, "invept", "invept", &BX_CPU_C::INVEPT, &BX_CPU_C::BxError, BX_ISA_VMX, OP_Gd, OP_Wdq, OP_NONE, OP_NONE, BX_PROTECTED_MODE_ONLY | BX_TRACE_END)
 bx_define_opcode(BX_IA_INVVPID, "invvpid", "invvpid", &BX_CPU_C::INVVPID, &BX_CPU_C::BxError, BX_ISA_VMX, OP_Gd, OP_Wdq, OP_NONE, OP_NONE, BX_PROTECTED_MODE_ONLY | BX_TRACE_END)
+#if BX_SUPPORT_X86_64
+bx_define_opcode(BX_IA_INVEPT_Gq, "invept", "invept", &BX_CPU_C::INVEPT, &BX_CPU_C::BxError, BX_ISA_VMX, OP_Gq, OP_Wdq, OP_NONE, OP_NONE, BX_PROTECTED_MODE_ONLY | BX_TRACE_END)
+bx_define_opcode(BX_IA_INVVPID_Gq, "invvpid", "invvpid", &BX_CPU_C::INVVPID, &BX_CPU_C::BxError, BX_ISA_VMX, OP_Gq, OP_Wdq, OP_NONE, OP_NONE, BX_PROTECTED_MODE_ONLY | BX_TRACE_END)
+#endif
 #endif
 bx_define_opcode(BX_IA_VMFUNC, "vmfunc", "vmfunc", &BX_CPU_C::BxError, &BX_CPU_C::VMFUNC, BX_ISA_VMX, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 // VMX
@@ -1802,6 +1806,9 @@ bx_define_opcode(BX_IA_ENDBRANCH64, "endbranch64", "endbranch64", &BX_CPU_C::BxE
 
 #if BX_CPU_LEVEL >= 6
 bx_define_opcode(BX_IA_INVPCID, "invpcid", "invpcid", &BX_CPU_C::INVPCID, &BX_CPU_C::BxError, BX_ISA_INVPCID, OP_Gd, OP_Wdq, OP_NONE, OP_NONE, BX_TRACE_END)
+#if BX_SUPPORT_X86_64
+bx_define_opcode(BX_IA_INVPCID_Gq, "invpcid", "invpcid", &BX_CPU_C::INVPCID, &BX_CPU_C::BxError, BX_ISA_INVPCID, OP_Gq, OP_Wdq, OP_NONE, OP_NONE, BX_TRACE_END)
+#endif
 #endif
 
 #if BX_SUPPORT_PKEYS

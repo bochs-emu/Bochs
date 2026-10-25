@@ -1337,11 +1337,12 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
 
 #if BX_SUPPORT_PKEYS
   if (vm->vmexit_ctrls1.LOAD_HOST_PKRS()) {
-    host_state->pkrs = VMread64(VMCS_64BIT_HOST_IA32_PKRS);
-    if (GET32H(host_state->pkrs) != 0) {
+    Bit64u host_pkrs = VMread64(VMCS_64BIT_HOST_IA32_PKRS);
+    if (GET32H(host_pkrs) != 0) {
       BX_ERROR(("VMFAIL: invalid host IA32_PKRS value"));
       return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
     }
+    host_state->pkrs = (Bit32u) host_pkrs;
   }
 #endif
 
@@ -1609,11 +1610,12 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
 #if BX_SUPPORT_PKEYS
   if (vm->vmentry_ctrls.LOAD_GUEST_PKRS()) {
-    guest.pkrs = VMread64(VMCS_64BIT_GUEST_IA32_PKRS);
-    if (GET32H(guest.pkrs) != 0) {
+    Bit64u guest_pkrs = VMread64(VMCS_64BIT_GUEST_IA32_PKRS);
+    if (GET32H(guest_pkrs) != 0) {
       BX_ERROR(("VMFAIL: invalid guest IA32_PKRS value"));
       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
+    guest.pkrs = (Bit32u) guest_pkrs;
   }
 #endif
 
@@ -4147,7 +4149,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
   }
 
   bx_address type;
-  if (i->os64L()) {
+  if (long64_mode()) { // the register operand is always 64-bit in 64-bit mode
     type = BX_READ_64BIT_REG(i->dst());
   }
   else {
@@ -4205,7 +4207,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
   }
 
   bx_address type;
-  if (i->os64L()) {
+  if (long64_mode()) { // the register operand is always 64-bit in 64-bit mode
     type = BX_READ_64BIT_REG(i->dst());
   }
   else {
@@ -4299,6 +4301,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
+  // faults based on privilege level have priority over VM exit
+  if (CPL != 0) {
+    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeNameShort()));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
 #if BX_SUPPORT_VMX >= 2
   // INVPCID will always #UD in legacy VMX mode
   if (BX_CPU_THIS_PTR in_vmx_guest) {
@@ -4308,11 +4316,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
   }
 #endif
 
-  if (CPL != 0) {
-    BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeNameShort()));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
     if (SVM_INTERCEPT(SVM_INTERCEPT2_INVPCID)) Svm_Vmexit(SVM_VMEXIT_INVPCID);
@@ -4321,7 +4324,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
 
   bx_address type;
 #if BX_SUPPORT_X86_64
-  if (i->os64L()) {
+  if (long64_mode()) { // the register operand is always 64-bit in 64-bit mode
     type = BX_READ_64BIT_REG(i->dst());
   }
   else
