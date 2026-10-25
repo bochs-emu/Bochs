@@ -491,11 +491,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTPD2PI_PqWpd(bxInstruction_c *i)
   else {
     bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
-#if BX_SUPPORT_MISALIGNED_SSE
     if (BX_CPU_THIS_PTR mxcsr.get_MM())
       read_virtual_xmmword(i->seg(), eaddr, &op);
     else
-#endif
       read_virtual_xmmword_aligned(i->seg(), eaddr, &op);
   }
 

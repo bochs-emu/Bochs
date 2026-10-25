@@ -55,6 +55,7 @@ Changes after Bochs 3.1:
 - SSE/AVX: Fixed PSRLQ and PSRAVQ instructions with shift count = 64
 - SSE: PSHUFLW instruction should be supported under SSE2 instead of SSE
 - POPCNT: fix POPCNT instruction to depend on its own (already existing) CPUID feature flags and not SSE4.2
+- MISALIGNED_SSE: CVTPD2PI with memory operand ignored AMD misaligned SSE mode (MXCSR.MM) and required 16-byte alignment
 - REP_MOVSW/D/Q: Each MOVSD or MOVSQ iteration must read one complete source dword or qword before writing it to the destination. Do not allow copying partial words/dword/qwords.
 - AVX: Fixed order of unmasked exceptions handling in VDPPS instruction. VDPPS must determine SIMD floating-point exceptions separately for each multiply and add operation in execution order.
 - x86-64: implement ENTER and LEAVE instructions with OperandSize=16 and StackSize=64
