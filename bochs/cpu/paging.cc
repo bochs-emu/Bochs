@@ -827,6 +827,11 @@ Bit32u BX_CPU_C::handle_pkeys(bx_address laddr, Bit64u leaf_entry, unsigned user
 bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lpf_mask, Bit32u &pkey, unsigned user, unsigned rw)
 {
   Bit64u curr_entry = BX_CPU_THIS_PTR cr3;
+#if BX_SUPPORT_MEMTYPE
+  // with CR4.PCIDE=1 CR3[11:0] holds the PCID, PAT entry 0 is used to access the root paging table
+  if (BX_CPU_THIS_PTR cr4.get_PCIDE())
+    curr_entry &= ~BX_CONST64(0xfff);
+#endif
 
   bx_phy_address entry_addr[5];
   Bit64u entry[5];
