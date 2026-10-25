@@ -1214,6 +1214,29 @@ static void CanDoLA(Bit64u *h)
     }
 }
 
+// reload the ASM window around the current instruction
+static void ReloadAsm()
+{
+    if (AtBreak)
+    {
+        Bit64u h = CurrentAsmLA;
+        CanDoLA(&h);
+        FillAsm(h, DefaultAsmLines);
+    }
+    else
+        BottomAsmLA = ~0;   // force an ASM autoload
+}
+
+// set the scroll limits for a freshly loaded ASM window
+static void SetAsmScrollLimits()
+{
+    BottomAsmLA = *AsmLA;
+    int j = bottommargin;       // try to use this bottom margin on ASM window
+    if (j > AsmLineCount)
+        j = AsmLineCount;
+    TopAsmLA = AsmLA[AsmLineCount - j];     //TopAsmLA is the scroll point
+}
+
 static void InitRegObjects()
 {
     bx_list_c *cpu_list;
@@ -1403,11 +1426,7 @@ void doUpdate()
         FillAsm(h, DefaultAsmLines);
 
         // Set the scroll position for the new ASM window
-        BottomAsmLA = *AsmLA;
-        int j = bottommargin;       // try to use this bottom margin on ASM window
-        if (j > AsmLineCount)
-            j = AsmLineCount;
-        TopAsmLA = AsmLA[AsmLineCount - j];     //TopAsmLA is the scroll point
+        SetAsmScrollLimits();
     }
     else
         doAsmScroll();      // ASM window may need to scroll
@@ -2478,6 +2497,33 @@ static void ToggleSeeReg(int cmd)
         LoadRegList();  // do a register window update
 }
 
+// redisplay the MemDump window, if it is shown, after a display option change
+static void RedrawMemDump()
+{
+    if (DViewMode == VIEW_MEMDUMP && DumpInitted)
+    {
+        if (! AtBreak)
+            doDumpRefresh = TRUE;
+        else
+            ShowData();
+    }
+}
+
+// toggle ASCII (bit 0) or hex (bit 1) MemDump display, at least one must stay on
+static void ToggleDumpMode(int bit, int chk_cmd, int other_cmd)
+{
+    int i = DumpInAsciiMode ^ bit;
+    if (i != 0)
+    {
+        DumpInAsciiMode = i;
+        i &= bit;
+        SetMenuCheckmark (i, chk_cmd);
+        GrayMenuItem (i, other_cmd);
+        PrevDAD = 0;        // force columns to resize
+        RedrawMemDump();
+    }
+}
+
 static void doNewWSize(int i)
 {
     // DumpAlign is the "wordsize" in bytes -- need to "calculate" the power of 2
@@ -2491,13 +2537,7 @@ static void doNewWSize(int i)
         ToggleWSchecks(i, j);
         DumpWSIndex = i;
         DumpAlign = 1<<i;
-        if (DViewMode == VIEW_MEMDUMP && DumpInitted)
-        {
-            if (! AtBreak)
-                doDumpRefresh = TRUE;
-            else
-                ShowData();
-        }
+        RedrawMemDump();
     }
 }
 
@@ -2663,19 +2703,24 @@ static void doFind()
     }
 }
 
+// pass a command to the internal debugger (sim thread picks it up from debug_cmd)
+// The VGAW *MUST* be refreshed periodically -- it's best to use the timer.
+// Which means that the sim cannot be directly run from this msglp thread.
+static void SendDebugCmd(const char *cmd)
+{
+    AtBreak = FALSE;
+    StatusChange = TRUE;
+    strcpy(debug_cmd, cmd);
+    debug_cmd_ready = TRUE;     // must be last, the sim thread is polling it
+}
+
 static void doStepOver()
 {
     // can't run sim until everything is ready
     if (! AtBreak || debug_cmd_ready)
         return;
 
-    // The VGAW *MUST* be refreshed periodically -- it's best to use the timer.
-    // Which means that the sim cannot be directly run from this msglp thread.
-    *debug_cmd = 'p';   // send a fake "continue" command to the internal debugger
-    debug_cmd[1] = 0;
-    debug_cmd_ready = TRUE;
-    AtBreak = FALSE;
-    StatusChange = TRUE;
+    SendDebugCmd("p");  // send a "step over" command to the internal debugger
 }
 
 static void doStepN()
@@ -2691,10 +2736,8 @@ static void doStepN()
     if (i == 0)
         return;
     PrevStepNSize = i;
-    AtBreak = FALSE;
-    StatusChange = TRUE;
-    sprintf(debug_cmd, "s %d %d", CurrentCPU, i);
-    debug_cmd_ready = TRUE;
+    sprintf(tmpcb, "s %d %d", CurrentCPU, i);
+    SendDebugCmd(tmpcb);
 }
 
 // User wants a custom disassembly
@@ -2718,11 +2761,7 @@ static void doDisAsm()
         ShowFW();
     FillAsm(h, NumLines);
     // Set the scroll limits for the new ASM window
-    BottomAsmLA = *AsmLA;
-    int j = bottommargin;       // try to use this bottom margin on ASM window
-    if (j > AsmLineCount)
-        j = AsmLineCount;
-    TopAsmLA = AsmLA[AsmLineCount - j];     //TopAsmLA is the scroll point
+    SetAsmScrollLimits();
 }
 
 // Toggle all "selected" items as linear breakpoint on the ASM window
@@ -2932,59 +2971,46 @@ void SetMemLine(int L)
     }
 }
 
+void ActivateMenuItem (int cmd);
+
 // Alt, Shift, Control keys are "down" if negative
 // Normal return value is 0, return != 0 has OS-specific meaning.
 int HotKey (int ww, int Alt, int Shift, int Control)
 {
+    int cmd = 0;    // menu command to run, 0 = none
+
     if (Alt < 0){
         if (ww == '1')
-            doNewWSize(0);
+            cmd = CMD_WS_1;
         else if (ww == '2')
-            doNewWSize(1);
+            cmd = CMD_WS_2;
         else if (ww == '4')
-            doNewWSize(2);
+            cmd = CMD_WS_4;
         else if (ww == '8')
-            doNewWSize(3);
+            cmd = CMD_WS_8;
         else if (ww == '6')
-            doNewWSize(4);
+            cmd = CMD_WS16;
         else if (ww == VK_F2)
-            TogglePAGE();
+            cmd = CMD_PAGEV;
 #if BX_SUPPORT_FPU
-        else if (ww == VK_F3) ToggleSeeReg(CMD_FPUR);   // MMX/FPU toggle
+        else if (ww == VK_F3)       // MMX/FPU toggle
+            cmd = CMD_FPUR;
 #endif
         else if (ww == VK_F6)       // AltF6 = Read Watchpt
         {
             if (DumpHasFocus)
-                SetWatchpoint(&num_read_watchpoints,read_watchpoint);
+                cmd = CMD_WPTRD;
         }
-        else if (ww == VK_F7)           // Alt+F7 memdump hex toggle
-        {
-            int i = DumpInAsciiMode;
-            i ^= 2;
-            if (i != 0)
-            {
-                DumpInAsciiMode = i;
-                i &= 2;
-                SetMenuCheckmark (i, CHK_CMD_MHEX);
-                GrayMenuItem (i, CMD_MASCII);
-                PrevDAD = 0;        // force columns to resize
-                if (DViewMode == VIEW_MEMDUMP && DumpInitted)
-                {
-                    if (! AtBreak)
-                        doDumpRefresh = TRUE;
-                    else
-                        ShowData();
-                }
-            }
-        }
+        else if (ww == VK_F7)       // Alt+F7 memdump hex toggle
+            cmd = CMD_MHEX;
+        if (cmd != 0)
+            ActivateMenuItem(cmd);
         return 0;
     }
     switch (ww)
     {
         case VK_ESCAPE:
-            CommandHistoryIdx = 0;
-            ClearInputWindow();
-            ShowMemData(FALSE);         // force a "normal" MemDump window
+            cmd = CMD_CMEM;
             break;
 
         case VK_UP:
@@ -3011,155 +3037,79 @@ int HotKey (int ww, int Alt, int Shift, int Control)
 
         case VK_F2:
             if (Control < 0)
-                ToggleGDT();
+                cmd = CMD_GDTV;
             else if (Shift < 0)
-                ToggleIDT();
+                cmd = CMD_IDTV;
             else
-                ToggleStack();
+                cmd = CMD_STACK;
             break;
 
         case VK_F3:     // ^F3 = param tree, F3 = toggle syntax
             if (Control < 0)
-                TogglePTree();
+                cmd = CMD_PTREE;
             else
-            {
-                bx_dbg_disassemble_switch_mode();
-                if (AtBreak)
-                {
-                    // do the standard ASM window fill sequence
-                    Bit64u h = CurrentAsmLA;
-                    CanDoLA(&h);
-                    FillAsm(h, DefaultAsmLines);
-                }
-                else
-                    BottomAsmLA = ~0;   // force an ASM autoload
-            }
+                cmd = CMD_ATTI;
             break;
 
         case VK_F4:
-            if (Shift < 0)          // Debug register toggle
-                ToggleSeeReg(CMD_DREG);
+            if (Shift < 0)              // Debug register toggle
+                cmd = CMD_DREG;
             else if (Control >= 0)      // Refresh
-            {
-                BottomAsmLA = ~0;       // force an ASM autoload
-                ResizeColmns = TRUE;    // force everything to repaint
-                doDumpRefresh = TRUE;   // force a data window reload on a break
-                if (AtBreak)   // can't refresh the windows until a break!
-                {
-                    doUpdate();         // refresh the ASM and Register windows
-                    RefreshDataWin();   // and whichever data window is up
-                }
-            }
-            else {
-                if (CpuSupportSSE)
-                    ToggleSeeReg(CMD_XMMR);    // SSE toggle
-            }
+                cmd = CMD_RFRSH;
+            else if (CpuSupportSSE)     // SSE toggle
+                cmd = CMD_XMMR;
             break;
 
         case VK_F5:
             if (Shift < 0)          // ShiftF5 = Modechange brk toggle
-            {
-                // toggle mode_break on cpu0, use that value to reset all CPUs
-                bool nmb = BX_CPU(0)->mode_break ^ TRUE;
-                int j = TotCPUs;
-                while (--j >= 0)
-                    BX_CPU(j)->mode_break = nmb;
-                SetMenuCheckmark ((int) nmb, CHK_CMD_MODEB);
-            }
+                cmd = CMD_MODEB;
             else
-            {
-                // can't continue until everything is ready
-                if (AtBreak && ! debug_cmd_ready)
-                {
-                    // The VGAW *MUST* be refreshed periodically -- it's best to use the timer.
-                    // Which means that the sim cannot be directly run from this msglp thread.
-                    *debug_cmd = 'c';   // send a fake "continue" command to the internal debugger
-                    debug_cmd[1] = 0;
-                    debug_cmd_ready = TRUE;
-                    AtBreak = FALSE;
-                    StatusChange = TRUE;
-                }
-            }
+                cmd = CMD_CONT;
             break;
 
         case VK_F7:
-            if (Control < 0)
-                InitDataDump(0,(Bit64u) 1);    // ^F7 = PhysDump
-            else if (Shift < 0)                // ShiftF7 = ascii toggle
-            {
-                int i = DumpInAsciiMode;
-                i ^= 1;
-                if (i != 0)
-                {
-                    DumpInAsciiMode = i;
-                    i &= 1;
-                    SetMenuCheckmark (i, CHK_CMD_MASCII);
-                    GrayMenuItem (i, CMD_MHEX);
-                    PrevDAD = 0;        // force columns to resize
-                    if (DViewMode == VIEW_MEMDUMP && DumpInitted)
-                    {
-                        if (! AtBreak)
-                            doDumpRefresh = TRUE;
-                        else
-                            ShowData();
-                    }
-                }
-            }
-            else
-                InitDataDump(1,(Bit64u) 1);     // F7 = LinDump
+            if (Control < 0)        // ^F7 = PhysDump
+                cmd = CMD_PHYDMP;
+            else if (Shift < 0)     // ShiftF7 = ascii toggle
+                cmd = CMD_MASCII;
+            else                    // F7 = LinDump
+                cmd = CMD_LINDMP;
             break;
 
         case VK_F6:
             if (Control < 0)        // ^F6 = Breakpoint window
-                ToggleBrkpt();
-            else if (Shift < 0)     // ShiftF6 = Write Watchpt
-            {
-                if (! DumpHasFocus)
-                    SetBreak(-1); // set or delete breakpoint(s) at the selected address(es)
-                else
-                    SetWatchpoint(&num_write_watchpoints,write_watchpoint);
-            }
-            else
-            {
-                if (! DumpHasFocus)      // F6 = Brkpt
-                    SetBreak(-1); // set or delete breakpoint(s) at the selected address(es)
-                else
-                    SetWatchpoint(&num_write_watchpoints,write_watchpoint);
-            }
+                cmd = CMD_VBRK;
+            else if (! DumpHasFocus)    // F6, ShiftF6 = Brkpt
+                cmd = CMD_BRKPT;    // set or delete breakpoint(s) at the selected address(es)
+            else                        // F6, ShiftF6 = Write Watchpt
+                cmd = CMD_WPTWR;
             break;
 
         case VK_F8:
-            doStepOver();
+            cmd = CMD_STEPOVER;
             break;
 
         case VK_F11:
-            if (AtBreak && ! debug_cmd_ready)
-            {
-                bx_dbg_stepN_command(CurrentCPU, 1);        // singlestep
-                StatusChange = TRUE;
-                OnBreak();
-            }
+            cmd = CMD_STEP1;        // singlestep
             break;
 
         case VK_F9:
-            doStepN();      // ask user for a step #
+            cmd = CMD_STEPN;        // ask user for a step #
             break;
 
         case 'C':           // ^c = break
             if (Control < 0)
-            {
-                SIM->debug_break();
-            }
+                cmd = CMD_BREAK;
             break;
 
         case 'D':
             if (Control < 0)
-                doDisAsm();
+                cmd = CMD_DISASM;
             break;
 
         case 'F':
             if (Control < 0)
-                doFind();
+                cmd = CMD_FIND;
             break;
 
         case VK_RIGHT:  // Win32: send a few virtual movement keys back into the Input window
@@ -3177,10 +3127,7 @@ int HotKey (int ww, int Alt, int Shift, int Control)
                 GetInputEntry(tmpcb);
                 StatusChange = TRUE;
                 if (*tmpcb == 0)            // Hitting <CR> on a blank line means SINGLESTEP
-                {
-                    bx_dbg_stepN_command(CurrentCPU, 1);        // singlestep
-                    OnBreak();
-                }
+                    cmd = CMD_STEP1;
                 else
                 {
                     // deal with the command history:
@@ -3192,14 +3139,14 @@ int HotKey (int ww, int Alt, int Shift, int Control)
                         strcpy (CmdHistory[CmdHInsert], tmpcb);
                         CmdHInsert = (CmdHInsert + 1) & 63;     // circular buffer, 0 to 63
                     }
-                    strcpy (debug_cmd,tmpcb);   // send the command into the bochs internal debugger
-                    debug_cmd_ready = TRUE;
-                    AtBreak = FALSE;
+                    SendDebugCmd(tmpcb);        // send the command into the bochs internal debugger
                     ClearInputWindow();         // prepare for the next command
                     CommandHistoryIdx = 0;      // and reset the history queue to the new end
                 }
             }
     }       // end the switch
+    if (cmd != 0)
+        ActivateMenuItem(cmd);
 //  if (Control >= 0 && ww >= ' ' && ww < 0x7f) -- might be interesting to catch printable chars
 //      return 1;
     return 0;
@@ -3213,15 +3160,7 @@ void ActivateMenuItem (int cmd)
     {
         case CMD_CONT: // run/go/continue
             if (AtBreak && ! debug_cmd_ready)
-            {
-                // The VGAW *MUST* be refreshed periodically -- it's best to use the timer.
-                // Which means that the sim cannot be directly run from this msglp thread.
-                *debug_cmd = 'c';   // send a fake "continue" command to the internal debugger
-                debug_cmd[1] = 0;
-                debug_cmd_ready = TRUE;
-                AtBreak = FALSE;
-                StatusChange = TRUE;
-            }
+                SendDebugCmd("c");  // send a "continue" command to the internal debugger
             break;
 
         case CMD_STEP1: // step 1
@@ -3356,15 +3295,7 @@ void ActivateMenuItem (int cmd)
 
         case CMD_ATTI:      // Toggle ASM Syntax
             bx_dbg_disassemble_switch_mode();
-            if (AtBreak)
-            {
-                // do the standard ASM window fill sequence
-                Bit64u h = CurrentAsmLA;
-                CanDoLA(&h);
-                FillAsm(h, DefaultAsmLines);
-            }
-            else
-                BottomAsmLA = ~0;       // force an ASM autoload
+            ReloadAsm();
             break;
 
         case CMD_IOWIN:  // toggle display of internal debugger Input and Output windows
@@ -3388,67 +3319,22 @@ void ActivateMenuItem (int cmd)
             SetMenuCheckmark ((int) UprCase, CHK_CMD_UCASE);
             MakeRDnames();
             if (AtBreak)
-            {
                 LoadRegList();
-                // do the standard ASM window fill sequence
-                Bit64u h = CurrentAsmLA;
-                CanDoLA(&h);
-                FillAsm(h, DefaultAsmLines);
-            }
-            else
-                BottomAsmLA = ~0;       // force an ASM autoload
+            ReloadAsm();
             break;
 
         case CMD_MHEX:      // Toggle showing hex in Dump window
-            i = DumpInAsciiMode;
-            i ^= 2;
-            if (i != 0)
-            {
-                DumpInAsciiMode = i;
-                i &= 2;
-                SetMenuCheckmark (i, CHK_CMD_MHEX);
-                GrayMenuItem (i, CMD_MASCII);
-                PrevDAD = 0;        // force columns to resize
-                if (DViewMode == VIEW_MEMDUMP && DumpInitted)
-                {
-                    if (! AtBreak)
-                        doDumpRefresh = TRUE;
-                    else
-                        ShowData();
-                }
-            }
+            ToggleDumpMode(2, CHK_CMD_MHEX, CMD_MASCII);
             break;
 
         case CMD_MASCII:    // Toggle showing ASCII in Dump window
-            i = DumpInAsciiMode;
-            i ^= 1;
-            if (i != 0)
-            {
-                DumpInAsciiMode = i;
-                i &= 1;
-                SetMenuCheckmark (i, CHK_CMD_MASCII);
-                GrayMenuItem (i, CMD_MHEX);
-                PrevDAD = 0;        // force columns to resize
-                if (DViewMode == VIEW_MEMDUMP && DumpInitted)
-                {
-                    if (! AtBreak)
-                        doDumpRefresh = TRUE;
-                    else
-                        ShowData();
-                }
-            }
+            ToggleDumpMode(1, CHK_CMD_MASCII, CMD_MHEX);
             break;
 
         case CMD_LEND:      // Toggle Endianness for the MemDumps
             isLittleEndian ^= TRUE;
             SetMenuCheckmark ((int) isLittleEndian, CHK_CMD_LEND);
-            if (DViewMode == VIEW_MEMDUMP && DumpInitted)
-            {
-                if (! AtBreak)
-                    doDumpRefresh = TRUE;
-                else
-                    ShowData();
-            }
+            RedrawMemDump();
             break;
 
         case CMD_WS_1:      // set memory dump "wordsize"
@@ -3775,11 +3661,8 @@ bool DetachDebugger()
     if (! AtBreak || debug_cmd_ready)
         return FALSE;
 
-    AtBreak = FALSE;
-    StatusChange = TRUE;
-    strcpy(debug_cmd, "detach");
-    debug_cmd_ready = TRUE;
-	return TRUE;
+    SendDebugCmd("detach");
+    return TRUE;
 }
 
 #endif
