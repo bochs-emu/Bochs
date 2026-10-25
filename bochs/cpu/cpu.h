@@ -5711,6 +5711,9 @@ public: // for now...
 #endif
   BX_SMF void TLB_flush(void);
   BX_SMF void TLB_invlpg(bx_address laddr);
+#if BX_SUPPORT_MONITOR_MWAIT
+  BX_SMF void TLB_disable_host_ptr(bx_phy_address ppf);
+#endif
   BX_SMF void inhibit_interrupts(unsigned mask);
   BX_SMF bool interrupts_inhibited(unsigned mask);
   BX_SMF const char *strseg(bx_segment_reg_t *seg);

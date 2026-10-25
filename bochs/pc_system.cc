@@ -180,11 +180,13 @@ void bx_pc_system_c::MemoryMappingChanged(void)
     BX_CPU(i)->TLB_flush();
 }
 
-void bx_pc_system_c::invlpg(bx_address addr)
+#if BX_SUPPORT_MONITOR_MWAIT
+void bx_pc_system_c::TLB_disable_host_ptr(bx_phy_address paddr)
 {
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++)
-    BX_CPU(i)->TLB_invlpg(addr);
+    BX_CPU(i)->TLB_disable_host_ptr(PPFOf(paddr));
 }
+#endif
 
 int bx_pc_system_c::Reset(unsigned type)
 {

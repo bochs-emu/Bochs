@@ -454,6 +454,24 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
   BX_CPU_THIS_PTR traceCache->breakLinks();
 }
 
+#if BX_SUPPORT_MONITOR_MWAIT
+// Disable direct access through host pointer for all data TLB entries translating
+// to the physical page ppf. The translation is kept but subsequent accesses to
+// the page go through access_read/write_physical where stores are checked against
+// armed monitors. The monitors are not affected.
+void BX_CPU_C::TLB_disable_host_ptr(bx_phy_address ppf)
+{
+  // stack cache keeps direct host pointer to the stack page
+  invalidate_stack_cache();
+
+  for (unsigned n=0; n < BX_DTLB_SIZE; n++) {
+    bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR DTLB.entry[n];
+    if (tlbEntry->valid() && tlbEntry->ppf == ppf)
+      tlbEntry->lpf |= TLB_NoHostPtr;
+  }
+}
+#endif
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
 {
   // CPL is always 0 in real mode

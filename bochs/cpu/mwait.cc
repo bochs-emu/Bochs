@@ -118,7 +118,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 
   // Set the monitor immediately. If monitor is still armed when we MWAIT,
   // the processor will stall.
-  bx_pc_system.invlpg(paddr);
+  // Stores to the monitored page through cached direct host pointers would
+  // bypass the monitor check, disable direct access to the page in all processors.
+  bx_pc_system.TLB_disable_host_ptr(paddr);
 
   BX_CPU_THIS_PTR monitor.arm(paddr, (i->getIaOpcode() == BX_IA_MONITOR) ? BX_MONITOR_ARMED_BY_MONITOR : BX_MONITOR_ARMED_BY_MONITORX);
 
@@ -273,7 +275,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMONITOR_Eq(bxInstruction_c *i)
 
   // Set the monitor immediately. If monitor is still armed when we MWAIT,
   // the processor will stall.
-  bx_pc_system.invlpg(paddr);
+  // Stores to the monitored page through cached direct host pointers would
+  // bypass the monitor check, disable direct access to the page in all processors.
+  bx_pc_system.TLB_disable_host_ptr(paddr);
 
   BX_CPU_THIS_PTR monitor.arm(paddr, BX_MONITOR_ARMED_BY_UMONITOR);
 
