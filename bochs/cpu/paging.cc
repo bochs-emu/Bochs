@@ -890,7 +890,8 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
   }
 
 #if BX_SUPPORT_PKEYS
-  pkey = handle_pkeys(laddr, entry[leaf], user, IS_USER_PAGE(combined_access) != 0, rw);
+  // the page is a user page only if U/S=1 in every paging-structure entry including the leaf
+  pkey = handle_pkeys(laddr, entry[leaf], user, IS_USER_PAGE(combined_access & entry[leaf]) != 0, rw);
 #endif
 
   combined_access = check_leaf_entry_faults(laddr, entry[leaf], combined_access, user, rw, nx_page);
