@@ -1119,8 +1119,9 @@ public: // for now...
   // When protection key prevents all accesses to the page both bits 1 and 3 are cleared
   // When protection key prevents writes to the page bit 1 will be set and 3 cleared
   // When no protection keys are enabled all bits should be set for all keys
-  Bit32u rd_pkey[16];
-  Bit32u wr_pkey[16];
+  // Entries [0..15] are used for user pages (PKRU), entries [16..31] for supervisor pages (PKRS)
+  Bit32u rd_pkey[32];
+  Bit32u wr_pkey[32];
 #endif
 
 #if BX_SUPPORT_UINTR

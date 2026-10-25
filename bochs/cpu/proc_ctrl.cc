@@ -1453,16 +1453,19 @@ void BX_CPU_C::set_PKeys(Bit32u pkru_val, Bit32u pkrs_val)
   BX_CPU_THIS_PTR pkru = pkru_val;
   BX_CPU_THIS_PTR pkrs = pkrs_val;
 
-  for (unsigned i=0; i<16; i++) {
+  // entries [0..15] are used for user pages (PKRU), entries [16..31] for supervisor pages (PKRS)
+  for (unsigned i=0; i<32; i++) {
     BX_CPU_THIS_PTR rd_pkey[i] = BX_CPU_THIS_PTR wr_pkey[i] =
       TLB_SysReadOK | TLB_UserReadOK | TLB_SysWriteOK | TLB_UserWriteOK;
+  }
 
-    if (long_mode()) {
+  if (long_mode()) {
+    for (unsigned i=0; i<16; i++) {
       if (BX_CPU_THIS_PTR cr4.get_PKE()) {
-        // accessDisable bit set
+        // accessDisable bit set: no data accesses to user page are permitted
         if (pkru_val & (1<<(i*2))) {
-          BX_CPU_THIS_PTR rd_pkey[i] &= ~(TLB_UserReadOK | TLB_UserWriteOK);
-          BX_CPU_THIS_PTR wr_pkey[i] &= ~(TLB_UserReadOK | TLB_UserWriteOK);
+          BX_CPU_THIS_PTR rd_pkey[i] = 0;
+          BX_CPU_THIS_PTR wr_pkey[i] = 0;
         }
 
         // writeDisable bit set
@@ -1474,26 +1477,28 @@ void BX_CPU_C::set_PKeys(Bit32u pkru_val, Bit32u pkrs_val)
       }
 
       if (BX_CPU_THIS_PTR cr4.get_PKS()) {
-        // accessDisable bit set
+        // accessDisable bit set: no data accesses to supervisor page are permitted
         if (pkrs_val & (1<<(i*2))) {
-          BX_CPU_THIS_PTR rd_pkey[i] &= ~(TLB_SysReadOK | TLB_SysWriteOK);
-          BX_CPU_THIS_PTR wr_pkey[i] &= ~(TLB_SysReadOK | TLB_SysWriteOK);
+          BX_CPU_THIS_PTR rd_pkey[16+i] = 0;
+          BX_CPU_THIS_PTR wr_pkey[16+i] = 0;
         }
 
         // writeDisable bit set
         if (pkrs_val & (1<<(i*2+1))) {
           if (BX_CPU_THIS_PTR cr0.get_WP())
-            BX_CPU_THIS_PTR wr_pkey[i] &= ~(TLB_SysWriteOK);
+            BX_CPU_THIS_PTR wr_pkey[16+i] &= ~(TLB_SysWriteOK);
         }
       }
     }
+  }
 
 #if BX_SUPPORT_CET
-    // replicate pkey access bits for shadow stack checks
+  // replicate pkey access bits for shadow stack checks
+  for (unsigned i=0; i<32; i++) {
     BX_CPU_THIS_PTR rd_pkey[i] |= BX_CPU_THIS_PTR rd_pkey[i]<<4;
     BX_CPU_THIS_PTR wr_pkey[i] |= BX_CPU_THIS_PTR wr_pkey[i]<<4;
-#endif
   }
+#endif
 
   // TLB entries are checked against rd_pkey/wr_pkey on every access and don't
   // need to be invalidated, but the stack cache was validated with old values

@@ -819,7 +819,9 @@ Bit32u BX_CPU_C::handle_pkeys(bx_address laddr, Bit64u leaf_entry, unsigned user
     }
   }
 
-  return pkey;
+  // protection key index for the TLB entry: user pages use rd_pkey/wr_pkey[0..15] (PKRU),
+  // supervisor pages use rd_pkey/wr_pkey[16..31] (PKRS)
+  return user_page ? pkey : (pkey + 16);
 }
 #endif
 

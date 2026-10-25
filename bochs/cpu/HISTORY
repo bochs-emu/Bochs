@@ -187,6 +187,7 @@ Changes after Bochs 3.1:
 - VMX: VM entry with "load PKRS" did not check reserved bits 63:32 of host/guest IA32_PKRS fields
 - PKU/PKS: selection between PKRU and PKRS ignored U/S bit of the leaf paging entry (supervisor page under user page tables was checked against PKRU)
 - PKU/PKS: PKRU change by XRSTOR or PKRS change by WRMSR did not invalidate the stack cache (stack accesses ignored the new protection keys rights), WRPKRU no longer flushes the TLB
+- PKU/PKS: separate TLB protection key masks for user (PKRU) and supervisor (PKRS) pages, PKRU access disable must block supervisor accesses to user pages cached in the TLB
 - PAT/PCID: memory type of the PML4/PML5 table access must use PAT entry 0 when CR4.PCIDE=1 (CR3 PCID bits were used as PCD/PWT)
 - MONITOR/MWAIT: write to the last byte of the monitored cache line did not wake up the monitor (off-by-one in monitor range check)
 - INVPCID: #GP(0) for CPL != 0 must have priority over VM exit due to "INVLPG exiting" in VMX guest
