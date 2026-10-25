@@ -186,10 +186,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
+  // MWAIT/MWAITX enters the optimized state only if the monitor was armed by matching
+  // MONITOR/MONITORX instruction, monitorless MWAIT enters it regardless of the monitor state
+  bool enter_optimized_state;
+  if (ECX & BX_MWAIT_MONITORLESS_MWAIT)
+    enter_optimized_state = true;
+  else if (i->getIaOpcode() == BX_IA_MWAITX)
+    enter_optimized_state = BX_CPU_THIS_PTR monitor.armed_by_monitorx();
+  else
+    enter_optimized_state = BX_CPU_THIS_PTR monitor.armed_by_monitor();
+
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
+    // conditional intercept is taken if MWAIT/MWAITX would enter the optimized state
     if (SVM_INTERCEPT(SVM_INTERCEPT1_MWAIT_ARMED))
-      if (BX_CPU_THIS_PTR monitor.armed()) Svm_Vmexit(SVM_VMEXIT_MWAIT_CONDITIONAL);
+      if (enter_optimized_state) Svm_Vmexit(SVM_VMEXIT_MWAIT_CONDITIONAL);
 
     if (SVM_INTERCEPT(SVM_INTERCEPT1_MWAIT)) Svm_Vmexit(SVM_VMEXIT_MWAIT);
   }
@@ -204,27 +215,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
     BX_NEXT_TRACE(i);
   }
 
-  if (! (ECX & BX_MWAIT_MONITORLESS_MWAIT)) {
-    // If monitor has already triggered, we just return.
-    bool monitor_armed = true;
-    if (i->getIaOpcode() == BX_IA_MWAITX) {
-      if (! BX_CPU_THIS_PTR monitor.armed_by_monitorx())
-        monitor_armed = false;
-    }
-    else {
-      if (! BX_CPU_THIS_PTR monitor.armed_by_monitor())
-        monitor_armed = false;
-    }
+  // If monitor has already triggered, we just return.
+  if (! enter_optimized_state) {
+    BX_DEBUG(("%s: the MONITOR was not armed or already triggered", i->getIaOpcodeNameShort()));
+    BX_CPU_THIS_PTR monitor.reset_monitor();
+    BX_NEXT_TRACE(i);
+  }
 
-    if (! monitor_armed) {
-      BX_DEBUG(("%s: the MONITOR was not armed or already triggered", i->getIaOpcodeNameShort()));
-      BX_CPU_THIS_PTR monitor.reset_monitor();
-      BX_NEXT_TRACE(i);
-    }
-  }
-  else {
+  if (ECX & BX_MWAIT_MONITORLESS_MWAIT)
     BX_CPU_THIS_PTR monitor.reset_monitor(); // Monitorless MWAIT
-  }
 
   // stops instruction execution and places the processor in a optimized
   // state.  Events that cause exit from MWAIT state are:
