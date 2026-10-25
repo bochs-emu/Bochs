@@ -124,12 +124,15 @@ char *clean_string(char *s0)
   char *s = s0;
   char *ptr;
   /* find first nonblank */
-  while (isspace(*s))
+  while (isspace((unsigned char)*s))
     s++;
-  /* truncate string at first non-alphanumeric */
+  /* truncate string at end of line */
   ptr = s;
-  while (isprint(*ptr))
+  while ((*ptr != 0) && (*ptr != '\r') && (*ptr != '\n'))
     ptr++;
+  /* remove trailing blanks */
+  while ((ptr > s) && isspace((unsigned char)ptr[-1]))
+    ptr--;
   *ptr = 0;
   return s;
 }
@@ -254,7 +257,7 @@ int ask_menu(const char *prompt, const char *help, int n_choices, const char *ch
 
 int ask_yn(const char *prompt, const char *help, Bit32u the_default, Bit32u *out)
 {
-  char buffer[16];
+  char buffer[1024];
   char *clean;
   *out = 1<<31;
   while (1) {
@@ -399,18 +402,19 @@ void build_runtime_options_prompt(const char *format, char *buf, int size)
 {
   bx_list_c *floppyop;
   char pname[80];
-  char buffer[6][128];
+  char buffer[3][CI_PATH_LENGTH + 64];
 
   for (int i=0; i<2; i++) {
     sprintf(pname, "floppy.%d", i);
     floppyop = (bx_list_c*) SIM->get_param(pname);
     if (SIM->get_param_enum("devtype", floppyop)->get() == BX_FDD_NONE)
       strcpy(buffer[i], "(not present)");
+    else if (!SIM->get_param_string("path", floppyop)->getptr()[0])
+      strcpy(buffer[i], "none");
     else {
-      sprintf(buffer[i], "%s, size=%s, %s", SIM->get_param_string("path", floppyop)->getptr(),
+      snprintf(buffer[i], sizeof(buffer[i]), "%s, size=%s, %s", SIM->get_param_string("path", floppyop)->getptr(),
         SIM->get_param_enum("type", floppyop)->get_selected(),
         SIM->get_param_enum("status", floppyop)->get_selected());
-      if (!SIM->get_param_string("path", floppyop)->getptr()[0]) strcpy(buffer[i], "none");
     }
   }
 
@@ -549,8 +553,8 @@ int bx_text_config_interface(int menu)
         break;
       case BX_CI_RUNTIME:
         {
-          char prompt[1024];
-          build_runtime_options_prompt(runtime_menu_prompt, prompt, 1024);
+          char prompt[1024 + 2 * CI_PATH_LENGTH];
+          build_runtime_options_prompt(runtime_menu_prompt, prompt, sizeof(prompt));
           unsigned max_choice = SIM->debugger_activation_allowed() ? BX_CI_RT_DEBUGGER : BX_CI_RT_QUIT;
           if (ask_uint(prompt, "", 1, max_choice, BX_CI_RT_CONT, &choice, 10) < 0) return -1;
           switch (choice) {
@@ -821,10 +825,10 @@ textconfig_notify_callback(void *unused, BxEvent *event)
 
         int choice;
 ask:
-        if (ask_menu("Choose one of the actions above: [%s] ", "",
-                     log_action_n_choices, log_action_ask_choices, 2, &choice) < 0)
-        event->retcode = -1;
-        // return 0 for continue, 1 for alwayscontinue, 2 for die, 3 for debug.
+        // choice is -1 on error (stream closed)
+        ask_menu("Choose one of the actions above: [%s] ", "",
+                 log_action_n_choices, log_action_ask_choices, 2, &choice);
+        // return 0 for continue, 1 for alwayscontinue, 2 for die, 3 for abort, 4 for debug.
         if (!BX_HAVE_ABORT && choice==BX_LOG_ASK_CHOICE_DUMP_CORE) goto ask;
         fflush(stdout);
         fflush(stderr);
@@ -1085,7 +1089,8 @@ int text_ask(bx_param_c *param)
             child = list->get(i);
             if (child->get_enabled()) {
               if (!SIM->get_init_done() || child->get_runtime_param()) {
-                text_ask(child);
+                int status = text_ask(child);
+                if (status < 0) return status;
               }
             }
           }
