@@ -42,10 +42,12 @@
 
 char *backslashes(char *s)
 {
-  if (s != NULL) {
-    while (*s != 0) {
-       if (*s == '/') *s = '\\';
-       s++;
+  char *p = s;
+
+  if (p != NULL) {
+    while (*p != 0) {
+       if (*p == '/') *p = '\\';
+       p++;
     }
   }
   return s;
