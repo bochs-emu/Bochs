@@ -102,6 +102,7 @@ Changes after Bochs 3.1:
 - SVM: nRIP must be saved only for instruction, MSR and IOIO intercepts and exceptions caused by INT3, INTO and BOUND, reset to zero for all other intercepts
 - SVM: correctly handle DR6 reserved bits
 - SVM: implemented CET state management - guest S_CET, SSP and ISST_ADDR are loaded by VMRUN and saved on #VMEXIT, VMRUN CET consistency checks
+- SVM: nested page table walk used guest CR4.LA57 instead of host CR4.LA57 to select 4-level or 5-level nested paging
 - SYSENTER/SYSEXIT: SYSENTER/SYSEXIT are not allowed in long mode on AMD
 - SYSCALL/SYSRET: SYSCALL whose SFMASK clears TF takes no single-step trap, SYSRET takes the single-step trap by the TF it loads
 - CPUID: allow configuring i486dx4 model without x87 using cpu exclude_features

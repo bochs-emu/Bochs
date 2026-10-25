@@ -1679,7 +1679,9 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
   if (ctrls->sss_check) npf_supervisor = supervisor_shadow_stack;
 #endif
   bx_phy_address ppf = ctrls->ncr3 & BX_CR3_PAGING_MASK;
-  Bit64u offset_mask = ((BX_CONST64(1) << BX_CPU_THIS_PTR linaddr_width) - 1);
+  // nested page tables use the host paging mode
+  bool host_la57 = host_state->cr4.get_LA57();
+  Bit64u offset_mask = ((BX_CONST64(1) << (host_la57 ? 57 : 48)) - 1);
   Bit32u combined_access = BX_COMBINED_ACCESS_WRITE | BX_COMBINED_ACCESS_USER;
 #if BX_SUPPORT_CET
   Bit32u nonleaf_access = BX_COMBINED_ACCESS_WRITE | BX_COMBINED_ACCESS_USER;
@@ -1689,7 +1691,7 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
   if (! host_state->efer.get_NXE())
     reserved |= PAGE_DIRECTORY_NX_BIT;
 
-  int start_leaf = BX_CPU_THIS_PTR cr4.get_LA57() ? BX_LEVEL_PML5 : BX_LEVEL_PML4, leaf = start_leaf;
+  int start_leaf = host_la57 ? BX_LEVEL_PML5 : BX_LEVEL_PML4, leaf = start_leaf;
 
   for (;; --leaf) {
     entry_addr[leaf] = ppf + ((guest_paddr >> (9 + 9*leaf)) & 0xff8);
