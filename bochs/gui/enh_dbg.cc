@@ -168,7 +168,7 @@ bool LinearDump = TRUE;        // FALSE = memdump uses physical addressing
 
 char *tmpcb;                   // 512b is allocated in bigbuf
 char *CurStack;                // Stack workspace (400b usually)
-char AsciiHex[512];            // Unsigned char to printable hex xlat table
+static char AsciiHex[512];     // Unsigned char to printable hex xlat table
 static char UCtable[256];
 
 char bigbuf[outbufSIZE];       // 40K preallocated storage for all char buffers (see DoAllInit)
@@ -246,8 +246,8 @@ unsigned short RWPSnapCount;
 bx_phy_address WWP_Snapshot[16];
 bx_phy_address RWP_Snapshot[16];
 
-bool global_ini;
-char ini_path[BX_PATHNAME_LEN + 16];
+static bool global_ini;
+static char ini_path[BX_PATHNAME_LEN + 16];
 char *debug_cmd;
 bool debug_cmd_ready;
 bool vgaw_refresh;
@@ -255,7 +255,7 @@ bool vgaw_refresh;
 static bxevent_handler old_callback = NULL;
 static void *old_callback_arg = NULL;
 
-short nDock[36] = {     // lookup table for alternate DockOrders
+static const short nDock[36] = {     // lookup table for alternate DockOrders
     0x231, 0x312, 0x231, 0x213, 0x132, 0x132,
     0x213, 0x321, 0x123, 0x123, 0x321, 0x312,
     0x213, 0x213, 0x123, 0x312, 0x321, 0x312,
@@ -264,7 +264,7 @@ short nDock[36] = {     // lookup table for alternate DockOrders
     0x132, 0x123, 0x321, 0x321, 0x123, 0x231
 };
 
-void MakeXlatTables()
+static void MakeXlatTables()
 {
     char *p, c;
     int i = 256;
@@ -288,7 +288,7 @@ void MakeXlatTables()
     }
 }
 
-int DoMatch(const char *text, const char *p, bool IsCaseSensitive)
+static int DoMatch(const char *text, const char *p, bool IsCaseSensitive)
 {
     // probably the MOST DIFFICULT FUNCTION in TurboIRC
     // Thanks to BitchX for copying this function
@@ -342,7 +342,7 @@ int DoMatch(const char *text, const char *p, bool IsCaseSensitive)
 }
 
 // This will be called from the other funcs
-int VMatching(const char *text, const char *p, bool IsCaseSensitive)
+static int VMatching(const char *text, const char *p, bool IsCaseSensitive)
 {
 #ifdef OPTIMIZE_JUST_STAR
     if (p[0] == '*' && p[1] == '\0')
@@ -351,7 +351,7 @@ int VMatching(const char *text, const char *p, bool IsCaseSensitive)
     return (DoMatch(text, p, IsCaseSensitive) == MATCH_TRUE);
 }
 
-int IsMatching(const char *text, const char *p, bool IsCaseSensitive)
+static int IsMatching(const char *text, const char *p, bool IsCaseSensitive)
 {
     return VMatching(text, p, IsCaseSensitive);
 }
@@ -425,7 +425,7 @@ void DockResize (int DestIdx, Bit32u ParentX)
 }
 
 // Convert a string (except for the 0x in a hex number) to uppercase
-void upr(char* d)
+static void upr(char* d)
 {
     char *p;
     p = d;
@@ -442,7 +442,7 @@ void upr(char* d)
 }
 
 // create EFLAGS display for Status line
-void ShowEflags(char *buf)
+static void ShowEflags(char *buf)
 {
     Bit32u Efl = (Bit32u) rV[EFL_Rnum];
     stringify_EFLAGS(Efl, buf);
@@ -509,13 +509,13 @@ void UpdateStatus()
 
 // Read a copy of some emulated linear bochs memory
 // Note: laddr + len must not cross a 4K boundary -- otherwise, there are no limits
-bool ReadBxLMem(Bit64u laddr, unsigned len, Bit8u *buf)
+static bool ReadBxLMem(Bit64u laddr, unsigned len, Bit8u *buf)
 {
     return bx_dbg_read_linear(CurrentCPU, laddr, len, buf);
 }
 
 // binary conversion (and validity testing) on hex/decimal char string inputs
-Bit64u cvthex(const char *p, Bit64u errval)
+static Bit64u cvthex(const char *p, Bit64u errval)
 {
     Bit64u ret = 0;
     bool end = FALSE;
@@ -533,7 +533,7 @@ Bit64u cvthex(const char *p, Bit64u errval)
     return ret;
 }
 
-Bit64u cvt64(const char *nstr, bool negok)
+static Bit64u cvt64(const char *nstr, bool negok)
 {
     const char *p, *s;
     Bit64u ret = 0;
@@ -559,7 +559,7 @@ Bit64u cvt64(const char *nstr, bool negok)
 }
 
 // "singlestep" disassembly lines from the internal debugger are sometimes ignored
-bool isSSDisasm(const char *s)
+static bool isSSDisasm(const char *s)
 {
     if (! ignSSDisasm)   // ignoring those lines?
         return FALSE;
@@ -668,7 +668,7 @@ void ParseIDText(const char *x)
 }
 
 // load appropriate register values from simulation into local rV[] array
-void FillRegs()
+static void FillRegs()
 {
     int i = EFER_Rnum + 1;      // EFER is the highest reg # in rV
     while (--i >= 0)
@@ -741,7 +741,7 @@ void ParseBkpt()
 
 // this routine is only called if debugger already knows SSE is supported
 // -- but it might not be "turned on", either
-int FillSSE(int LineCount)
+static int FillSSE(int LineCount)
 {
 #if BX_CPU_LEVEL >= 6
     Bit64u val = 0;
@@ -804,7 +804,7 @@ extern double x87_to_double(Bit16u signExp, Bit64u signif);
 
 // this routine is only called if debugger already knows FPU is supported
 // -- but it might not be active
-int FillMMX(int LineCount)
+static int FillMMX(int LineCount)
 {
     bx_param_num_c *p;
     Bit16u exponent[8];
@@ -862,7 +862,7 @@ int FillMMX(int LineCount)
 #endif
 
 // get values of Debug registers from simulation
-int FillDebugRegs(int itemnum)
+static int FillDebugRegs(int itemnum)
 {
     bx_param_num_c *bxp;
     Bit64u val;
@@ -905,7 +905,7 @@ int FillDebugRegs(int itemnum)
 
 // Disassemble a linear memory area, in a loop, loading text into ASM window
 // completely update the ASM display with new data
-void FillAsm(Bit64u LAddr, int MaxLines)
+static void FillAsm(Bit64u LAddr, int MaxLines)
 {
     Bit64u ReadAddr = LAddr;
     int BufLen = 0;
@@ -1001,7 +1001,7 @@ void FillAsm(Bit64u LAddr, int MaxLines)
 
 
 // Reload the entire Register window with data
-void LoadRegList()
+static void LoadRegList()
 {
     int i, itemnum;     // TODO: This routine needs a big rewrite to make it pretty
     bool showEreg = TRUE;
@@ -1156,7 +1156,7 @@ void LoadRegList()
 }
 
 // scroll ASM window so that the current line is in the "middle"
-void doAsmScroll()
+static void doAsmScroll()
 {
     int j;
     int CurTopIdx = GetASMTopIdx();
@@ -1195,7 +1195,7 @@ void doAsmScroll()
 }
 
 // try to find a Linear Address to start a "pretty" autodisassembly
-void CanDoLA(Bit64u *h)
+static void CanDoLA(Bit64u *h)
 {
     int index;
     if (TopAsmLA > *h || *h > AsmLA[AsmLineCount-1])    // is it hopeless?
@@ -1214,7 +1214,7 @@ void CanDoLA(Bit64u *h)
     }
 }
 
-void InitRegObjects()
+static void InitRegObjects()
 {
     bx_list_c *cpu_list;
     extern bx_list_c *root_param;
@@ -1373,13 +1373,12 @@ void InitRegObjects()
     }
 }
 
+static void FillStack();
+static void RefreshDataDump(Bit8u *buffer);
 
 void doUpdate()
 {
     Bit8u tmpbuffer[4096];
-
-    void FillStack();
-    void RefreshDataDump(Bit8u *buffer);
 
     if (doSimuInit)
         SpecialInit();
@@ -1417,7 +1416,7 @@ void doUpdate()
 }
 
 // Fill the GDT ListView, reading GDT data directly from bochs linear mem
-void FillGDT()
+static void FillGDT()
 {
     unsigned int i, j, GroupId;
     unsigned int row = 0;
@@ -1553,7 +1552,7 @@ void FillGDT()
 }
 
 // Fills the IDT ListView, reading IDT data directly from bochs linear mem
-void FillIDT()
+static void FillIDT()
 {
     Bit64u laddr;
     Bit8u idtbuf[16];
@@ -1645,7 +1644,7 @@ void FillIDT()
 
 
 // insert one entry into the Paging data list (a linear and a physical addy)
-void AddPagingLine(int LC, char *pa_lin, char *pa_phy)
+static void AddPagingLine(int LC, char *pa_lin, char *pa_phy)
 {
     char zero = 0;
     char *cols[18];
@@ -1671,7 +1670,7 @@ void AddPagingLine(int LC, char *pa_lin, char *pa_phy)
 }
 
 // lifted from bx_dbg_dump_table in dbg_main of the internal debugger
-void FillPAGE()
+static void FillPAGE()
 {
     Bit64u lin, start_lin; // show only low 32 bit
     bx_phy_address phy, start_phy; // start of a valid translation interval
@@ -1735,7 +1734,7 @@ void FillPAGE()
 }
 
 // build the stack display
-void FillStack()
+static void FillStack()
 {
     // sometimes need to specially invalidate the stack window
     static bool StkInvOnce = FALSE;
@@ -1917,7 +1916,7 @@ void FillStack()
 }
 
 // utility function to print breakpoints in a unified way
-void prtbrk (Bit32u seg, Bit64u addy, unsigned int id, bool enabled, char *cols[])
+static void prtbrk (Bit32u seg, Bit64u addy, unsigned int id, bool enabled, char *cols[])
 {
     int i = 0;
     if (! enabled)
@@ -1934,7 +1933,7 @@ void prtbrk (Bit32u seg, Bit64u addy, unsigned int id, bool enabled, char *cols[
 }
 
 // Displays all Breakpoints and Watchpoints
-void FillBrkp()
+static void FillBrkp()
 {
     int LineCount, totqty, i;
     char *cols[18];
@@ -2062,7 +2061,7 @@ void FillBrkp()
 }
 
 // performs endian byteswapping the hard way, for a Data dump
-void FillDataX(char* t, unsigned char C, bool doHex)
+static void FillDataX(char* t, unsigned char C, bool doHex)
 {
     char tmpbuf[40];
     char *d = tmpbuf;
@@ -2086,7 +2085,7 @@ void FillDataX(char* t, unsigned char C, bool doHex)
     }
 }
 
-void RefreshDataDump(Bit8u *buffer)
+static void RefreshDataDump(Bit8u *buffer)
 {
     bool retval = TRUE;
 
@@ -2180,7 +2179,7 @@ void ShowData()
 
 // build Register "display" names from lower case names
 // (must build the pointer list while building the names)
-void MakeRDnames()
+static void MakeRDnames()
 {
     char *p = RDispName[0];       // first storage location
     for (int i=0; i <= EFER_Rnum; i++)
@@ -2203,7 +2202,7 @@ void MakeRDnames()
 }
 
 // generic initialization routine -- called once, only at startup
-void DoAllInit()
+static void DoAllInit()
 {
     char *p;
     int i;
@@ -2398,7 +2397,7 @@ static bool FindHex(const unsigned char* b1,int bs,int avail,const unsigned char
     return FALSE;
 }
 
-bool AskText(const char *title, const char *prompt, char *DefaultText)
+static bool AskText(const char *title, const char *prompt, char *DefaultText)
 {
     ask_str.title= title;
     ask_str.prompt= prompt;
@@ -2408,7 +2407,7 @@ bool AskText(const char *title, const char *prompt, char *DefaultText)
 
 // load new memory for a MemDump
 // newDS = illegal (1) is a flag to ask the user for a DumpStart address
-bool InitDataDump(bool isLinear, Bit64u newDS)
+static bool InitDataDump(bool isLinear, Bit64u newDS)
 {
     bool retval = TRUE;
     bool MsgOnErr = FALSE;
@@ -2465,7 +2464,7 @@ bool InitDataDump(bool isLinear, Bit64u newDS)
 }
 
 // User is changing which registers are displaying in the Register list
-void ToggleSeeReg(int cmd)
+static void ToggleSeeReg(int cmd)
 {
     int i = cmd - CMD_EREG;
     if (i < 0 || i > 7)
@@ -2479,7 +2478,7 @@ void ToggleSeeReg(int cmd)
         LoadRegList();  // do a register window update
 }
 
-void doNewWSize(int i)
+static void doNewWSize(int i)
 {
     // DumpAlign is the "wordsize" in bytes -- need to "calculate" the power of 2
     int j = 0;
@@ -2502,7 +2501,7 @@ void doNewWSize(int i)
     }
 }
 
-void ToggleGDT()
+static void ToggleGDT()
 {
     if (! AtBreak)
         return;
@@ -2522,7 +2521,7 @@ void ToggleGDT()
     }
 }
 
-void ToggleIDT()
+static void ToggleIDT()
 {
     if (! AtBreak)
         return;
@@ -2542,7 +2541,7 @@ void ToggleIDT()
     }
 }
 
-void TogglePAGE()
+static void TogglePAGE()
 {
     if (! AtBreak)
         return;
@@ -2558,7 +2557,7 @@ void TogglePAGE()
     }
 }
 
-void ToggleStack()
+static void ToggleStack()
 {
     if (! AtBreak)
         return;
@@ -2575,7 +2574,7 @@ void ToggleStack()
     }
 }
 
-void ToggleBrkpt()
+static void ToggleBrkpt()
 {
     if (! AtBreak)
         return;
@@ -2591,7 +2590,7 @@ void ToggleBrkpt()
     }
 }
 
-void TogglePTree()
+static void TogglePTree()
 {
     if (! AtBreak)
         return;
@@ -2607,7 +2606,7 @@ void TogglePTree()
     }
 }
 
-void doFind()
+static void doFind()
 {
     unsigned int i, L;
     bool Select;
@@ -2664,7 +2663,7 @@ void doFind()
     }
 }
 
-void doStepOver()
+static void doStepOver()
 {
     // can't run sim until everything is ready
     if (! AtBreak || debug_cmd_ready)
@@ -2679,7 +2678,7 @@ void doStepOver()
     StatusChange = TRUE;
 }
 
-void doStepN()
+static void doStepN()
 {
     // can't run sim until everything is ready
     if (! AtBreak || debug_cmd_ready)
@@ -2699,7 +2698,7 @@ void doStepN()
 }
 
 // User wants a custom disassembly
-void doDisAsm()
+static void doDisAsm()
 {
     int NumLines = DefaultAsmLines;
     if (! AtBreak)
@@ -3521,7 +3520,7 @@ void ActivateMenuItem (int cmd)
     }
 }
 
-BxEvent *enh_dbg_notify_callback(void *unused, BxEvent *event)
+static BxEvent *enh_dbg_notify_callback(void *unused, BxEvent *event)
 {
   switch (event->type)
   {
@@ -3581,7 +3580,7 @@ static size_t strip_whitespace(char *s)
   return ptr;
 }
 
-void ReadSettings()
+static void ReadSettings()
 {
   FILE *fd = NULL;
   char line[512], path[BX_PATHNAME_LEN];
@@ -3712,7 +3711,7 @@ void ReadSettings()
   fclose(fd);
 }
 
-void WriteSettings()
+static void WriteSettings()
 {
   FILE *fd = NULL;
   int i;

@@ -203,8 +203,6 @@ extern Bit64u CurrentAsmLA;    // = EIP/RIP -- for highlighting in ASM window
 extern Bit64u BottomAsmLA;     // beginning and end addrs on ASM window
 extern Bit64u TopAsmLA;
 
-extern Bit64u PrevPtime;       // any number other than 0
-extern Bit64u NewPtime;        // used to test whether sim has "updated"
 extern unsigned TotCPUs;       // # of CPUs in a multi-CPU simulation
 extern unsigned CpuSupportSSE; // cpu supports SSE
 extern unsigned CurrentCPU;    // cpu that is being displayed
@@ -267,7 +265,6 @@ extern int DViewMode;
 extern bool LinearDump;        // FALSE = memdump uses physical addressing
 
 extern char *tmpcb;            // 512b is allocated in bigbuf
-extern char AsciiHex[512];     // Unsigned char to printable hex xlat table
 
 #define outbufSIZE      40960
 extern char bigbuf[outbufSIZE];    // 40K preallocated storage for all char buffers (see DoAllInit)
