@@ -929,7 +929,7 @@ int MainMenuDialog(HWND hwnd, bool runtime)
 
 // Unfortunetly, Win32 Edit Controls must have \r\n for line feeds, and Bochs uses only \n
 // We must add \r to every \n to get Windows to drop to the next line in an Edit Control.
-void conv_dos2unix(const char *src, char *targ, int max_len)
+void conv_unix2dos(const char *src, char *targ, int max_len)
 {
   char last = 0;
   while (*src && (max_len > 2)) {
@@ -980,7 +980,7 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
         ncm.cbSize = sizeof(NONCLIENTMETRICS);
         if (SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &ncm, 0))
           SendMessage(hwnd, WM_SETFONT, (WPARAM) CreateFontIndirect(&ncm.lfMessageFont), 0);
-        conv_dos2unix(event->u.logmsg.msg, pname, BX_PATHNAME_LEN);
+        conv_unix2dos(event->u.logmsg.msg, pname, BX_PATHNAME_LEN);
         SendMessage(hwnd, EM_SETSEL, 0, -1);
         SendMessage(hwnd, EM_REPLACESEL, 0, (LPARAM) pname);
         ShowWindow(hwnd, SW_SHOW);
