@@ -224,6 +224,7 @@ Changes after Bochs 3.1:
 + TBM: BLCFILL/BLSFILL/BLCS/TZMSK/BLCIC/BLSIC/T1MSKC/BLCMSK/BLCI were decoded from XOP map 8 instead of map 9 with inverted XOP.W, XOP.W is ignored outside 64-bit mode, TBM is #UD in real and v8086 mode
 - VMX: RDMSRLIST/WRMSRLIST must VM exit unconditionally when "use MSR bitmaps" is 0, before any memory access (no VM exit was taken when RCX was 0)
 - MOVRS: legacy MOVRS must allow 66H operand size prefix (MOVRS r16, m16 was #UD), AVX10.2 VMOVRSB/W/D/Q must #UD outside of 64-bit mode
+- RAO-INT: AADD/AAND/AOR/AXOR checked for non-WB memory type #GP only after the read access was done (device read side effects for MMIO), check it before any memory access
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):
