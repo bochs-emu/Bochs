@@ -959,7 +959,7 @@ static void FillAsm(Bit64u LAddr, int MaxLines)
         }
         if (AsmLineCount >= MaxLines)       // disassembled enough lines?
             Go = FALSE;
-        if (In64Mode == FALSE && ReadAddr > 0xffffffff)
+        if (! In64Mode && ReadAddr > 0xffffffff)
             break;
     }
     if (ResizeColmns)
@@ -1011,7 +1011,7 @@ static void LoadRegList()
             RitemToRnum[itemnum] = i;
             cols[0] = RDispName[i];
 
-            if (In32Mode == FALSE && i == EIP_Rnum)   // Check for Real Mode (Pmode is TRUE in Long Mode)
+            if (! In32Mode && i == EIP_Rnum)   // Check for Real Mode (Pmode is TRUE in Long Mode)
             {
                 rV[EIP_Rnum] &= 0xffff;     // in Real Mode, mask IP to 2 bytes
                 ++cols[0];                  // and shorten name to 2 letters
@@ -1754,7 +1754,7 @@ static void FillStack()
     cols[17]= stktxt + 80;
     doDumpRefresh = FALSE;
     bx_address StackPtr = (bx_address) rV[RSP_Rnum];
-    if (In64Mode == FALSE && BX_CPU(CurrentCPU)->sregs[BX_SEG_REG_SS].cache.u.segment.d_b == 0)
+    if (! In64Mode && BX_CPU(CurrentCPU)->sregs[BX_SEG_REG_SS].cache.u.segment.d_b == 0)
         StackPtr &= 0xffff;     // 16-bit stack segment (SS.B=0) uses SP only
     StackLA = (Bit64u) BX_CPU(CurrentCPU)->get_laddr(BX_SEG_REG_SS, StackPtr);
 
@@ -1786,7 +1786,7 @@ static void FillStack()
             return;
         }
         LglAddy = bx_dbg_read_linear(CurrentCPU, StackLA + ReadSize, len + i - 0x1000, (Bit8u *) cp + ReadSize);
-        if (LglAddy == FALSE)
+        if (! LglAddy)
             len = ReadSize;
     }
     else
