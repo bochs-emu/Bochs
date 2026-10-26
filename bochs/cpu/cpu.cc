@@ -668,6 +668,17 @@ void BX_CPU_C::prefetch(void)
   // with the old page fetch pointer (SVM decode assist relies on it).
   BX_CPU_THIS_PTR eipPageWindowSize = 0;
 
+#if BX_CPU_LEVEL >= 4
+  // VIF and VIP both set at the beginning of an instruction cause #GP in VME mode
+  // and in PVI mode (CPL=3, any mode including 64-bit)
+  if (USER_PL && BX_CPU_THIS_PTR get_VIP() && BX_CPU_THIS_PTR get_VIF()) {
+    if (BX_CPU_THIS_PTR cr4.get_PVI() || (v8086_mode() && BX_CPU_THIS_PTR cr4.get_VME())) {
+      BX_ERROR(("prefetch: inconsistent VME state"));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+  }
+#endif
+
 #if BX_SUPPORT_X86_64
   if (long64_mode()) {
     if (! IsCanonicalAccess(RIP, BX_EXECUTE, USER_PL)) {
@@ -686,16 +697,6 @@ void BX_CPU_C::prefetch(void)
   else
 #endif
   {
-
-#if BX_CPU_LEVEL >= 4
-    if (USER_PL && BX_CPU_THIS_PTR get_VIP() && BX_CPU_THIS_PTR get_VIF()) {
-      if (BX_CPU_THIS_PTR cr4.get_PVI() || (v8086_mode() && BX_CPU_THIS_PTR cr4.get_VME())) {
-        BX_ERROR(("prefetch: inconsistent VME state"));
-        exception(BX_GP_EXCEPTION, 0);
-      }
-    }
-#endif
-
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RIP); /* avoid 32-bit EIP wrap */
     laddr = get_laddr32(BX_SEG_REG_CS, EIP);
     pageOffset = PAGE_OFFSET(laddr);
