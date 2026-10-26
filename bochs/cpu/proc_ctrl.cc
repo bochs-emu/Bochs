@@ -1188,6 +1188,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
     ECX = EIP;
     temp_RIP = (Bit32u)(BX_CPU_THIS_PTR msr.star);
 
+    // clear VM before loading CS: with VM=1 the mode change would force CPL=3
+    BX_CPU_THIS_PTR clear_VM();
+    BX_CPU_THIS_PTR clear_IF();
+    BX_CPU_THIS_PTR clear_RF();
+
     // set up CS segment, flat, 32-bit DPL=0
     parse_selector((BX_CPU_THIS_PTR msr.star >> 32) & BX_SELECTOR_RPL_MASK,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
@@ -1200,9 +1205,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
 
     setup_flat_SS(0);
 
-    BX_CPU_THIS_PTR clear_VM();
-    BX_CPU_THIS_PTR clear_IF();
-    BX_CPU_THIS_PTR clear_RF();
     RIP = temp_RIP;
   }
 
