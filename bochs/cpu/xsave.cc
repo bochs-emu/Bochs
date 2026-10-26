@@ -46,8 +46,6 @@ extern XSaveRestoreStateHelper xsave_restore[];
 #define CALL_XSAVE_FN(ptrToFunc)  (ptrToFunc)
 #endif
 
-#include "scalar_arith.h"
-
 #if BX_CPU_LEVEL >= 6
 BX_CPP_INLINE Bit32u xsave_offset_align64_if_needed(Bit32u offset, unsigned feature)
 {
