@@ -976,14 +976,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  invalidate_prefetch_q();
-
-  BX_INSTR_FAR_BRANCH_ORIGIN();
-
-  BX_CPU_THIS_PTR clear_VM();       // do this just like the book says to do
-  BX_CPU_THIS_PTR clear_IF();
-  BX_CPU_THIS_PTR clear_RF();
-
 #if BX_SUPPORT_X86_64
   if (long_mode()) {
     if (!IsCanonical(BX_CPU_THIS_PTR msr.sysenter_eip_msr)) {
@@ -996,6 +988,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
     }
   }
 #endif
+
+  invalidate_prefetch_q();
+
+  BX_INSTR_FAR_BRANCH_ORIGIN();
+
+  BX_CPU_THIS_PTR clear_VM();       // do this just like the book says to do
+  BX_CPU_THIS_PTR clear_IF();
+  BX_CPU_THIS_PTR clear_RF();
 
 #if BX_SUPPORT_CET
   if (ShadowStackEnabled(CPL))
