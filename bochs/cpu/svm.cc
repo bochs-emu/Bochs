@@ -1068,6 +1068,13 @@ bool BX_CPU_C::SvmInjectEvents(void)
     BX_CPU_THIS_PTR last_exception_type = get_exception_type(vector);
   }
 
+  // injected software interrupt and #BP/#OF exception behave like INTn/INT3/INTO instruction and push
+  // the next RIP taken from the VMCB, a fault during the event delivery is reported on the guest RIP (prev_rip)
+  if (type == BX_SOFTWARE_INTERRUPT || type == BX_SOFTWARE_EXCEPTION) {
+    if (BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_NRIP_SAVE))
+      RIP = vmcb_read64(SVM_CONTROL64_NRIP);
+  }
+
   interrupt(vector, type, push_error, error_code);
 
   BX_CPU_THIS_PTR last_exception_type = BX_ET_NONE; // error resolved
