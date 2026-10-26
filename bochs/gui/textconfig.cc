@@ -140,7 +140,7 @@ char *clean_string(char *s0)
 /* returns 0 on success, -1 on failure.  The value goes into out. */
 int ask_uint(const char *prompt, const char *help, Bit32u min, Bit32u max, Bit32u the_default, Bit32u *out, int base)
 {
-  Bit32u n = max + 1;
+  Bit32u n = 0;
   char buffer[1024];
   char *clean;
   int illegal;
@@ -165,7 +165,7 @@ int ask_uint(const char *prompt, const char *help, Bit32u min, Bit32u max, Bit32
       }
       continue;
     }
-    const char *format = (base==10) ? "%d" : "%x";
+    const char *format = (base==10) ? "%u" : "%x";
     illegal = (1 != sscanf(buffer, format, &n));
     if (illegal || n<min || n>max) {
       if (base == 10) {
@@ -183,15 +183,25 @@ int ask_uint(const char *prompt, const char *help, Bit32u min, Bit32u max, Bit32
   }
 }
 
+// The prompt of ask_int() expects a 64-bit default value only if it uses
+// a FMT_LL conversion, otherwise a 32-bit value.
+static bool is_64bit_format(const char *format)
+{
+  return (strstr(format, FMT_LL) != NULL);
+}
+
 // Identical to ask_uint but uses 64 bits signed integers
 int ask_int(const char *prompt, const char *help, Bit64s min, Bit64s max, Bit64s the_default, Bit64s *out)
 {
-  Bit64s n = max + 1;
+  Bit64s n = 0;
   char buffer[1024];
   char *clean;
   int illegal;
   while (1) {
-    bx_printf(prompt, the_default);
+    if (is_64bit_format(prompt))
+      bx_printf(prompt, the_default);
+    else
+      bx_printf(prompt, (Bit32s)the_default);
     fflush(stdout);
     if (!bx_fgets(buffer, sizeof(buffer), stdin))
       return -1;
@@ -259,7 +269,7 @@ int ask_yn(const char *prompt, const char *help, Bit32u the_default, Bit32u *out
 {
   char buffer[1024];
   char *clean;
-  *out = 1<<31;
+  *out = 1U<<31;
   while (1) {
     // if there's a %s field, substitute in the default yes/no.
     bx_printf(prompt, the_default ? "yes" : "no");
@@ -631,12 +641,16 @@ void bx_log_options(int individual)
       if (ask_int(log_options_prompt1, "", -1, maxid-1, -1, &id) < 0)
         return;
       if (id < 0) return;
+      if (!strcmp(SIM->get_prefix((int)id), BX_NULL_PREFIX)) {
+        bx_printf("Invalid device ID %d\n", (int)id);
+        continue;
+      }
       bx_printf("Editing log options for the device %s\n", SIM->get_prefix((int)id));
       for (level=0; level<SIM->get_max_log_level(); level++) {
         char prompt[1024];
         int default_action = SIM->get_log_action((int)id, level);
         sprintf(prompt, "Enter action for %s event: [%s] ", SIM->get_log_level_name(level), SIM->get_action_name(default_action));
-        // don't show the no change choice (choices=3)
+        // don't show the no change choice
         if (ask_menu(prompt, "", log_level_n_choices_normal, log_level_choices, default_action, &action)<0)
           return;
         // the exclude expression allows some choices not being available if they
@@ -656,7 +670,7 @@ void bx_log_options(int individual)
       char prompt[1024];
       int action, default_action = N_ACT;  // default to no change
       sprintf(prompt, "Enter action for %s event on all devices: [no change] ", SIM->get_log_level_name(level));
-      // do show the no change choice (choices=4)
+      // do show the no change choice
       if (ask_menu(prompt, "", log_level_n_choices_normal+1, log_level_choices, default_action, &action)<0)
         return;
       if (action < log_level_n_choices_normal) {
@@ -868,14 +882,15 @@ void text_print(bx_param_c *param)
         bx_param_num_c *nparam = (bx_param_num_c*)param;
         Bit64s nval = nparam->get64();
         if (nparam->get_long_format()) {
-          bx_printf(nparam->get_long_format(), nval);
+          // all long formats are using 32-bit conversions
+          bx_printf(nparam->get_long_format(), (Bit32u)nval);
         } else {
           const char *format;
           int base = nparam->get_base();
           if (base == 16)
-            format = "%s: 0x%x";
+            format = "%s: 0x" FMT_LL "x";
           else
-            format = "%s: %ld";
+            format = "%s: " FMT_LL "d";
           if (nparam->get_label()) {
             bx_printf(format, nparam->get_label(), (Bit64s)nval);
           } else {
@@ -959,6 +974,8 @@ int text_ask(bx_param_c *param)
           bx_printf("\n");
           if (nparam->get_base() == 16)
             prompt = "Enter new value in hex or '?' for help: [%x] ";
+          else if ((nparam->get_min() < (Bit64s)BX_MIN_BIT32S) || (nparam->get_max() > (Bit64s)BX_MAX_BIT32S))
+            prompt = "Enter new value or '?' for help: [" FMT_LL "d] ";
           else
             prompt = "Enter new value or '?' for help: [%d] ";
         }
