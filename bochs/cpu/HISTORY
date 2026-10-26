@@ -116,6 +116,7 @@ Changes after Bochs 3.1:
 - SYSENTER/SYSEXIT: SYSENTER/SYSEXIT are not allowed in long mode on AMD
 - SYSCALL/SYSRET: SYSRET must clear RFLAGS.RF and RFLAGS.VM instead of loading them from R11
 - PVI: #GP when both EFLAGS.VIF and EFLAGS.VIP are set at the beginning of CPL3 instruction was not checked in 64-bit mode
+- DR6: delivery of #DB exception must not clear DR6.BT flag (only B0-B3 are updated, BD, BS and BT are never cleared)
 - SYSCALL/SYSRET: SYSCALL whose SFMASK clears TF takes no single-step trap, SYSRET takes the single-step trap by the TF it loads
 - CPUID: allow configuring i486dx4 model without x87 using cpu exclude_features
 - FRED: Fixed reserved bits checking for MSR_IA32_FRED_CONFIG (0x1d4), bug was introduced in Bochs 3.1 release
@@ -307,8 +308,8 @@ Changes in Bochs 3.1 (August 23, 2026):
 - VMX: fix VMX guest activity state reported on VMEXIT occured during HLT (should be BX_ACTIVITY_STATE_HLT=1)
 + CPUID: Update Arrow Lake CPUID - enable missing leaf CPUID leaf=7.subleaf=1[EDX]
 - x87: Implemented MS-DOS Compatibility mode for handling x87 FPU exceptions, FERR# and IGNNE# pins enabled when 'extfpuirq' plugin is enabled
-+ i486dx4: expose CR4 to support VME/PVI
 - x86-64: attempt to leave x86-64 long mode with 64-bit RIP value by writing to CR0 truncates RIP to 32-bit value
++ i486dx4: expose CR4 to support VME/PVI
 - i486: fixed reset value of dr6 register
 
 -------------------------------------------------------------------------

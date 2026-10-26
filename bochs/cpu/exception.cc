@@ -1047,9 +1047,9 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
   }
 
   if (vector == BX_DB_EXCEPTION) {
-    // Commit debug events to DR6: preserve DR5.BS and DR6.BD values,
+    // Commit debug events to DR6: B0-B3 are replaced, preserve DR6.BD, DR6.BS and DR6.BT values,
     // only software can clear them
-    BX_CPU_THIS_PTR dr6.val = (BX_CPU_THIS_PTR dr6.val    & 0xffff6ff0) |
+    BX_CPU_THIS_PTR dr6.val = (BX_CPU_THIS_PTR dr6.val    & 0xffffeff0) |
                               (BX_CPU_THIS_PTR debug_trap & 0x0000e00f);
 
     // clear GD flag in the DR7 prior entering debug exception handler
