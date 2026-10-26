@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2025  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -315,6 +315,11 @@ void bx_cmos_c::save_image(void)
 #endif
        , S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP
         );
+    if (fd < 0) {
+      BX_ERROR(("CMOS: could not open image file '%s' for writing",
+        SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->getptr()));
+      return;
+    }
     ret = ::write(fd, (bx_ptr_t) BX_CMOS_THIS s.reg, BX_CMOS_THIS s.max_reg + 1);
     if (ret != (BX_CMOS_THIS s.max_reg + 1)) {
       BX_PANIC(("CMOS: error writing cmos file."));
@@ -329,6 +334,10 @@ void bx_cmos_c::register_state(void)
   BXRS_HEX_PARAM_FIELD(list, mem_address, BX_CMOS_THIS s.cmos_mem_address);
   BXRS_PARAM_BOOL(list, irq_enabled, BX_CMOS_THIS s.irq_enabled);
   new bx_shadow_data_c(list, "ram", BX_CMOS_THIS s.reg, 128, 1);
+  // extended CMOS RAM (ports 0x72/0x73, used with 256 byte images)
+  BXRS_HEX_PARAM_FIELD(list, ext_mem_address, BX_CMOS_THIS s.cmos_ext_mem_addr);
+  new bx_shadow_data_c(list, "ext_ram", BX_CMOS_THIS s.reg + 128, 128, 1);
+  BXRS_PARAM_BOOL(list, timeval_change, BX_CMOS_THIS s.timeval_change);
 }
 
 void bx_cmos_c::after_restore_state(void)
