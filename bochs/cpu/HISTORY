@@ -194,6 +194,7 @@ Changes after Bochs 3.1:
 - LASS: implicit supervisor-mode accesses (GDT, LDT, IDT, TSS, UPID, UITT, USER_MSR bitmap) must cause LASS violation regardless of RFLAGS.AC
 - SMAP: implicit supervisor-mode accesses (GDT, LDT, IDT, TSS, UPID ...) to user pages must cause #PF regardless of RFLAGS.AC
 - XSAVE: make sure XRSTOR/XRSTORS always end trace, updating state like PKRS might require re-fetch after XRSTOR/XRSTORS execution
+- XSAVE: compacted XRSTOR/XRSTORS probed the XSAVE area using RFBM layout instead of XCOMP_BV layout, could cause spurious #PF beyond the end of the XSAVE area
 - Legacy: MOV Sreg,r/m and MOV r/m,Sreg must ignore REX.R in 64-bit mode (was generating #UD)
 - EVEX: #UD if EVEX.R'=0 for GPR encoded in ModRM.reg, EVEX.X is ignored for GPR encoded in ModRM.rm (was accessing RIP/internal registers)
 - VMX: MOV DR8-DR15 must #UD before checking for MOV-DR VM exit
