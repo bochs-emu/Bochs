@@ -117,7 +117,7 @@ Changes after Bochs 3.1:
 - SYSCALL/SYSRET: SYSRET must clear RFLAGS.RF and RFLAGS.VM instead of loading them from R11
 - PVI: #GP when both EFLAGS.VIF and EFLAGS.VIP are set at the beginning of CPL3 instruction was not checked in 64-bit mode
 - DR6: delivery of #DB exception must not clear DR6.BT flag (only B0-B3 are updated, BD, BS and BT are never cleared)
-- PAE: MOV to CR4 must reload PDPTEs only when modifying CR4.PAE, CR4.PGE, CR4.PSE, CR4.SMEP or CR4.CET
+- PAE: MOV to CR4 must reload PDPTEs only when modifying CR4.PAE, CR4.PGE, CR4.PSE, CR4.SMEP or CR4.CET / MOV to CR0 and LMSW must reload PDPTEs only when modifying CR0.PG, CR0.CD, CR0.NW or CR0.WP
 - SYSCALL/SYSRET: SYSCALL whose SFMASK clears TF takes no single-step trap, SYSRET takes the single-step trap by the TF it loads
 - CPUID: allow configuring i486dx4 model without x87 using cpu exclude_features
 - FRED: Fixed reserved bits checking for MSR_IA32_FRED_CONFIG (0x1d4), bug was introduced in Bochs 3.1 release

@@ -36,6 +36,10 @@
 #define BX_CR0_CD_MASK         (1 << 30)
 #define BX_CR0_PG_MASK         (1 << 31)
 
+#if BX_CPU_LEVEL >= 6
+const Bit32u BX_CR0_PDPTE_RELOAD_MASK = (BX_CR0_PG_MASK | BX_CR0_CD_MASK | BX_CR0_NW_MASK | BX_CR0_WP_MASK);
+#endif
+
 struct bx_cr0_t {
   Bit32u  val; // 32bit value of register
 

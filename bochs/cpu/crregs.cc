@@ -1161,9 +1161,12 @@ bool BX_CPU_C::SetCR0(bxInstruction_c *i, bx_address val)
 
 #if BX_CPU_LEVEL >= 6
   if (pg && BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
-    if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
-      BX_ERROR(("SetCR0(): PDPTR check failed !"));
-      return false;
+    // reload PDPTR if needed
+    if ((oldCR0 ^ val_32) & BX_CR0_PDPTE_RELOAD_MASK) {
+      if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
+        BX_ERROR(("SetCR0(): PDPTR check failed !"));
+        return false;
+      }
     }
   }
 #endif
@@ -1419,10 +1422,10 @@ bool BX_CPU_C::SetCR4(bxInstruction_c *i, bx_address val)
 
 #if BX_CPU_LEVEL >= 6
   // Modification of PGE,PAE,PSE,PCIDE,SMEP and etc flushes TLB cache according to docs.
-  if ((val & BX_CR4_FLUSH_TLB_MASK) != (BX_CPU_THIS_PTR cr4.get() & BX_CR4_FLUSH_TLB_MASK)) {
+  if ((val ^ BX_CPU_THIS_PTR cr4.get()) & BX_CR4_FLUSH_TLB_MASK) {
     if (BX_CPU_THIS_PTR cr0.get_PG() && temp_cr4.get_PAE() && !long_mode()) {
       // reload PDPTR if needed
-      if ((val & BX_CR4_PDPTE_RELOAD_MASK) != (BX_CPU_THIS_PTR cr4.get() & BX_CR4_PDPTE_RELOAD_MASK)) {
+      if ((val ^ BX_CPU_THIS_PTR cr4.get()) & BX_CR4_PDPTE_RELOAD_MASK) {
         if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
           BX_ERROR(("SetCR4(): PDPTR check failed !"));
           return false;
