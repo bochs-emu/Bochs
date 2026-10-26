@@ -1090,7 +1090,6 @@ bool BX_CPU_C::SetCR0(bxInstruction_c *i, bx_address val)
           return false;
         }
       }
-      BX_CPU_THIS_PTR efer.set_LMA(1);
     }
   }
   else if (BX_CPU_THIS_PTR cr0.get_PG() && ! pg) {
@@ -1098,15 +1097,9 @@ bool BX_CPU_C::SetCR0(bxInstruction_c *i, bx_address val)
       BX_ERROR(("SetCR0(): attempt to leave 64 bit mode directly to legacy mode !"));
       return false;
     }
-    if (BX_CPU_THIS_PTR efer.get_LMA()) {
-      if (BX_CPU_THIS_PTR cr4.get_PCIDE()) {
-        BX_ERROR(("SetCR0(): attempt to leave 64 bit mode with CR4.PCIDE set !"));
-        return false;
-      }
-      BX_CPU_THIS_PTR efer.set_LMA(0);
-
-      // clear upper part of RIP when leaving 64-bit long mode
-      BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RIP);
+    if (BX_CPU_THIS_PTR efer.get_LMA() && BX_CPU_THIS_PTR cr4.get_PCIDE()) {
+      BX_ERROR(("SetCR0(): attempt to leave 64 bit mode with CR4.PCIDE set !"));
+      return false;
     }
   }
 #endif  // #if BX_SUPPORT_X86_64
@@ -1146,6 +1139,22 @@ bool BX_CPU_C::SetCR0(bxInstruction_c *i, bx_address val)
         // any other bit except TS or MP had changed
         Svm_Vmexit(SVM_VMEXIT_CR0_SEL_WRITE);
       }
+    }
+  }
+#endif
+
+#if BX_SUPPORT_X86_64
+  // all #GP checks and SVM intercepts passed, commit long mode activation change
+  if (! BX_CPU_THIS_PTR cr0.get_PG() && pg) {
+    if (BX_CPU_THIS_PTR efer.get_LME())
+      BX_CPU_THIS_PTR efer.set_LMA(1);
+  }
+  else if (BX_CPU_THIS_PTR cr0.get_PG() && ! pg) {
+    if (BX_CPU_THIS_PTR efer.get_LMA()) {
+      BX_CPU_THIS_PTR efer.set_LMA(0);
+
+      // clear upper part of RIP when leaving 64-bit long mode
+      BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RIP);
     }
   }
 #endif
