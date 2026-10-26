@@ -490,17 +490,7 @@ static unsigned xsave_max_size_required_by_features(Bit32u features)
   return max_size;
 }
 
-static unsigned xsave_max_size_required_by_xsaves_features(Bit32u features)
-{
-  unsigned max_size = 512+64;
-
-  for (unsigned n=xcr0_t::BX_XCR0_YMM_BIT; n < xcr0_t::BX_XCR0_LAST; n++) {
-    if (features & (1 << n))
-      max_size += xsave_restore[n].len;
-  }
-
-  return max_size;
-}
+extern Bit32u xsave_area_last_byte_compaction(Bit32u requested_feature_bitmap);
 
 // CPUID Leaf 0x0000000D: XSAVE
 void bx_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
@@ -542,7 +532,7 @@ void bx_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *
     // EBX[31:00] - The size (in bytes) of the XSAVE area containing all states enabled by (XCRO | IA32_XSS)
     leaf->ebx = 0;
     if (is_cpu_extension_supported(BX_ISA_XSAVES))
-      leaf->ebx = xsave_max_size_required_by_xsaves_features(cpu->xcr0.get32() | cpu->msr.ia32_xss);
+      leaf->ebx = xsave_area_last_byte_compaction(cpu->xcr0.get32() | cpu->msr.ia32_xss);
 
     // ECX[31:0] - Reports the supported bits of the lower 32 bits of the IA32_XSS MSR.
     //             IA32_XSS[n]    can be set to 1 only if ECX[n] is 1

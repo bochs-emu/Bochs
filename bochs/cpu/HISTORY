@@ -24,6 +24,7 @@ Changes after Bochs 3.1:
 - CPUID: models reporting TCE in CPUID (Ryzen, Trinity) did not allow setting EFER.TCE (#GP on WRMSR), enable TCE for all Family 15h+ AMD models (Zambezi, Trinity, Ryzen)
 - CPUID: avoid reporting SVM LBR Virtualization CPUID 0x8000000A.EDX[1] - LBRs are not implemented yet, avoid reporting Data breakpoint extension for Ryzen - it is not implemented yet
 - CPUID: do not report SEV capabilities through CPUID leaf 0x8000001F on Ryzen, SEV is not supported
+- CPUID: CPUID.(EAX=0DH,ECX=1):EBX (XSAVES area size) ignored the 64-byte alignment of AMX TILECFG/TILEDATA and SCALEDATA components in the compacted format
 - CPUID: add std leaf 7 ECX/EDX calculation to CPUID models which support std leaf 7 but have nothing to report there (ECX/EDX reported=0), required for correct CET reporting after using add_features="cet"
 - CPUID: correctly report presence of subleaf=1 in CPUID Leaf 0x0000001E: AMX: TMUL Information Main leaf (when present)
 - AMX: TILELOADD/TILESTORED must #UD if memory operand is encoded without SIB byte, use zero stride when SIB has no index register (was using RSP)

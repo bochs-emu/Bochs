@@ -59,25 +59,25 @@ BX_CPP_INLINE Bit32u xsave_offset_align64_if_needed(Bit32u offset, unsigned feat
   return offset;
 }
 
-BX_CPP_INLINE Bit32u xsave_area_last_byte(Bit32u requested_feature_bitmap, bool compaction = false)
+Bit32u xsave_area_last_byte_compaction(Bit32u requested_feature_bitmap)
 {
-  if (compaction) {
-    Bit32u offset = XSAVE_YMM_STATE_OFFSET;
+  Bit32u offset = XSAVE_YMM_STATE_OFFSET;
 
-    for (unsigned feature = xcr0_t::BX_XCR0_YMM_BIT; feature < xcr0_t::BX_XCR0_LAST; feature++)
-    {
-      Bit32u feature_mask = (1 << feature);
-      if ((requested_feature_bitmap & feature_mask) != 0) {
-        offset =  xsave_offset_align64_if_needed(offset, feature);
-        offset += xsave_restore[feature].len;
-      }
+  for (unsigned feature = xcr0_t::BX_XCR0_YMM_BIT; feature < xcr0_t::BX_XCR0_LAST; feature++)
+  {
+    Bit32u feature_mask = (1 << feature);
+    if ((requested_feature_bitmap & feature_mask) != 0) {
+      offset =  xsave_offset_align64_if_needed(offset, feature);
+      offset += xsave_restore[feature].len;
     }
-
-    return offset;
   }
 
-  unsigned last_feature_to_save = most_significant_bitd(requested_feature_bitmap);
+  return offset;
+}
 
+Bit32u xsave_area_last_byte(Bit32u requested_feature_bitmap)
+{
+  unsigned last_feature_to_save = most_significant_bitd(requested_feature_bitmap);
   return xsave_restore[last_feature_to_save].offset + xsave_restore[last_feature_to_save].len;
 }
 #endif
@@ -233,7 +233,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
   if (requested_feature_bitmap & ~(BX_XCR0_FPU_MASK | BX_XCR0_SSE_MASK)) {
     // check that we would not fault while attempting to write, check that we can write-access last byte of the XSAVE area to be written
     // touch the memory but no write actually occurs
-    tickle_write_virtual(i->seg(), (eaddr + xsave_area_last_byte(requested_feature_bitmap, true) - 1) & asize_mask, 1);
+    tickle_write_virtual(i->seg(), (eaddr + xsave_area_last_byte_compaction(requested_feature_bitmap) - 1) & asize_mask, 1);
 
     Bit32u offset = XSAVE_YMM_STATE_OFFSET;
 
@@ -428,11 +428,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
     }
   }
 
-  // check that we would not fault while attempting to read, check that we can access last byte of the XSAVE area
-  // touch the memory but no read actually occurs
-  tickle_read_virtual(i->seg(), (eaddr + xsave_area_last_byte(requested_feature_bitmap, compaction) - 1) & asize_mask);
-
   if (compaction) {
+    // check that we would not fault while attempting to read, check that we can access last byte of the XSAVE area
+    // touch the memory but no read actually occurs
+    tickle_read_virtual(i->seg(), (eaddr + xsave_area_last_byte_compaction(requested_feature_bitmap) - 1) & asize_mask);
+
     Bit32u offset = XSAVE_YMM_STATE_OFFSET;
 
     /////////////////////////////////////////////////////////////////////////////
@@ -457,6 +457,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
     }
   }
   else {
+    // check that we would not fault while attempting to read, check that we can access last byte of the XSAVE area
+    // touch the memory but no read actually occurs
+    tickle_read_virtual(i->seg(), (eaddr + xsave_area_last_byte(requested_feature_bitmap) - 1) & asize_mask);
+
     /////////////////////////////////////////////////////////////////////////////
     for (unsigned feature = xcr0_t::BX_XCR0_YMM_BIT; feature < xcr0_t::BX_XCR0_LAST; feature++)
     {
