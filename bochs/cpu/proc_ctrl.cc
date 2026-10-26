@@ -1280,12 +1280,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
     parse_selector((Bit16u)(((BX_CPU_THIS_PTR msr.star >> 48) + 8) | 3),
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
-    // SS base, limit, attributes unchanged
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p       = 1;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl     = 3;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment = 1;  /* data/code segment */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
+    if (is_cpu_extension_supported(BX_ISA_SYSCALL_SYSRET_LEGACY)) {
+      // SYSCALL_SYSRET_LEGACY selects AMD specific behavior: SS base, limit, attributes unchanged
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p       = 1;
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl     = 3;
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment = 1;  /* data/code segment */
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
+    }
+    else {
+      // Intel: SS is loaded with flat 32-bit DPL=3 segment
+      setup_flat_SS(3);
+    }
 
     writeEFlags((Bit32u) R11, EFlagsValidMask);
     // SYSRET takes the single-step trap by the TF it loads: none when TF = 0, and at once
