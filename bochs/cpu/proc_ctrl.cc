@@ -1293,7 +1293,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
       setup_flat_SS(3);
     }
 
-    writeEFlags((Bit32u) R11, EFlagsValidMask);
+    // RF and VM are cleared, not loaded from R11
+    writeEFlags((Bit32u) R11 & ~(EFlagsRFMask | EFlagsVMMask), EFlagsValidMask);
     // SYSRET takes the single-step trap by the TF it loads: none when TF = 0, and at once
     // (before the target's first instruction) when TF = 1
     if (! BX_CPU_THIS_PTR get_TF())

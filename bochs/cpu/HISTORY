@@ -114,6 +114,7 @@ Changes after Bochs 3.1:
 - SVM: CR0 write intercept VM exit must happen before intercepted MOV CR0 changed EFER.LMA and RIP[63:32]
 - SYSENTER: check SYSENTER_EIP/SYSENTER_ESP canonicality before modifying any state
 - SYSENTER/SYSEXIT: SYSENTER/SYSEXIT are not allowed in long mode on AMD
+- SYSCALL/SYSRET: SYSRET must clear RFLAGS.RF and RFLAGS.VM instead of loading them from R11
 - SYSCALL/SYSRET: SYSCALL whose SFMASK clears TF takes no single-step trap, SYSRET takes the single-step trap by the TF it loads
 - CPUID: allow configuring i486dx4 model without x87 using cpu exclude_features
 - FRED: Fixed reserved bits checking for MSR_IA32_FRED_CONFIG (0x1d4), bug was introduced in Bochs 3.1 release
