@@ -6364,6 +6364,7 @@ public: // for now...
   BX_SMF bool SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls);
   BX_SMF bool SvmEnterLoadCheckGuestState(void);
   BX_SMF bool SvmInjectEvents(void);
+  BX_SMF bool SvmInjectedVectorIsException(unsigned vector);
   BX_SMF void Svm_Vmexit(int reason, Bit64u exitinfo1 = 0, Bit64u exitinfo2 = 0);
   BX_SMF void SvmExitSaveGuestState(void);
   BX_SMF void SvmExitLoadHostState(SVM_HOST_STATE *host);

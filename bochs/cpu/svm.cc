@@ -980,6 +980,40 @@ void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1, Bit64u exitinfo2)
 
 extern int get_exception_type(unsigned vector);
 
+// TYPE=3 (exception) event injection must specify a vector of an exception supported by the CPU,
+// otherwise VMRUN fails with VMEXIT_INVALID
+bool BX_CPU_C::SvmInjectedVectorIsException(unsigned vector)
+{
+  switch(vector) {
+    case BX_DE_EXCEPTION:
+    case BX_DB_EXCEPTION:
+    case BX_BP_EXCEPTION:
+    case BX_OF_EXCEPTION:
+    case BX_BR_EXCEPTION:
+    case BX_UD_EXCEPTION:
+    case BX_NM_EXCEPTION:
+    case BX_DF_EXCEPTION:
+    case BX_TS_EXCEPTION:
+    case BX_NP_EXCEPTION:
+    case BX_SS_EXCEPTION:
+    case BX_GP_EXCEPTION:
+    case BX_PF_EXCEPTION:
+    case BX_MF_EXCEPTION:
+    case BX_AC_EXCEPTION:
+    case BX_MC_EXCEPTION:
+    case BX_XM_EXCEPTION:
+    case BX_SX_EXCEPTION:
+      return true;
+
+    case BX_CP_EXCEPTION:
+      return is_cpu_extension_supported(BX_ISA_CET);
+
+    default:
+      // NMI, coprocessor segment overrun (9), #VE (raised only by VMX) and reserved vectors
+      return false;
+  }
+}
+
 bool BX_CPU_C::SvmInjectEvents(void)
 {
   SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb->ctrls;
@@ -1004,7 +1038,7 @@ bool BX_CPU_C::SvmInjectEvents(void)
       break;
 
     case BX_HARDWARE_EXCEPTION:
-      if (vector == 2 || vector > 31) {
+      if (! SvmInjectedVectorIsException(vector)) {
         BX_ERROR(("SvmInjectEvents: invalid vector %d for HW exception", vector));
         return false;
       }

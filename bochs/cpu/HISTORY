@@ -109,6 +109,7 @@ Changes after Bochs 3.1:
 - SVM: correctly handle DR6 reserved bits
 - SVM: implemented CET state management - guest S_CET, SSP and ISST_ADDR are loaded by VMRUN and saved on #VMEXIT, VMRUN CET consistency checks
 - SVM: nested page table walk used guest CR4.LA57 instead of host CR4.LA57 to select 4-level or 5-level nested paging
+- SVM: event injection of exception (TYPE=3) must fail with VMEXIT_INVALID for vectors not corresponding to an exception supported by the CPU (9, 15, #VE, reserved vectors and #CP without CET)
 - SYSENTER: check SYSENTER_EIP/SYSENTER_ESP canonicality before modifying any state
 - SYSENTER/SYSEXIT: SYSENTER/SYSEXIT are not allowed in long mode on AMD
 - SYSCALL/SYSRET: SYSCALL whose SFMASK clears TF takes no single-step trap, SYSRET takes the single-step trap by the TF it loads
