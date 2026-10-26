@@ -944,6 +944,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPID_Ed(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
+
+#if BX_SUPPORT_X86_64
+  // AMD: SYSENTER is invalid in long mode (both 64-bit and compatibility mode)
+  if (long_mode() && ! is_cpu_extension_supported(BX_ISA_SYSENTER_SYSEXIT_LONGMODE)) {
+    BX_ERROR(("%s: not supported in long mode", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
   if (real_mode()) {
     BX_ERROR(("%s: not recognized in real mode !", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -1029,6 +1038,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
+
+#if BX_SUPPORT_X86_64
+  // AMD: SYSEXIT is invalid in long mode (both 64-bit and compatibility mode)
+  if (long_mode() && ! is_cpu_extension_supported(BX_ISA_SYSENTER_SYSEXIT_LONGMODE)) {
+    BX_ERROR(("%s: not supported in long mode", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
 
 #if BX_SUPPORT_X86_64 && BX_SUPPORT_FRED
   if (BX_CPU_THIS_PTR cr4.get_FRED()) {
