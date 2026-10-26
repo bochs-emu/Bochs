@@ -12,7 +12,7 @@ Changes after Bochs 3.1 release:
     - CPU feature 'sca_mitigations' renamed to 'spec_ctrl' (Intel speculation control), new 'spec_ctrl_amd' feature for AMD speculation control
   ! Implemented MSR_CORE_THREAD_COUNT (0x35) for Intel Nehalem and later cpu models, reports the configured number of cores and threads
   ! Improved implementation of x87 transendential instructions (F2XM1/FYL2X/FYL2XP1/FPATAN/FSIN/FCOS/FSINCOS/FPTAN) to match HW
-  - Bugfixes for CPU emulation correctness (critical bugfixes for emulation of xAPIC, AVX_NE_CONVERT, AVX512/AVX512_FP16/AVX512_BF16, AMX, VMX, SVM, XOP, CET, FRED, MWAIT)
+  - Bugfixes for CPU emulation correctness (critical bugfixes for emulation of xAPIC, AVX_NE_CONVERT, AVX512/AVX512_FP16/AVX512_BF16, AMX, VMX, SVM, XOP, TBM, CET, FRED, MWAIT)
     full list of all CPU bugfixes can be seen in Bochs source tree @ bochs/cpu/history)
 
 - Bochs debugger

@@ -32,37 +32,6 @@
 #include "fetchdecode.h"
 
 // 256 entries for XOP-encoded map 0x8 opcodes
-static const Bit64u BxOpcodeGroup_XOP_0x8_01[] = {
-  form_opcode(ATTR_NNN1 | ATTR_IS64 | ATTR_VEX_L0 | ATTR_VEX_W0, BX_IA_BLCFILL_BqEq),
-  form_opcode(ATTR_NNN1 |             ATTR_VEX_L0 | ATTR_VEX_W1, BX_IA_BLCFILL_BdEd),
-
-  form_opcode(ATTR_NNN2 | ATTR_IS64 | ATTR_VEX_L0 | ATTR_VEX_W0, BX_IA_BLSFILL_BqEq),
-  form_opcode(ATTR_NNN2 |             ATTR_VEX_L0 | ATTR_VEX_W1, BX_IA_BLSFILL_BdEd),
-
-  form_opcode(ATTR_NNN3 | ATTR_IS64 | ATTR_VEX_L0 | ATTR_VEX_W0, BX_IA_BLCS_BqEq),
-  form_opcode(ATTR_NNN3 |             ATTR_VEX_L0 | ATTR_VEX_W1, BX_IA_BLCS_BdEd),
-
-  form_opcode(ATTR_NNN4 | ATTR_IS64 | ATTR_VEX_L0 | ATTR_VEX_W0, BX_IA_TZMSK_BqEq),
-  form_opcode(ATTR_NNN4 |             ATTR_VEX_L0 | ATTR_VEX_W1, BX_IA_TZMSK_BdEd),
-
-  form_opcode(ATTR_NNN5 | ATTR_IS64 | ATTR_VEX_L0 | ATTR_VEX_W0, BX_IA_BLCIC_BqEq),
-  form_opcode(ATTR_NNN5 |             ATTR_VEX_L0 | ATTR_VEX_W1, BX_IA_BLCIC_BdEd),
-
-  form_opcode(ATTR_NNN6 | ATTR_IS64 | ATTR_VEX_L0 | ATTR_VEX_W0, BX_IA_BLSIC_BqEq),
-  form_opcode(ATTR_NNN6 |             ATTR_VEX_L0 | ATTR_VEX_W1, BX_IA_BLSIC_BdEd),
-
-  form_opcode(ATTR_NNN7 | ATTR_IS64 | ATTR_VEX_L0 | ATTR_VEX_W0, BX_IA_T1MSKC_BqEq),
-  last_opcode(ATTR_NNN7 |             ATTR_VEX_L0 | ATTR_VEX_W1, BX_IA_T1MSKC_BdEd)
-};
-
-static const Bit64u BxOpcodeGroup_XOP_0x8_02[] = {
-  form_opcode(ATTR_NNN1 | ATTR_IS64 | ATTR_VEX_L0 | ATTR_VEX_W0, BX_IA_BLCMSK_BqEq),
-  form_opcode(ATTR_NNN1 |             ATTR_VEX_L0 | ATTR_VEX_W1, BX_IA_BLCMSK_BdEd),
-
-  form_opcode(ATTR_NNN6 | ATTR_IS64 | ATTR_VEX_L0 | ATTR_VEX_W0, BX_IA_BLCI_BqEq),
-  last_opcode(ATTR_NNN6 |             ATTR_VEX_L0 | ATTR_VEX_W1, BX_IA_BLCI_BdEd)
-};
-
 static const Bit64u BxOpcodeGroup_XOP_0x8_85[] = { last_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VPMACSSWW_VdqHdqWdqVIb) };
 static const Bit64u BxOpcodeGroup_XOP_0x8_86[] = { last_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VPMACSSWD_VdqHdqWdqVIb) };
 static const Bit64u BxOpcodeGroup_XOP_0x8_87[] = { last_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VPMACSSDQL_VdqHdqWdqVIb) };
@@ -100,6 +69,37 @@ static const Bit64u BxOpcodeGroup_XOP_0x8_EE[] = { last_opcode(ATTR_VEX_W0 | ATT
 static const Bit64u BxOpcodeGroup_XOP_0x8_EF[] = { last_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VPCOMUQ_VdqHdqWdqIb) };
 
 // 256 entries for XOP-encoded map 0x9 opcodes
+static const Bit64u BxOpcodeGroup_XOP_0x9_01[] = {
+  form_opcode(ATTR_NNN1 | ATTR_IS64 | ATTR_VEX_L0 | ATTR_VEX_W1, BX_IA_BLCFILL_BqEq),
+  form_opcode(ATTR_NNN1 |             ATTR_VEX_L0,               BX_IA_BLCFILL_BdEd),
+
+  form_opcode(ATTR_NNN2 | ATTR_IS64 | ATTR_VEX_L0 | ATTR_VEX_W1, BX_IA_BLSFILL_BqEq),
+  form_opcode(ATTR_NNN2 |             ATTR_VEX_L0,               BX_IA_BLSFILL_BdEd),
+
+  form_opcode(ATTR_NNN3 | ATTR_IS64 | ATTR_VEX_L0 | ATTR_VEX_W1, BX_IA_BLCS_BqEq),
+  form_opcode(ATTR_NNN3 |             ATTR_VEX_L0,               BX_IA_BLCS_BdEd),
+
+  form_opcode(ATTR_NNN4 | ATTR_IS64 | ATTR_VEX_L0 | ATTR_VEX_W1, BX_IA_TZMSK_BqEq),
+  form_opcode(ATTR_NNN4 |             ATTR_VEX_L0,               BX_IA_TZMSK_BdEd),
+
+  form_opcode(ATTR_NNN5 | ATTR_IS64 | ATTR_VEX_L0 | ATTR_VEX_W1, BX_IA_BLCIC_BqEq),
+  form_opcode(ATTR_NNN5 |             ATTR_VEX_L0,               BX_IA_BLCIC_BdEd),
+
+  form_opcode(ATTR_NNN6 | ATTR_IS64 | ATTR_VEX_L0 | ATTR_VEX_W1, BX_IA_BLSIC_BqEq),
+  form_opcode(ATTR_NNN6 |             ATTR_VEX_L0,               BX_IA_BLSIC_BdEd),
+
+  form_opcode(ATTR_NNN7 | ATTR_IS64 | ATTR_VEX_L0 | ATTR_VEX_W1, BX_IA_T1MSKC_BqEq),
+  last_opcode(ATTR_NNN7 |             ATTR_VEX_L0,               BX_IA_T1MSKC_BdEd)
+};
+
+static const Bit64u BxOpcodeGroup_XOP_0x9_02[] = {
+  form_opcode(ATTR_NNN1 | ATTR_IS64 | ATTR_VEX_L0 | ATTR_VEX_W1, BX_IA_BLCMSK_BqEq),
+  form_opcode(ATTR_NNN1 |             ATTR_VEX_L0,               BX_IA_BLCMSK_BdEd),
+
+  form_opcode(ATTR_NNN6 | ATTR_IS64 | ATTR_VEX_L0 | ATTR_VEX_W1, BX_IA_BLCI_BqEq),
+  last_opcode(ATTR_NNN6 |             ATTR_VEX_L0,               BX_IA_BLCI_BdEd)
+};
+
 static const Bit64u BxOpcodeGroup_XOP_0x9_80[] = { last_opcode(ATTR_VEX_W0, BX_IA_VFRCZPS_VpsWps) };
 static const Bit64u BxOpcodeGroup_XOP_0x9_81[] = { last_opcode(ATTR_VEX_W0, BX_IA_VFRCZPD_VpdWpd) };
 static const Bit64u BxOpcodeGroup_XOP_0x9_82[] = { last_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VFRCZSS_VssWss) };
@@ -183,8 +183,8 @@ static const Bit64u BxOpcodeGroup_XOP_0x9_E3[] = { last_opcode(ATTR_VEX_W0 | ATT
 
 // 256 entries for XOP-encoded map 0xA opcodes
 static const Bit64u BxOpcodeGroup_XOP_0xA_10[] = {
-  form_opcode(ATTR_VEX_W0 | ATTR_VEX_L0,             BX_IA_BEXTR_GdEdId),
-  last_opcode(ATTR_VEX_W1 | ATTR_VEX_L0 | ATTR_IS64, BX_IA_BEXTR_GqEqId)
+  form_opcode(ATTR_VEX_W1 | ATTR_VEX_L0 | ATTR_IS64, BX_IA_BEXTR_GqEqId),
+  last_opcode(              ATTR_VEX_L0,             BX_IA_BEXTR_GdEdId)
 };
 
 /* ************************************************************************ */
@@ -192,8 +192,8 @@ static const Bit64u BxOpcodeGroup_XOP_0xA_10[] = {
 const Bit64u *BxOpcodeTableXOP[256*3] = {
   // 256 entries for XOP-encoded map 0x8 opcodes
   /* 00  */ BxOpcodeGroup_ERR,
-  /* 01  */ BxOpcodeGroup_XOP_0x8_01,
-  /* 02  */ BxOpcodeGroup_XOP_0x8_02,
+  /* 01  */ BxOpcodeGroup_ERR,
+  /* 02  */ BxOpcodeGroup_ERR,
   /* 03  */ BxOpcodeGroup_ERR,
   /* 04  */ BxOpcodeGroup_ERR,
   /* 05  */ BxOpcodeGroup_ERR,
@@ -450,8 +450,8 @@ const Bit64u *BxOpcodeTableXOP[256*3] = {
 
   // 256 entries for XOP-encoded map 0x9 opcodes
   /* 00  */ BxOpcodeGroup_ERR,
-  /* 01  */ BxOpcodeGroup_ERR,
-  /* 02  */ BxOpcodeGroup_ERR,
+  /* 01  */ BxOpcodeGroup_XOP_0x9_01,
+  /* 02  */ BxOpcodeGroup_XOP_0x9_02,
   /* 03  */ BxOpcodeGroup_ERR,
   /* 04  */ BxOpcodeGroup_ERR,
   /* 05  */ BxOpcodeGroup_ERR,

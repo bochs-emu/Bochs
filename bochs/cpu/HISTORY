@@ -221,6 +221,7 @@ Changes after Bochs 3.1:
 + LAPIC: allow local APIC to be re-enabled after clearing APIC global enable bit in IA32_APIC_BASE MSR, also #GP on attempt to switch directly from disabled APIC to x2APIC mode
 + LAPIC: EOI cleared TMR after broadcasting the EOI to the IOAPIC, wiping the TMR bit of a still asserted level triggered interrupt re-delivered by that EOI.
          The next EOI was not broadcast and the IOAPIC Remote IRR got stuck (Windows Vista boot hang with GeForce).
++ TBM: BLCFILL/BLSFILL/BLCS/TZMSK/BLCIC/BLSIC/T1MSKC/BLCMSK/BLCI were decoded from XOP map 8 instead of map 9 with inverted XOP.W, XOP.W is ignored outside 64-bit mode, TBM is #UD in real and v8086 mode
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):
