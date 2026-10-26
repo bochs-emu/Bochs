@@ -176,11 +176,11 @@ static const Bit64u BxOpcodeTable0F3882[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable0F388A[] = { last_opcode(ATTR_SSE_NO_PREFIX | ATTR_MOD_MEM | ATTR_IS64, BX_IA_MOVRS_GbEb) };
+static const Bit64u BxOpcodeTable0F388A[] = { last_opcode(ATTR_NO_SSE_PREFIX_F2_F3 | ATTR_MOD_MEM | ATTR_IS64, BX_IA_MOVRS_GbEb) };
 static const Bit64u BxOpcodeTable0F388B[] = {
-  form_opcode(ATTR_SSE_NO_PREFIX | ATTR_MOD_MEM | ATTR_OS64 | ATTR_IS64, BX_IA_MOVRS_GqEq),
-  form_opcode(ATTR_SSE_NO_PREFIX | ATTR_MOD_MEM | ATTR_OS32 | ATTR_IS64, BX_IA_MOVRS_GdEd),
-  last_opcode(ATTR_SSE_NO_PREFIX | ATTR_MOD_MEM | ATTR_OS16 | ATTR_IS64, BX_IA_MOVRS_GwEw)
+  form_opcode(ATTR_NO_SSE_PREFIX_F2_F3 | ATTR_MOD_MEM | ATTR_OS64 | ATTR_IS64, BX_IA_MOVRS_GqEq),
+  form_opcode(ATTR_NO_SSE_PREFIX_F2_F3 | ATTR_MOD_MEM | ATTR_OS32 | ATTR_IS64, BX_IA_MOVRS_GdEd),
+  last_opcode(ATTR_NO_SSE_PREFIX_F2_F3 | ATTR_MOD_MEM | ATTR_OS16 | ATTR_IS64, BX_IA_MOVRS_GwEw)
 };
 #endif
 
