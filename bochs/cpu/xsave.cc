@@ -1452,6 +1452,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
   }
 
+  // CPL is always 3 in vm8086 mode
+  if (/* v8086_mode() || */ CPL != 0) {
+    BX_ERROR(("XSETBV: The current priveledge level is not 0"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     VMexit(VMX_VMEXIT_XSETBV, 0);
@@ -1463,12 +1469,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
     if (SVM_INTERCEPT(SVM_INTERCEPT1_XSETBV)) Svm_Vmexit(SVM_VMEXIT_XSETBV);
   }
 #endif
-
-  // CPL is always 3 in vm8086 mode
-  if (/* v8086_mode() || */ CPL != 0) {
-    BX_ERROR(("XSETBV: The current priveledge level is not 0"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
 
   // For now hardcoded handle only XCR0 register, it should take a few
   // years until extension will be required
