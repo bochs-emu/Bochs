@@ -222,6 +222,7 @@ Changes after Bochs 3.1:
 + LAPIC: EOI cleared TMR after broadcasting the EOI to the IOAPIC, wiping the TMR bit of a still asserted level triggered interrupt re-delivered by that EOI.
          The next EOI was not broadcast and the IOAPIC Remote IRR got stuck (Windows Vista boot hang with GeForce).
 + TBM: BLCFILL/BLSFILL/BLCS/TZMSK/BLCIC/BLSIC/T1MSKC/BLCMSK/BLCI were decoded from XOP map 8 instead of map 9 with inverted XOP.W, XOP.W is ignored outside 64-bit mode, TBM is #UD in real and v8086 mode
+- VMX: RDMSRLIST/WRMSRLIST must VM exit unconditionally when "use MSR bitmaps" is 0, before any memory access (no VM exit was taken when RCX was 0)
 - MOVRS: legacy MOVRS must allow 66H operand size prefix (MOVRS r16, m16 was #UD), AVX10.2 VMOVRSB/W/D/Q must #UD outside of 64-bit mode
 
 -------------------------------------------------------------------------

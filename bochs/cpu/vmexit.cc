@@ -460,9 +460,8 @@ void BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr, Bit32u qualification, unsigne
 
   if (! vm->vmexec_ctrls1.MSR_BITMAPS()) {
     BX_DEBUG(("VMEXIT: %sMSR 0x%08x", (readmsr) ? "RD" : "WR", msr));
-    // for RDMSRLIST and WRMSRLIST, if MSR Bitmaps disabled, exit qualification is 0
-    if (op == VMX_VMEXIT_RDMSRLIST || op == VMX_VMEXIT_WRMSRLIST)
-      qualification = 0;
+    // RDMSRLIST and WRMSRLIST never get here, with MSR bitmaps disabled they VM exit before the MSR loop
+    BX_ASSERT(op != VMX_VMEXIT_RDMSRLIST && op != VMX_VMEXIT_WRMSRLIST);
     if (save_instr_info)
       VMexit_SaveInstructionInfo(Bit64u(reg) << 16);
     VMexit(op, qualification);

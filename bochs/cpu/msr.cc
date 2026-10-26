@@ -1053,6 +1053,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSRLIST(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_VMX >= 2
+  // with MSR bitmaps disabled RDMSRLIST causes VM exit before any memory access, exit qualification is 0
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (! BX_CPU_THIS_PTR vmcs.vmexec_ctrls1.MSR_BITMAPS())
+      VMexit(VMX_VMEXIT_RDMSRLIST, 0);
+  }
+#endif
+
   Bit64u val64;
 
   while (RCX != 0) {
@@ -1105,6 +1113,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSRLIST(bxInstruction_c *i)
     BX_ERROR(("WRMSRLIST: RSI and RDI must be 8-byte aligned"));
     exception(BX_GP_EXCEPTION, 0);
   }
+
+#if BX_SUPPORT_VMX >= 2
+  // with MSR bitmaps disabled WRMSRLIST causes VM exit before any memory access, exit qualification is 0
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (! vm->vmexec_ctrls1.MSR_BITMAPS())
+      VMexit(VMX_VMEXIT_WRMSRLIST, 0);
+  }
+#endif
 
   invalidate_prefetch_q();
 
