@@ -93,6 +93,7 @@ Changes after Bochs 3.1:
 + VMX: EPTP index VM-execution control was not loaded on VM entry, #VE information area reported stale or uninitialized EPTP index unless the guest executed VMFUNC EPTP switching
 - VMX: posted-interrupt processing with empty PIR and VIRR set RVI to 0xFF and delivered a bogus virtual interrupt 0xFF (instead should keep RVI unchanged when VIRR is empty)
 - VMX: #VE delivery wrote the 16-bit EPTP index as a qword, overwriting bytes 34..39 of the virtualization-exception information area
+- VMX: EPT violation exit qualification with mode-based execute control for data accesses did not report user-execute permission in bit 6 and set it in bit 13 (shadow-stack access) instead
 + SVM: Fixed VMRUN consistency checks
 + SVM: LMSW must treat the selective CR0 write intercept as non-selective (intercept regardless of the value written)
 + SVM: RSM intercept must be checked before #UD for RSM executed outside of SMM (SMM containerization)

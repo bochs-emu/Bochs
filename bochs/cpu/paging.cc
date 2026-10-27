@@ -2258,10 +2258,11 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
     // no VMExit qualification for EPT Misconfiguration VMExit
     if (vmexit_reason == VMX_VMEXIT_EPT_VIOLATION) {
       combined_access &= entry[leaf];
-      vmexit_qualification = access_mask | (combined_access << 3);
-      if (vm->vmexec_ctrls2.MBE_CTRL() && (rw == BX_EXECUTE)) {
-        vmexit_qualification &= (0x3f); // reset all bit bits beyond [5:0]
-        vmexit_qualification |= (1<<2); // bit2 indicate the operation was instruction fetch
+      vmexit_qualification = (access_mask & 0x7) | ((combined_access & 0x7) << 3);
+      if (vm->vmexec_ctrls2.MBE_CTRL()) {
+        if (rw == BX_EXECUTE)
+          vmexit_qualification |= (1<<2); // bit2 indicate the operation was instruction fetch
+        // bit6 reports user-mode execute permission for any access type when MBE is enabled
         if (combined_access & BX_EPT_MBE_USER_EXECUTE)
           vmexit_qualification |= (1<<6);
       }
