@@ -1003,7 +1003,14 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(bx_phy_address cr3_val)
   for (n=0; n<4; n++) {
     // read and check PDPTE entries
     bx_phy_address pdpe_entry_addr = (bx_phy_address) (cr3_val | (n << 3));
-    pdptr[n] = read_physical_qword(pdpe_entry_addr, BX_MEMTYPE_INVALID, AccessReason(BX_PDPTR0_ACCESS + n));
+    BxMemtype pdpte_memtype = BX_MEMTYPE_INVALID;
+#if BX_SUPPORT_MEMTYPE
+    // Intel: WB memory type is used when loading the PDPTEs, CR3.PCD and CR3.PWT are ignored with PAE paging (SDM 5.9.2)
+    // AMD would use PAT entry selected by CR3.PCD and CR3.PWT to access the page-directory-pointer table (APM 5.2.1)
+    // to be calculated using: memtype_by_pat(calculate_pcd_pwt((Bit32u) BX_CPU_THIS_PTR cr3))
+    pdpte_memtype = resolve_memtype(memtype_by_mtrr(pdpe_entry_addr), BX_MEMTYPE_WB);
+#endif
+    pdptr[n] = read_physical_qword(pdpe_entry_addr, pdpte_memtype, AccessReason(BX_PDPTR0_ACCESS + n));
 
     if (pdptr[n] & 0x1) {
        if (pdptr[n] & PAGING_PAE_PDPTE_RESERVED_BITS) return false;
@@ -1042,7 +1049,13 @@ bx_phy_address BX_CPU_C::translate_linear_load_PDPTR(bx_address laddr, unsigned 
     cr3_val = nested_walk(cr3_val, BX_RW, 1);
 
     bx_phy_address pdpe_entry_addr = (bx_phy_address) (cr3_val | (index << 3));
-    pdptr = read_physical_qword(pdpe_entry_addr, BX_MEMTYPE_INVALID, AccessReason(BX_PDPTR0_ACCESS + index));
+    BxMemtype pdpte_memtype = BX_MEMTYPE_INVALID;
+#if BX_SUPPORT_MEMTYPE
+    // AMD: guest CR3.PCD and CR3.PWT select the gPAT entry used to access the page-directory-pointer table (APM 5.2.1)
+    // TODO: combine with host PAT type from nested paging entries (APM 15.25.8)
+    pdpte_memtype = resolve_memtype(memtype_by_mtrr(pdpe_entry_addr), memtype_by_pat(calculate_pcd_pwt((Bit32u) BX_CPU_THIS_PTR cr3)));
+#endif
+    pdptr = read_physical_qword(pdpe_entry_addr, pdpte_memtype, AccessReason(BX_PDPTR0_ACCESS + index));
 
     if (pdptr & 0x1) {
       if (pdptr & PAGING_PAE_PDPTE_RESERVED_BITS) {

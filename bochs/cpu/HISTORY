@@ -121,6 +121,7 @@ Changes after Bochs 3.1:
 - PAE: MOV to CR4 must reload PDPTEs only when modifying CR4.PAE, CR4.PGE, CR4.PSE, CR4.SMEP or CR4.CET / MOV to CR0 and LMSW must reload PDPTEs only when modifying CR0.PG, CR0.CD, CR0.NW or CR0.WP
 - SYSCALL/SYSRET: SYSCALL whose SFMASK clears TF takes no single-step trap, SYSRET takes the single-step trap by the TF it loads
 - MEMTYPE: VMX/SVM structure accesses reported the physical address as memory type instead of the MTRR memory type
+- MEMTYPE: PAE PDPTE loads must use WB memory type combined with MTRR memory type (were reported with INVALID memory type)
 - CPUID: allow configuring i486dx4 model without x87 using cpu exclude_features
 - FRED: Fixed reserved bits checking for MSR_IA32_FRED_CONFIG (0x1d4), bug was introduced in Bochs 3.1 release
 - MTRR: Fixed reserved bits checking for MSR_MTRR_DEFTYPE (0x2ff)
