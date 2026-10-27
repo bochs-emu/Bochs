@@ -96,6 +96,7 @@ Changes after Bochs 3.1:
 - VMX: EPT violation exit qualification with mode-based execute control for data accesses did not report user-execute permission in bit 6 and set it in bit 13 (shadow-stack access) instead
 - VMX: posted-interrupt processing must update RVI from the highest PIR bit only (not from VIRR), VIRR is not modified for empty PIR dwords
 - VMX: posted-interrupt processing in HLT state must return the logical processor to HLT state unless a virtual interrupt was recognized and can be delivered
+- VMX: VM entry with unrestricted guest must fail if "IA-32e mode guest" is set with guest CR0.PG=0 or if guest RFLAGS.VM is set with CR0.PE=0
 + SVM: Fixed VMRUN consistency checks
 + SVM: LMSW must treat the selective CR0 write intercept as non-selective (intercept regardless of the value written)
 + SVM: RSM intercept must be checked before #UD for RSM executed outside of SMM (SMM containerization)

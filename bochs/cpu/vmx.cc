@@ -1516,6 +1516,12 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   bool real_mode_guest = false;
   if (! (guest.cr0 & BX_CR0_PE_MASK))
      real_mode_guest = true;
+
+  // possible only with unrestricted guest, RFLAGS.VM must be 0 if CR0.PE is 0
+  if (real_mode_guest && v8086_guest) {
+     BX_ERROR(("VMENTER FAIL: Enter to real mode guest with RFLAGS.VM"));
+     return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+  }
 #endif
 
   guest.cr3 = VMread_natural(VMCS_GUEST_CR3);
@@ -1539,6 +1545,11 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
 #if BX_SUPPORT_X86_64
   if (x86_64_guest) {
+     // CR0.PG could be 0 only with unrestricted guest
+     if (! (guest.cr0 & BX_CR0_PG_MASK)) {
+        BX_ERROR(("VMENTER FAIL: VMCS guest CR0.PG=0 in x86-64 mode"));
+        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+     }
      if (! guest.cr4.get_PAE()) {
         BX_ERROR(("VMENTER FAIL: VMCS guest CR4.PAE=0 in x86-64 mode"));
         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
