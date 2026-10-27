@@ -51,7 +51,7 @@ void BX_CPU_C::set_VMCBPTR(Bit64u vmcbptr)
   if (vmcbptr != 0) {
     BX_CPU_THIS_PTR vmcbhostptr = BX_CPU_THIS_PTR getHostMemAddr(vmcbptr, BX_WRITE);
 #if BX_SUPPORT_MEMTYPE
-    BX_CPU_THIS_PTR vmcb_memtype = resolve_memtype(BX_CPU_THIS_PTR vmcbptr);
+    BX_CPU_THIS_PTR vmcb_memtype = resolve_memtype(memtype_by_mtrr(BX_CPU_THIS_PTR vmcbptr));
 #endif
   }
   else {
@@ -1158,10 +1158,10 @@ void BX_CPU_C::SvmInterceptIO(bxInstruction_c *i, unsigned port, unsigned len)
 
   // access_read_physical cannot read 2 bytes cross 4K boundary :(
   pAddr = BX_CPU_THIS_PTR vmcb->ctrls.iopm_base + (port / 8);
-  bitmap[0] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_IO_BITMAP_ACCESS);
+  bitmap[0] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_IO_BITMAP_ACCESS);
 
   pAddr++;
-  bitmap[1] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_IO_BITMAP_ACCESS);
+  bitmap[1] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_IO_BITMAP_ACCESS);
 
   Bit16u combined_bitmap = bitmap[1];
   combined_bitmap = (combined_bitmap << 8) | bitmap[0];
@@ -1250,7 +1250,7 @@ void BX_CPU_C::SvmInterceptMSR(unsigned op, Bit32u msr)
     Bit32u msr_offset = (msr & 0x1fff) * 2 + op;
 
     bx_phy_address pAddr = msr_bitmap_addr + (msr_offset / 8);
-    Bit8u msr_bitmap = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_MSR_BITMAP_ACCESS);
+    Bit8u msr_bitmap = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_MSR_BITMAP_ACCESS);
 
     vmexit = (msr_bitmap >> (msr_offset & 7)) & 0x1;
   }

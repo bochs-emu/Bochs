@@ -473,7 +473,7 @@ void BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr, Bit32u qualification, unsigne
     else {
       // check MSR-HI bitmaps
       bx_phy_address pAddr = vm->msr_bitmap_addr + ((msr - BX_VMX_HI_MSR_START) >> 3) + 1024 + (readmsr ? 0 : 2048);
-      Bit8u field = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_MSR_BITMAP_ACCESS);
+      Bit8u field = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_MSR_BITMAP_ACCESS);
       if (field & (1 << (msr & 7)))
         vmexit = true;
     }
@@ -483,7 +483,7 @@ void BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr, Bit32u qualification, unsigne
     else {
       // check MSR-LO bitmaps
       bx_phy_address pAddr = vm->msr_bitmap_addr + (msr >> 3) + (readmsr ? 0 : 2048);
-      Bit8u field = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_MSR_BITMAP_ACCESS);
+      Bit8u field = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_MSR_BITMAP_ACCESS);
       if (field & (1 << (msr & 7)))
         vmexit = true;
     }
@@ -523,18 +523,18 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
         if ((port & 0x7fff) + len > 0x8000) {
           // special case - the IO access split cross both I/O bitmaps
           pAddr = vm->io_bitmap_addr[0] + 0xfff;
-          bitmap[0] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_IO_BITMAP_ACCESS);
+          bitmap[0] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_IO_BITMAP_ACCESS);
 
           pAddr = vm->io_bitmap_addr[1];
-          bitmap[1] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_IO_BITMAP_ACCESS);
+          bitmap[1] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_IO_BITMAP_ACCESS);
         }
         else {
           // access_read_physical cannot read 2 bytes cross 4K boundary :(
           pAddr = vm->io_bitmap_addr[(port >> 15) & 1] + ((port & 0x7fff) / 8);
-          bitmap[0] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_IO_BITMAP_ACCESS);
+          bitmap[0] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_IO_BITMAP_ACCESS);
 
           pAddr++;
-          bitmap[1] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_IO_BITMAP_ACCESS);
+          bitmap[1] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_IO_BITMAP_ACCESS);
         }
 
         Bit16u combined_bitmap = bitmap[1];
@@ -826,7 +826,7 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::Vmexit_Vmread(bxInstruction_c *i)
   if (encoding > 0x7fff) return true;
 
   bx_phy_address pAddr = vm->vmread_bitmap_addr | (encoding >> 3);
-  Bit8u bitmap = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_VMREAD_BITMAP_ACCESS);
+  Bit8u bitmap = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_VMREAD_BITMAP_ACCESS);
 
   if (bitmap & (1 << (encoding & 7)))
     return true;
@@ -851,7 +851,7 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::Vmexit_Vmwrite(bxInstruction_c *i)
   if (encoding > 0x7fff) return true;
 
   bx_phy_address pAddr = vm->vmwrite_bitmap_addr | (encoding >> 3);
-  Bit8u bitmap = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_VMWRITE_BITMAP_ACCESS);
+  Bit8u bitmap = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_VMWRITE_BITMAP_ACCESS);
 
   if (bitmap & (1 << (encoding & 7)))
     return true;
@@ -879,7 +879,7 @@ void BX_CPU_C::Virtualization_Exception(Bit64u qualification, Bit64u guest_physi
 
   BxMemtype ve_info_memtype = BX_MEMTYPE_INVALID;
 #if BX_SUPPORT_MEMTYPE
-            ve_info_memtype = resolve_memtype(vm->ve_info_addr);
+            ve_info_memtype = resolve_memtype(memtype_by_mtrr(vm->ve_info_addr));
 #endif
   Bit32u magic = read_physical_dword(vm->ve_info_addr + 4, MEMTYPE(ve_info_memtype), BX_ACCESS_REASON_NOT_SPECIFIED);
   if (magic != 0) return;
@@ -923,7 +923,7 @@ void BX_CPU_C::vmx_page_modification_logging(Bit64u guest_laddr, Bit64u guest_pa
 
   if (dirty_update) {
     Bit64u pAddr = vm->pml_address + 8 * vm->pml_index;
-    write_physical_qword(pAddr, LPFOf(guest_paddr), MEMTYPE(resolve_memtype(pAddr)), BX_VMX_PML_WRITE);
+    write_physical_qword(pAddr, LPFOf(guest_paddr), MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_VMX_PML_WRITE);
     vm->pml_index--;
   }
 }

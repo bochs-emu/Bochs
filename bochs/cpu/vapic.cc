@@ -75,7 +75,7 @@ Bit32u BX_CPU_C::VMX_Read_Virtual_APIC(unsigned offset)
   Bit32u field32;
   // must avoid recursive call to the function when VMX APIC access page = VMX Virtual Apic Page
   BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pAddr, 4, (Bit8u*)(&field32));
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 4, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_VMX_VAPIC_ACCESS, (Bit8u*)(&field32));
+  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 4, MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_READ, BX_VMX_VAPIC_ACCESS, (Bit8u*)(&field32));
   return field32;
 }
 
@@ -84,7 +84,7 @@ void BX_CPU_C::VMX_Write_Virtual_APIC(unsigned offset, int len, Bit8u* val)
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcs.virtual_apic_page_addr + offset;
   // must avoid recursive call to the function when VMX APIC access page = VMX Virtual Apic Page
   BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, pAddr, len, val);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, len, MEMTYPE(resolve_memtype(pAddr)), BX_WRITE, BX_VMX_VAPIC_ACCESS, val);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, len, MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_WRITE, BX_VMX_VAPIC_ACCESS, val);
 }
 
 bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *data)
@@ -167,7 +167,7 @@ bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned le
 
   // remap access to virtual apic page
   paddr = vm->virtual_apic_page_addr + offset;
-  BX_NOTIFY_PHY_MEMORY_ACCESS(paddr, len, MEMTYPE(resolve_memtype(paddr)), BX_READ, BX_VMX_VAPIC_ACCESS, (Bit8u*) data);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(paddr, len, MEMTYPE(resolve_memtype(memtype_by_mtrr(paddr))), BX_READ, BX_VMX_VAPIC_ACCESS, (Bit8u*) data);
   return paddr;
 }
 
@@ -549,7 +549,7 @@ bool BX_CPU_C::VMX_Posted_Interrupt_Processing(Bit8u vector)
 
   BxMemtype pid_memtype = BX_MEMTYPE_INVALID;
 #if BX_SUPPORT_MEMTYPE
-            pid_memtype = resolve_memtype(vm->pid_addr);
+            pid_memtype = resolve_memtype(memtype_by_mtrr(vm->pid_addr));
 #endif
 
   // clear PID.ON using atomic RMW 'bit clear' operation
