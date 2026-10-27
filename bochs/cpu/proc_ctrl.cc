@@ -809,8 +809,11 @@ Bit64u BX_CPU_C::compute_physical_TSC_delay(Bit64u tsc_delay)
       // integer. That product is then divided by the TSC multiplier to produce a 64-bit integer.
       // The physical delay is that quotient.
       Bit128u quotient = ((Bit128u) tsc_delay << 48) / BX_CPU_THIS_PTR vmcs.tsc_multiplier;
-      BX_ASSERT(GET128H(quotient) == 0);
-      tsc_delay = GET128L(quotient);
+      // the physical delay could overflow 64-bit when TSC multiplier is less than 1.0
+      if (GET128H(quotient) != 0)
+        tsc_delay = BX_CONST64(0xffffffffffffffff);
+      else
+        tsc_delay = GET128L(quotient);
     }
   }
 #endif

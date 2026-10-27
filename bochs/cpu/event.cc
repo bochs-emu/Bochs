@@ -165,7 +165,7 @@ bool BX_CPU_C::HandleExtInterrupt(void)
   if (BX_CPU_THIS_PTR in_vmx_guest) {
 
 #if BX_SUPPORT_VMX >= 2
-    if (is_pending(BX_EVENT_PENDING_VMX_VIRTUAL_INTR)) {
+    if (is_unmasked_event_pending(BX_EVENT_PENDING_VMX_VIRTUAL_INTR)) {
       VMX_Deliver_Virtual_Interrupt();
       return true;
     }
