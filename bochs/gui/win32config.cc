@@ -560,18 +560,13 @@ edit_opts_t runtime_options[] = {
 
 void ResizeDialog(HWND hDlg, SIZE size)
 {
-  static RECT ri;
-  static bool dlg_size_init = false;
   RECT r, r0, r1, r2, r3;
-  bool resize0, resize1;
+  bool resize0 = false, resize1 = false;
 
-  if (!dlg_size_init) {
-    GetWindowRect(hDlg, &ri);
-    ri.right -= ri.left;
-    ri.bottom -= ri.top;
-    dlg_size_init = true;
-  }
-  r0 = ri;
+  // current position and size of the dialog
+  GetWindowRect(hDlg, &r0);
+  r0.right -= r0.left;
+  r0.bottom -= r0.top;
   r.left = 0;
   r.top = 0;
   r.right = size.cx + 215;
@@ -614,7 +609,6 @@ void ResizeDialog(HWND hDlg, SIZE size)
   }
   if (resize0) {
     MoveWindow(hDlg, r0.left, r0.top, r0.right, r0.bottom, TRUE);
-    ri = r0;
   }
   if (resize1) {
     MoveWindow(GetDlgItem(hDlg, IDOPTGRP), r1.left, r1.top, r1.right, r1.bottom, TRUE);
@@ -1039,6 +1033,8 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
         }
         return event;
       }
+      // other parameter types not supported (retcode = -1)
+      return event;
     case BX_SYNC_EVT_TICK: // called periodically by siminterface.
       event->retcode = 0;
       // fall into default case
