@@ -94,6 +94,7 @@ Changes after Bochs 3.1:
 - VMX: posted-interrupt processing with empty PIR and VIRR set RVI to 0xFF and delivered a bogus virtual interrupt 0xFF (instead should keep RVI unchanged when VIRR is empty)
 - VMX: #VE delivery wrote the 16-bit EPTP index as a qword, overwriting bytes 34..39 of the virtualization-exception information area
 - VMX: EPT violation exit qualification with mode-based execute control for data accesses did not report user-execute permission in bit 6 and set it in bit 13 (shadow-stack access) instead
+- VMX: posted-interrupt processing must update RVI from the highest PIR bit only (not from VIRR), VIRR is not modified for empty PIR dwords
 + SVM: Fixed VMRUN consistency checks
 + SVM: LMSW must treat the selective CR0 write intercept as non-selective (intercept regardless of the value written)
 + SVM: RSM intercept must be checked before #UD for RSM executed outside of SMM (SMM containerization)

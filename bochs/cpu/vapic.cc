@@ -571,15 +571,18 @@ bool BX_CPU_C::VMX_Posted_Interrupt_Processing(Bit8u vector)
   access_write_physical(vm->pid_addr, 32, (Bit8u*)(&tmp));
   BX_NOTIFY_PHY_MEMORY_ACCESS(vm->pid_addr, 32, MEMTYPE(pid_memtype), BX_WRITE, BX_VMX_PID, (Bit8u*)(&tmp));
 
-  Bit32u virr[8];
+  Bit32u pir[8];
   for (unsigned n=0;n<8;n++) {
-    virr[n] = VMX_Read_Virtual_APIC(BX_LAPIC_IRR1 + 16*n); // atomic RMW 
-    virr[n] |= PIR.ymm32u(n);
-    VMX_Write_Virtual_APIC(BX_LAPIC_IRR1 + 16*n, virr[n]);
+    pir[n] = PIR.ymm32u(n);
+    if (pir[n]) { // VIRR is not modified when no PIR bit is set
+      Bit32u virr = VMX_Read_Virtual_APIC(BX_LAPIC_IRR1 + 16*n); // atomic RMW
+      VMX_Write_Virtual_APIC(BX_LAPIC_IRR1 + 16*n, virr | pir[n]);
+    }
   }
 
-  // RVI is unchanged if VIRR is empty
-  int highest = BX_CPU_THIS_PTR lapic->highest_priority_int(virr);
+  // RVI is the maximum of old RVI and highest index of the bits that were set in PIR,
+  // RVI is unchanged if PIR is empty
+  int highest = BX_CPU_THIS_PTR lapic->highest_priority_int(pir);
   if (highest >= 0 && highest > vm->rvi) vm->rvi = highest;
 
   VMX_Evaluate_Pending_Virtual_Interrupts();
