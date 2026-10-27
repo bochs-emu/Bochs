@@ -773,6 +773,12 @@ void BX_CPU_C::prefetch(void)
     BX_CPU_THIS_PTR eipFetchPtr = fetchPtr;
   }
   else {
+#if BX_SUPPORT_VMX && BX_SUPPORT_X86_64
+    // instruction fetch from VMX APIC-access page always causes APIC-access VM exit
+    if (is_virtual_apic_page(BX_CPU_THIS_PTR pAddrFetchPage))
+      VMexit(VMX_VMEXIT_APIC_ACCESS, pageOffset | VMX_APIC_INSTRUCTION_FETCH);
+#endif
+
     BX_CPU_THIS_PTR eipFetchPtr = (const Bit8u*) getHostMemAddr(BX_CPU_THIS_PTR pAddrFetchPage, BX_EXECUTE);
 
     // Sanity checks

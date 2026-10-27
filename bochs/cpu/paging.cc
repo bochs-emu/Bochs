@@ -2316,6 +2316,15 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
 #endif
 
   Bit32u page_offset = PAGE_OFFSET(guest_paddr);
+
+  // guest-physical accesses (guest paging structures, PDPTEs) to the APIC-access page are
+  // never virtualized and always cause APIC-access VM exit (after EPT A/D update)
+  if (is_page_walk && is_virtual_apic_page(ppf | page_offset)) {
+    Bit32u qualification = page_offset |
+      ((BX_CPU_THIS_PTR in_event) ? VMX_APIC_GUEST_PHYSICAL_ACCESS_DURING_EVENT_DELIVERY : VMX_APIC_GUEST_PHYSICAL_ACCESS_INSTRUCTION_EXECUTION);
+    VMexit(VMX_VMEXIT_APIC_ACCESS, qualification);
+  }
+
   return ppf | page_offset;
 }
 

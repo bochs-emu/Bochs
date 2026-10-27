@@ -98,12 +98,18 @@ bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned le
 
   bool vmexit = virtual_apic_access_vmexit(offset, len);
 
-  // access is not instruction fetch because cpu::prefetch will crash them
+  // access is not instruction fetch, cpu::prefetch causes APIC-access VM exit for them
   if (! vmexit) {
 
     if (!vm->vmexec_ctrls2.VIRTUALIZE_APIC_REGISTERS()) {
-      // if 'Virtualize Apic Registers' control is disabled allow only aligned access to VTPR
-      if (offset != BX_LAPIC_TPR) vmexit = true;
+      // if 'Virtualize Apic Registers' control is disabled allow only aligned access to VTPR,
+      // with 'Virtual Interrupt Delivery' also aligned access to VEOI and VICR_LO
+      if (offset != BX_LAPIC_TPR) {
+#if BX_SUPPORT_VMX >= 2
+        if (! vm->vmexec_ctrls2.VIRTUAL_INT_DELIVERY() || (offset != BX_LAPIC_EOI && offset != BX_LAPIC_ICR_LO))
+#endif
+          vmexit = true;
+      }
     }
 
 #if BX_SUPPORT_VMX >= 2
@@ -222,7 +228,8 @@ void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *
 
     case BX_LAPIC_EOI:
     case BX_LAPIC_ICR_LO:
-      if (vm->vmexec_ctrls2.VIRTUALIZE_APIC_REGISTERS() || vm->vmexec_ctrls2.VIRTUAL_INT_DELIVERY()) {
+      // 'Virtual Interrupt Delivery' alone virtualizes only aligned access to VEOI and VICR_LO
+      if (vm->vmexec_ctrls2.VIRTUALIZE_APIC_REGISTERS() || (vm->vmexec_ctrls2.VIRTUAL_INT_DELIVERY() && (offset & 0x3) == 0)) {
         virtualize_access = true;
       }
       break;
@@ -510,9 +517,10 @@ bool BX_CPU_C::Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64)
       if ((val_64 >> 8) != 0)
         exception(BX_GP_EXCEPTION, 0);
 
+      // the value is stored into virtual-APIC page before self-IPI virtualization or APIC-write VM exit
       Bit8u vector = val_64 & 0xff;
+      VMX_Write_Virtual_X2APIC(BX_LAPIC_SELF_IPI, vector);
       if (vector < 16) {
-        VMX_Write_Virtual_X2APIC(BX_LAPIC_SELF_IPI, vector);
         VMexit(VMX_VMEXIT_APIC_WRITE, BX_LAPIC_SELF_IPI); // trap-like vmexit
       }
       else {

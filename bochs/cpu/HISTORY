@@ -103,6 +103,10 @@ Changes after Bochs 3.1:
 - VMX: the first execution of PAUSE at CPL0 after VM entry must always be considered the first PAUSE in a loop for PAUSE-loop exiting
 - VMX: INVEPT/INVVPID must #UD when EPT/VPID is not supported and must check for unsupported type (VMfail) before reading the memory operand
 - VMX: VM entry must restrict events injected into HLT activity state to: external interrupt, NMI, #DB, #MC and pending MTF
+- VMX: instruction fetch from the APIC-access page must cause APIC-access VM exit (was BX_PANIC)
+- VMX: with virtual-interrupt delivery and without APIC-register virtualization only aligned reads/writes of VEOI (0B0H) and VICR_LO (300H) must be virtualized
+- VMX: guest-physical accesses to paging structures/PDPTEs overlapping the APIC-access page must always cause APIC-access VM exit (were virtualized or reported as linear accesses)
+- VMX: virtualized WRMSR to x2APIC self-IPI MSR (83FH) must store the value at virtual-APIC page offset 3F0H also when self-IPI virtualization is performed
 + SVM: Fixed VMRUN consistency checks
 + SVM: LMSW must treat the selective CR0 write intercept as non-selective (intercept regardless of the value written)
 + SVM: RSM intercept must be checked before #UD for RSM executed outside of SMM (SMM containerization)
