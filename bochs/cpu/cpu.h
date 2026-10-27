@@ -5421,7 +5421,7 @@ public: // for now...
 #endif
   BX_SMF bool handleAsyncEvent(void);
   BX_SMF bool handleWaitForEvent(void);
-  BX_SMF void HandleExtInterrupt(void);
+  BX_SMF bool HandleExtInterrupt(void);
   BX_SMF Bit8u interrupt_acknowledge(void);
 
   BX_SMF void boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *);

@@ -4434,6 +4434,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmexec_ctrls1, *vm->vmexec_ctrls1.getref());
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmexec_ctrls2, *vm->vmexec_ctrls2.getref());
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmexec_ctrls3, *vm->vmexec_ctrls3.getref());
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmfunc_ctrls, vm->vmfunc_ctrls);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_exceptions_bitmap, vm->vm_exceptions_bitmap);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, tsc_multiplier, vm->tsc_multiplier);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_pf_mask, vm->vm_pf_mask);
@@ -4466,6 +4467,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, pml_address, vm->pml_address);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, pml_index, vm->pml_index);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, spptp, vm->spptp);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, eptp_list_address, vm->eptp_list_address);
 #endif
 #if BX_SUPPORT_VMX >= 2
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, pause_loop_exiting_gap, vm->ple.pause_loop_exiting_gap);

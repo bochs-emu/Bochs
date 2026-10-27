@@ -152,7 +152,8 @@ Bit8u BX_CPU_C::interrupt_acknowledge(void)
   return vector;
 }
 
-void BX_CPU_C::HandleExtInterrupt(void)
+// returns false if the interrupt was consumed by posted-interrupt processing and no event was delivered
+bool BX_CPU_C::HandleExtInterrupt(void)
 {
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
@@ -166,7 +167,7 @@ void BX_CPU_C::HandleExtInterrupt(void)
 #if BX_SUPPORT_VMX >= 2
     if (is_pending(BX_EVENT_PENDING_VMX_VIRTUAL_INTR)) {
       VMX_Deliver_Virtual_Interrupt();
-      return;
+      return true;
     }
 #endif
 
@@ -177,7 +178,7 @@ void BX_CPU_C::HandleExtInterrupt(void)
   Bit8u vector = interrupt_acknowledge();
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (VMX_Posted_Interrupt_Processing(vector)) return;
+    if (VMX_Posted_Interrupt_Processing(vector)) return false;
   }
 #endif
 
@@ -210,6 +211,7 @@ void BX_CPU_C::HandleExtInterrupt(void)
   }
 
   BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
+  return true;
 }
 
 #if BX_SUPPORT_SVM
@@ -421,7 +423,13 @@ bool BX_CPU_C::handleAsyncEvent(void)
   else if (is_unmasked_event_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR |
                                      BX_EVENT_PENDING_VMX_VIRTUAL_INTR))
   {
-    HandleExtInterrupt();
+    if (! HandleExtInterrupt()) {
+      if (BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_HLT) {
+        // posted-interrupt processing returns the logical processor to the HLT state, it wakes up
+        // only if a pending virtual interrupt was recognized and can be delivered (SDM 32.6)
+        return 1; // HALT condition remains, return to caller of cpu_loop
+      }
+    }
   }
 #if BX_SUPPORT_UINTR
   else if (is_unmasked_event_pending(BX_EVENT_PENDING_UINTR))
