@@ -6303,7 +6303,7 @@ public: // for now...
 #endif
 #if BX_SUPPORT_X86_64
   BX_SMF bool is_virtual_apic_page(bx_phy_address paddr) BX_CPP_AttrRegparmN(1);
-  BX_SMF bool virtual_apic_access_vmexit(unsigned offset, unsigned len) BX_CPP_AttrRegparmN(2);
+  BX_SMF bool virtual_apic_access_vmexit(unsigned offset, unsigned len, unsigned rw) BX_CPP_AttrRegparmN(3);
   BX_SMF bx_phy_address VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *data);
   BX_SMF void VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *data);
   BX_SMF Bit32u VMX_Read_Virtual_APIC(unsigned offset);

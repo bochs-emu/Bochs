@@ -870,6 +870,7 @@ typedef struct bx_VMCS
    Bit32u vm_tpr_threshold;
    bx_phy_address apic_access_page;
    unsigned apic_access;
+   unsigned apic_access_len;
 #endif
 
    unsigned posted_intr_notification_vector;

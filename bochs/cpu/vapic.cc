@@ -45,7 +45,7 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::is_virtual_apic_page(bx_phy_address paddr)
   return false;
 }
 
-bool BX_CPP_AttrRegparmN(2) BX_CPU_C::virtual_apic_access_vmexit(unsigned offset, unsigned len)
+bool BX_CPP_AttrRegparmN(3) BX_CPU_C::virtual_apic_access_vmexit(unsigned offset, unsigned len, unsigned rw)
 {
   if((offset & ~0x3) != ((offset+len-1) & ~0x3)) {
     BX_ERROR(("Virtual APIC access at offset 0x%08x spans 32-bit boundary !", offset));
@@ -54,18 +54,21 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::virtual_apic_access_vmexit(unsigned offset
 
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
+  // the operation already virtualized a write to the APIC-access page: any read causes APIC-access
+  // VM exit, a write causes APIC-access VM exit if it has a different page offset or a different size
   if (is_pending(BX_EVENT_VMX_VTPR_UPDATE | BX_EVENT_VMX_VEOI_UPDATE | BX_EVENT_VMX_VIRTUAL_APIC_WRITE)) {
-    if (vm->apic_access != offset) {
-      BX_ERROR(("Second APIC virtualization at offset 0x%08x (first access at offset 0x%08x)", offset, vm->apic_access));
+    if (rw == BX_READ || vm->apic_access != offset || vm->apic_access_len != len) {
+      BX_ERROR(("Second APIC virtualization at offset 0x%08x len=%d (first write at offset 0x%08x len=%d)", offset, len, vm->apic_access, vm->apic_access_len));
       return true;
     }
   }
 
-  // access is not instruction fetch because cpu::prefetch will crash them
+  // access is not instruction fetch, cpu::prefetch causes APIC-access VM exit for them
   if (! vm->vmexec_ctrls1.TPR_SHADOW() || len > 4 || offset >= 0x400)
     return true;
 
   BX_CPU_THIS_PTR vmcs.apic_access = offset;
+  BX_CPU_THIS_PTR vmcs.apic_access_len = len;
   return false;
 }
 
@@ -96,7 +99,7 @@ bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned le
 
   Bit32u offset = PAGE_OFFSET(paddr);
 
-  bool vmexit = virtual_apic_access_vmexit(offset, len);
+  bool vmexit = virtual_apic_access_vmexit(offset, len, BX_READ);
 
   // access is not instruction fetch, cpu::prefetch causes APIC-access VM exit for them
   if (! vmexit) {
@@ -186,7 +189,7 @@ void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *
 
   Bit32u offset = PAGE_OFFSET(paddr);
 
-  bool vmexit = virtual_apic_access_vmexit(offset, len);
+  bool vmexit = virtual_apic_access_vmexit(offset, len, BX_WRITE);
 
   if (! vmexit) {
 

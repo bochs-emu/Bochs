@@ -4484,6 +4484,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_tpr_threshold, vm->vm_tpr_threshold);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, apic_access_page, vm->apic_access_page);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, apic_access, vm->apic_access);
+  BXRS_DEC_PARAM_FIELD(vmexec_ctrls, apic_access_len, vm->apic_access_len);
 #endif
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, posted_intr_notification_vector, vm->posted_intr_notification_vector);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, pid_addr, vm->pid_addr);
