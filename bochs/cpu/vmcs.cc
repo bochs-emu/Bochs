@@ -902,8 +902,8 @@ void BX_CPU_C::init_secondary_proc_based_vmexec_ctrls(void)
     cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_PML_ENABLE;
   }
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_EXCEPTION)) {
-    if (! BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPTP_SWITCHING))
-      BX_PANIC(("#VE exception feature requires EPTP switching support !"));
+    if (! BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT))
+      BX_PANIC(("#VE exception feature requires EPT support !"));
     cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_EPT_VIOLATION_EXCEPTION;
   }
 #endif
