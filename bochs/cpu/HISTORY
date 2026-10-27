@@ -108,6 +108,7 @@ Changes after Bochs 3.1:
 - VMX: guest-physical accesses to paging structures/PDPTEs overlapping the APIC-access page must always cause APIC-access VM exit (were virtualized or reported as linear accesses)
 - VMX: virtualized WRMSR to x2APIC self-IPI MSR (83FH) must store the value at virtual-APIC page offset 3F0H also when self-IPI virtualization is performed
 - VMX: after a virtualized write to the APIC-access page any read and any write with different offset or size in the same operation must cause APIC-access VM exit
+- SMM/VMX: RSM must restore the state of blocking by NMI from before SMI (was always unblocking NMIs), and virtual-NMI blocking when returning to VMX non-root operation with "virtual NMIs" control set
 + SVM: Fixed VMRUN consistency checks
 + SVM: LMSW must treat the selective CR0 write intercept as non-selective (intercept regardless of the value written)
 + SVM: RSM intercept must be checked before #UD for RSM executed outside of SMM (SMM containerization)

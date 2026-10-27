@@ -1304,6 +1304,7 @@ public: // for now...
 #define BX_ASYNC_EVENT_DEBUGGER_REQUEST (1<<30)
 
   bool  in_smm;
+  bool  smm_nmi_blocked; // blocking by NMI (or virtual-NMI blocking) before SMI, restored by RSM
   unsigned cpu_mode;
   bool  user_pl;
 #if BX_CPU_LEVEL >= 5

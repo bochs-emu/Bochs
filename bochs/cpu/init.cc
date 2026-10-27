@@ -716,6 +716,7 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_SIMPLE32(cpu, async_event);
 
   BXRS_PARAM_BOOL(cpu, in_smm, in_smm);
+  BXRS_PARAM_BOOL(cpu, smm_nmi_blocked, smm_nmi_blocked);
 
 #if BX_DEBUGGER
   bx_list_c *dtlb = new bx_list_c(cpu, "DTLB");
@@ -1083,6 +1084,7 @@ void BX_CPU_C::reset(unsigned source)
 
   BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
   BX_CPU_THIS_PTR in_smm = false;
+  BX_CPU_THIS_PTR smm_nmi_blocked = false;
   BX_CPU_THIS_PTR pending_event = 0;
   BX_CPU_THIS_PTR event_mask = 0;
 

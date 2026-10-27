@@ -64,6 +64,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSM(bxInstruction_c *i)
 
   unmask_event(BX_EVENT_SMI | BX_EVENT_NMI | BX_EVENT_VMX_VIRTUAL_NMI);
 
+  // restore the state of blocking by NMI as it was before SMI, when returning to VMX non-root
+  // operation with "virtual NMIs" VM-execution control set NMIs are not blocked and the
+  // virtual-NMI blocking is restored instead
+  if (BX_CPU_THIS_PTR smm_nmi_blocked) {
+#if BX_SUPPORT_VMX
+    if (BX_CPU_THIS_PTR in_smm_vmx_guest && BX_CPU_THIS_PTR vmcs.pin_vmexec_ctrls.VIRTUAL_NMI())
+      mask_event(BX_EVENT_VMX_VIRTUAL_NMI);
+    else
+#endif
+      mask_event(BX_EVENT_NMI);
+  }
+
   Bit32u saved_state[SMM_SAVE_STATE_MAP_SIZE], n;
   // reset reserved bits
   for(n=0;n<SMM_SAVE_STATE_MAP_SIZE;n++) saved_state[n] = 0;
@@ -129,6 +141,16 @@ void BX_CPU_C::enter_system_management_mode(void)
 #endif
 
   BX_CPU_THIS_PTR in_smm = true;
+
+  // save the state of blocking by NMI, if the logical processor was in VMX non-root operation
+  // with "virtual NMIs" VM-execution control set the virtual-NMI blocking is saved instead
+  // (part of VMX-critical state)
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_smm_vmx_guest && BX_CPU_THIS_PTR vmcs.pin_vmexec_ctrls.VIRTUAL_NMI())
+    BX_CPU_THIS_PTR smm_nmi_blocked = is_masked_event(BX_EVENT_VMX_VIRTUAL_NMI);
+  else
+#endif
+    BX_CPU_THIS_PTR smm_nmi_blocked = is_masked_event(BX_EVENT_NMI);
 
   mask_event(BX_EVENT_SMI | BX_EVENT_NMI | BX_EVENT_VMX_VIRTUAL_NMI);
 
