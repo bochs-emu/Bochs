@@ -898,7 +898,7 @@ void BX_CPU_C::Virtualization_Exception(Bit64u qualification, Bit64u guest_physi
   write_physical_qword(vm->ve_info_addr + 8,  ve_info.qualification,       MEMTYPE(ve_info_memtype), BX_ACCESS_REASON_NOT_SPECIFIED);
   write_physical_qword(vm->ve_info_addr + 16, ve_info.guest_linear_addr,   MEMTYPE(ve_info_memtype), BX_ACCESS_REASON_NOT_SPECIFIED);
   write_physical_qword(vm->ve_info_addr + 24, ve_info.guest_physical_addr, MEMTYPE(ve_info_memtype), BX_ACCESS_REASON_NOT_SPECIFIED);
-  write_physical_qword(vm->ve_info_addr + 32, ve_info.eptp_index,          MEMTYPE(ve_info_memtype), BX_ACCESS_REASON_NOT_SPECIFIED);
+   write_physical_word(vm->ve_info_addr + 32, ve_info.eptp_index,          MEMTYPE(ve_info_memtype), BX_ACCESS_REASON_NOT_SPECIFIED);
 
   exception(BX_VE_EXCEPTION, 0);
 }
