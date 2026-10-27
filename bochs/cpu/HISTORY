@@ -100,6 +100,7 @@ Changes after Bochs 3.1:
 + VMX: pending virtual interrupt was delivered with RFLAGS.IF=0 when external interrupt arrived (instead of external-interrupt VM exit)
 - VMX: TPAUSE/UMWAIT physical delay computed with TSC multiplier less than 1.0 could overflow 64-bit and cause assertion panic, saturate the delay instead
 - VMX: VM entry with zero VMX-preemption timer value did not reset the timer, VM exit saved stale non-zero timer value from previous VM entry
+- VMX: the first execution of PAUSE at CPL0 after VM entry must always be considered the first PAUSE in a loop for PAUSE-loop exiting
 + SVM: Fixed VMRUN consistency checks
 + SVM: LMSW must treat the selective CR0 write intercept as non-selective (intercept regardless of the value written)
 + SVM: RSM intercept must be checked before #UD for RSM executed outside of SMM (SMM containerization)

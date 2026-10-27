@@ -269,7 +269,9 @@ void BX_CPU_C::VMexit_PAUSE(void)
   if (vm->vmexec_ctrls2.PAUSE_LOOP_VMEXIT() && CPL == 0) {
     VMX_PLE *ple = &vm->ple;
     Bit64u currtime = bx_pc_system.time_ticks();
-    if ((currtime - ple->last_pause_time) > ple->pause_loop_exiting_gap) {
+    // the first execution of PAUSE at CPL0 after VM entry is always considered the first
+    // execution of PAUSE in a loop (last_pause_time is reset to zero by VM entry)
+    if (ple->last_pause_time == 0 || (currtime - ple->last_pause_time) > ple->pause_loop_exiting_gap) {
       ple->first_pause_time = currtime;
     }
     else {
