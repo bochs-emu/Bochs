@@ -2526,7 +2526,10 @@ void BX_CPU_C::VMenterInjectEvents(void)
     case BX_EVENT_OTHER:
       if (vector == 0) {
         BX_ASSERT(BX_SUPPORT_VMX_EXTENSION(BX_VMX_MONITOR_TRAP_FLAG));
+        // injected pending MTF VM exit occurs before the first guest instruction (and wakes
+        // the logical processor from HLT) even if the event was masked by "monitor trap flag" control
         signal_event(BX_EVENT_VMX_MONITOR_TRAP_FLAG);
+        unmask_event(BX_EVENT_VMX_MONITOR_TRAP_FLAG);
         return;
       }
 #if BX_SUPPORT_FRED
@@ -4460,7 +4463,9 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmexec_ctrls1, *vm->vmexec_ctrls1.getref());
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmexec_ctrls2, *vm->vmexec_ctrls2.getref());
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmexec_ctrls3, *vm->vmexec_ctrls3.getref());
+#if BX_SUPPORT_VMX >= 2
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmfunc_ctrls, vm->vmfunc_ctrls);
+#endif
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_exceptions_bitmap, vm->vm_exceptions_bitmap);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, tsc_multiplier, vm->tsc_multiplier);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_pf_mask, vm->vm_pf_mask);
