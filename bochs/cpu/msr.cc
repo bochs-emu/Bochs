@@ -871,6 +871,13 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
   if (index == BX_MSR_IA32_UINTR_RR)
     uintr_uirr_update(); // potentially signal or clear user-level-interrupt
 #endif
+#if BX_SUPPORT_MEMTYPE
+  // the TLB caches memory type of the page which depends on PAT and MTRRs
+  if (index == BX_MSR_PAT || index == BX_MSR_MTRR_DEFTYPE || (index >= BX_MSR_MTRRPHYSBASE0 && index <= BX_MSR_MTRRPHYSMASK7) ||
+      index == BX_MSR_MTRRFIX64K_00000 || index == BX_MSR_MTRRFIX16K_80000 || index == BX_MSR_MTRRFIX16K_A0000 ||
+      (index >= BX_MSR_MTRRFIX4K_C0000 && index <= BX_MSR_MTRRFIX4K_F8000))
+    TLB_flush();
+#endif
 #if BX_SUPPORT_VMX
   if (index == BX_MSR_IA32_FEATURE_CONTROL) {
     // once the lock bit is set the MSR becomes read only until hardware reset

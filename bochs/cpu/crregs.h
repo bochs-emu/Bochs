@@ -36,6 +36,8 @@
 #define BX_CR0_CD_MASK         (1 << 30)
 #define BX_CR0_PG_MASK         (1 << 31)
 
+const Bit32u BX_CR0_FLUSH_TLB_MASK = (BX_CR0_PG_MASK | BX_CR0_CD_MASK | BX_CR0_WP_MASK | BX_CR0_PE_MASK);
+
 #if BX_CPU_LEVEL >= 6
 const Bit32u BX_CR0_PDPTE_RELOAD_MASK = (BX_CR0_PG_MASK | BX_CR0_CD_MASK | BX_CR0_NW_MASK | BX_CR0_WP_MASK);
 #endif
