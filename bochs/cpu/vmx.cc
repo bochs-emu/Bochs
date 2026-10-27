@@ -3590,13 +3590,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
 #if BX_SUPPORT_VMX >= 2
   if (vm->pin_vmexec_ctrls.VMX_PREEMPTION_TIMER_VMEXIT()) {
     Bit32u timer_value = VMread32(VMCS_32BIT_GUEST_PREEMPTION_TIMER_VALUE);
+    // activate VMX preemption timer, timer value of zero must be loaded as well
+    // so the value saved on VM exit would be zero
+    BX_DEBUG(("VMX preemption timer active"));
+    BX_CPU_THIS_PTR lapic->set_vmx_preemption_timer(timer_value);
     if (timer_value == 0) {
       signal_event(BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED);
-    }
-    else {
-      // activate VMX preemption timer
-      BX_DEBUG(("VMX preemption timer active"));
-      BX_CPU_THIS_PTR lapic->set_vmx_preemption_timer(timer_value);
     }
   }
 #endif

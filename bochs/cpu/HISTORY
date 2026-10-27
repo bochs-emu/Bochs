@@ -99,6 +99,7 @@ Changes after Bochs 3.1:
 - VMX: VM entry with unrestricted guest must fail if "IA-32e mode guest" is set with guest CR0.PG=0 or if guest RFLAGS.VM is set with CR0.PE=0
 + VMX: pending virtual interrupt was delivered with RFLAGS.IF=0 when external interrupt arrived (instead of external-interrupt VM exit)
 - VMX: TPAUSE/UMWAIT physical delay computed with TSC multiplier less than 1.0 could overflow 64-bit and cause assertion panic, saturate the delay instead
+- VMX: VM entry with zero VMX-preemption timer value did not reset the timer, VM exit saved stale non-zero timer value from previous VM entry
 + SVM: Fixed VMRUN consistency checks
 + SVM: LMSW must treat the selective CR0 write intercept as non-selective (intercept regardless of the value written)
 + SVM: RSM intercept must be checked before #UD for RSM executed outside of SMM (SMM containerization)

@@ -1263,6 +1263,12 @@ void bx_local_apic_c::set_vmx_preemption_timer(Bit32u value)
 {
   vmx_preemption_timer_value = value;
   vmx_preemption_timer_initial = bx_pc_system.time_ticks();
+  // timer value of zero expires immediately, the expiration is signaled by the caller,
+  // keep timer state up to date so read_vmx_preemption_timer() would return zero
+  if (value == 0) {
+    deactivate_vmx_preemption_timer();
+    return;
+  }
   vmx_preemption_timer_fire = ((vmx_preemption_timer_initial >> vmx_preemption_timer_rate) + value) << vmx_preemption_timer_rate;
   BX_DEBUG(("VMX Preemption timer: value = %u, rate = %u, init = " FMT_LL "u, fire = " FMT_LL "u", value, vmx_preemption_timer_rate, vmx_preemption_timer_initial, vmx_preemption_timer_fire));
   bx_pc_system.activate_timer_ticks(vmx_timer_handle, vmx_preemption_timer_fire - vmx_preemption_timer_initial, 0);
