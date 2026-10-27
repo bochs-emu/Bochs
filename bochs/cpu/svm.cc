@@ -979,6 +979,7 @@ void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1, Bit64u exitinfo2)
 }
 
 extern int get_exception_type(unsigned vector);
+extern int get_exception_class(unsigned vector);
 
 // TYPE=3 (exception) event injection must specify a vector of an exception supported by the CPU,
 // otherwise VMRUN fails with VMEXIT_INVALID
@@ -1073,6 +1074,18 @@ bool BX_CPU_C::SvmInjectEvents(void)
   if (type == BX_SOFTWARE_INTERRUPT || type == BX_SOFTWARE_EXCEPTION) {
     if (BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_NRIP_SAVE))
       RIP = vmcb_read64(SVM_CONTROL64_NRIP);
+  }
+
+  // injected events push RF like the event would occur normally in the guest: a fault (except #DB) sets RF,
+  // a trap (#BP/#OF, INTn) clears it, #DB and #MC keep the VMCB value (Zen HW pushes RF=0 for injected #TS)
+  if (type == BX_HARDWARE_EXCEPTION) {
+    if (vector == BX_TS_EXCEPTION)
+      BX_CPU_THIS_PTR clear_RF();
+    else if (vector != BX_DB_EXCEPTION && get_exception_class(vector) == BX_EXCEPTION_CLASS_FAULT)
+      BX_CPU_THIS_PTR assert_RF();
+  }
+  else if (type == BX_SOFTWARE_INTERRUPT || type == BX_SOFTWARE_EXCEPTION) {
+    BX_CPU_THIS_PTR clear_RF();
   }
 
   interrupt(vector, type, push_error, error_code);
