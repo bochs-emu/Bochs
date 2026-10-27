@@ -2095,12 +2095,14 @@ const Bit64u BX_SUB_PAGE_PROTECTED               = (BX_CONST64(1) << 61);
 const Bit64u BX_SUPERVISOR_SHADOW_STACK_PAGE     = (BX_CONST64(1) << 60);
 const Bit64u BX_PAGING_WRITE_ACCESS              = (BX_CONST64(1) << 58);
 const Bit64u BX_VERIFY_GUEST_PAGING              = (BX_CONST64(1) << 57);
+const Bit64u BX_EPT_IGNORE_PAT                   = (BX_CONST64(1) << 6);
 
 BX_CPP_INLINE bool ept_suppress_ept_violation_exception_bit(Bit64u leaf_entry) { return leaf_entry & BX_SUPPRESS_EPT_VIOLATION_EXCEPTION; }
 BX_CPP_INLINE bool ept_spp_bit(Bit64u leaf_entry) { return leaf_entry & BX_SUB_PAGE_PROTECTED; }
 BX_CPP_INLINE bool ept_supervisor_shadow_stack_page_bit(Bit64u leaf_entry) { return leaf_entry & BX_SUPERVISOR_SHADOW_STACK_PAGE; }
 BX_CPP_INLINE bool ept_paging_write_access_bit(Bit64u leaf_entry) { return leaf_entry & BX_PAGING_WRITE_ACCESS; }
 BX_CPP_INLINE bool ept_verify_guest_paging_bit(Bit64u leaf_entry) { return leaf_entry & BX_VERIFY_GUEST_PAGING; }
+BX_CPP_INLINE bool ept_ignore_pat(Bit64u leaf_entry) { return leaf_entry & BX_EPT_IGNORE_PAT; }
 
 #define PAGING_EPT_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS)
 
@@ -2309,7 +2311,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
 
 #if BX_SUPPORT_MEMTYPE
   // EPT memory type is used in place of MTRR memory type, PAT memory type is ignored when IPAT=1 (SDM 31.3.7.2)
-  *memtype = resolve_memtype((BxMemtype)((entry[leaf] >> 3) & 0x7), (entry[leaf] & 0x40) ? BX_MEMTYPE_WB : *memtype);
+  *memtype = resolve_memtype((BxMemtype)((entry[leaf] >> 3) & 0x7), ept_ignore_pat(entry[leaf]) ? BX_MEMTYPE_WB : *memtype);
 #endif
 
   Bit32u page_offset = PAGE_OFFSET(guest_paddr);
