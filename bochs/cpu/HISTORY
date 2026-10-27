@@ -209,7 +209,7 @@ Changes after Bochs 3.1:
 - VMX: Fixed typo in VMXON #GP(0) condition
 - VMX: RDMSRLIST/WRMSRLIST must VM exit unconditionally when "use MSR bitmaps" is 0, before any memory access (no VM exit was taken when RCX was 0)
 - VMX: VM entry with "load PKRS" did not check reserved bits 63:32 of host/guest IA32_PKRS fields
-- VMX/SVM: XSETBV at CPL>0 must cause #GP(0), higher priority than SVM intercept/VMEXIT
+- VMX: XSETBV at CPL>0 must cause #GP(0), higher priority than VMX VMEXIT (SVM intercept, in opposite, has higher priority)
 - PKU/PKS: selection between PKRU and PKRS ignored U/S bit of the leaf paging entry (supervisor page under user page tables was checked against PKRU)
 - PKU/PKS: PKRU change by XRSTOR or PKRS change by WRMSR did not invalidate the stack cache (stack accesses ignored the new protection keys rights), WRPKRU no longer flushes the TLB
 - PKU/PKS: separate TLB protection key masks for user (PKRU) and supervisor (PKRS) pages, PKRU access disable must block supervisor accesses to user pages cached in the TLB
