@@ -2542,11 +2542,11 @@ bool bx_banshee_c::blt_apply_clipwindow(int *x0, int *y0, int *x1, int *y1, int 
     if (yd > 0) {
       *h -= yd;
       *y1 = cy1 - 1;
-      if (y0 != NULL) *y0 -= xd;
+      if (y0 != NULL) *y0 -= yd;
     }
     yd = cy0 - (*y1 - *h + 1);
     if (yd > 0) {
-      *h -= xd;
+      *h -= yd;
     }
   } else {
     yd = cy0 - *y1;
