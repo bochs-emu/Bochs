@@ -2208,9 +2208,21 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
       BX_ERROR(("VMENTER FAIL: No guest interruptions are allowed when entering Wait-For-Sipi state"));
       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
-    if (guest.activity_state == BX_ACTIVITY_STATE_SHUTDOWN && event_type != BX_NMI && vector != BX_MC_EXCEPTION) {
-      BX_ERROR(("VMENTER FAIL: Only NMI or #MC guest interruption is allowed when entering shutdown state"));
-      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    if (guest.activity_state == BX_ACTIVITY_STATE_SHUTDOWN) {
+      if (event_type != BX_NMI && !(event_type == BX_HARDWARE_EXCEPTION && vector == BX_MC_EXCEPTION)) {
+        BX_ERROR(("VMENTER FAIL: Only NMI or #MC guest interruption is allowed when entering shutdown state"));
+        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+      }
+    }
+    if (guest.activity_state == BX_ACTIVITY_STATE_HLT) {
+      // only external interrupt, NMI, #DB, #MC or pending MTF VM exit can be injected when entering HLT state
+      if (event_type != BX_EXTERNAL_INTERRUPT && event_type != BX_NMI &&
+          !(event_type == BX_HARDWARE_EXCEPTION && (vector == BX_DB_EXCEPTION || vector == BX_MC_EXCEPTION)) &&
+          !(event_type == BX_EVENT_OTHER && vector == 0))
+      {
+        BX_ERROR(("VMENTER FAIL: injected event type %d vector %d is not allowed when entering HLT state", event_type, vector));
+        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+      }
     }
   }
 
@@ -4142,7 +4154,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCLEAR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX >= 2
-  if (! BX_CPU_THIS_PTR in_vmx || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
+  if (! BX_CPU_THIS_PTR in_vmx || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT || ! BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT))
     exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
@@ -4162,6 +4174,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
     type = BX_READ_32BIT_REG(i->dst());
   }
 
+  // unsupported INVEPT type is checked before the memory operand is read
+  if (type != BX_INVEPT_INVVPID_SINGLE_CONTEXT_INVALIDATION && type != BX_INVEPT_INVVPID_ALL_CONTEXT_INVALIDATION) {
+    BX_ERROR(("INVEPT: not supported type !"));
+    VMfail(VMXERR_INVALID_INVEPT_INVVPID);
+    BX_NEXT_TRACE(i);
+  }
+
   BxPackedXmmRegister inv_eptp;
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   read_virtual_xmmword(i->seg(), eaddr, &inv_eptp);
@@ -4179,11 +4198,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
   case BX_INVEPT_INVVPID_ALL_CONTEXT_INVALIDATION:
      TLB_flush(); // Invalidate mappings associated with all EPTPs
      break;
-
-  default:
-     BX_ERROR(("INVEPT: not supported type !"));
-     VMfail(VMXERR_INVALID_INVEPT_INVVPID);
-     BX_NEXT_TRACE(i);
   }
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_INVEPT, type);
@@ -4200,7 +4214,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX >= 2
-  if (! BX_CPU_THIS_PTR in_vmx || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
+  if (! BX_CPU_THIS_PTR in_vmx || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT || ! BX_SUPPORT_VMX_EXTENSION(BX_VMX_VPID))
     exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
@@ -4218,6 +4232,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
   }
   else {
     type = BX_READ_32BIT_REG(i->dst());
+  }
+
+  // unsupported INVVPID type is checked before the memory operand is read
+  if (type > BX_INVEPT_INVVPID_SINGLE_CONTEXT_NON_GLOBAL_INVALIDATION) {
+    BX_ERROR(("INVVPID: not supported type !"));
+    VMfail(VMXERR_INVALID_INVEPT_INVVPID);
+    BX_NEXT_TRACE(i);
   }
 
   BxPackedXmmRegister invvpid_desc;
@@ -4259,11 +4280,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
   case BX_INVEPT_INVVPID_SINGLE_CONTEXT_NON_GLOBAL_INVALIDATION:
     TLB_flushNonGlobal(); // invalidate all mappings tagged with VPID except globals
     break;
-
-  default:
-    BX_ERROR(("INVVPID: not supported type !"));
-    VMfail(VMXERR_INVALID_INVEPT_INVVPID);
-    BX_NEXT_TRACE(i);
   }
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_INVVPID, type);
