@@ -871,27 +871,20 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
 
   for (;; --leaf) {
     entry_addr[leaf] = ppf + ((laddr >> (9 + 9*leaf)) & 0xff8);
+    // PAT memory type selected by the parent entry, combined below with MTRR, EPT or nested paging memory type
+    entry_memtype[leaf] = MEMTYPE(memtype_by_pat(calculate_pcd_pwt((Bit32u) curr_entry)));
 #if BX_SUPPORT_VMX >= 2
-    if (BX_CPU_THIS_PTR in_vmx_guest) {
-      if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.EPT_ENABLE())
-        entry_addr[leaf] = translate_guest_physical(entry_addr[leaf], laddr, true /* laddr_valid */, true /* page walk */,
-                IS_USER_PAGE(combined_access) != 0, IS_WRITEABLE_PAGE(combined_access) != 0, IS_NX_PAGE(combined_access), BX_READ);
-    }
-#endif
-#if BX_SUPPORT_SVM
-    if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED) {
-      entry_addr[leaf] = nested_walk(entry_addr[leaf], BX_RW, 1);
-    }
-#endif
-
-#if BX_SUPPORT_MEMTYPE
-#if BX_SUPPORT_SVM
-    if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED)
-      entry_memtype[leaf] = resolve_memtype_nested_paging(memtype_by_mtrr(entry_addr[leaf]), memtype_by_pat(calculate_pcd_pwt((Bit32u) curr_entry)));
+    if (BX_CPU_THIS_PTR in_vmx_guest && BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.EPT_ENABLE())
+      entry_addr[leaf] = translate_guest_physical(entry_addr[leaf], laddr, true /* laddr_valid */, true /* page walk */,
+              IS_USER_PAGE(combined_access) != 0, IS_WRITEABLE_PAGE(combined_access) != 0, IS_NX_PAGE(combined_access), BX_READ, &entry_memtype[leaf]);
     else
 #endif
-      entry_memtype[leaf] = resolve_memtype(memtype_by_mtrr(entry_addr[leaf]), memtype_by_pat(calculate_pcd_pwt((Bit32u) curr_entry)));
+#if BX_SUPPORT_SVM
+    if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED)
+      entry_addr[leaf] = nested_walk(entry_addr[leaf], BX_RW, 1, &entry_memtype[leaf]);
+    else
 #endif
+      entry_memtype[leaf] = MEMTYPE(resolve_memtype(memtype_by_mtrr(entry_addr[leaf]), entry_memtype[leaf]));
     entry[leaf] = read_physical_qword(entry_addr[leaf], entry_memtype[leaf], AccessReason(BX_PTE_ACCESS + leaf));
 
     offset_mask >>= 9;
@@ -994,13 +987,19 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(bx_phy_address cr3_val)
     return true;
 #endif
 
+  // Intel: WB memory type is used when loading the PDPTEs, CR3.PCD and CR3.PWT are ignored with PAE paging (SDM 5.9.2)
+  // AMD would use PAT entry selected by CR3.PCD and CR3.PWT to access the page-directory-pointer table (APM 5.2.1)
+  // to be calculated using: memtype_by_pat(calculate_pcd_pwt((Bit32u) BX_CPU_THIS_PTR cr3))
+  // The 32-byte page-directory-pointer table is located within single 4K page, all PDPTEs have the same memory type
+  BxMemtype pdpte_memtype = MEMTYPE(BX_MEMTYPE_WB);
+
   cr3_val &= 0xffffffe0;
 #if BX_SUPPORT_VMX >= 2
-  if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.EPT_ENABLE())
-      cr3_val = translate_guest_physical(cr3_val, 0, false /* laddr_valid */, true /* page walk */, 0, 0, 0, BX_READ);
-  }
+  if (BX_CPU_THIS_PTR in_vmx_guest && BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.EPT_ENABLE())
+    cr3_val = translate_guest_physical(cr3_val, 0, false /* laddr_valid */, true /* page walk */, 0, 0, 0, BX_READ, &pdpte_memtype);
+  else
 #endif
+    pdpte_memtype = MEMTYPE(resolve_memtype(memtype_by_mtrr(cr3_val), pdpte_memtype));
 
   Bit64u pdptr[4];
   unsigned n;
@@ -1008,13 +1007,6 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(bx_phy_address cr3_val)
   for (n=0; n<4; n++) {
     // read and check PDPTE entries
     bx_phy_address pdpe_entry_addr = (bx_phy_address) (cr3_val | (n << 3));
-    BxMemtype pdpte_memtype = BX_MEMTYPE_INVALID;
-#if BX_SUPPORT_MEMTYPE
-    // Intel: WB memory type is used when loading the PDPTEs, CR3.PCD and CR3.PWT are ignored with PAE paging (SDM 5.9.2)
-    // AMD would use PAT entry selected by CR3.PCD and CR3.PWT to access the page-directory-pointer table (APM 5.2.1)
-    // to be calculated using: memtype_by_pat(calculate_pcd_pwt((Bit32u) BX_CPU_THIS_PTR cr3))
-    pdpte_memtype = resolve_memtype(memtype_by_mtrr(pdpe_entry_addr), BX_MEMTYPE_WB);
-#endif
     pdptr[n] = read_physical_qword(pdpe_entry_addr, pdpte_memtype, AccessReason(BX_PDPTR0_ACCESS + n));
 
     if (pdptr[n] & 0x1) {
@@ -1050,16 +1042,14 @@ bx_phy_address BX_CPU_C::translate_linear_load_PDPTR(bx_address laddr, unsigned 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED)
   {
+    // AMD: guest CR3.PCD and CR3.PWT select the gPAT entry used to access the page-directory-pointer table (APM 5.2.1)
+    // combined with host PAT memory type of the nested page table entry by the nested walk (APM 15.25.8)
+    BxMemtype pdpte_memtype = MEMTYPE(memtype_by_pat(calculate_pcd_pwt((Bit32u) BX_CPU_THIS_PTR cr3)));
+
     bx_phy_address cr3_val = BX_CPU_THIS_PTR cr3 & 0xffffffe0;
-    cr3_val = nested_walk(cr3_val, BX_RW, 1);
+    cr3_val = nested_walk(cr3_val, BX_RW, 1, &pdpte_memtype);
 
     bx_phy_address pdpe_entry_addr = (bx_phy_address) (cr3_val | (index << 3));
-    BxMemtype pdpte_memtype = BX_MEMTYPE_INVALID;
-#if BX_SUPPORT_MEMTYPE
-    // AMD: guest CR3.PCD and CR3.PWT select the gPAT entry used to access the page-directory-pointer table (APM 5.2.1)
-    // combined with host PAT memory type of the nested page table entry (APM 15.25.8)
-    pdpte_memtype = resolve_memtype_nested_paging(memtype_by_mtrr(pdpe_entry_addr), memtype_by_pat(calculate_pcd_pwt((Bit32u) BX_CPU_THIS_PTR cr3)));
-#endif
     pdptr = read_physical_qword(pdpe_entry_addr, pdpte_memtype, AccessReason(BX_PDPTR0_ACCESS + index));
 
     if (pdptr & 0x1) {
@@ -1105,27 +1095,20 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
 
   for (leaf = BX_LEVEL_PDE;; --leaf) {
     entry_addr[leaf] = ppf + ((laddr >> (9 + 9*leaf)) & 0xff8);
+    // PAT memory type selected by the parent entry, combined below with MTRR, EPT or nested paging memory type
+    entry_memtype[leaf] = MEMTYPE(memtype_by_pat(calculate_pcd_pwt((Bit32u) curr_entry)));
 #if BX_SUPPORT_VMX >= 2
-    if (BX_CPU_THIS_PTR in_vmx_guest) {
-      if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.EPT_ENABLE())
-        entry_addr[leaf] = translate_guest_physical(entry_addr[leaf], laddr, true /* laddr_valid */, true /* page walk */,
-                IS_USER_PAGE(combined_access) != 0, IS_WRITEABLE_PAGE(combined_access) != 0, IS_NX_PAGE(combined_access), BX_READ);
-    }
-#endif
-#if BX_SUPPORT_SVM
-    if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED) {
-      entry_addr[leaf] = nested_walk(entry_addr[leaf], BX_RW, 1);
-    }
-#endif
-
-#if BX_SUPPORT_MEMTYPE
-#if BX_SUPPORT_SVM
-    if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED)
-      entry_memtype[leaf] = resolve_memtype_nested_paging(memtype_by_mtrr(entry_addr[leaf]), memtype_by_pat(calculate_pcd_pwt((Bit32u) curr_entry)));
+    if (BX_CPU_THIS_PTR in_vmx_guest && BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.EPT_ENABLE())
+      entry_addr[leaf] = translate_guest_physical(entry_addr[leaf], laddr, true /* laddr_valid */, true /* page walk */,
+              IS_USER_PAGE(combined_access) != 0, IS_WRITEABLE_PAGE(combined_access) != 0, IS_NX_PAGE(combined_access), BX_READ, &entry_memtype[leaf]);
     else
 #endif
-      entry_memtype[leaf] = resolve_memtype(memtype_by_mtrr(entry_addr[leaf]), memtype_by_pat(calculate_pcd_pwt((Bit32u) curr_entry)));
+#if BX_SUPPORT_SVM
+    if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED)
+      entry_addr[leaf] = nested_walk(entry_addr[leaf], BX_RW, 1, &entry_memtype[leaf]);
+    else
 #endif
+      entry_memtype[leaf] = MEMTYPE(resolve_memtype(memtype_by_mtrr(entry_addr[leaf]), entry_memtype[leaf]));
     entry[leaf] = read_physical_qword(entry_addr[leaf], entry_memtype[leaf], AccessReason(BX_PTE_ACCESS + leaf));
 
     curr_entry = entry[leaf];
@@ -1211,27 +1194,20 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
 
   for (leaf = BX_LEVEL_PDE;; --leaf) {
     entry_addr[leaf] = ppf + ((laddr >> (10 + 10*leaf)) & 0xffc);
+    // PAT memory type selected by the parent entry, combined below with MTRR, EPT or nested paging memory type
+    entry_memtype[leaf] = MEMTYPE(memtype_by_pat(calculate_pcd_pwt(curr_entry)));
 #if BX_SUPPORT_VMX >= 2
-    if (BX_CPU_THIS_PTR in_vmx_guest) {
-      if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.EPT_ENABLE())
-        entry_addr[leaf] = translate_guest_physical(entry_addr[leaf], laddr, true /* laddr_valid */, true /* page walk */,
-                IS_USER_PAGE(combined_access) != 0, IS_WRITEABLE_PAGE(combined_access) != 0, false /* nx */, BX_READ);
-    }
-#endif
-#if BX_SUPPORT_SVM
-    if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED) {
-      entry_addr[leaf] = nested_walk(entry_addr[leaf], BX_RW, 1);
-    }
-#endif
-
-#if BX_SUPPORT_MEMTYPE
-#if BX_SUPPORT_SVM
-    if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED)
-      entry_memtype[leaf] = resolve_memtype_nested_paging(memtype_by_mtrr(entry_addr[leaf]), memtype_by_pat(calculate_pcd_pwt(curr_entry)));
+    if (BX_CPU_THIS_PTR in_vmx_guest && BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.EPT_ENABLE())
+      entry_addr[leaf] = translate_guest_physical(entry_addr[leaf], laddr, true /* laddr_valid */, true /* page walk */,
+              IS_USER_PAGE(combined_access) != 0, IS_WRITEABLE_PAGE(combined_access) != 0, false /* nx */, BX_READ, &entry_memtype[leaf]);
     else
 #endif
-      entry_memtype[leaf] = resolve_memtype(memtype_by_mtrr(entry_addr[leaf]), memtype_by_pat(calculate_pcd_pwt(curr_entry)));
+#if BX_SUPPORT_SVM
+    if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED)
+      entry_addr[leaf] = nested_walk(entry_addr[leaf], BX_RW, 1, &entry_memtype[leaf]);
+    else
 #endif
+      entry_memtype[leaf] = MEMTYPE(resolve_memtype(memtype_by_mtrr(entry_addr[leaf]), entry_memtype[leaf]));
     entry[leaf] = read_physical_dword(entry_addr[leaf], entry_memtype[leaf], AccessReason(BX_PTE_ACCESS + leaf));
 
     curr_entry = entry[leaf];
@@ -1412,23 +1388,32 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
   }
 
   // Calculate physical memory address and fill in TLB cache entry
+#if BX_SUPPORT_MEMTYPE || BX_SUPPORT_VMX >= 2 || BX_SUPPORT_SVM
+  // PAT memory type of the page, combined below with MTRR, EPT or nested paging memory type
+  BxMemtype memtype = MEMTYPE(extract_memtype(combined_access));
+#endif
 #if BX_SUPPORT_VMX >= 2
   bool spp_page = false;
-  if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.EPT_ENABLE()) {
-      paddress = translate_guest_physical(paddress, laddr, true /* laddr_valid */, false /* page walk */,
-            IS_USER_PAGE(combined_access) != 0, IS_WRITEABLE_PAGE(combined_access) != 0, IS_NX_PAGE(combined_access), rw, (isShadowStack && !user), &spp_page);
-    }
+  if (BX_CPU_THIS_PTR in_vmx_guest && BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.EPT_ENABLE()) {
+    paddress = translate_guest_physical(paddress, laddr, true /* laddr_valid */, false /* page walk */,
+          IS_USER_PAGE(combined_access) != 0, IS_WRITEABLE_PAGE(combined_access) != 0, IS_NX_PAGE(combined_access), rw, &memtype, (isShadowStack && !user), &spp_page);
   }
+  else
 #endif
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED) {
     // hack: ignore isExecute attribute in SMM mode under SVM virtualization
     if (BX_CPU_THIS_PTR in_smm && rw == BX_EXECUTE) rw = BX_READ;
 
-    paddress = nested_walk(paddress, rw, 0, (isShadowStack && !user));
+    paddress = nested_walk(paddress, rw, 0, &memtype, (isShadowStack && !user));
   }
+  else
 #endif
+  {
+#if BX_SUPPORT_MEMTYPE
+    memtype = resolve_memtype(memtype_by_mtrr(A20ADDR(paddress)), memtype);
+#endif
+  }
   paddress = A20ADDR(paddress);
   ppf = PPFOf(paddress);
 
@@ -1559,12 +1544,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
   }
 
 #if BX_SUPPORT_MEMTYPE
-#if BX_SUPPORT_SVM
-  if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED)
-    tlbEntry->memtype = resolve_memtype_nested_paging(memtype_by_mtrr(tlbEntry->ppf), extract_memtype(combined_access) /* effective page tables memory type */);
-  else
-#endif
-    tlbEntry->memtype = resolve_memtype(memtype_by_mtrr(tlbEntry->ppf), extract_memtype(combined_access) /* effective page tables memory type */);
+  tlbEntry->memtype = memtype;
 #endif
 
   return paddress;
@@ -1702,12 +1682,12 @@ static const Bit8u nested_paging_pat_memtype[8][8] = {
 };
 
 // memory type of the guest access with nested paging, either guest or host CR0.CD can disable caching (APM 15.25.8)
-BxMemtype BX_CPP_AttrRegparmN(2) BX_CPU_C::resolve_memtype_nested_paging(BxMemtype mtrr_memtype, BxMemtype guest_pat_memtype)
+BxMemtype BX_CPP_AttrRegparmN(3) BX_CPU_C::resolve_memtype_nested_paging(BxMemtype mtrr_memtype, BxMemtype guest_pat_memtype, BxMemtype host_pat_memtype)
 {
   if (BX_CPU_THIS_PTR vmcb->host_state.cr0.get_CD())
     return BX_MEMTYPE_UC;
 
-  return resolve_memtype(mtrr_memtype, (BxMemtype) nested_paging_pat_memtype[guest_pat_memtype][BX_CPU_THIS_PTR nested_paging_host_pat_memtype]);
+  return resolve_memtype(mtrr_memtype, (BxMemtype) nested_paging_pat_memtype[guest_pat_memtype][host_pat_memtype]);
 }
 
 // memory type of nested page table entry access, host PAT entry is selected by PCD/PWT of nCR3 or parent nested page table entry
@@ -1750,7 +1730,7 @@ void BX_CPU_C::nested_page_fault(Bit64u fault, bx_phy_address guest_paddr, unsig
   Svm_Vmexit(SVM_VMEXIT_NPF, error_code, guest_paddr);
 }
 
-bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk, bool supervisor_shadow_stack)
+bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk, BxMemtype *memtype, bool supervisor_shadow_stack)
 {
   bx_phy_address entry_addr[5];
   Bit64u entry[5];
@@ -1842,7 +1822,9 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
     nested_page_fault(ERROR_PROTECTION | sss_page, guest_paddr, rw, is_page_walk, npf_supervisor);
 
 #if BX_SUPPORT_MEMTYPE
-  BX_CPU_THIS_PTR nested_paging_host_pat_memtype = (BxMemtype) host_state->pat_msr.ubyte(calculate_pat((Bit32u) entry[leaf], (Bit32u) offset_mask));
+  if (memtype)
+    *memtype = resolve_memtype_nested_paging(memtype_by_mtrr(ppf | (guest_paddr & offset_mask)), *memtype,
+                    (BxMemtype) host_state->pat_msr.ubyte(calculate_pat((Bit32u) entry[leaf], (Bit32u) offset_mask)));
 #endif
 
   // Update A/D bits if needed
@@ -1852,7 +1834,7 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
   return ppf | (bx_phy_address)(guest_paddr & offset_mask);
 }
 
-bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk, bool supervisor_shadow_stack)
+bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk, BxMemtype *memtype, bool supervisor_shadow_stack)
 {
   bx_phy_address entry_addr[2];
   Bit64u entry[2];
@@ -1963,7 +1945,9 @@ bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw
     nested_page_fault(ERROR_PROTECTION | sss_page, guest_paddr, rw, is_page_walk, npf_supervisor);
 
 #if BX_SUPPORT_MEMTYPE
-  BX_CPU_THIS_PTR nested_paging_host_pat_memtype = (BxMemtype) host_state->pat_msr.ubyte(calculate_pat((Bit32u) entry[leaf], (leaf == BX_LEVEL_PTE) ? 0xfff : 0x1fffff));
+  if (memtype)
+    *memtype = resolve_memtype_nested_paging(memtype_by_mtrr(ppf), *memtype,
+                    (BxMemtype) host_state->pat_msr.ubyte(calculate_pat((Bit32u) entry[leaf], (leaf == BX_LEVEL_PTE) ? 0xfff : 0x1fffff)));
 #endif
 
   // Update A/D bits if needed
@@ -1973,7 +1957,7 @@ bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw
   return ppf | page_offset;
 }
 
-bx_phy_address BX_CPU_C::nested_walk_legacy(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk)
+bx_phy_address BX_CPU_C::nested_walk_legacy(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk, BxMemtype *memtype)
 {
   bx_phy_address entry_addr[2];
   Bit32u entry[2];
@@ -2029,7 +2013,9 @@ bx_phy_address BX_CPU_C::nested_walk_legacy(bx_phy_address guest_paddr, unsigned
     nested_page_fault(ERROR_PROTECTION, guest_paddr, rw, is_page_walk);
 
 #if BX_SUPPORT_MEMTYPE
-  BX_CPU_THIS_PTR nested_paging_host_pat_memtype = (BxMemtype) host_state->pat_msr.ubyte(calculate_pat(entry[leaf], (leaf == BX_LEVEL_PTE) ? 0xfff : 0x3fffff));
+  if (memtype)
+    *memtype = resolve_memtype_nested_paging(memtype_by_mtrr(ppf), *memtype,
+                    (BxMemtype) host_state->pat_msr.ubyte(calculate_pat(entry[leaf], (leaf == BX_LEVEL_PTE) ? 0xfff : 0x3fffff)));
 #endif
 
   update_access_dirty(entry_addr, entry, entry_memtype, leaf, isWrite);
@@ -2038,18 +2024,18 @@ bx_phy_address BX_CPU_C::nested_walk_legacy(bx_phy_address guest_paddr, unsigned
   return ppf | page_offset;
 }
 
-bx_phy_address BX_CPU_C::nested_walk(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk, bool supervisor_shadow_stack)
+bx_phy_address BX_CPU_C::nested_walk(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk, BxMemtype *memtype, bool supervisor_shadow_stack)
 {
   SVM_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcb->host_state;
 
   BX_DEBUG(("Nested walk for guest paddr 0x" FMT_PHY_ADDRX, guest_paddr));
 
   if (host_state->efer.get_LMA())
-    return nested_walk_long_mode(guest_paddr, rw, is_page_walk, supervisor_shadow_stack);
+    return nested_walk_long_mode(guest_paddr, rw, is_page_walk, memtype, supervisor_shadow_stack);
   else if (host_state->cr4.get_PAE())
-    return nested_walk_PAE(guest_paddr, rw, is_page_walk, supervisor_shadow_stack);
+    return nested_walk_PAE(guest_paddr, rw, is_page_walk, memtype, supervisor_shadow_stack);
   else
-    return nested_walk_legacy(guest_paddr, rw, is_page_walk);
+    return nested_walk_legacy(guest_paddr, rw, is_page_walk, memtype);
 }
 
 #endif
@@ -2120,7 +2106,7 @@ BX_CPP_INLINE bool ept_verify_guest_paging_bit(Bit64u leaf_entry) { return leaf_
 
 // entries which were allowed to write only because of SPP cannot be cached in DTLB as writeable
 bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx_address guest_laddr, bool guest_laddr_valid, 
-                    bool is_page_walk, bool user_page, bool writeable_page, bool nx_page, unsigned rw, bool supervisor_shadow_stack, bool *spp_page)
+                    bool is_page_walk, bool user_page, bool writeable_page, bool nx_page, unsigned rw, BxMemtype *memtype, bool supervisor_shadow_stack, bool *spp_page)
 {
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
   bx_phy_address entry_addr[4], ppf = LPFOf(vm->eptptr);
@@ -2320,6 +2306,11 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
 
     update_ept_access_dirty(entry_addr, entry, MEMTYPE(eptptr_memtype), leaf, rw & 1);
   }
+
+#if BX_SUPPORT_MEMTYPE
+  // EPT memory type is used in place of MTRR memory type, PAT memory type is ignored when IPAT=1 (SDM 31.3.7.2)
+  *memtype = resolve_memtype((BxMemtype)((entry[leaf] >> 3) & 0x7), (entry[leaf] & 0x40) ? BX_MEMTYPE_WB : *memtype);
+#endif
 
   Bit32u page_offset = PAGE_OFFSET(guest_paddr);
   return ppf | page_offset;

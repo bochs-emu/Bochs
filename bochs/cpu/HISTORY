@@ -125,6 +125,7 @@ Changes after Bochs 3.1:
 - MEMTYPE: PAE PDPTE loads must use WB memory type combined with MTRR memory type (were reported with INVALID memory type)
 - MEMTYPE: flush TLB when CR0.CD, PAT or MTRR MSRs are modified, the TLB caches the memory type of the page
 - MEMTYPE: SVM nested paging must combine guest PAT memory type with host PAT memory type of the nested page table entry and honor host CR0.CD, nested page table accesses were reported with INVALID memory type
+- MEMTYPE: VMX guest-physical accesses with EPT must use EPT memory type in place of MTRR memory type and honor EPT IPAT bit (were using MTRR memory type)
 - CPUID: allow configuring i486dx4 model without x87 using cpu exclude_features
 - FRED: Fixed reserved bits checking for MSR_IA32_FRED_CONFIG (0x1d4), bug was introduced in Bochs 3.1 release
 - MTRR: Fixed reserved bits checking for MSR_MTRR_DEFTYPE (0x2ff)

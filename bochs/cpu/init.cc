@@ -1352,9 +1352,6 @@ void BX_CPU_C::reset(unsigned source)
   set_VMCBPTR(0);
   BX_CPU_THIS_PTR in_svm_guest = false;
   BX_CPU_THIS_PTR svm_gif = true;
-#if BX_SUPPORT_MEMTYPE
-  BX_CPU_THIS_PTR nested_paging_host_pat_memtype = BX_MEMTYPE_WB;
-#endif
 #endif
 
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM || BX_SUPPORT_FRED

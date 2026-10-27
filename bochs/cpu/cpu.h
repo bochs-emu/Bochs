@@ -1211,7 +1211,6 @@ public: // for now...
   bx_hostpageaddr_t vmcbhostptr;
 #if BX_SUPPORT_MEMTYPE
   BxMemtype vmcb_memtype;
-  BxMemtype nested_paging_host_pat_memtype; // host PAT memory type of the leaf entry from the last nested page walk
 #endif
   VMCB_CACHE *vmcb;
 
@@ -5684,24 +5683,26 @@ public: // for now...
 #endif
 #if BX_SUPPORT_VMX >= 2
   BX_SMF bx_phy_address translate_guest_physical(bx_phy_address guest_paddr, bx_address guest_laddr, bool guest_laddr_valid, bool is_page_walk, 
-        bool user_page, bool writeable_page, bool nx_page, unsigned rw, bool supervisor_shadow_stack = false, bool *spp_walk = NULL);
+        bool user_page, bool writeable_page, bool nx_page, unsigned rw, BxMemtype *memtype /* in: PAT memory type, out: effective memory type */,
+        bool supervisor_shadow_stack = false, bool *spp_walk = NULL);
   BX_SMF void update_ept_access_dirty(bx_phy_address *entry_addr, Bit64u *entry, BxMemtype eptptr_memtype, unsigned leaf, unsigned write);
   BX_SMF bool is_eptptr_valid(Bit64u eptptr);
   BX_SMF bool spp_walk(bx_phy_address guest_paddr, bx_address guest_laddr, BxMemtype memtype);
 #endif
 #if BX_SUPPORT_SVM
   BX_SMF void nested_page_fault(Bit64u fault, bx_phy_address guest_paddr, unsigned rw, unsigned is_page_walk, bool supervisor = false);
-  BX_SMF bx_phy_address nested_walk_long_mode(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk, bool supervisor_shadow_stack);
-  BX_SMF bx_phy_address nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk, bool supervisor_shadow_stack);
-  BX_SMF bx_phy_address nested_walk_legacy(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk);
-  BX_SMF bx_phy_address nested_walk(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk, bool supervisor_shadow_stack = false);
+  // memory type is passed by pointer, in: guest PAT memory type, out: effective memory type (NULL if not required)
+  BX_SMF bx_phy_address nested_walk_long_mode(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk, BxMemtype *memtype, bool supervisor_shadow_stack);
+  BX_SMF bx_phy_address nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk, BxMemtype *memtype, bool supervisor_shadow_stack);
+  BX_SMF bx_phy_address nested_walk_legacy(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk, BxMemtype *memtype);
+  BX_SMF bx_phy_address nested_walk(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk, BxMemtype *memtype = NULL, bool supervisor_shadow_stack = false);
 #endif
 #if BX_SUPPORT_MEMTYPE
   BX_SMF BxMemtype memtype_by_mtrr(bx_phy_address paddr) BX_CPP_AttrRegparmN(1);
   BX_SMF BxMemtype memtype_by_pat(unsigned pat) BX_CPP_AttrRegparmN(1);
   BX_SMF BxMemtype resolve_memtype(BxMemtype mtrr_memtype, BxMemtype pat_memtype = BX_MEMTYPE_WB) BX_CPP_AttrRegparmN(2);
 #if BX_SUPPORT_SVM
-  BX_SMF BxMemtype resolve_memtype_nested_paging(BxMemtype mtrr_memtype, BxMemtype guest_pat_memtype) BX_CPP_AttrRegparmN(2);
+  BX_SMF BxMemtype resolve_memtype_nested_paging(BxMemtype mtrr_memtype, BxMemtype guest_pat_memtype, BxMemtype host_pat_memtype) BX_CPP_AttrRegparmN(3);
   BX_SMF BxMemtype memtype_nested_paging_entry(bx_phy_address entry_addr, Bit32u parent_entry) BX_CPP_AttrRegparmN(2);
 #endif
 #endif
