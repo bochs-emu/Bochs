@@ -1151,6 +1151,17 @@ BX_CPUID_STD7_SUBLEAF0_EBX_MPX;
  Dependency: BX_SUPPORT_EVEX, BX_SUPPORT_AMX
              avx512, avx10_2, amx
 
+- CPU Feature: apx
+
+ Enables CPUID[0x00000007].subleaf[1].EAX[21]: APX architecture flag.
+ Enables CPUID[0x00000029] APX leaf
+ Enables 16 more GPR registers, NDD form for integer instructions, NF for no flags update
+ Promotes a lot of integer instructions via new REX2 prefix or extended EVEX prefix + adds new APX instructions
+ XSAVE/XRSTOR support of new registers
+ VMX support: report extended register width in VM-exit extended instruction information field
+
+ Dependency: BX_SUPPORT_EVEX, BX_SUPPORT_APX
+
 ---------------------------------------------------------------------------------------------------
 
 Description of some CPUID buts not directly controlled by above features:
