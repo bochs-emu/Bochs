@@ -3836,6 +3836,9 @@ bool bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u *se
                           channel, BX_SLAVE_SELECTED(channel), BX_SELECTED_DRIVE(channel).atapi.command, *sector_size));
           if (*sector_size > (Bit32u)BX_SELECTED_DRIVE(channel).atapi.total_bytes_remaining) {
             memcpy(buffer, controller->buffer, BX_SELECTED_DRIVE(channel).atapi.total_bytes_remaining);
+            // the rest of the PRD area gets zeroes, not stale DMA buffer contents
+            memset(buffer + BX_SELECTED_DRIVE(channel).atapi.total_bytes_remaining, 0,
+                   *sector_size - BX_SELECTED_DRIVE(channel).atapi.total_bytes_remaining);
           } else {
             memcpy(buffer, controller->buffer, *sector_size);
           }

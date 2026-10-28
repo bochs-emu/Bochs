@@ -270,6 +270,7 @@ void bx_pci_ide_c::timer()
   }
   DEV_MEM_READ_PHYSICAL(BX_PIDE_THIS s.bmdma[channel].prd_current, 4, (Bit8u *)&prd.addr);
   DEV_MEM_READ_PHYSICAL(BX_PIDE_THIS s.bmdma[channel].prd_current+4, 4, (Bit8u *)&prd.size);
+  prd.addr &= 0xfffffffe; // bit 0 of the PRD base address is reserved
   size = prd.size & 0xfffe;
   if (size == 0) {
     size = 0x10000;
@@ -447,6 +448,9 @@ void bx_pci_ide_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
         break;
       case 0x04:
         BX_PIDE_THIS pci_conf[address+i] = value8 & 0x05;
+        break;
+      case 0x07: // status: write 1 to clear the abort bits, DEVSEL is read-only
+        BX_PIDE_THIS pci_conf[address+i] &= ~(value8 & 0x38);
         break;
       default:
         BX_PIDE_THIS pci_conf[address+i] = value8;
