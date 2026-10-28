@@ -1749,6 +1749,9 @@ Bit8u bx_vgacore_c::mem_read(bx_phy_address addr)
   }
 
   offset += BX_VGA_THIS s.ext_offset;
+  if (((offset << 2) + 3) >= BX_VGA_THIS s.memsize) {
+    return 0xff; // out of bounds
+  }
 
   switch (BX_VGA_THIS s.graphics_ctrl.read_mode) {
     case 0: /* read mode 0 */
