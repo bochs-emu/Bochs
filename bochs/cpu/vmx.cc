@@ -3485,6 +3485,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
     BX_NEXT_TRACE(i);
   }
 
+  // VM entry is not allowed with shadow VMCS as current VMCS
+  if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_VMCS_SHADOWING)) {
+    if (VMXReadRevisionID(BX_CPU_THIS_PTR vmcsptr) & BX_VMCS_SHADOW_BIT_MASK) {
+      BX_ERROR(("VMFAIL: VMLAUNCH with shadow VMCS !"));
+      VMfailInvalid();
+      BX_NEXT_TRACE(i);
+    }
+  }
+
   if (interrupts_inhibited(BX_INHIBIT_INTERRUPTS_BY_MOVSS)) {
     BX_ERROR(("VMFAIL: VMLAUNCH with interrupts blocked by MOV_SS !"));
     VMfail(VMXERR_VMENTRY_MOV_SS_BLOCKING);

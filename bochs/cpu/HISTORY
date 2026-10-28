@@ -112,6 +112,7 @@ Changes after Bochs 3.1:
 - VMX: injected pending MTF VM exit with "monitor trap flag" control set was delayed until after the first guest instruction and did not wake from HLT state
 - VMX/INVPCID: INVVPID and INVPCID individual-address invalidation must accept any address canonical to the max supported linear address width (57-bit with LA57) regardless of current paging mode
 - VMX: bit 12 set in EPT 2M/1G page entry must cause EPT misconfiguration (bits 20:12 / 29:12 are reserved, there is no PAT bit in EPT entries)
+- VMX: VMLAUNCH/VMRESUME must VMfailInvalid when the current VMCS is a shadow VMCS
 + SVM: Fixed VMRUN consistency checks
 + SVM: LMSW must treat the selective CR0 write intercept as non-selective (intercept regardless of the value written)
 + SVM: RSM intercept must be checked before #UD for RSM executed outside of SMM (SMM containerization)
