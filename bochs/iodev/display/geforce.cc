@@ -674,6 +674,10 @@ bool bx_geforce_c::geforce_mem_write_handler(bx_phy_address addr, unsigned len,
     if (len == 1) {
       BX_DEBUG(("MMIO write to 0x%08x, value 0x%02x", offset, *(Bit8u*)data));
       class_ptr->register_write8(offset, *(Bit8u*)data);
+    } else if (len == 2) {
+      Bit16u value = *((Bit16u*)data);
+      BX_DEBUG(("MMIO write to 0x%08x, value 0x%04x", offset, value));
+      class_ptr->register_write16(offset, value);
     } else if (len == 4) {
       Bit32u value = *((Bit32u*)data);
       BX_DEBUG(("MMIO write to 0x%08x, value 0x%08x", offset, value));
@@ -1921,6 +1925,23 @@ void bx_geforce_c::register_write8(Bit32u address, Bit8u value)
     BX_GEFORCE_THIS s.memory[(address - 0x700000) ^ BX_GEFORCE_THIS ramin_flip] = value;
   } else {
     register_write32(address, (register_read32(address) & ~0xFF) | value);
+  }
+}
+
+void bx_geforce_c::register_write16(Bit32u address, Bit16u value)
+{
+  if ((address >= 0x601300 && address < 0x601400) ||
+      (address >= 0x603300 && address < 0x603400)) {
+    Bit32u head = (address >> 13) & 1;
+    Bit32u offset = address & 0x00000fff;
+    if (offset == 0x3b4 || offset == 0x3d4) {
+      if (!head)
+        SVGA_WRITE(offset, value, 2);
+    } else {
+      BX_PANIC(("Unknown register 0x%08x write", address));
+    }
+  } else {
+    register_write32(address, (register_read32(address) & ~0xFFFF) | value);
   }
 }
 
