@@ -1,6 +1,6 @@
 Changes after Bochs 3.1 release:
 
-(up to date with commits done till 25 Oct 2026)
+(up to date with commits done till 28 Oct 2026)
 
 - CPU emulation and instrumentation
   ! CPUDB: Added AMD Zen3 (Vermeer) CPUID model (features X2APIC, CLWB, UMIP, PKU, CET, VAES, RDPID + introduces CPUID 0x80000021: AMD Extended Feature Identification 2)
@@ -81,10 +81,15 @@ Changes after Bochs 3.1 release:
     - Setting wrong VBE "dispi ID" do not cause PANIC anymore
     - Fixed guest-to-host heap buffer overflow in text mode with high CRTC start address
     - Fixed division by zero in planar memory write with zero line offset
+    - Fixed host heap out-of-bounds read in planar memory read beyond the end of the video memory
+    - Fixed division by zero in Input Status 1 read with very short horizontal total
+    - Fixed vertical timer stall when vertical retrace end is beyond vertical total
   - Voodoo
     - Fixed crash when the screen is redrawn (e.g. by the debugger) before a display mode is set (#666)
   - Banshee
     - Two small fixes in blt_polygon_fill
+    - Fixed clip window for bottom-to-top 2D BLTs
+    - Y direction bit is applied only to screen-to-screen and host-to-screen BLTs (was applied also to stretch BLTs, fills, lines and polygons)
   - Cirrus
     - Fixed guest-to-host stack buffer overflow in color expand video-to-video BitBLT
     - Reject BitBLT operations crossing the video memory boundaries
@@ -99,6 +104,8 @@ Changes after Bochs 3.1 release:
       - #871: Implement 2D lines
       - #873: Implement bump mapping with luminance
       - #928: Add back-transform support for NV20
+      - #942: Fix inline array method handler registration for NV15 (crashes in 3D demos)
+      - #944: Implement 16-bit MMIO writes (PANIC with RivaTuner)
   - Hard drive / HD image
     - VVFAT: Fixed LongName handling in vvfat disks
     - VVFAT: Adding path prefix "fat32:" forces using FAT32 file system
@@ -121,8 +128,8 @@ Changes after Bochs 3.1 release:
     - Fixed guest-to-host heap corruption on PCI configuration space accesses crossing the 0xCFC-0xCFF window
     - i440FX: fixed write-1-to-clear handling of the PCI status register
     - PIIX3: asserted PCI interrupt lines now follow PIRQ routing changes
-    - Fixed loading of PCI option ROM images (partial reads, uninitialized ROM padding)
     - PIIX3: restore the default I/O APIC base on reset
+    - Fixed loading of PCI option ROM images (partial reads, uninitialized ROM padding)
     - ACPI: unmap the PM/SMBus I/O windows when reset clears their BARs
     - Fixed spurious rejection of read-only memory handlers (e.g. PCI option ROM) after other memory handlers were unregistered (#932)
   - Interrupt controllers and timers
@@ -130,8 +137,8 @@ Changes after Bochs 3.1 release:
     - IOAPIC: a level triggered entry programmed while its input line is already asserted now delivers the interrupt
     - LAPIC: clear TMR before broadcasting EOI to the IOAPIC (level triggered interrupt could be lost forever,
              Windows Vista hang with GeForce at the display mode switch)
-    - LAPIC: TSC-deadline timer compared the deadline with system time instead of the guest TSC (interrupt storm after
-             hardware reset or TSC write), IA32_TSC_DEADLINE is cleared when the timer fires
+    - LAPIC: TSC-deadline timer compared the deadline with system time instead of the guest TSC (interrupt storm after hardware reset or TSC write),
+             IA32_TSC_DEADLINE is cleared when the timer fires
     - LAPIC: many fixes for SDM compliance:
       - ExtINT interrupts are delivered bypassing IRR/ISR and processor priority
       - APIC errors generate the LVT Error interrupt, illegal IPI vector sets Send Illegal Vector in the ESR
@@ -170,6 +177,9 @@ Changes after Bochs 3.1 release:
       - With this change, mixer thread adds short delay before starting sound playback. It allows to get rid of crackling noise during playback.
   - Networking
     - VDE: fix networking on FreeBSD
+  - CMOS
+    - Save/restore: the extended CMOS RAM bank (ports 0x72/0x73) is save/restored now
+    - Report an error instead of PANIC when the CMOS image file cannot be written on exit
   - General
     - Set Windows system timer resolution to 1ms. This help to reduce artefacts (clicking noises) during sound playback
     - Save/restore: failures while saving the simulation state are reported instead of being ignored
