@@ -2127,9 +2127,12 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
 
   BX_DEBUG(("EPT walk for guest paddr 0x" FMT_PHY_ADDRX, guest_paddr));
 
-  // when EPT A/D enabled treat guest page table accesses as writes
-  if (BX_VMX_EPT_ACCESS_DIRTY_ENABLED && is_page_walk && guest_laddr_valid)
+  // when EPT A/D enabled treat guest page table accesses as writes,
+  // EPT violation caused by such access reports both data read and data write
+  if (BX_VMX_EPT_ACCESS_DIRTY_ENABLED && is_page_walk && guest_laddr_valid) {
     rw = BX_WRITE;
+    access_mask = BX_EPT_READ;
+  }
 
   if (rw == BX_EXECUTE) {
     if (vm->vmexec_ctrls2.MBE_CTRL()) {
