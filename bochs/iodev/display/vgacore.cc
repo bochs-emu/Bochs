@@ -436,6 +436,10 @@ void bx_vgacore_c::calculate_retrace_timing()
   hfreq = (float)vclock / (crtcp.htotal * cwidth);
   f_htotal_usec = 1000000.0f / hfreq;
   BX_VGA_THIS s.htotal_usec = (Bit32u)f_htotal_usec;
+  if (BX_VGA_THIS s.htotal_usec == 0) {
+    // high video clock with small horizontal total: avoid division by zero
+    BX_VGA_THIS s.htotal_usec = 1;
+  }
   hbstart = BX_VGA_THIS s.CRTC.reg[2];
   BX_VGA_THIS s.hbstart_usec = (Bit32u)((1000000.0 * hbstart * cwidth) / vclock);
   hbend = (BX_VGA_THIS s.CRTC.reg[3] & 0x1f) + ((BX_VGA_THIS s.CRTC.reg[5] & 0x80) >> 2);
@@ -452,7 +456,8 @@ void bx_vgacore_c::calculate_retrace_timing()
   if (BX_VGA_THIS s.vtotal_usec < 8000) {
     BX_VGA_THIS s.vtotal_usec = 14268;
   }
-  if (BX_VGA_THIS s.vrend_usec < 7000) {
+  if ((BX_VGA_THIS s.vrend_usec < 7000) ||
+      (BX_VGA_THIS s.vrend_usec >= BX_VGA_THIS s.vtotal_usec)) {
     BX_VGA_THIS s.vrend_usec = BX_VGA_THIS s.vtotal_usec - 1113;
   }
   BX_VGA_THIS start_vertical_timer();
