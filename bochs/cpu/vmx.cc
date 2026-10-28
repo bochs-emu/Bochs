@@ -4263,7 +4263,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
 
   switch(type) {
   case BX_INVEPT_INVVPID_INDIVIDUAL_ADDRESS_INVALIDATION:
-    if (! IsCanonical(invvpid_desc.xmm64u(1))) {
+    if (! IsCpuidCanonical(invvpid_desc.xmm64u(1))) {
       BX_ERROR(("INVVPID: non canonical LADDR single context invalidation"));
       VMfail(VMXERR_INVALID_INVEPT_INVVPID);
       BX_NEXT_TRACE(i);
@@ -4373,7 +4373,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
   switch(type) {
   case BX_INVPCID_INDIVIDUAL_ADDRESS_NON_GLOBAL_INVALIDATION:
 #if BX_SUPPORT_X86_64
-    if (! IsCanonical(invpcid_addr)) {
+    if (! IsCpuidCanonical(invpcid_addr)) {
       BX_ERROR(("INVPCID: non canonical LADDR single context invalidation"));
       exception(BX_GP_EXCEPTION, 0);
     }

@@ -2192,7 +2192,6 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
         break;
       }
 
-      ppf &= BX_CONST64(0x000fffffffffe000);
       if (ppf & offset_mask) {
          BX_DEBUG(("EPT %s: reserved bit is set: 0x" FMT_ADDRX64, bx_paging_level[leaf], curr_entry));
          vmexit_reason = VMX_VMEXIT_EPT_MISCONFIGURATION;
