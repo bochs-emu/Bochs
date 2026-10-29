@@ -962,6 +962,10 @@ void BX_CPU_C::reset(unsigned source)
     BX_CPU_THIS_PTR icount = 0;
   BX_CPU_THIS_PTR icount_last_sync = BX_CPU_THIS_PTR icount;
 
+#if BX_SUPPORT_AVX && BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR ignore_ac_icount = 0;
+#endif
+
   BX_CPU_THIS_PTR inhibit_mask = 0;
   BX_CPU_THIS_PTR inhibit_icount = 0;
 

@@ -962,6 +962,11 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
      BX_PANIC(("exception(%u): bad vector", vector));
   }
 
+#if BX_SUPPORT_AVX && BX_SUPPORT_ALIGNMENT_CHECK
+  // any exception ends the instruction, do not suppress #AC during the event delivery
+  BX_CPU_THIS_PTR ignore_ac_icount = 0;
+#endif
+
 #if BX_X86_DEBUGGER
   // V[P]GATHER*/V[P]SCATTER* suspended by a fault: a data breakpoint pending from already
   // completed elements is delivered in lieu of the fault, RF is set so instruction breakpoint

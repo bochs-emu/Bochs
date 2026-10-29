@@ -1386,6 +1386,11 @@ public: // for now...
   unsigned alignment_check_mask;
 #endif
 
+#if BX_SUPPORT_AVX && BX_SUPPORT_ALIGNMENT_CHECK
+  // icount of the instruction which requested to suppress #AC generation (gather/scatter, masked load/store)
+  Bit64u ignore_ac_icount;
+#endif
+
   // statistics
   bx_cpu_statistics *stats;
 
@@ -6072,6 +6077,10 @@ public: // for now...
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
   BX_SMF BX_CPP_INLINE bool alignment_check(void);
 #endif
+#if BX_SUPPORT_AVX && BX_SUPPORT_ALIGNMENT_CHECK
+  BX_SMF BX_CPP_INLINE void ignore_alignment_check(void);
+  BX_SMF BX_CPP_INLINE bool is_alignment_check_ignored(void);
+#endif
 
 #if BX_CPU_LEVEL >= 5
   BX_SMF Bit64u get_TSC();
@@ -6891,6 +6900,19 @@ BX_CPP_INLINE unsigned BX_CPU_C::get_cpu_mode(void)
 BX_CPP_INLINE bool BX_CPU_C::alignment_check(void)
 {
   return BX_CPU_THIS_PTR alignment_check_mask;
+}
+#endif
+
+#if BX_SUPPORT_AVX && BX_SUPPORT_ALIGNMENT_CHECK
+// suppress #AC generation for the rest of the current instruction
+BX_CPP_INLINE void BX_CPU_C::ignore_alignment_check(void)
+{
+  BX_CPU_THIS_PTR ignore_ac_icount = get_icount();
+}
+
+BX_CPP_INLINE bool BX_CPU_C::is_alignment_check_ignored(void)
+{
+  return BX_CPU_THIS_PTR ignore_ac_icount == get_icount();
 }
 #endif
 

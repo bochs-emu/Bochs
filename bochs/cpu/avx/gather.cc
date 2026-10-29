@@ -93,8 +93,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_VpsHps(bxInstruction_c *i)
   BX_CLEAR_AVX_REGZ(i->src2(), len);
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
-  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
-  BX_CPU_THIS_PTR alignment_check_mask = 0;
+  ignore_alignment_check();
 #endif
 
   for (n=0; n < num_elements; n++)
@@ -105,10 +104,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_VpsHps(bxInstruction_c *i)
     }
     mask->ymm32u(n) = 0;
   }
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
-#endif
 
   BX_CLEAR_AVX_REGZ(i->dst(), len);
 
@@ -144,8 +139,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_VpsHps(bxInstruction_c *i)
   BX_CLEAR_AVX_HIGH128(i->src2());
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
-  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
-  BX_CPU_THIS_PTR alignment_check_mask = 0;
+  ignore_alignment_check();
 #endif
 
   for (n=0; n < num_elements; n++)
@@ -156,10 +150,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_VpsHps(bxInstruction_c *i)
     }
     mask->ymm32u(n) = 0;
   }
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
-#endif
 
   for (n=num_elements; n < 4; n++)
     dest->ymm32u(n) = 0;
@@ -195,8 +185,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_VpdHpd(bxInstruction_c *i)
   BX_CLEAR_AVX_REGZ(i->src2(), len);
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
-  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
-  BX_CPU_THIS_PTR alignment_check_mask = 0;
+  ignore_alignment_check();
 #endif
 
   for (n=0; n < num_elements; n++)
@@ -207,10 +196,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_VpdHpd(bxInstruction_c *i)
     }
     mask->ymm64u(n) = 0;
   }
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
-#endif
 
   BX_CLEAR_AVX_REGZ(i->dst(), len);
 
@@ -244,8 +229,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_VpdHpd(bxInstruction_c *i)
   BX_CLEAR_AVX_REGZ(i->src2(), len);
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
-  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
-  BX_CPU_THIS_PTR alignment_check_mask = 0;
+  ignore_alignment_check();
 #endif
 
   for (n=0; n < num_elements; n++)
@@ -256,10 +240,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_VpdHpd(bxInstruction_c *i)
     }
     mask->ymm64u(n) = 0;
   }
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
-#endif
 
   BX_CLEAR_AVX_REGZ(i->dst(), len);
 
@@ -288,8 +268,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_MASK_VpsVSib(bxInstruction_c *i
   unsigned n, len = i->getVL(), num_elements = DWORD_ELEMENTS(len);
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
-  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
-  BX_CPU_THIS_PTR alignment_check_mask = 0;
+  ignore_alignment_check();
 #endif
 
   for (n=0, mask = 0x1; n < num_elements; n++, mask <<= 1)
@@ -301,10 +280,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_MASK_VpsVSib(bxInstruction_c *i
       BX_GATHER_ELEMENT_COMPLETED();
     }
   }
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
-#endif
 
   BX_WRITE_OPMASK(i->opmask(), 0);
   BX_CLEAR_AVX_REGZ(i->dst(), len);
@@ -331,8 +306,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_MASK_VpsVSib(bxInstruction_c *i
   unsigned n, len = i->getVL(), num_elements = QWORD_ELEMENTS(len);
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
-  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
-  BX_CPU_THIS_PTR alignment_check_mask = 0;
+  ignore_alignment_check();
 #endif
 
   for (n=0, mask = 0x1; n < num_elements; n++, mask <<= 1)
@@ -344,10 +318,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_MASK_VpsVSib(bxInstruction_c *i
       BX_GATHER_ELEMENT_COMPLETED();
     }
   }
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
-#endif
 
   // ensure correct upper part clearing of the destination register
   if (len == BX_VL128) dest->vmm64u(1) = 0;
@@ -378,8 +348,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_MASK_VpdVSib(bxInstruction_c *i
   unsigned n, len = i->getVL(), num_elements = QWORD_ELEMENTS(len);
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
-  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
-  BX_CPU_THIS_PTR alignment_check_mask = 0;
+  ignore_alignment_check();
 #endif
 
   for (n=0, mask = 0x1; n < num_elements; n++, mask <<= 1)
@@ -391,10 +360,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_MASK_VpdVSib(bxInstruction_c *i
       BX_GATHER_ELEMENT_COMPLETED();
     }
   }
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
-#endif
 
   BX_WRITE_OPMASK(i->opmask(), 0);
   BX_CLEAR_AVX_REGZ(i->dst(), len);
@@ -421,8 +386,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_MASK_VpdVSib(bxInstruction_c *i
   unsigned n, len = i->getVL(), num_elements = QWORD_ELEMENTS(len);
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
-  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
-  BX_CPU_THIS_PTR alignment_check_mask = 0;
+  ignore_alignment_check();
 #endif
 
   for (n=0, mask = 0x1; n < num_elements; n++, mask <<= 1)
@@ -434,10 +398,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_MASK_VpdVSib(bxInstruction_c *i
       BX_GATHER_ELEMENT_COMPLETED();
     }
   }
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
-#endif
 
   BX_WRITE_OPMASK(i->opmask(), 0);
   BX_CLEAR_AVX_REGZ(i->dst(), len);
@@ -459,8 +419,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERDPS_MASK_VSibVps(bxInstruction_c *
   unsigned n, num_elements = DWORD_ELEMENTS(i->getVL());
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
-  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
-  BX_CPU_THIS_PTR alignment_check_mask = 0;
+  ignore_alignment_check();
 #endif
 
   for (n=0, mask = 0x1; n < num_elements; n++, mask <<= 1)
@@ -472,10 +431,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERDPS_MASK_VSibVps(bxInstruction_c *
       BX_GATHER_ELEMENT_COMPLETED();
     }
   }
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
-#endif
 
   BX_WRITE_OPMASK(i->opmask(), 0);
   BX_GATHER_DONE();
@@ -496,8 +451,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERQPS_MASK_VSibVps(bxInstruction_c *
   unsigned n, num_elements = QWORD_ELEMENTS(i->getVL());
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
-  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
-  BX_CPU_THIS_PTR alignment_check_mask = 0;
+  ignore_alignment_check();
 #endif
 
   for (n=0, mask = 0x1; n < num_elements; n++, mask <<= 1)
@@ -509,10 +463,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERQPS_MASK_VSibVps(bxInstruction_c *
       BX_GATHER_ELEMENT_COMPLETED();
     }
   }
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
-#endif
 
   BX_WRITE_OPMASK(i->opmask(), 0);
   BX_GATHER_DONE();
@@ -533,8 +483,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERDPD_MASK_VSibVpd(bxInstruction_c *
   unsigned n, num_elements = QWORD_ELEMENTS(i->getVL());
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
-  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
-  BX_CPU_THIS_PTR alignment_check_mask = 0;
+  ignore_alignment_check();
 #endif
 
   for (n=0, mask = 0x1; n < num_elements; n++, mask <<= 1)
@@ -546,10 +495,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERDPD_MASK_VSibVpd(bxInstruction_c *
       BX_GATHER_ELEMENT_COMPLETED();
     }
   }
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
-#endif
 
   BX_WRITE_OPMASK(i->opmask(), 0);
   BX_GATHER_DONE();
@@ -570,8 +515,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERQPD_MASK_VSibVpd(bxInstruction_c *
   unsigned n, num_elements = QWORD_ELEMENTS(i->getVL());
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
-  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
-  BX_CPU_THIS_PTR alignment_check_mask = 0;
+  ignore_alignment_check();
 #endif
 
   for (n=0, mask = 0x1; n < num_elements; n++, mask <<= 1)
@@ -583,10 +527,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERQPD_MASK_VSibVpd(bxInstruction_c *
       BX_GATHER_ELEMENT_COMPLETED();
     }
   }
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
-#endif
 
   BX_WRITE_OPMASK(i->opmask(), 0);
   BX_GATHER_DONE();
