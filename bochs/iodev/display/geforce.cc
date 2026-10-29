@@ -7811,9 +7811,11 @@ void bx_geforce_c::d3d_mh_0497_609(gf_channel* ch, Bit32u cls, Bit32u method, Bi
     ch->d3d_vertex_b_obj : ch->d3d_vertex_a_obj;
   for (Bit32u v = vertex_first; v <= vertex_last; v++) {
     Bit32u vertex_array_index;
-    if (ch->d3d_index_array_type_16)
+    if (ch->d3d_index_array_type_16) {
       vertex_array_index = BX_GEFORCE_THIS dma_read16(index_array_obj, ch->d3d_index_array_offset + v * 2);
-    else
+      if (vertex_array_index == 0xFFFF)
+        continue;
+    } else
       vertex_array_index = BX_GEFORCE_THIS dma_read32(index_array_obj, ch->d3d_index_array_offset + v * 4);
     BX_GEFORCE_THIS d3d_load_vertex(ch, vertex_array_index);
   }
