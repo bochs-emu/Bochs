@@ -156,7 +156,8 @@ static bool hpet_read(bx_phy_address a20addr, unsigned len, void *data, void *pa
 
   if (len == 4) { // must be 32-bit aligned
     if ((a20addr & 0x3) != 0) {
-      BX_PANIC(("Unaligned HPET read at address 0x" FMT_PHY_ADDRX, a20addr));
+      BX_ERROR(("Unaligned HPET read at address 0x" FMT_PHY_ADDRX, a20addr));
+      *((Bit32u *)data) = 0;
       return true;
     }
     value1 = theHPET->read_aligned(a20addr);
@@ -164,7 +165,8 @@ static bool hpet_read(bx_phy_address a20addr, unsigned len, void *data, void *pa
     return true;
   } else if (len == 8) { // must be 64-bit aligned
     if ((a20addr & 0x7) != 0) {
-      BX_PANIC(("Unaligned HPET read at address 0x" FMT_PHY_ADDRX, a20addr));
+      BX_ERROR(("Unaligned HPET read at address 0x" FMT_PHY_ADDRX, a20addr));
+      *((Bit64u *)data) = 0;
       return true;
     }
     value1 = theHPET->read_aligned(a20addr);
@@ -178,7 +180,8 @@ static bool hpet_read(bx_phy_address a20addr, unsigned len, void *data, void *pa
     BX_ERROR(("Unsupported HPET read at address 0x" FMT_PHY_ADDRX " with len = 1", a20addr));
     *((Bit8u *)data) = 0x00;
   } else {
-    BX_PANIC(("Unsupported HPET read at address 0x" FMT_PHY_ADDRX " with len = %i", a20addr, len));
+    BX_ERROR(("Unsupported HPET read at address 0x" FMT_PHY_ADDRX " with len = %i", a20addr, len));
+    memset(data, 0, len);
   }
   return true;
 }
@@ -187,14 +190,14 @@ static bool hpet_write(bx_phy_address a20addr, unsigned len, void *data, void *p
 {
   if (len == 4) { // must be 32-bit aligned
     if ((a20addr & 0x3) != 0) {
-      BX_PANIC(("Unaligned HPET write at address 0x" FMT_PHY_ADDRX, a20addr));
+      BX_ERROR(("Unaligned HPET write at address 0x" FMT_PHY_ADDRX " ignored", a20addr));
       return true;
     }
     theHPET->write_aligned(a20addr, *((Bit32u*) data), true);
     return true;
   } else if (len == 8) { // must be 64-bit aligned
     if ((a20addr & 0x7) != 0) {
-      BX_PANIC(("Unaligned HPET write at address 0x" FMT_PHY_ADDRX, a20addr));
+      BX_ERROR(("Unaligned HPET write at address 0x" FMT_PHY_ADDRX " ignored", a20addr));
       return true;
     }
     Bit64u val64 = *((Bit64u*) data);
@@ -205,7 +208,7 @@ static bool hpet_write(bx_phy_address a20addr, unsigned len, void *data, void *p
   } else if (len == 1) {
     BX_ERROR(("Unsupported HPET write at address 0x" FMT_PHY_ADDRX " with len = 1", a20addr));
   } else {
-    BX_PANIC(("Unsupported HPET write at address 0x" FMT_PHY_ADDRX " with len = %i", a20addr, len));
+    BX_ERROR(("Unsupported HPET write at address 0x" FMT_PHY_ADDRX " with len = %i", a20addr, len));
   }
   return true;
 }

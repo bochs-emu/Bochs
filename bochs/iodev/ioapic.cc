@@ -53,7 +53,8 @@ PLUGIN_ENTRY_FOR_MODULE(ioapic)
 static bool ioapic_read(bx_phy_address a20addr, unsigned len, void *data, void *param)
 {
   if((a20addr & ~0x3) != ((a20addr+len-1) & ~0x3)) {
-    BX_PANIC(("I/O APIC read at address 0x" FMT_PHY_ADDRX " spans 32-bit boundary !", a20addr));
+    BX_ERROR(("I/O APIC read at address 0x" FMT_PHY_ADDRX " spans 32-bit boundary !", a20addr));
+    memset(data, 0xff, len);
     return 1;
   }
   Bit32u value = theIOAPIC->read_aligned(a20addr & ~0x3);
@@ -68,7 +69,7 @@ static bool ioapic_read(bx_phy_address a20addr, unsigned len, void *data, void *
   else if (len == 2)
     *((Bit16u *)data) = value & 0xffff;
   else
-    BX_PANIC(("Unsupported I/O APIC read at address 0x" FMT_PHY_ADDRX ", len=%d", a20addr, len));
+    BX_ERROR(("Unsupported I/O APIC read at address 0x" FMT_PHY_ADDRX ", len=%d", a20addr, len));
 
   return 1;
 }
@@ -76,7 +77,7 @@ static bool ioapic_read(bx_phy_address a20addr, unsigned len, void *data, void *
 static bool ioapic_write(bx_phy_address a20addr, unsigned len, void *data, void *param)
 {
   if(a20addr & 0xf) {
-    BX_PANIC(("I/O apic write at unaligned address 0x" FMT_PHY_ADDRX, a20addr));
+    BX_ERROR(("I/O apic write at unaligned address 0x" FMT_PHY_ADDRX " ignored", a20addr));
     return 1;
   }
 
@@ -84,15 +85,17 @@ static bool ioapic_write(bx_phy_address a20addr, unsigned len, void *data, void 
     theIOAPIC->write_aligned(a20addr, *((Bit32u*) data));
   }
   else {
-    if ((a20addr & 0xff) != 0)
-      BX_PANIC(("I/O apic write with len=%d (should be 4) at address 0x" FMT_PHY_ADDRX, len, a20addr));
+    if ((a20addr & 0xff) != 0) {
+      BX_ERROR(("I/O apic write with len=%d (should be 4) at address 0x" FMT_PHY_ADDRX " ignored", len, a20addr));
+      return 1;
+    }
 
     if (len == 2)
       theIOAPIC->write_aligned(a20addr, (Bit32u) *((Bit16u*) data));
     else if (len == 1)
       theIOAPIC->write_aligned(a20addr, (Bit32u) *((Bit8u*) data));
     else
-      BX_PANIC(("Unsupported I/O APIC write at address 0x" FMT_PHY_ADDRX ", len=%d", a20addr, len));
+      BX_ERROR(("Unsupported I/O APIC write at address 0x" FMT_PHY_ADDRX ", len=%d", a20addr, len));
   }
 
   return 1;
@@ -164,8 +167,10 @@ Bit32u bx_ioapic_c::read_aligned(bx_phy_address address)
     // select register
     return ioregsel;
   } else {
-    if (address != 0x10)
-      BX_PANIC(("IOAPIC: read from unsupported address"));
+    if (address != 0x10) {
+      BX_ERROR(("IOAPIC: read from unsupported address 0x%02x", (unsigned) address));
+      return 0;
+    }
   }
 
   Bit32u data = 0;
@@ -188,7 +193,7 @@ Bit32u bx_ioapic_c::read_aligned(bx_phy_address address)
       data = (ioregsel&1) ? entry->get_hi_part() : entry->get_lo_part();
       break;
     }
-    BX_PANIC(("IOAPIC: IOREGSEL points to undefined register %02x", ioregsel));
+    BX_ERROR(("IOAPIC: IOREGSEL points to undefined register %02x", ioregsel));
   }
 
   return data;
@@ -199,11 +204,13 @@ void bx_ioapic_c::write_aligned(bx_phy_address address, Bit32u value)
   BX_DEBUG(("IOAPIC: write aligned addr=%08x, data=%08x", (unsigned) address, value));
   address &= 0xff;
   if (address == 0x00)  {
-    ioregsel = value;
+    ioregsel = value & 0xff; // 8-bit register
     return;
   } else {
-    if (address != 0x10)
-      BX_PANIC(("IOAPIC: write to unsupported address"));
+    if (address != 0x10) {
+      BX_ERROR(("IOAPIC: write to unsupported address 0x%02x ignored", (unsigned) address));
+      return;
+    }
   }
   // only reached when writing data register
   switch (ioregsel) {
@@ -240,7 +247,7 @@ void bx_ioapic_c::write_aligned(bx_phy_address address, Bit32u value)
         service_ioapic();
         return;
       }
-      BX_PANIC(("IOAPIC: IOREGSEL points to undefined register %02x", ioregsel));
+      BX_ERROR(("IOAPIC: IOREGSEL points to undefined register %02x", ioregsel));
   }
 }
 
