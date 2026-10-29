@@ -92,6 +92,7 @@ Changes after Bochs 3.1:
 + VMX: vmcs.shadow_stack_prematurely_busy was not initialized on reset, until the first VMEXIT a stale value could suppress convertible EPT violation #VE or set exit reason bit 25 (shadow stack prematurely busy)
 + VMX: EPTP index VM-execution control was not loaded on VM entry, #VE information area reported stale or uninitialized EPTP index unless the guest executed VMFUNC EPTP switching
 - VMX: posted-interrupt processing with empty PIR and VIRR set RVI to 0xFF and delivered a bogus virtual interrupt 0xFF (instead should keep RVI unchanged when VIRR is empty)
+- VMX: VM entry injecting pending MTF VM exit (event type 7, vector 0) must not clear guest interruptibility state, pending debug exceptions and activity state
 - VMX: #VE delivery wrote the 16-bit EPTP index as a qword, overwriting bytes 34..39 of the virtualization-exception information area
 - VMX: EPT violation exit qualification with mode-based execute control for data accesses did not report user-execute permission in bit 6 and set it in bit 13 (shadow-stack access) instead
 - VMX: posted-interrupt processing must update RVI from the highest PIR bit only (not from VIRR), VIRR is not modified for empty PIR dwords

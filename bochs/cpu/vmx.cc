@@ -2424,7 +2424,9 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   if (vm->vmentry_ctrls.SMM_ENTER())
     BX_PANIC(("VMENTER: entry to SMM is not implemented yet !"));
 
-  if (VMENTRY_INJECTING_EVENT(vm->vmentry_interr_info)) {
+  // injection of pending MTF VM exit (event type 7, vector 0) is not considered as injecting event
+  // so interruptibility state, pending debug exceptions and activity state are loaded from guest state
+  if (VMENTRY_INJECTING_EVENT(vm->vmentry_interr_info) && (vm->vmentry_interr_info & 0x7ff) != (BX_EVENT_OTHER << 8)) {
     // the VMENTRY injecting event to the guest
     BX_CPU_THIS_PTR inhibit_mask = 0; // do not block interrupts
     BX_CPU_THIS_PTR debug_trap = 0;
