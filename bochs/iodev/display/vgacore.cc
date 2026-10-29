@@ -1336,6 +1336,7 @@ void bx_vgacore_c::update(void)
   static unsigned cs_counter = 1;
   static bool cs_visible = 0;
   bool cs_toggle = 0;
+  static bool word_mode_256c = false;
 
   cs_counter--;
   /* no screen update necessary */
@@ -1500,7 +1501,7 @@ void bx_vgacore_c::update(void)
         if (BX_VGA_THIS s.CRTC.reg[0x14] & 0x40) { // DW set: doubleword mode
 
           if (BX_VGA_THIS s.misc_output.select_high_bank != 1)
-            BX_PANIC(("update: select_high_bank != 1"));
+            BX_DEBUG(("update: select_high_bank != 1"));
 
           line_offset = BX_VGA_THIS s.line_offset;
           start_addr <<= 2;
@@ -1564,18 +1565,26 @@ void bx_vgacore_c::update(void)
           }
         } else { // word mode
 
-          BX_INFO(("256-color word mode untested"));
+          if (!word_mode_256c) {
+            BX_INFO(("256-color word mode untested"));
+            word_mode_256c = true;
+          }
+          // in word mode the memory address is the CRTC address counter shifted
+          // left by 1 (line_offset is already in memory address units), every
+          // address holds 4 pixels, one in each plane
+          line_offset = BX_VGA_THIS s.line_offset;
+          start_addr <<= 1;
           for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
             for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED (xti, yti)) {
                 for (r=0; r<Y_TILESIZE; r++) {
                   y = yc + r;
                   if (BX_VGA_THIS s.y_doublescan) y >>= 1;
-                  row_addr = start_addr + (y * BX_VGA_THIS s.line_offset);
+                  row_addr = start_addr + (y * line_offset);
                   for (c=0; c<X_TILESIZE; c++) {
                     x = (xc + c) >> 1;
-                    byte_offset = (row_addr + ((x & ~1) << 1)) | (x & 1);
-                    color = BX_VGA_THIS s.memory[start_addr + byte_offset];
+                    byte_offset = (((row_addr + ((x >> 2) << 1)) << 2) | (x & 3)) & 0x3ffff;
+                    color = BX_VGA_THIS s.memory[byte_offset];
                     BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
                   }
                 }
