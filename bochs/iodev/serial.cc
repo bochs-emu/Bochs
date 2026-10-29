@@ -923,6 +923,7 @@ Bit32u bx_serial_c::read(Bit32u address, unsigned io_len)
             (BX_SER_THIS s[port].line_status.tsr_empty      << 6) |
             (BX_SER_THIS s[port].line_status.fifo_error     << 7);
       BX_SER_THIS s[port].line_status.overrun_error = 0;
+      BX_SER_THIS s[port].line_status.parity_error = 0;
       BX_SER_THIS s[port].line_status.framing_error = 0;
       BX_SER_THIS s[port].line_status.break_int = 0;
       BX_SER_THIS s[port].ls_interrupt = false;
