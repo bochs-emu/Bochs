@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2021  The Bochs Project
+//  Copyright (C) 2004-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -404,6 +404,14 @@ void bx_busm_c::update_mouse_data()
   int delta_x, delta_y;
   bool hold;
 
+  if (BX_BUSM_THIS type == BX_MOUSE_TYPE_INPORT) {
+    hold = (BX_BUSM_THIS control_val & INP_HOLD_COUNTER) > 0;
+  } else {
+    hold = (BX_BUSM_THIS control_val & HOLD_COUNTER) > 0;
+  }
+  // while the counters are held the motion keeps accumulating
+  if (hold) return;
+
   if (BX_BUSM_THIS mouse_delayed_dx > 127) {
     delta_x = 127;
     BX_BUSM_THIS mouse_delayed_dx -= 127;
@@ -425,16 +433,9 @@ void bx_busm_c::update_mouse_data()
     BX_BUSM_THIS mouse_delayed_dy = 0;
   }
 
-  if (BX_BUSM_THIS type == BX_MOUSE_TYPE_INPORT) {
-    hold = (BX_BUSM_THIS control_val & INP_HOLD_COUNTER) > 0;
-  } else {
-    hold = (BX_BUSM_THIS control_val & HOLD_COUNTER) > 0;
-  }
-  if (!hold) {
-    BX_BUSM_THIS current_x = (Bit8u) delta_x;
-    BX_BUSM_THIS current_y = (Bit8u) delta_y;
-    BX_BUSM_THIS current_b = BX_BUSM_THIS mouse_buttons;
-  }
+  BX_BUSM_THIS current_x = (Bit8u) delta_x;
+  BX_BUSM_THIS current_y = (Bit8u) delta_y;
+  BX_BUSM_THIS current_b = BX_BUSM_THIS mouse_buttons;
 }
 
 void bx_busm_c::timer_handler(void *this_ptr)
