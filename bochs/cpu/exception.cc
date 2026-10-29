@@ -962,6 +962,21 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
      BX_PANIC(("exception(%u): bad vector", vector));
   }
 
+#if BX_X86_DEBUGGER
+  // V[P]GATHER*/V[P]SCATTER* suspended by a fault: a data breakpoint pending from already
+  // completed elements is delivered in lieu of the fault, RF is set so instruction breakpoint
+  // is not re-triggered when the instruction is continued
+  // (BX_DEBUG_TRAP_ELEMENT_COMPLETED is a non-architectural Bochs internal flag)
+  if ((BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_ELEMENT_COMPLETED) &&
+       exception_class == BX_EXCEPTION_CLASS_FAULT && vector != BX_DB_EXCEPTION)
+  {
+    BX_CPU_THIS_PTR debug_trap &= ~BX_DEBUG_TRAP_ELEMENT_COMPLETED;
+    BX_DEBUG(("exception(0x%02x): deliver pending data breakpoint #DB in lieu of the fault", vector));
+    BX_CPU_THIS_PTR assert_RF();
+    exception(BX_DB_EXCEPTION, 0); // does not return
+  }
+#endif
+
   /* Excluding page faults and double faults, error_code may not have the
    * least significant bit set correctly. This correction is applied first
    * to make the change transparent to any instrumentation.

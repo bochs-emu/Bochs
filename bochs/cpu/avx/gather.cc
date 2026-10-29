@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2018 Stanislav Shwartsman
+//   Copyright (c) 2011-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -27,6 +27,24 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #if BX_SUPPORT_AVX
+
+#if BX_X86_DEBUGGER
+
+// A data breakpoint pending from an already completed element must be delivered in lieu of
+// a fault triggered by a later element (see exception()), remember it in the non-architectural
+// BX_DEBUG_TRAP_ELEMENT_COMPLETED flag of debug_trap
+#define BX_GATHER_ELEMENT_COMPLETED() {                                \
+  if (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_HIT)                  \
+    BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_TRAP_ELEMENT_COMPLETED;     \
+}
+#define BX_GATHER_DONE() { BX_CPU_THIS_PTR debug_trap &= ~BX_DEBUG_TRAP_ELEMENT_COMPLETED; }
+
+#else
+
+#define BX_GATHER_ELEMENT_COMPLETED()
+#define BX_GATHER_DONE()
+
+#endif
 
 bx_address BX_CPP_AttrRegparmN(2) BX_CPU_C::BxResolveGatherD(bxInstruction_c *i, unsigned element)
 {
@@ -86,6 +104,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_VpsHps(bxInstruction_c *i)
 
     if (mask->ymm32u(n)) {
         dest->ymm32u(n) = read_virtual_dword(i->seg(), BxResolveGatherD(i, n));
+        BX_GATHER_ELEMENT_COMPLETED();
     }
     mask->ymm32u(n) = 0;
   }
@@ -97,6 +116,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_VpsHps(bxInstruction_c *i)
   BX_CLEAR_AVX_HIGH256(i->dst());
   BX_CLEAR_AVX_HIGH256(i->src2());
 
+  BX_GATHER_DONE();
   BX_NEXT_INSTR(i);
 }
 
@@ -137,6 +157,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_VpsHps(bxInstruction_c *i)
 
     if (mask->ymm32u(n)) {
         dest->ymm32u(n) = read_virtual_dword(i->seg(), BxResolveGatherQ(i, n));
+        BX_GATHER_ELEMENT_COMPLETED();
     }
     mask->ymm32u(n) = 0;
   }
@@ -148,6 +169,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_VpsHps(bxInstruction_c *i)
   BX_CLEAR_AVX_HIGH128(i->dst());
   BX_CLEAR_AVX_HIGH128(i->src2());
 
+  BX_GATHER_DONE();
   BX_NEXT_INSTR(i);
 }
 
@@ -188,6 +210,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_VpdHpd(bxInstruction_c *i)
 
     if (mask->ymm64u(n)) {
         dest->ymm64u(n) = read_virtual_qword(i->seg(), BxResolveGatherD(i, n));
+        BX_GATHER_ELEMENT_COMPLETED();
     }
     mask->ymm64u(n) = 0;
   }
@@ -199,6 +222,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_VpdHpd(bxInstruction_c *i)
   BX_CLEAR_AVX_HIGH256(i->dst());
   BX_CLEAR_AVX_HIGH256(i->src2());
 
+  BX_GATHER_DONE();
   BX_NEXT_INSTR(i);
 }
 
@@ -239,6 +263,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_VpdHpd(bxInstruction_c *i)
 
     if (mask->ymm64u(n)) {
         dest->ymm64u(n) = read_virtual_qword(i->seg(), BxResolveGatherQ(i, n));
+        BX_GATHER_ELEMENT_COMPLETED();
     }
     mask->ymm64u(n) = 0;
   }
@@ -250,6 +275,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_VpdHpd(bxInstruction_c *i)
   BX_CLEAR_AVX_HIGH256(i->dst());
   BX_CLEAR_AVX_HIGH256(i->src2());
 
+  BX_GATHER_DONE();
   BX_NEXT_INSTR(i);
 }
 
@@ -284,6 +310,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_MASK_VpsVSib(bxInstruction_c *i
       dest->vmm32u(n) = read_virtual_dword(i->seg(), BxResolveGatherD(i, n));
       opmask &= ~mask;
       BX_WRITE_OPMASK(i->opmask(), opmask);
+      BX_GATHER_ELEMENT_COMPLETED();
     }
   }
 
@@ -293,6 +320,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_MASK_VpsVSib(bxInstruction_c *i
 
   BX_WRITE_OPMASK(i->opmask(), 0);
   BX_CLEAR_AVX_REGZ(i->dst(), len);
+  BX_GATHER_DONE();
   BX_NEXT_INSTR(i);
 }
 
@@ -325,6 +353,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_MASK_VpsVSib(bxInstruction_c *i
       dest->vmm32u(n) = read_virtual_dword(i->seg(), BxResolveGatherQ(i, n));
       opmask &= ~mask;
       BX_WRITE_OPMASK(i->opmask(), opmask);
+      BX_GATHER_ELEMENT_COMPLETED();
     }
   }
 
@@ -338,6 +367,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_MASK_VpsVSib(bxInstruction_c *i
 
   BX_WRITE_OPMASK(i->opmask(), 0);
   BX_CLEAR_AVX_REGZ(i->dst(), len);
+  BX_GATHER_DONE();
   BX_NEXT_INSTR(i);
 }
 
@@ -370,6 +400,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_MASK_VpdVSib(bxInstruction_c *i
       dest->vmm64u(n) = read_virtual_qword(i->seg(), BxResolveGatherD(i, n));
       opmask &= ~mask;
       BX_WRITE_OPMASK(i->opmask(), opmask);
+      BX_GATHER_ELEMENT_COMPLETED();
     }
   }
 
@@ -379,6 +410,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_MASK_VpdVSib(bxInstruction_c *i
 
   BX_WRITE_OPMASK(i->opmask(), 0);
   BX_CLEAR_AVX_REGZ(i->dst(), len);
+  BX_GATHER_DONE();
   BX_NEXT_INSTR(i);
 }
 
@@ -411,6 +443,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_MASK_VpdVSib(bxInstruction_c *i
       dest->vmm64u(n) = read_virtual_qword(i->seg(), BxResolveGatherQ(i, n));
       opmask &= ~mask;
       BX_WRITE_OPMASK(i->opmask(), opmask);
+      BX_GATHER_ELEMENT_COMPLETED();
     }
   }
 
@@ -420,6 +453,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_MASK_VpdVSib(bxInstruction_c *i
 
   BX_WRITE_OPMASK(i->opmask(), 0);
   BX_CLEAR_AVX_REGZ(i->dst(), len);
+  BX_GATHER_DONE();
   BX_NEXT_INSTR(i);
 }
 
@@ -447,6 +481,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERDPS_MASK_VSibVps(bxInstruction_c *
       write_virtual_dword(i->seg(), BxResolveGatherD(i, n), src->vmm32u(n));
       opmask &= ~mask;
       BX_WRITE_OPMASK(i->opmask(), opmask);
+      BX_GATHER_ELEMENT_COMPLETED();
     }
   }
 
@@ -455,6 +490,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERDPS_MASK_VSibVps(bxInstruction_c *
 #endif
 
   BX_WRITE_OPMASK(i->opmask(), 0);
+  BX_GATHER_DONE();
   BX_NEXT_INSTR(i);
 }
 
@@ -482,6 +518,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERQPS_MASK_VSibVps(bxInstruction_c *
       write_virtual_dword(i->seg(), BxResolveGatherQ(i, n), src->vmm32u(n));
       opmask &= ~mask;
       BX_WRITE_OPMASK(i->opmask(), opmask);
+      BX_GATHER_ELEMENT_COMPLETED();
     }
   }
 
@@ -490,6 +527,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERQPS_MASK_VSibVps(bxInstruction_c *
 #endif
 
   BX_WRITE_OPMASK(i->opmask(), 0);
+  BX_GATHER_DONE();
   BX_NEXT_INSTR(i);
 }
 
@@ -517,6 +555,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERDPD_MASK_VSibVpd(bxInstruction_c *
       write_virtual_qword(i->seg(), BxResolveGatherD(i, n), src->vmm64u(n));
       opmask &= ~mask;
       BX_WRITE_OPMASK(i->opmask(), opmask);
+      BX_GATHER_ELEMENT_COMPLETED();
     }
   }
 
@@ -525,6 +564,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERDPD_MASK_VSibVpd(bxInstruction_c *
 #endif
 
   BX_WRITE_OPMASK(i->opmask(), 0);
+  BX_GATHER_DONE();
   BX_NEXT_INSTR(i);
 }
 
@@ -552,6 +592,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERQPD_MASK_VSibVpd(bxInstruction_c *
       write_virtual_qword(i->seg(), BxResolveGatherQ(i, n), src->vmm64u(n));
       opmask &= ~mask;
       BX_WRITE_OPMASK(i->opmask(), opmask);
+      BX_GATHER_ELEMENT_COMPLETED();
     }
   }
 
@@ -560,6 +601,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERQPD_MASK_VSibVpd(bxInstruction_c *
 #endif
 
   BX_WRITE_OPMASK(i->opmask(), 0);
+  BX_GATHER_DONE();
   BX_NEXT_INSTR(i);
 }
 

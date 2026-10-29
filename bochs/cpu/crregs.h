@@ -196,6 +196,13 @@ struct bx_dr6_t {
 #define BX_DEBUG_SINGLE_STEP_BIT      (1 << 14)
 #define BX_DEBUG_TRAP_TASK_SWITCH_BIT (1 << 15)
 
+// NOT ARCHITECTURAL: Bochs internal flag kept in debug_trap only, never written to DR6,
+// pending debug exceptions VMCS field or FRED event data.
+// Set by V[P]GATHER*/V[P]SCATTER* when a data breakpoint is pending from an already completed
+// element - such breakpoint is delivered in lieu of a fault triggered by a later element.
+// Cleared together with debug_trap on any event delivery or VM exit.
+#define BX_DEBUG_TRAP_ELEMENT_COMPLETED (1u << 31)
+
   IMPLEMENT_CRREG_ACCESSORS(BD, 13);
   IMPLEMENT_CRREG_ACCESSORS(BS, 14);
   IMPLEMENT_CRREG_ACCESSORS(BT, 15);
