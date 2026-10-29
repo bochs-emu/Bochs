@@ -80,7 +80,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_VpsHps(bxInstruction_c *i)
   //     128 bit => 4
   //     256 bit => 8
 
-  unsigned n, num_elements = DWORD_ELEMENTS(i->getVL());
+  unsigned n, len = i->getVL(), num_elements = DWORD_ELEMENTS(len);
 
   for (n=0; n < num_elements; n++) {
     if (mask->ymm32s(n) < 0)
@@ -89,19 +89,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_VpsHps(bxInstruction_c *i)
       mask->ymm32u(n) = 0;
   }
 
+  // MASK[MAXVL-1:VL] is cleared before gathering any element
+  BX_CLEAR_AVX_REGZ(i->src2(), len);
+
 #if BX_SUPPORT_ALIGNMENT_CHECK
   unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
   BX_CPU_THIS_PTR alignment_check_mask = 0;
 #endif
 
-  for (n=0; n < 8; n++)
+  for (n=0; n < num_elements; n++)
   {
-    if (n >= num_elements) {
-        mask->ymm32u(n) = 0;
-        dest->ymm32u(n) = 0;
-        continue;
-    }
-
     if (mask->ymm32u(n)) {
         dest->ymm32u(n) = read_virtual_dword(i->seg(), BxResolveGatherD(i, n));
         BX_GATHER_ELEMENT_COMPLETED();
@@ -113,8 +110,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_VpsHps(bxInstruction_c *i)
   BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
 #endif
 
-  BX_CLEAR_AVX_HIGH256(i->dst());
-  BX_CLEAR_AVX_HIGH256(i->src2());
+  BX_CLEAR_AVX_REGZ(i->dst(), len);
 
   BX_GATHER_DONE();
   BX_NEXT_INSTR(i);
@@ -133,7 +129,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_VpsHps(bxInstruction_c *i)
   //     256 bit => 4
 
   BxPackedYmmRegister *mask = &BX_YMM_REG(i->src2()), *dest = &BX_YMM_REG(i->dst());
-  unsigned n, num_elements = QWORD_ELEMENTS(i->getVL());
+  unsigned n, len = i->getVL(), num_elements = QWORD_ELEMENTS(len);
 
   for (n=0; n < num_elements; n++) {
     if (mask->ymm32s(n) < 0)
@@ -142,19 +138,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_VpsHps(bxInstruction_c *i)
       mask->ymm32u(n) = 0;
   }
 
+  // MASK[MAXVL-1:VL/2] is cleared before gathering any element
+  for (; n < 4; n++)
+    mask->ymm32u(n) = 0;
+  BX_CLEAR_AVX_HIGH128(i->src2());
+
 #if BX_SUPPORT_ALIGNMENT_CHECK
   unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
   BX_CPU_THIS_PTR alignment_check_mask = 0;
 #endif
 
-  for (n=0; n < 4; n++)
+  for (n=0; n < num_elements; n++)
   {
-    if (n >= num_elements) {
-        mask->ymm32u(n) = 0;
-        dest->ymm32u(n) = 0;
-        continue;
-    }
-
     if (mask->ymm32u(n)) {
         dest->ymm32u(n) = read_virtual_dword(i->seg(), BxResolveGatherQ(i, n));
         BX_GATHER_ELEMENT_COMPLETED();
@@ -166,8 +161,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_VpsHps(bxInstruction_c *i)
   BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
 #endif
 
+  for (n=num_elements; n < 4; n++)
+    dest->ymm32u(n) = 0;
   BX_CLEAR_AVX_HIGH128(i->dst());
-  BX_CLEAR_AVX_HIGH128(i->src2());
 
   BX_GATHER_DONE();
   BX_NEXT_INSTR(i);
@@ -186,7 +182,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_VpdHpd(bxInstruction_c *i)
   //     256 bit => 4
 
   BxPackedYmmRegister *mask = &BX_YMM_REG(i->src2()), *dest = &BX_YMM_REG(i->dst());
-  unsigned n, num_elements = QWORD_ELEMENTS(i->getVL());
+  unsigned n, len = i->getVL(), num_elements = QWORD_ELEMENTS(len);
 
   for (n=0; n < num_elements; n++) {
     if (mask->ymm64s(n) < 0)
@@ -195,19 +191,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_VpdHpd(bxInstruction_c *i)
       mask->ymm64u(n) = 0;
   }
 
+  // MASK[MAXVL-1:VL] is cleared before gathering any element
+  BX_CLEAR_AVX_REGZ(i->src2(), len);
+
 #if BX_SUPPORT_ALIGNMENT_CHECK
   unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
   BX_CPU_THIS_PTR alignment_check_mask = 0;
 #endif
 
-  for (unsigned n=0; n < 4; n++)
+  for (n=0; n < num_elements; n++)
   {
-    if (n >= num_elements) {
-        mask->ymm64u(n) = 0;
-        dest->ymm64u(n) = 0;
-        continue;
-    }
-
     if (mask->ymm64u(n)) {
         dest->ymm64u(n) = read_virtual_qword(i->seg(), BxResolveGatherD(i, n));
         BX_GATHER_ELEMENT_COMPLETED();
@@ -219,8 +212,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_VpdHpd(bxInstruction_c *i)
   BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
 #endif
 
-  BX_CLEAR_AVX_HIGH256(i->dst());
-  BX_CLEAR_AVX_HIGH256(i->src2());
+  BX_CLEAR_AVX_REGZ(i->dst(), len);
 
   BX_GATHER_DONE();
   BX_NEXT_INSTR(i);
@@ -239,7 +231,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_VpdHpd(bxInstruction_c *i)
   //     256 bit => 4
 
   BxPackedYmmRegister *mask = &BX_YMM_REG(i->src2()), *dest = &BX_YMM_REG(i->dst());
-  unsigned n, num_elements = QWORD_ELEMENTS(i->getVL());
+  unsigned n, len = i->getVL(), num_elements = QWORD_ELEMENTS(len);
 
   for (n=0; n < num_elements; n++) {
     if (mask->ymm64s(n) < 0)
@@ -248,19 +240,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_VpdHpd(bxInstruction_c *i)
       mask->ymm64u(n) = 0;
   }
 
+  // MASK[MAXVL-1:VL] is cleared before gathering any element
+  BX_CLEAR_AVX_REGZ(i->src2(), len);
+
 #if BX_SUPPORT_ALIGNMENT_CHECK
   unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
   BX_CPU_THIS_PTR alignment_check_mask = 0;
 #endif
 
-  for (n=0; n < 4; n++)
+  for (n=0; n < num_elements; n++)
   {
-    if (n >= num_elements) {
-        mask->ymm64u(n) = 0;
-        dest->ymm64u(n) = 0;
-        continue;
-    }
-
     if (mask->ymm64u(n)) {
         dest->ymm64u(n) = read_virtual_qword(i->seg(), BxResolveGatherQ(i, n));
         BX_GATHER_ELEMENT_COMPLETED();
@@ -272,8 +261,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_VpdHpd(bxInstruction_c *i)
   BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
 #endif
 
-  BX_CLEAR_AVX_HIGH256(i->dst());
-  BX_CLEAR_AVX_HIGH256(i->src2());
+  BX_CLEAR_AVX_REGZ(i->dst(), len);
 
   BX_GATHER_DONE();
   BX_NEXT_INSTR(i);
