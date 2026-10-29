@@ -375,9 +375,11 @@ void bx_fw_cfg_c::process_dma(Bit64u dma_addr)
     Bit16u key = cur_entry & FW_CFG_ENTRY_MASK;
 
     if (key < FW_CFG_MAX_ENTRY && entries[key].data != NULL) {
-      Bit32u to_read = length;
-      if (cur_offset + to_read > entries[key].len) {
+      Bit32u to_read = 0;
+      // cur_offset may be past the end after a SKIP operation
+      if (cur_offset < entries[key].len) {
         to_read = entries[key].len - cur_offset;
+        if (to_read > length) to_read = length;
       }
 
       // Write data to guest memory in page-sized chunks
