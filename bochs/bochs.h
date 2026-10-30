@@ -400,6 +400,19 @@ enum {
 
 void bx_center_print(FILE *file, const char *line, unsigned maxwidth);
 
+// integer base 2 logarithm (index of the most significant set bit), returns 0 for x=0
+BX_CPP_INLINE Bit32u ilog2(Bit32u x)
+{
+  Bit32u count = 0;
+  while(x>>=1) count++;
+  return count;
+}
+
+BX_CPP_INLINE bool is_power_of_2(Bit64u x)
+{
+  return (x & (x - 1)) == 0;
+}
+
 #include "misc/bswap.h"
 
 #endif  /* BX_BOCHS_H */

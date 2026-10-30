@@ -34,6 +34,9 @@
 #  define BX_MEM_THIS this->
 #endif
 
+// size of memory block in bytes
+#define BX_MEM_BLOCK_SIZE (size_t(1) << BX_MEM_THIS block_size_bits)
+
 class BX_CPU_C;
                                        // 512K BIOS ROM @0xfff80000
 const Bit32u BIOSROMSZ = (1 << 22);    //   4M BIOS ROM @0xffc00000, must be a power of 2
@@ -75,7 +78,7 @@ BOCHSAPI void dbg_invalidate_smc_pages(bx_phy_address addr, unsigned len);
 class BOCHSAPI BX_MEMORY_STUB_C : public logfunctions {
 protected:
   Bit64u  len, allocated;  // could be > 4G
-  Bit32u  block_size;      // individual block size, must be power of 2
+  Bit32u  block_size_bits; // log2 of individual block size (block size must be power of 2)
   Bit8u   *actual_vector;
   Bit8u   *vector;   // aligned correctly
   Bit8u  **blocks;

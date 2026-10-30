@@ -100,10 +100,10 @@ void ramfile_save_handler(void *devptr, FILE *fp)
   for (Bit32u idx = 0; idx < num_blocks; idx++) {
     if ((BX_MEM(0)->blocks[idx]) && (BX_MEM(0)->blocks[idx] != BX_MEM(0)->swapped_out))
     {
-      bx_phy_address address = bx_phy_address(idx) * BX_MEM_THIS block_size;
+      bx_phy_address address = bx_phy_address(idx) << BX_MEM_THIS block_size_bits;
       if (fseeko64(fp, address, SEEK_SET))
         BX_PANIC(("FATAL ERROR: Could not seek to 0x" FMT_PHY_ADDRX " in overflow file!", address));
-      if (1 != fwrite (BX_MEM(0)->blocks[idx], BX_MEM_THIS block_size, 1, fp))
+      if (1 != fwrite (BX_MEM(0)->blocks[idx], BX_MEM_BLOCK_SIZE, 1, fp))
         BX_PANIC(("FATAL ERROR: Could not write at 0x" FMT_PHY_ADDRX " in overflow file!", address));
     }
   }
@@ -128,8 +128,8 @@ Bit64s memory_param_save_handler(void *devptr, bx_param_c *param)
 #endif
     // Return the block offset into the array
     Bit64u val = (Bit64u) (BX_MEM(0)->blocks[blk_index] - BX_MEM(0)->vector);
-    if ((val & (BX_MEM_THIS block_size-1)) == 0)
-       return val / BX_MEM_THIS block_size;
+    if ((val & (BX_MEM_BLOCK_SIZE-1)) == 0)
+       return val >> BX_MEM_THIS block_size_bits;
   } else if (!strcmp(pname, "flash_data")) {
     bool ret = false;
     if (BX_MEM_THIS flash_modified) {
@@ -166,7 +166,7 @@ void memory_param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
         BX_MEM(0)->blocks[blk_index] = NULL;
         return;
       }
-      BX_MEM(0)->blocks[blk_index] = BX_MEM(0)->vector + val * BX_MEM_THIS block_size;
+      BX_MEM(0)->blocks[blk_index] = BX_MEM(0)->vector + (val << BX_MEM_THIS block_size_bits);
 #if BX_LARGE_RAMFILE
       BX_MEM(0)->read_block(blk_index);
 #endif
