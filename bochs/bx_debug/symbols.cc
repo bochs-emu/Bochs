@@ -118,18 +118,17 @@ context_t* context_t::get_context(bx_address i)
 symbol_entry_t* context_t::get_symbol_entry(bx_address ip)
 {
   symbol_entry_t probe(ip, 0);
-  // find the first symbol whose address is greater than ip.
   if (m_syms.empty ())
       return 0;
+  // find the first symbol whose address is greater than ip,
+  // the symbol before it (if any) is the one containing ip.
   sym_set_t::iterator iter = m_syms.upper_bound(&probe);
 
-  if (iter == m_syms.end()) { // No symbol found
+  if (iter == m_syms.begin()) { // ip is below the first symbol
     return 0;
   }
 
   --iter;
-  if(iter == m_syms.end())
-      return 0;
   return *iter;
 }
 
@@ -217,7 +216,7 @@ const char* bx_dbg_disasm_symbolic_address(bx_address xip, bx_address base)
   if (!entr) {
     return 0;
   }
-  snprintf (buf, 80, "%s+%" FMT_64 "x", entr->name, (base+xip) - entr->start);
+  snprintf (buf, 80, "%s+%" FMT_64 "x", entr->name, (Bit64u) ((base+xip) - entr->start));
   return buf;
 }
 

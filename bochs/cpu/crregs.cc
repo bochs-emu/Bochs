@@ -631,6 +631,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR4(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rq(bxInstruction_c *i)
 {
+#if BX_SUPPORT_APX
+  if (i->dst() > 8) {
+    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
   if (CPL!=0) {
     BX_ERROR(("%s: #GP(0) if CPL is not 0", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -761,6 +768,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rq(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR0(bxInstruction_c *i)
 {
+#if BX_SUPPORT_APX
+  if (i->src() > 8) {
+    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
   if (CPL!=0) {
     BX_ERROR(("%s: #GP(0) if CPL is not 0", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -882,6 +896,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
     if(SVM_CR_WRITE_INTERCEPTED(0)) Svm_Vmexit(SVM_VMEXIT_CR0_WRITE);
+    // LMSW treats the selective CR0 write intercept as non-selective (intercepts regardless of the value being written)
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_CR0_WRITE_NO_TS_MP)) Svm_Vmexit(SVM_VMEXIT_CR0_SEL_WRITE);
   }
 #endif
 
@@ -1074,7 +1090,6 @@ bool BX_CPU_C::SetCR0(bxInstruction_c *i, bx_address val)
           return false;
         }
       }
-      BX_CPU_THIS_PTR efer.set_LMA(1);
     }
   }
   else if (BX_CPU_THIS_PTR cr0.get_PG() && ! pg) {
@@ -1082,15 +1097,9 @@ bool BX_CPU_C::SetCR0(bxInstruction_c *i, bx_address val)
       BX_ERROR(("SetCR0(): attempt to leave 64 bit mode directly to legacy mode !"));
       return false;
     }
-    if (BX_CPU_THIS_PTR efer.get_LMA()) {
-      if (BX_CPU_THIS_PTR cr4.get_PCIDE()) {
-        BX_ERROR(("SetCR0(): attempt to leave 64 bit mode with CR4.PCIDE set !"));
-        return false;
-      }
-      BX_CPU_THIS_PTR efer.set_LMA(0);
-
-      // clear upper part of RIP when leaving 64-bit long mode
-      BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RIP);
+    if (BX_CPU_THIS_PTR efer.get_LMA() && BX_CPU_THIS_PTR cr4.get_PCIDE()) {
+      BX_ERROR(("SetCR0(): attempt to leave 64 bit mode with CR4.PCIDE set !"));
+      return false;
     }
   }
 #endif  // #if BX_SUPPORT_X86_64
@@ -1134,11 +1143,30 @@ bool BX_CPU_C::SetCR0(bxInstruction_c *i, bx_address val)
   }
 #endif
 
+#if BX_SUPPORT_X86_64
+  // all #GP checks and SVM intercepts passed, commit long mode activation change
+  if (! BX_CPU_THIS_PTR cr0.get_PG() && pg) {
+    if (BX_CPU_THIS_PTR efer.get_LME())
+      BX_CPU_THIS_PTR efer.set_LMA(1);
+  }
+  else if (BX_CPU_THIS_PTR cr0.get_PG() && ! pg) {
+    if (BX_CPU_THIS_PTR efer.get_LMA()) {
+      BX_CPU_THIS_PTR efer.set_LMA(0);
+
+      // clear upper part of RIP when leaving 64-bit long mode
+      BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RIP);
+    }
+  }
+#endif
+
 #if BX_CPU_LEVEL >= 6
   if (pg && BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
-    if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
-      BX_ERROR(("SetCR0(): PDPTR check failed !"));
-      return false;
+    // reload PDPTR if needed
+    if ((oldCR0 ^ val_32) & BX_CR0_PDPTE_RELOAD_MASK) {
+      if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
+        BX_ERROR(("SetCR0(): PDPTR check failed !"));
+        return false;
+      }
     }
   }
 #endif
@@ -1162,7 +1190,8 @@ bool BX_CPU_C::SetCR0(bxInstruction_c *i, bx_address val)
   // Modification of PG,PE flushes TLB cache according to docs.
   // Additionally, the TLB strategy is based on the current value of
   // WP, so if that changes we must also flush the TLB.
-  if ((oldCR0 & 0x80010001) != (val_32 & 0x80010001)) {
+  // The TLB also caches memory type of the page which depends on CR0.CD.
+  if ((oldCR0 ^ val_32) & BX_CR0_FLUSH_TLB_MASK) {
     TLB_flush(); // Flush Global entries also
 #if BX_SUPPORT_PKEYS
     set_PKeys(BX_CPU_THIS_PTR pkru, BX_CPU_THIS_PTR pkrs); // recalculate protection keys due to CR0.WP change
@@ -1394,12 +1423,14 @@ bool BX_CPU_C::SetCR4(bxInstruction_c *i, bx_address val)
 
 #if BX_CPU_LEVEL >= 6
   // Modification of PGE,PAE,PSE,PCIDE,SMEP and etc flushes TLB cache according to docs.
-  if ((val & BX_CR4_FLUSH_TLB_MASK) != (BX_CPU_THIS_PTR cr4.get() & BX_CR4_FLUSH_TLB_MASK)) {
-    // reload PDPTR if needed
+  if ((val ^ BX_CPU_THIS_PTR cr4.get()) & BX_CR4_FLUSH_TLB_MASK) {
     if (BX_CPU_THIS_PTR cr0.get_PG() && temp_cr4.get_PAE() && !long_mode()) {
-      if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
-        BX_ERROR(("SetCR4(): PDPTR check failed !"));
-        return false;
+      // reload PDPTR if needed
+      if ((val ^ BX_CPU_THIS_PTR cr4.get()) & BX_CR4_PDPTE_RELOAD_MASK) {
+        if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
+          BX_ERROR(("SetCR4(): PDPTR check failed !"));
+          return false;
+        }
       }
     }
 #if BX_SUPPORT_X86_64
@@ -1931,7 +1962,18 @@ void BX_CPU_C::xsave_xrestor_init(void)
   }
 #endif
 
-  // XCR0[19]: APX state (not implemented)
+#if BX_SUPPORT_APX
+  // XCR0[19]: APX state
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_APX)) {
+    xsave_restore[xcr0_t::BX_XCR0_APX_BIT].len    = XSAVE_APX_STATE_LEN;
+    xsave_restore[xcr0_t::BX_XCR0_APX_BIT].offset = XSAVE_APX_STATE_OFFSET;
+    xsave_restore[xcr0_t::BX_XCR0_APX_BIT].attr   = 0;
+    xsave_restore[xcr0_t::BX_XCR0_APX_BIT].xstate_in_use_method = &BX_CPU_C::xsave_apx_state_xinuse;
+    xsave_restore[xcr0_t::BX_XCR0_APX_BIT].xsave_method = &BX_CPU_C::xsave_apx_state;
+    xsave_restore[xcr0_t::BX_XCR0_APX_BIT].xrstor_method = &BX_CPU_C::xrstor_apx_state;
+    xsave_restore[xcr0_t::BX_XCR0_APX_BIT].xrstor_init_method = &BX_CPU_C::xrstor_init_apx_state;
+  }
+#endif
 
 #if BX_SUPPORT_AMX
   // XCR0[20]: SCALEDATA state
@@ -2004,6 +2046,10 @@ Bit32u BX_CPU_C::get_xcr0_allow_mask(void)
     allowMask |= BX_XCR0_XTILE_BITS_MASK;
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_ACE))
     allowMask |= BX_XCR0_SCALEDATA_MASK;
+#endif
+#if BX_SUPPORT_APX
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_APX))
+    allowMask |= BX_XCR0_APX_MASK;
 #endif
   return allowMask;
 }

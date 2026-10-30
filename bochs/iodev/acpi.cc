@@ -244,15 +244,16 @@ void bx_acpi_ctrl_c::reset(unsigned type)
   }
 
   // Map the ACPI I/O windows only when the BAR is configured (non-zero base).
+  // A window mapped before the reset is unmapped if the BAR is now cleared.
   pmbar = ReadHostDWordFromLittleEndian((Bit32u*) &BX_ACPI_THIS pci_conf[0x40]);
   smbar = ReadHostDWordFromLittleEndian((Bit32u*) &BX_ACPI_THIS pci_conf[0x90]);
-  if ((pmbar & 0xffc0) != 0) {
+  if (((pmbar & 0xffc0) != 0) || (BX_ACPI_THIS s.pm_base != 0)) {
     DEV_pci_set_base_io(BX_ACPI_THIS_PTR, read_handler, write_handler,
                         &BX_ACPI_THIS s.pm_base,
                         &BX_ACPI_THIS pci_conf[0x40],
                         64, &acpi_pm_iomask[0], "ACPI PM base", 1);
   }
-  if ((smbar & 0xfff0) != 0) {
+  if (((smbar & 0xfff0) != 0) || (BX_ACPI_THIS s.sm_base != 0)) {
     DEV_pci_set_base_io(BX_ACPI_THIS_PTR, read_handler, write_handler,
                         &BX_ACPI_THIS s.sm_base,
                         &BX_ACPI_THIS pci_conf[0x90],

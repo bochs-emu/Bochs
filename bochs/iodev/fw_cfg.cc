@@ -93,7 +93,7 @@ PLUGIN_ENTRY_FOR_MODULE(fw_cfg)
 // Constructor
 bx_fw_cfg_c::bx_fw_cfg_c()
 {
-  put("FW_CFG", "FWCFG");
+  put("fw_cfg", "FWCFG");
   file_dir = NULL;
   file_count = 0;
 }
@@ -375,9 +375,11 @@ void bx_fw_cfg_c::process_dma(Bit64u dma_addr)
     Bit16u key = cur_entry & FW_CFG_ENTRY_MASK;
 
     if (key < FW_CFG_MAX_ENTRY && entries[key].data != NULL) {
-      Bit32u to_read = length;
-      if (cur_offset + to_read > entries[key].len) {
+      Bit32u to_read = 0;
+      // cur_offset may be past the end after a SKIP operation
+      if (cur_offset < entries[key].len) {
         to_read = entries[key].len - cur_offset;
+        if (to_read > length) to_read = length;
       }
 
       // Write data to guest memory in page-sized chunks
@@ -415,6 +417,14 @@ void bx_fw_cfg_c::process_dma(Bit64u dma_addr)
       control &= ~FW_CFG_DMA_CTL_READ;
       BX_ERROR(("fw_cfg DMA: invalid entry 0x%04x", key));
     }
+  }
+
+  // Handle WRITE operation - all items are read-only, report an error
+  // (the WRITE bit must be cleared, otherwise the firmware waits forever)
+  if (control & FW_CFG_DMA_CTL_WRITE) {
+    BX_ERROR(("fw_cfg DMA: write to entry 0x%04x not supported", cur_entry));
+    control |= FW_CFG_DMA_CTL_ERROR;
+    control &= ~FW_CFG_DMA_CTL_WRITE;
   }
 
   // Handle SKIP operation

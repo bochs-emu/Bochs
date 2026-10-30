@@ -36,7 +36,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ANDN_GdBdEdR(bxInstruction_c *i)
 
   op1_32 = ~op1_32 & op2_32;
 
-  SET_FLAGS_OSZAxC_LOGIC_32(op1_32); // keep PF unchanged
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAxC_LOGIC_32(op1_32); // keep PF unchanged
 
   BX_WRITE_32BIT_REGZ(i->dst(), op1_32);
 
@@ -62,8 +65,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSI_BdEdR(bxInstruction_c *i)
 
   op1_32 = (-op1_32) & op1_32;
 
-  SET_FLAGS_OSZAxC_LOGIC_32(op1_32); // keep PF unchanged
-  set_CF(tmpCF);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+  {
+    SET_FLAGS_OSZAxC_LOGIC_32(op1_32); // keep PF unchanged
+    set_CF(tmpCF);
+  }
 
   BX_WRITE_32BIT_REGZ(i->dst(), op1_32);
 
@@ -77,8 +85,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSMSK_BdEdR(bxInstruction_c *i)
 
   op1_32 = (op1_32-1) ^ op1_32;
 
-  SET_FLAGS_OSZAxC_LOGIC_32(op1_32); // keep PF unchanged
-  set_CF(tmpCF);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+  {
+    SET_FLAGS_OSZAxC_LOGIC_32(op1_32); // keep PF unchanged
+    set_CF(tmpCF);
+  }
 
   BX_WRITE_32BIT_REGZ(i->dst(), op1_32);
 
@@ -92,8 +105,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSR_BdEdR(bxInstruction_c *i)
 
   op1_32 = (op1_32-1) & op1_32;
 
-  SET_FLAGS_OSZAxC_LOGIC_32(op1_32); // keep PF unchanged
-  set_CF(tmpCF);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+  {
+    SET_FLAGS_OSZAxC_LOGIC_32(op1_32); // keep PF unchanged
+    set_CF(tmpCF);
+  }
 
   BX_WRITE_32BIT_REGZ(i->dst(), op1_32);
 
@@ -164,9 +182,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BEXTR_GdEdBdR(bxInstruction_c *i)
   Bit32u op1_32 = bextrd(BX_READ_32BIT_REG(i->src1()), start, len);
   BX_WRITE_32BIT_REGZ(i->dst(), op1_32);
 
-  clearEFlagsOSZAPC();
-  if (op1_32 == 0)
-    assert_ZF();
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+  {
+    clearEFlagsOSZAPC();
+    if (op1_32 == 0)
+      assert_ZF();
+  }
 
   BX_NEXT_INSTR(i);
 }
@@ -185,8 +208,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BZHI_GdEdBdR(bxInstruction_c *i)
     tmpCF = 1;
   }
 
-  SET_FLAGS_OSZAxC_LOGIC_32(op1_32); // keep PF unchanged
-  set_CF(tmpCF);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+  {
+    SET_FLAGS_OSZAxC_LOGIC_32(op1_32); // keep PF unchanged
+    set_CF(tmpCF);
+  }
 
   BX_WRITE_32BIT_REGZ(i->dst(), op1_32);
 

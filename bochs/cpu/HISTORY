@@ -9,16 +9,38 @@ Legend:
 -------------------------------------------------------------------------
 Changes after Bochs 3.1:
 
+! Implemented support for APX (Advanced Performance Extensions) new instructions, still not enabled in any CPU model
 ! Implemented AI Compute Extensions (ACE) emulation according AI Compute Extensions (ACE) Specification rev1.16.2 from x86 Ecosystem Advisory Group
 ! Implemented support for Intel MPX ISA extension
+! Implemented SVM TSC Ratio MSR (TSC scaling for SVM guests), enabled in Zambezi, Trinity and Ryzen models
+! Implemented SVM Virtual GIF (VGIF) feature, enabled in Ryzen model
+! Implemented SVM VMSAVE and VMLOAD virtualization feature, enabled in Ryzen model
+! Implemented SVM Supervisor Shadow Stack restrictions (SSSCheck) feature, enabled in Zen3 model
+! Implemented SVM SPEC_CTRL virtualization and AMD speculation control (spec_ctrl_amd), enabled in Zen3 model
+! Implemented SVM Decode Assist feature and enabled in all CPUID models featuring SVM
+! Implemented MSR_CORE_THREAD_COUNT (0x35) for Intel Nehalem and later cpu models, reports the configured number of cores and threads
+! CPUDB: Added AMD Zen3 (Vermeer) CPUID model (features X2APIC, CLWB, UMIP, PKU, CET, VAES, RDPID + introduces CPUID 0x80000021: AMD Extended Feature Identification 2), extra SVM features not implemented yet
+- CPUID: fixed CPUID 0x8000001E: Extended Topology leaf + CPUID 0x80000008[ECX] for all AMD models that support it
+- CPUID: models reporting TCE in CPUID (Ryzen, Trinity) did not allow setting EFER.TCE (#GP on WRMSR), enable TCE for all Family 15h+ AMD models (Zambezi, Trinity, Ryzen)
+- CPUID: avoid reporting SVM LBR Virtualization CPUID 0x8000000A.EDX[1] - LBRs are not implemented yet, avoid reporting Data breakpoint extension for Ryzen - it is not implemented yet
+- CPUID: do not report SEV capabilities through CPUID leaf 0x8000001F on Ryzen, SEV is not supported
+- CPUID: CPUID.(EAX=0DH,ECX=1):EBX (XSAVES area size) ignored the 64-byte alignment of AMX TILECFG/TILEDATA and SCALEDATA components in the compacted format
+- CPUID: add std leaf 7 ECX/EDX calculation to CPUID models which support std leaf 7 but have nothing to report there (ECX/EDX reported=0), required for correct CET reporting after using add_features="cet"
+- CPUID: correctly report presence of subleaf=1 in CPUID Leaf 0x0000001E: AMX: TMUL Information Main leaf (when present)
 - AMX: TILELOADD/TILESTORED must #UD if memory operand is encoded without SIB byte, use zero stride when SIB has no index register (was using RSP)
-- AVX/AVX-512: VGATHER/VSCATTER instructions must #UD if memory operand is encoded without VSIB byte
+- GATHER: VGATHER*/VSCATTER* suspended by a fault: deliver data breakpoint #DB pending from already completed elements in lieu of the fault (with RF=1) instead of dropping it
+- GATHER: VEX encoded VGATHER* must clear mask register bits above VL before gathering any element (also when suspended by a fault)
+- AVX/AVX-512/GATHER: VGATHER*/VSCATTER*, masked loads/stores (VMASKMOV*, VPMASKMOV*, EVEX masked memory operands, AMX TILELOADD/TILESTORED rows) suppressed #AC through overriding alignment check mask which was left cleared when an element faulted
 + AMX-FP8: rewrite TDPBF8PS/TDPHF8PS/TDPBHF8PS/TDPHBF8PS to match SDM: they must accumulate FP8 products exactly in fixed point over the whole K dimension with single rounding to FP32
 - AMX-AVX512: TCVTROWPS2PHH/TCVTROWPS2PHL should allow to produce FP16 denormal outputs instead of flushing them to zero
 - AMX-AVX512: TILEMOVROW/TCVTROW* must return zero for elements beyond configured tile row width and zero TILECFG.start_row also when the row is out of range
 - AMX-COMPLEX: fixed NaN propagation priority in TCMMIMFP16PS instruction to match Intel SDE
 - AMX-AVX512/ACE: TILEMOVROW/TCVTROW*/TILEMOVCOL with general purpose register in EVEX.vvvv must #UD if EVEX.V' != 1
 - AMX-FP16/AMX-COMPLEX: TDPFP16PS/TCMMRLFP16PS/TCMMIMFP16PS must not treat FP32 srcdest denormals as zero (matching Intel SDE)
++ AVX512_OPMASK: Fixed behavior of KSHIFTLW/KSHIFTRW instructions with shift count = 15
++ AMX: STTILECFG instruction should be encoded with VEX.W0, the bug had VEX.W1 encoding
+- AMX: LDTILECFG/STTILECFG must #UD if ModRM.reg != 0
+- AVX/AVX-512: VGATHER/VSCATTER instructions must #UD if memory operand is encoded without VSIB byte
 + AVX512_FP16: VCVTTPH2DQ/VCVTTPH2UDQ/VCVTTPH2QQ/VCVTTPH2UQQ instructions were mapped into their non-truncating forms and therefore used MXCSR rounding instead of truncation
 + AVX512_FP16: FP16 instructions must ignore MXCSR.DAZ for FP16 inputs and MXCSR.FUZ for FP16 outputs (matching Intel SDE)
 - AVX10.2: VCVT2PS2PHX must update MXCSR flags (as if all exceptions are masked, without generating #XM) and flush FP16 denormal outputs when MXCSR.FUZ=1 regardless of MXCSR.UM (matching Intel SDE)
@@ -37,11 +59,16 @@ Changes after Bochs 3.1:
 - SSE/AVX: Fixed PSRLQ and PSRAVQ instructions with shift count = 64
 - SSE: PSHUFLW instruction should be supported under SSE2 instead of SSE
 - POPCNT: fix POPCNT instruction to depend on its own (already existing) CPUID feature flags and not SSE4.2
+- MISALIGNED_SSE: CVTPD2PI with memory operand ignored AMD misaligned SSE mode (MXCSR.MM) and required 16-byte alignment
+- FFXSR: FXRSTOR in FFXSR mode (EFER.FFXSR=1) must still restore MXCSR, only restore of XMM registers is skipped
++ FMA4/XOP: four operand FMA4, VPCMOV, VPPERM and VPERMIL2PS/PD instructions had second and third source operands swapped (VEX.W0 must take src2 from ModRM.r/m and src3 from imm8[7:4], VEX.W1 the opposite)
++ TBM: BLCFILL/BLSFILL/BLCS/TZMSK/BLCIC/BLSIC/T1MSKC/BLCMSK/BLCI were decoded from XOP map 8 instead of map 9 with inverted XOP.W, XOP.W is ignored outside 64-bit mode, TBM is #UD in real and v8086 mode
+- MOVRS: legacy MOVRS must allow 66H operand size prefix (MOVRS r16, m16 was #UD), AVX10.2 VMOVRSB/W/D/Q must #UD outside of 64-bit mode
+- RAO-INT: AADD/AAND/AOR/AXOR checked for non-WB memory type #GP only after the read access was done (device read side effects for MMIO), check it before any memory access
 - REP_MOVSW/D/Q: Each MOVSD or MOVSQ iteration must read one complete source dword or qword before writing it to the destination. Do not allow copying partial words/dword/qwords.
 - AVX: Fixed order of unmasked exceptions handling in VDPPS instruction. VDPPS must determine SIMD floating-point exceptions separately for each multiply and add operation in execution order.
 - x86-64: implement ENTER and LEAVE instructions with OperandSize=16 and StackSize=64
 - AES_AVX: Enforce AES feature flag in cpu to make sure these are disabled when AES gets disabled
-+ AVX512_OPMASK: Fixed behavior of KSHIFTLW/KSHIFTRW instructions with shift count = 15
 - AVX-512: VPBROADCASTMB2Q/VPBROADCASTMW2D instructions should require AVX512_CD
 - AVX-512: VPCMPB/VPCMPUB/VPCMPW/VPCMPUW instructions should require AVX512_BW
 + AVX-512: Fix boundary conditions of write mask calculation for VPCOMPRESSB/VPCOMPRESSW instructions
@@ -53,7 +80,6 @@ Changes after Bochs 3.1:
 + x87: fixed unmasked underflow/overflow corner cases for FSCALE x87 instruction
 - Legacy: fixed broken CR2 register initialization in reset() method, CR2 contained garbage value at the beginning instead of being initialized to 0
 - Legacy: swap order of memory accesses in CMPSB/CMPSW/CMPSD/CMPSQ instructions to match real HW: access ES:EDI first and seg:ESI later
-- VMX: Fixed typo in VMXON #GP(0) condition
 + AVX-512/AVX512_FP16: fixed corner case correctness issue for VRNDSCALE* instructions with denormal operand
 + AVX-512/AVX512_FP16: fixed corner case correctness issue for VRCPSH/VRCPPH and VRCP14* instructions
 + AVX-512/AVX512_FP16: fixed corner case correctness issue for VRSQRTSH/VRSQRTPH and VRSQRT14* instructions
@@ -64,24 +90,82 @@ Changes after Bochs 3.1:
 - APIC: APIC read from an address crossing 32-bit boundary actually returns all zero in HW
 - SMC: Fixed potential SMC detection problem while running guest code with AMX enabled (XCR0.TILECFG=XCR0.TILEDATA=1)
 + Fixed incorrect assertion in assert_checks: require CS.L and CS.D_B to be mutually exclusive only in long mode, CS.L is silently ignored outside of long mode
++ CET: same privilege far CALL and 64-bit interrupt without stack switch did the shadow stack push after loading new CS, if the push faulted new CS was left loaded with old RIP (SVM decode assist also recorded 0 guest instruction bytes)
++ CET: far CALL through call gate to more privilege and interrupt to inner privilege or through IST did the shadow stack switch and push after loading new CS, if they faulted new CS/CPL was left loaded with old RIP
++ VMX: vmcs.shadow_stack_prematurely_busy was not initialized on reset, until the first VMEXIT a stale value could suppress convertible EPT violation #VE or set exit reason bit 25 (shadow stack prematurely busy)
++ VMX: EPTP index VM-execution control was not loaded on VM entry, #VE information area reported stale or uninitialized EPTP index unless the guest executed VMFUNC EPTP switching
+- VMX: posted-interrupt processing with empty PIR and VIRR set RVI to 0xFF and delivered a bogus virtual interrupt 0xFF (instead should keep RVI unchanged when VIRR is empty)
+- VMX: VM entry injecting pending MTF VM exit (event type 7, vector 0) must not clear guest interruptibility state, pending debug exceptions and activity state
+- VMX: #VE delivery wrote the 16-bit EPTP index as a qword, overwriting bytes 34..39 of the virtualization-exception information area
+- VMX: EPT violation exit qualification with mode-based execute control for data accesses did not report user-execute permission in bit 6 and set it in bit 13 (shadow-stack access) instead
+- VMX: posted-interrupt processing must update RVI from the highest PIR bit only (not from VIRR), VIRR is not modified for empty PIR dwords
+- VMX: posted-interrupt processing in HLT state must return the logical processor to HLT state unless a virtual interrupt was recognized and can be delivered
+- VMX: VM entry with unrestricted guest must fail if "IA-32e mode guest" is set with guest CR0.PG=0 or if guest RFLAGS.VM is set with CR0.PE=0
++ VMX: pending virtual interrupt was delivered with RFLAGS.IF=0 when external interrupt arrived (instead of external-interrupt VM exit)
+- VMX: TPAUSE/UMWAIT physical delay computed with TSC multiplier less than 1.0 could overflow 64-bit and cause assertion panic, saturate the delay instead
+- VMX: VM entry with zero VMX-preemption timer value did not reset the timer, VM exit saved stale non-zero timer value from previous VM entry
+- VMX: the first execution of PAUSE at CPL0 after VM entry must always be considered the first PAUSE in a loop for PAUSE-loop exiting
+- VMX: INVEPT/INVVPID must #UD when EPT/VPID is not supported and must check for unsupported type (VMfail) before reading the memory operand
+- VMX: VM entry must restrict events injected into HLT activity state to: external interrupt, NMI, #DB, #MC and pending MTF
+- VMX: instruction fetch from the APIC-access page must cause APIC-access VM exit (was BX_PANIC)
+- VMX: with virtual-interrupt delivery and without APIC-register virtualization only aligned reads/writes of VEOI (0B0H) and VICR_LO (300H) must be virtualized
+- VMX: guest-physical accesses to paging structures/PDPTEs overlapping the APIC-access page must always cause APIC-access VM exit (were virtualized or reported as linear accesses)
+- VMX: virtualized WRMSR to x2APIC self-IPI MSR (83FH) must store the value at virtual-APIC page offset 3F0H also when self-IPI virtualization is performed
+- VMX: after a virtualized write to the APIC-access page any read and any write with different offset or size in the same operation must cause APIC-access VM exit
+- SMM/VMX: RSM must restore the state of blocking by NMI from before SMI (was always unblocking NMIs), and virtual-NMI blocking when returning to VMX non-root operation with "virtual NMIs" control set
+- VMX: injected pending MTF VM exit with "monitor trap flag" control set was delayed until after the first guest instruction and did not wake from HLT state
+- VMX/INVPCID: INVVPID and INVPCID individual-address invalidation must accept any address canonical to the max supported linear address width (57-bit with LA57) regardless of current paging mode
+- VMX: bit 12 set in EPT 2M/1G page entry must cause EPT misconfiguration (bits 20:12 / 29:12 are reserved, there is no PAT bit in EPT entries)
+- VMX: VMLAUNCH/VMRESUME must VMfailInvalid when the current VMCS is a shadow VMCS
+- VMX: EPT violation on guest paging-structure access with EPT A/D enabled must report both data read and data write in exit qualification bits 0 and 1
++ SVM: Fixed VMRUN consistency checks
++ SVM: LMSW must treat the selective CR0 write intercept as non-selective (intercept regardless of the value written)
++ SVM: RSM intercept must be checked before #UD for RSM executed outside of SMM (SMM containerization)
++ SVM: host EFLAGS.TF on VMRUN must cause #DB trap on the host side right after #VMEXIT (was taken one instruction later) and must not leak into the guest, VMRUN completion clears host EFLAGS.RF
++ SVM: with V_INTR_MASKING physical interrupts must be masked by the host EFLAGS.IF regardless of the guest EFLAGS.IF, HLT with EFLAGS.IF=0 must be woken up by such unmasked interrupt (also for VMX guest with external-interrupt exiting)
 + SVM: VMRUN didn't not load the guest CR2 from the VMCB (Debian 12 amd64 running KVM (kvm_amd) failed inside Bochs)
 + SVM: SVM VMEXIT loading host state should reset debug_trap and inhibit_mask
 + SVM: interrupt shadow lost at a #DB intercept, after STI in the guest a #DB intercept at the next boundary saved VMCB INTERRUPT_SHADOW = 0 in Bochs, 1 on real Zen 4
 + SVM: V_IRQ never taken when the guest is entered with IF = 1 (VMRUN loads the guest RFLAGS before in_svm_guest = true, so handleInterruptMaskChange() evaluated the masks as the host)
 + SVM: AMD hardware doesn't enforce TSS386 to enter long mode (Debian 12 amd64 running kvm_amd with npt=1 fails: kvm_amd leaves TR = TSS286_BUSY and its 64-bit guest triple-faults while booting)
 + SVM: An intercepted #DB has already updated DR6 and leaves RF clear (AMD APM vol. 2, 15.12)
+- SVM: EXITINTINFO was not recorded for INTn, ICEBP, external/virtual interrupt and NMI delivery (stale value reported) and recorded 2nd exception instead of prior event on intercepted #DF
+- SVM: task switch intercept must be checked before new TSS limit checks (Zen 5 takes the intercept with TSS limit 0x67 and CR4.CET=1)
+- SVM: PAUSE filter threshold of zero must select count only PAUSE filter mode (was resetting the PAUSE filter count on every PAUSE)
+- SVM: nRIP must be saved only for instruction, MSR and IOIO intercepts and exceptions caused by INT3, INTO and BOUND, reset to zero for all other intercepts
+- SVM: correctly handle DR6 reserved bits
+- SVM: implemented CET state management - guest S_CET, SSP and ISST_ADDR are loaded by VMRUN and saved on #VMEXIT, VMRUN CET consistency checks
+- SVM: nested page table walk used guest CR4.LA57 instead of host CR4.LA57 to select 4-level or 5-level nested paging
+- SVM: event injection of exception (TYPE=3) must fail with VMEXIT_INVALID for vectors not corresponding to an exception supported by the CPU (9, 15, #VE, reserved vectors and #CP without CET)
+- SVM: injected software interrupt (TYPE=4) and #BP/#OF exception (TYPE=3) must push the next RIP from the VMCB nRIP field when NRIP save is supported (like INTn/INT3/INTO trap)
+- SVM: injected exception must push RFLAGS.RF=1 for faults (except #DB, #TS pushes RF=0 matching Zen HW) and RF=0 for #BP/#OF and software interrupts
+- SVM: CR0 write intercept VM exit must happen before intercepted MOV CR0 changed EFER.LMA and RIP[63:32]
+- SYSENTER: check SYSENTER_EIP/SYSENTER_ESP canonicality before modifying any state
 - SYSENTER/SYSEXIT: SYSENTER/SYSEXIT are not allowed in long mode on AMD
+- SYSCALL/SYSRET: SYSRET must clear RFLAGS.RF and RFLAGS.VM instead of loading them from R11
+- PVI: #GP when both EFLAGS.VIF and EFLAGS.VIP are set at the beginning of CPL3 instruction was not checked in 64-bit mode
+- DR6: delivery of #DB exception must not clear DR6.BT flag (only B0-B3 are updated, BD, BS and BT are never cleared)
+- PAE: MOV to CR4 must reload PDPTEs only when modifying CR4.PAE, CR4.PGE, CR4.PSE, CR4.SMEP or CR4.CET / MOV to CR0 and LMSW must reload PDPTEs only when modifying CR0.PG, CR0.CD, CR0.NW or CR0.WP
+- PSE-36: bit 21 of 32-bit paging 4M PDE (PSE-36) must remain reserved when physical address width is wider than 40 bit
 - SYSCALL/SYSRET: SYSCALL whose SFMASK clears TF takes no single-step trap, SYSRET takes the single-step trap by the TF it loads
+- MEMTYPE: VMX/SVM structure accesses reported the physical address as memory type instead of the MTRR memory type
+- MEMTYPE: PAE PDPTE loads must use WB memory type combined with MTRR memory type (were reported with INVALID memory type)
+- MEMTYPE: flush TLB when CR0.CD, PAT or MTRR MSRs are modified, the TLB caches the memory type of the page
+- MEMTYPE: SVM nested paging must combine guest PAT memory type with host PAT memory type of the nested page table entry and honor host CR0.CD, nested page table accesses were reported with INVALID memory type
+- MEMTYPE: VMX guest-physical accesses with EPT must use EPT memory type in place of MTRR memory type and honor EPT IPAT bit (were using MTRR memory type)
 - CPUID: allow configuring i486dx4 model without x87 using cpu exclude_features
-! SVM: Implemented SVM Decode Assist feature and enabled in all CPUID models featuring SVM
 - FRED: Fixed reserved bits checking for MSR_IA32_FRED_CONFIG (0x1d4), bug was introduced in Bochs 3.1 release
 - MTRR: Fixed reserved bits checking for MSR_MTRR_DEFTYPE (0x2ff)
+- MTRR/PAT: fixed effective memory type for MTRR WT + PAT WP (WP) and MTRR WP + PAT UC- (WC) combinations according to SDM
 - MSR: enforce reserved bits checking for MSR_TSX_AUX (0xc0000103), MSR_IA32_UMWAIT_CONTROL (0xe1), MSR_IA32_PKRS (0x6e1), MSR_IA32_USER_MSR_CTL (0x1c) and MSR_IA32_FEATURE_CONTROL (0x3a)
 - MSR: writing 0 value to read only MSR was passing validation checks reaching BX_PANIC
+- MSR: MSR with all bits reserved (e.g. MSR_IA32_XSS without any supported XSS feature) was treated as read only, writing 0 must be allowed
 - MSR: writes to MSR_APERF/MSR_MPERF were ignored, so "write to clear" didn't work. Now any write clears the counter, and hardware reset clears it too.
 - MSR: MSR_IA32_EFER on CPU models without EFER: writing 0 used to succeed. It's now #GP(0)
 - SVM: BX_SVM_VM_CR_MSR write: the "SVMDIS while EFER.SVME=1 #GP" check tested the current VM_CR value instead of the value being written.
-- Legacy/AMD: AMD specific behavior always clear EFLAGS.RF when #DB exception occurs, however Intel pushed EFLAGS.RF=1 when rep string iteration was interrupted by #DB
+- Legacy/AMD: AMD specific behavior - always clear EFLAGS.RF when #DB exception occurs, however Intel pushed EFLAGS.RF=1 when rep string iteration was interrupted by #DB
+- Legacy/AMD: AMD specific behavior - SYSRET keep SS base, limit, attributes unchanged, must load flat 32-bit SS (base 0, 4G limit, B=1) on Intel CPUs
+- Legacy/AMD: legacy mode SYSCALL from virtual-8086 mode must clear EFLAGS.VM and enter the target code with CPL=0
 + XSAVE/AMX: fixed incorrect detection of TILEDATA xinuse
 + XSAVE/AMX: fixed XSAVE of the TILECFG state
 + XSAVE/AMX: use correct value for BX_TILE_MAX_ROWS while XSAVE/XRSTOR TILEDATA state (code was using BX_TILE_REGISTERS instead of BX_TILE_MAX_ROWS)
@@ -89,7 +173,6 @@ Changes after Bochs 3.1:
 - AMX: failed LDTILECFG or XRSTOR of TILECFG state should not reset TILEDATA and SCALEDATA
 + AMX: added missing reset of AMX state on hardware reset
 - MSR: reset MSR IA32_XSS only on hardware reset, unchanged on INIT
-- CPUID: correctly report presence of subleaf=1 in CPUID Leaf 0x0000001E: AMX: TMUL Information Main leaf (when present)
 - URDMSR/UWRMSR: missing #GP(0) if MSR address bits [63:14] are not all zero
 + VMX: fix VM-exit info for URDMSR, UWRMSR and immediate RDMSR/WRMSRNS + save VM-exit instruction information (bits 6:3 = data register operand)
 + VMX: exit reason 85 is the WRMSRNS immediate form only, legacy WRMSRNS exits with WRMSR basic reason (32) and qualification 1
@@ -144,10 +227,50 @@ Changes after Bochs 3.1:
 - LASS: implicit supervisor-mode accesses (GDT, LDT, IDT, TSS, UPID, UITT, USER_MSR bitmap) must cause LASS violation regardless of RFLAGS.AC
 - SMAP: implicit supervisor-mode accesses (GDT, LDT, IDT, TSS, UPID ...) to user pages must cause #PF regardless of RFLAGS.AC
 - XSAVE: make sure XRSTOR/XRSTORS always end trace, updating state like PKRS might require re-fetch after XRSTOR/XRSTORS execution
-- SVM: correctly handle DR6 reserved bits
+- XSAVE: compacted XRSTOR/XRSTORS probed the XSAVE area using RFBM layout instead of XCOMP_BV layout, could cause spurious #PF beyond the end of the XSAVE area
 - Legacy: MOV Sreg,r/m and MOV r/m,Sreg must ignore REX.R in 64-bit mode (was generating #UD)
-- VMX: MOV DR8-DR15 must #UD before checking for MOV-DR VM exit
 - EVEX: #UD if EVEX.R'=0 for GPR encoded in ModRM.reg, EVEX.X is ignored for GPR encoded in ModRM.rm (was accessing RIP/internal registers)
+- VMX: MOV DR8-DR15 must #UD before checking for MOV-DR VM exit
+- VMX: VM-exit instruction information for RDRAND/RDSEED reported address size instead of operand size
+- VMX: TPAUSE/UMWAIT VM exit must save VM-exit instruction information (bits 6:3 = source register operand)
+- VMX: VM-exit instruction information for LIDT/LGDT/SIDT/SGDT must report operand size in bit 11
+- VMX: Fixed typo in VMXON #GP(0) condition
+- VMX: RDMSRLIST/WRMSRLIST must VM exit unconditionally when "use MSR bitmaps" is 0, before any memory access (no VM exit was taken when RCX was 0)
+- VMX: VM entry with "load PKRS" did not check reserved bits 63:32 of host/guest IA32_PKRS fields
+- VMX: XSETBV at CPL>0 must cause #GP(0), higher priority than VMX VMEXIT (SVM intercept, in opposite, has higher priority)
+- PKU/PKS: selection between PKRU and PKRS ignored U/S bit of the leaf paging entry (supervisor page under user page tables was checked against PKRU)
+- PKU/PKS: PKRU change by XRSTOR or PKRS change by WRMSR did not invalidate the stack cache (stack accesses ignored the new protection keys rights), WRPKRU no longer flushes the TLB
+- PKU/PKS: separate TLB protection key masks for user (PKRU) and supervisor (PKRS) pages, PKRU access disable must block supervisor accesses to user pages cached in the TLB
+- PAT/PCID: memory type of the PML4/PML5 table access must use PAT entry 0 when CR4.PCIDE=1 (CR3 PCID bits were used as PCD/PWT)
+- MWAIT/WAITPKG: write to the last byte of the monitored cache line did not wake up the monitor (off-by-one in monitor range check)
++ MWAIT/WAITPKG: direct host access to the monitored page was not disabled in the TLB (physical address was used as linear for invalidation), stores through cached host pointers missed the monitor + MONITOR also no longer wakes and disarms other processors
+- MWAIT/WAITPKG: address-range monitoring must be cleared after MWAIT/UMWAIT completes if the processor did not enter the optimized state
+- MWAIT/WAITPKG: reset all address-range monitors (and wake up from MWAIT state) on every far control transfer (any CS load, including interrupts, IRET/far RET, SYSENTER/SYSEXIT/SYSCALL/SYSRET and task switch), FRED event delivery/ERETU/ERETS, user interrupt delivery/UIRET, VMX/SVM transitions and SMM entry/RSM
+- MWAIT/WAITPKG: MWAITX/UMWAIT/TPAUSE timer was not cancelled when an interrupt woke up the processor without being delivered, later timer expiration disarmed a newer monitor and woke an unrelated MWAIT
+- MWAIT/WAITPKG: UMWAIT/TPAUSE must set RFLAGS.CF when woken up by expiration of the OS time limit (IA32_UMWAIT_CONTROL)
+- MONITOR/MWAIT: extensions operand is RCX only in 64-bit mode and ECX otherwise, MONITORX/MWAITX always use 32-bit ECX (stale RCX[63:32] caused #GP)
+- SVM: MONITOR/MONITORX on non-WB memory skipped the MONITOR intercept check
+- SVM: conditional MWAIT/MWAITX intercept must be taken only if the instruction would enter the low-power state (monitor armed by matching MONITOR/MONITORX, or monitorless MWAIT)
+- VMX: virtual-interrupt delivery must wake the logical processor from HLT and MWAIT
+- MWAIT/VMX: MWAIT with ECX[0]=1 and EFLAGS.IF=0 must not enter the optimized state when a pending virtual interrupt is recognized
+- INVPCID: #GP(0) for CPL != 0 must have priority over VM exit due to "INVLPG exiting" in VMX guest
+- INVPCID/INVEPT/INVVPID: the type register operand is always 64-bit in 64-bit mode (was read as 32-bit without REX.W)
+- LAPIC_EXT: AMD IER masked in-service vectors as well, EOI/PPR ignored in-service vectors disabled in IER (IER only applies to pending interrupts)
+- LAPIC: Self and All-including-self IPI shorthands must only send Fixed interrupts, other delivery modes are invalid and ignored
+- LAPIC: x2APIC physical IPI destination with low byte 0xFF (e.g. 0x1FF) was treated as broadcast, only 0xFFFFFFFF is x2APIC broadcast
+- LAPIC: LVT delivery status and LINT0/LINT1 remote IRR bits are read only, guest writes to them were stored and read back
+- LAPIC: APIC errors never generated the LVT Error interrupt, generate it on the first error after ESR write (ESR write rearms it)
+- LAPIC: IPI or x2APIC SELF IPI with illegal vector (0-15) must set Send Illegal Vector in the ESR of the sender
+- LAPIC: pending interrupt of the same priority class as the in-service interrupt raised INTR and was acknowledged as spurious interrupt, deliver only if the priority class is higher than the PPR
+- LAPIC: INIT must keep IA32_APIC_BASE and only reinitialize the local APIC registers
+- LAPIC: change of the LVT timer mode field must disarm the timer and initialize Initial Count and Current Count registers (IA32_TSC_DEADLINE read a stale value after switching to TSC-deadline mode)
+- LAPIC: timer Divide Configuration change while the timer counts did not reschedule the timer (wrong current count, BX_PANIC when the divider was reduced), continue from the current count with the new divider
++ LAPIC: ExtINT interrupts from the IOAPIC were queued in IRR/ISR (ISR never cleared as ExtINT handler does not EOI the local APIC, vectors < 16 from the 8259 rejected), deliver ExtINT bypassing IRR/ISR and processor priority
++ LAPIC: EOI was ignored when the in-service vector number matched the spurious interrupt vector (spurious interrupt never enters the ISR, no need to check for the spurious vector)
++ LAPIC: TSC-deadline timer compared the deadline with system time instead of the guest TSC (interrupt storm after hardware reset or TSC write), clear IA32_TSC_DEADLINE when the timer fires
++ LAPIC: allow local APIC to be re-enabled after clearing APIC global enable bit in IA32_APIC_BASE MSR, also #GP on attempt to switch directly from disabled APIC to x2APIC mode
++ LAPIC: EOI cleared TMR after broadcasting the EOI to the IOAPIC, wiping the TMR bit of a still asserted level triggered interrupt re-delivered by that EOI.
+         The next EOI was not broadcast and the IOAPIC Remote IRR got stuck (Windows Vista boot hang with GeForce).
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):
@@ -223,8 +346,8 @@ Changes in Bochs 3.1 (August 23, 2026):
 - VMX: fix VMX guest activity state reported on VMEXIT occured during HLT (should be BX_ACTIVITY_STATE_HLT=1)
 + CPUID: Update Arrow Lake CPUID - enable missing leaf CPUID leaf=7.subleaf=1[EDX]
 - x87: Implemented MS-DOS Compatibility mode for handling x87 FPU exceptions, FERR# and IGNNE# pins enabled when 'extfpuirq' plugin is enabled
-+ i486dx4: expose CR4 to support VME/PVI
 - x86-64: attempt to leave x86-64 long mode with 64-bit RIP value by writing to CR0 truncates RIP to 32-bit value
++ i486dx4: expose CR4 to support VME/PVI
 - i486: fixed reset value of dr6 register
 
 -------------------------------------------------------------------------

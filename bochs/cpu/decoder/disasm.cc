@@ -41,7 +41,7 @@
 
 extern int fetchDecode32(const Bit8u *fetchPtr, bool is_32, bxInstruction_c *i, unsigned remainingInPage);
 #if BX_SUPPORT_X86_64
-extern int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage);
+extern int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage, bool apx_ok);
 #endif
 unsigned evex_displ8_compression(const bxInstruction_c *i, unsigned ia_opcode, unsigned src, unsigned type, unsigned vex_w);
 
@@ -69,25 +69,47 @@ char* dis_putc(char *disbufptr, char symbol)
   return disbufptr;
 }
 
-static const char *general_16bit_regname[16] = {
+static const char *general_16bit_regname[BX_GENERAL_REGISTERS] = {
     "ax",  "cx",  "dx",   "bx",   "sp",   "bp",   "si",   "di",
-    "r8w", "r9w", "r10w", "r11w", "r12w", "r13w", "r14w", "r15w"
+#if BX_SUPPORT_X86_64
+    "r8w", "r9w", "r10w", "r11w", "r12w", "r13w", "r14w", "r15w",
+#if BX_SUPPORT_APX
+    "r16w", "r17w", "r18w", "r19w", "r20w", "r21w", "r22w", "r23w",
+    "r24w", "r25w", "r26w", "r27w", "r28w", "r29w", "r30w", "r31w"
+#endif
+#endif
 };
 
-static const char *general_32bit_regname[17] = {
+static const char *general_32bit_regname[BX_GENERAL_REGISTERS+1] = {
     "eax", "ecx", "edx",  "ebx",  "esp",  "ebp",  "esi",  "edi",
-    "r8d", "r9d", "r10d", "r11d", "r12d", "r13d", "r14d", "r15d", "eip"
-};
-
-static const char *general_64bit_regname[17] = {
-    "rax", "rcx", "rdx", "rbx", "rsp", "rbp", "rsi", "rdi",
-    "r8",  "r9",  "r10", "r11", "r12", "r13", "r14", "r15", "rip"
+#if BX_SUPPORT_X86_64
+    "r8d", "r9d", "r10d", "r11d", "r12d", "r13d", "r14d", "r15d",
+#if BX_SUPPORT_APX
+    "r16d", "r17d", "r18d", "r19d", "r20d", "r21d", "r22d", "r23d",
+    "r24d", "r25d", "r26d", "r27d", "r28d", "r29d", "r30d", "r31d",
+#endif
+#endif
+    "eip"
 };
 
 #if BX_SUPPORT_X86_64
-static const char *general_8bit_regname_rex[16] = {
+static const char *general_64bit_regname[BX_GENERAL_REGISTERS+1] = {
+    "rax", "rcx", "rdx", "rbx", "rsp", "rbp", "rsi", "rdi",
+    "r8",  "r9",  "r10", "r11", "r12", "r13", "r14", "r15",
+#if BX_SUPPORT_APX
+    "r16", "r17", "r18", "r19", "r20", "r21", "r22", "r23",
+    "r24", "r25", "r26", "r27", "r28", "r29", "r30", "r31",
+#endif
+    "rip"
+};
+
+static const char *general_8bit_regname_rex[BX_GENERAL_REGISTERS] = {
     "al",  "cl",  "dl",   "bl",   "spl",  "bpl",  "sil",  "dil",
-    "r8b", "r9b", "r10b", "r11b", "r12b", "r13b", "r14b", "r15b"
+    "r8b", "r9b", "r10b", "r11b", "r12b", "r13b", "r14b", "r15b",
+#if BX_SUPPORT_APX
+    "r16b", "r17b", "r18b", "r19b", "r20b", "r21b", "r22b", "r23b",
+    "r24b", "r25b", "r26b", "r27b", "r28b", "r29b", "r30b", "r31b",
+#endif
 };
 #endif
 
@@ -293,16 +315,25 @@ char *resolve_memsize(char *disbufptr, const bxInstruction_c *i, unsigned src_in
   else if (src_index == BX_SRC_RM) {
     switch(src_type) {
     case BX_GPR8:
+#if BX_SUPPORT_EVEX
+    case BX_KMASK_REG_B:
+#endif
       disbufptr = dis_sprintf(disbufptr, "byte ptr ");
       break;
 
     case BX_GPR16:
     case BX_SEGREG:
+#if BX_SUPPORT_EVEX
+    case BX_KMASK_REG_W:
+#endif
       disbufptr = dis_sprintf(disbufptr, "word ptr ");
       break;
 
     case BX_GPR32:
     case BX_MMX_HALF_REG:
+#if BX_SUPPORT_EVEX
+    case BX_KMASK_REG_D:
+#endif
       disbufptr = dis_sprintf(disbufptr, "dword ptr ");
       break;
 
@@ -351,14 +382,19 @@ char *resolve_memref_intel(char *disbufptr, const bxInstruction_c *i, unsigned s
 
   // seg:[base + index*scale + disp]
   disbufptr = dis_sprintf(disbufptr, "%s:", segment_name[i->seg()]);
+#if BX_SUPPORT_X86_64
   if (i->as64L()) {
     disbufptr = resolve_memref_intel(disbufptr, i, general_64bit_regname, src_index);
   }
-  else if (i->as32L()) {
-    disbufptr = resolve_memref_intel(disbufptr, i, general_32bit_regname, src_index);
-  }
-  else {
-    disbufptr = resolve_memref_intel(disbufptr, i, general_16bit_regname, src_index);
+  else
+#endif
+  {
+    if (i->as32L()) {
+      disbufptr = resolve_memref_intel(disbufptr, i, general_32bit_regname, src_index);
+    }
+    else {
+      disbufptr = resolve_memref_intel(disbufptr, i, general_16bit_regname, src_index);
+    }
   }
   return disbufptr;
 }
@@ -367,14 +403,19 @@ char *resolve_memref_gas(char *disbufptr, const bxInstruction_c *i, unsigned src
 {
   // %%seg: $disp[base, index, scale)
   disbufptr = dis_sprintf(disbufptr, "%%%s:", segment_name[i->seg()]);
+#if BX_SUPPORT_X86_64
   if (i->as64L()) {
     disbufptr = resolve_memref_gas(disbufptr, i, general_64bit_regname, src_index);
   }
-  else if (i->as32L()) {
-    disbufptr = resolve_memref_gas(disbufptr, i, general_32bit_regname, src_index);
-  }
-  else {
-    disbufptr = resolve_memref_gas(disbufptr, i, general_16bit_regname, src_index);
+  else
+#endif
+  {
+    if (i->as32L()) {
+      disbufptr = resolve_memref_gas(disbufptr, i, general_32bit_regname, src_index);
+    }
+    else {
+      disbufptr = resolve_memref_gas(disbufptr, i, general_16bit_regname, src_index);
+    }
   }
   return disbufptr;
 }
@@ -396,10 +437,20 @@ char *disasm_regref(char *disbufptr, const bxInstruction_c *i, unsigned src_num,
     else
 #endif
       disbufptr = dis_sprintf(disbufptr, "%s", general_8bit_regname[srcreg]);
+#if BX_SUPPORT_APX
+    // APX NDD form zeroes the upper bits of 8/16-bit destination register
+    if (src_num == 0 && i->getApxEvexND())
+      disbufptr = dis_sprintf(disbufptr, "{zu}");
+#endif
     break;
 
   case BX_GPR16:
     disbufptr = dis_sprintf(disbufptr, "%s", general_16bit_regname[srcreg]);
+#if BX_SUPPORT_APX
+    // APX NDD form zeroes the upper bits of 8/16-bit destination register
+    if (src_num == 0 && i->getApxEvexND())
+      disbufptr = dis_sprintf(disbufptr, "{zu}");
+#endif
     break;
 
   case BX_GPR32:
@@ -445,6 +496,9 @@ char *disasm_regref(char *disbufptr, const bxInstruction_c *i, unsigned src_num,
 
 #if BX_SUPPORT_EVEX
   case BX_KMASK_REG:
+  case BX_KMASK_REG_B:
+  case BX_KMASK_REG_W:
+  case BX_KMASK_REG_D:
     disbufptr = dis_sprintf(disbufptr, "k%d", srcreg);
     assert(srcreg < 8);
     if (src_num == 0 && i->opmask()) {
@@ -484,6 +538,24 @@ char *disasm_regref(char *disbufptr, const bxInstruction_c *i, unsigned src_num,
     disbufptr = dis_sprintf(disbufptr, "dr%d", srcreg);
     break;
 
+#if BX_SUPPORT_APX
+  case BX_DFV: {
+    // this is DFV - default flags value
+    unsigned dfv = i->dfv();
+    unsigned CF = dfv & 0x1, PF = CF;
+    unsigned ZF = (dfv >> 1) & 0x1;
+    unsigned SF = (dfv >> 2) & 0x1;
+    unsigned OF = (dfv >> 3) & 0x1;
+    disbufptr = dis_sprintf(disbufptr, "dfv=0x%x {%c%c%ca%c%c}", i->dfv(),
+        OF ? 'O' : 'o',
+        SF ? 'S' : 's',
+        ZF ? 'Z' : 'z',
+        PF ? 'P' : 'p',
+        CF ? 'C' : 'c');
+    break;
+  }
+#endif
+
   default:
     if (src_type != BX_NO_REGISTER)
       disbufptr = dis_sprintf(disbufptr, "(unknown source type %d)", src_type);
@@ -499,20 +571,14 @@ char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_t
   case BX_DIRECT_MEMREF_B:
     disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR8);
     break;
-  case BX_DIRECT_MEMREF_W:
-    disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR16);
-    break;
-  case BX_DIRECT_MEMREF_D:
-    disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR32);
-    break;
-  case BX_DIRECT_MEMREF_Q:
-    disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR64);
+  case BX_DIRECT_MEMREF_OSIZE:
+    disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, i->os64L() ? BX_GPR64 : (i->os32L() ? BX_GPR32 : BX_GPR16));
     break;
   default: break;
   };
 
   if (style == BX_DISASM_GAS)
-    if(src_type != BX_DIRECT_MEMREF_B && src_type != BX_DIRECT_MEMREF_W && src_type != BX_DIRECT_MEMREF_D && src_type != BX_DIRECT_MEMREF_Q)
+    if(src_type != BX_DIRECT_MEMREF_B && src_type != BX_DIRECT_MEMREF_OSIZE)
       disbufptr = dis_sprintf(disbufptr, "$");
 
   switch(src_type) {
@@ -530,16 +596,23 @@ char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_t
     break;
 
   case BX_IMMD:
+    disbufptr = dis_sprintf(disbufptr, "0x%08x", i->Id());
+    break;
+
   case BX_IMMBD_SE: // 8-bit signed value sign extended to 32-bit size
 #if BX_SUPPORT_X86_64
     if (i->os64L())
-      disbufptr = dis_sprintf(disbufptr, "0x" FMT_ADDRX64, (Bit64u) (Bit32s) i->Id());
+      disbufptr = dis_sprintf(disbufptr, "0x" FMT_ADDRX64, (Bit64u) (Bit64s) i->sId());
     else
 #endif
       disbufptr = dis_sprintf(disbufptr, "0x%08x", i->Id());
     break;
 
 #if BX_SUPPORT_X86_64
+  case BX_IMMDQ_SE: // 32-bit signed value sign extended to 64-bit size
+    disbufptr = dis_sprintf(disbufptr, "0x" FMT_ADDRX64, (Bit64u) (Bit64s) i->sId());
+    break;
+
   case BX_IMMQ:
     disbufptr = dis_sprintf(disbufptr, "0x" FMT_ADDRX64, i->Iq());
     break;
@@ -577,9 +650,7 @@ char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_t
     break;
 
   case BX_DIRECT_MEMREF_B:
-  case BX_DIRECT_MEMREF_W:
-  case BX_DIRECT_MEMREF_D:
-  case BX_DIRECT_MEMREF_Q:
+  case BX_DIRECT_MEMREF_OSIZE:
     disbufptr = dis_sprintf(disbufptr, "%s%s:",
      (style == BX_DISASM_GAS) ? "%" : "", segment_name[i->seg()]);
 #if BX_SUPPORT_X86_64
@@ -768,6 +839,12 @@ char* disasm_source(char *disbufptr, unsigned n, bool srcs_used, const bxInstruc
   unsigned src_type = BX_DISASM_SRC_TYPE(src);
   unsigned src_index = BX_DISASM_SRC_ORIGIN(src);
 
+#if BX_SUPPORT_APX
+  // APX ND=0 forms reuse ND=1 handlers with destination duplicated as first source, do not print it twice
+  if (n == 1 && src == BxOpcodesTable[ia_opcode].src[0] && src_type >= BX_GPR8 && src_type <= BX_GPR64)
+    return disbufptr;
+#endif
+
   // type==0 covers both "no operand" (OP_NONE) and "register value not
   // shown" (e.g. OP_NNN, used by SIDT/SLDT/STR to feed nnn into dst()
   // without printing it) -- both are 0 by design.
@@ -787,7 +864,7 @@ char* disasm_source(char *disbufptr, unsigned n, bool srcs_used, const bxInstruc
     if (src_index == BX_SRC_VECTOR_RM) src_type = BX_VMM_REG;
 
     if (src_index == BX_SRC_NONE) {
-      if (src_type <= BX_DIRECT_MEMREF_Q) {
+      if (src_type <= BX_DIRECT_MEMREF_OSIZE) {
         // this is immediate value
         disbufptr = disasm_immediate(disbufptr, i, src_type, style);
       }
@@ -835,6 +912,12 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
   bool is_vector = false;
 #endif
 
+#if BX_SUPPORT_APX
+  if (! strncmp(opname, "APX_", 4)) {
+    opname += 4;
+  }
+#endif
+
   if (! strncmp(opname, "V128_", 5) || ! strncmp(opname, "V256_", 5) || ! strncmp(opname, "V512_", 5) || ! strncmp(opname, "EVEX_", 5)) {
     opname += 5;
 #if BX_SUPPORT_EVEX
@@ -865,6 +948,11 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
   else {
     disbufptr = dis_sprintf(disbufptr, "%s", get_intel_disasm_opcode_name(ia_opcode));
   }
+#if BX_SUPPORT_APX
+  // EVEX.NF=1: no flags update
+  if (i->getApxEvexNF())
+    disbufptr = dis_sprintf(disbufptr, "{nf}");
+#endif
   disbufptr = dis_putc(disbufptr, ' ');
 
   // Step 3: print sources
@@ -896,13 +984,13 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
   return disbufptr;
 }
 
-char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base, bx_address rip, BxDisasmStyle style)
+char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base, bx_address rip, BxDisasmStyle style, bool apx_ok)
 {
   int ret;
 
 #if BX_SUPPORT_X86_64
   if (is_64)
-    ret = fetchDecode64(opcode, i, 16);
+    ret = fetchDecode64(opcode, i, 16, apx_ok);
   else
 #endif
     ret = fetchDecode32(opcode, is_32, i, 16);

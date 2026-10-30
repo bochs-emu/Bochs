@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  I/O memory handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -34,7 +34,21 @@
 #  define BX_MEM_THIS this->
 #endif
 
+// size of memory block in bytes
+#define BX_MEM_BLOCK_SIZE (size_t(1) << BX_MEM_THIS block_size_bits)
+
 class BX_CPU_C;
+
+// memory handlers (MMIO) can be registered only below this physical address,
+// one memory handlers list is kept per megabyte of the memory handlers space
+#if BX_PHY_ADDRESS_LONG
+const Bit64u BX_MEM_HANDLERS_ADDR_LIMIT = BX_CONST64(1) << 36;  // 64GB
+#else
+const Bit64u BX_MEM_HANDLERS_ADDR_LIMIT = BX_CONST64(1) << 32;  // 4GB
+#endif
+
+#define BX_MEM_HANDLERS (BX_MEM_HANDLERS_ADDR_LIMIT >> 20) /* one per megabyte */
+
                                        // 512K BIOS ROM @0xfff80000
 const Bit32u BIOSROMSZ = (1 << 22);    //   4M BIOS ROM @0xffc00000, must be a power of 2
 const Bit32u EXROMSIZE = (0x20000);    // ROMs 0xc0000-0xdffff (area 0xe0000-0xfffff=bios mapped)
@@ -75,7 +89,7 @@ BOCHSAPI void dbg_invalidate_smc_pages(bx_phy_address addr, unsigned len);
 class BOCHSAPI BX_MEMORY_STUB_C : public logfunctions {
 protected:
   Bit64u  len, allocated;  // could be > 4G
-  Bit32u  block_size;      // individual block size, must be power of 2
+  Bit32u  block_size_bits; // log2 of individual block size (block size must be power of 2)
   Bit8u   *actual_vector;
   Bit8u   *vector;   // aligned correctly
   Bit8u  **blocks;
@@ -134,7 +148,6 @@ struct memory_handler_struct {
   void *param;
   bx_phy_address begin;
   bx_phy_address end;
-  Bit16u bitmap;
   bool overlap;
   memory_handler_t read_handler;
   memory_handler_t write_handler;
@@ -184,6 +197,10 @@ private:
 
   BX_MEM_SMF Bit8u flash_read(Bit32u addr);
   BX_MEM_SMF void  flash_write(Bit32u addr, Bit8u data);
+
+  BX_MEM_SMF BX_CPP_INLINE struct memory_handler_struct *get_memory_handlers(bx_phy_address a20addr);
+  BX_MEM_SMF BX_CPP_INLINE struct memory_handler_struct *find_memory_handler(struct memory_handler_struct *memory_handler, bx_phy_address a20addr, bool write);
+  BX_MEM_SMF BX_CPP_INLINE bool is_smram_data_access(bx_phy_address a20addr, bool smm_mode);
 
 public:
   BX_MEM_C();
@@ -244,5 +261,37 @@ public:
 };
 
 BOCHSAPI extern BX_MEM_C bx_mem;
+
+// return list of memory handlers registered for the megabyte containing a20addr,
+// there are no memory handlers beyond BX_MEM_HANDLERS_ADDR_LIMIT
+BX_CPP_INLINE struct memory_handler_struct *BX_MEM_C::get_memory_handlers(bx_phy_address a20addr)
+{
+#if BX_PHY_ADDRESS_LONG
+  if (a20addr >= BX_MEM_HANDLERS_ADDR_LIMIT) return NULL;
+#endif
+  return BX_MEM_THIS memory_handlers[a20addr >> 20];
+}
+
+// return first memory handler in the list starting from <memory_handler> which covers a20addr,
+// for write access only handlers with write_handler are considered
+BX_CPP_INLINE struct memory_handler_struct *BX_MEM_C::find_memory_handler(struct memory_handler_struct *memory_handler, bx_phy_address a20addr, bool write)
+{
+  while (memory_handler) {
+    if (memory_handler->begin <= a20addr && memory_handler->end >= a20addr) {
+      if (!write || memory_handler->write_handler != NULL)
+        return memory_handler;
+    }
+    memory_handler = memory_handler->next;
+  }
+
+  return NULL;
+}
+
+// check if CPU data access to a20addr goes to SMRAM (instead of memory handlers)
+BX_CPP_INLINE bool BX_MEM_C::is_smram_data_access(bx_phy_address a20addr, bool smm_mode)
+{
+  return (a20addr >= 0x000a0000 && a20addr < 0x000c0000) && BX_MEM_THIS smram_available &&
+         (BX_MEM_THIS smram_enable || (smm_mode && !BX_MEM_THIS smram_restricted));
+}
 
 #endif

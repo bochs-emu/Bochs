@@ -3537,6 +3537,13 @@ emulated tick rate itself, so guests that trust CPUID also obtain the true
 rate. The CPUID brand string of the selected model is not affected by this
 option; use the <option>brand_string</option> option to override it.
 </para>
+<para><command>maxphyaddr</command></para>
+<para>
+Emulated maximum physical address width (MAXPHYADDR) in bits, reported in
+CPUID.80000008H:EAX[7:0] and used for reserved physical address bits checks.
+Valid range is 36 to 52, default is 40. This option exists only if Bochs
+compiled with physical address wider than 32 bit.
+</para>
 <para><command>mwait_is_nop</command></para>
 <para>
 When this option is enabled MWAIT will not put the CPU into a sleep state.
@@ -4384,6 +4391,14 @@ and continue), report (print information to the console or log file), or ignore
 </para>
 
 <para>
+In Bochs compiled with the internal debugger the "ask" dialog also offers to
+continue in the debugger. If Bochs was started without the <option>-dbg</option>
+option, this choice activates the debugger at runtime (textconfig and the win32
+dialog, currently with the win32 display library only). Pressing Ctrl-C in the console while Bochs runs without the debugger
+raises a panic, so with action=ask it shows the same dialog.
+</para>
+
+<para>
 It is also possible to specify the 'action' to do for each Bochs facility
 separately (e.g. crash on panics from everything except the CD-ROM, and only
 report those). See the <link linkend="logopts-by-device">log function module table</link>
@@ -4407,12 +4422,21 @@ problem like "could not find hard drive image."
 Examples:
 <screen>
   debugger: log=debugger.out, gui=true
+  debugger: activate=1, gui=true
   debugger: log=/dev/null              (Unix only)
   debugger: log=-
 </screen>
 </para>
 <para>
 This defines the parameters of the Bochs internal debugger.
+</para>
+<para><command>activate</command></para>
+<para>
+If this parameter is set to 'true' or '1' the debugger is started on startup,
+same as the command line option <option>-dbg</option> (the configuration menu
+is skipped). If set to 'false' or '0' (default) Bochs is started without the
+debugger, it could be activated at runtime (currently with the win32 display
+library only, see <xref linkend="internal-debugger">).
 </para>
 <para><command>log</command></para>
 <para>
@@ -4424,8 +4448,11 @@ If you really don't want it, make it /dev/null or '-'.
 If this parameter is set to 'true' or '1' the debugger gui is used instead
 of the command line version. The special value 'globalini' enables the gui
 and forces the usage of an ini file from BXSHARE path. The gui parameter is
-available only if Bochs is built with debugger gui support and the debugger
-is activated with the command line option '-dbg'.
+available only if Bochs is built with debugger gui support. The debugger
+gui starts on startup with the command line option '-dbg' or with the
+<command>activate</command> parameter, without them the debugger gui is
+started when the debugger is activated at runtime (currently with the win32
+display library only).
 </para>
 </section>
 
@@ -5212,7 +5239,7 @@ This enables the GDB stub. See <xref linkend="debugging-with-gdb">.
 </para>
 </section>
 
-<section><title>magic_break</title>
+<section id="bochsopt-magicbreak"><title>magic_break</title>
 <para>
 Example for breaking on "XCHGW %DI, %DI" or "XCHGW %SP, %SP" execution
 <screen>
@@ -5223,9 +5250,15 @@ Note: Windows XP ntldr can cause problems with XCHGW %BX, %BX
 <screen>
   magic_break: enabled=1
 </screen>
-This enables the "magic breakpoint" feature when using the debugger.
-The useless cpu instruction XCHGW REGW, REGW causes Bochs to enter the
+This enables the "magic breakpoint" feature in Bochs compiled with the internal
+debugger. The useless cpu instruction XCHGW REGW, REGW causes Bochs to enter the
 debugger mode. This might be useful for software development.
+If Bochs was started without the debugger enabled (no <option>-dbg</option>
+command line option), the magic breakpoint activates the internal debugger
+and the simulation continues in the debugger mode (currently with the win32
+display library only, otherwise the magic breakpoint is ignored).
+Note: with the win32 display library the magic breakpoint is no longer ignored
+when Bochs is started without <option>-dbg</option>, use <option>enabled=0</option> to disable it.
 <screen>
   cx dx bx sp bp si di
 </screen>
@@ -5775,6 +5808,21 @@ behavoiur of Bochs at runtime if you click on one of these buttons:
 </para></note>
 </listitem>
 <listitem>
+<para>debugger button</para>
+<para>
+  This button is present only if Bochs is compiled with the internal debugger
+  (currently win32 only). If Bochs was started without the <option>-dbg</option>
+  option, it activates the internal debugger at runtime (see
+  <xref linkend="internal-debugger">). If the debugger is active and the simulation
+  is running, it breaks into the debugger like pressing Ctrl-C in the console.
+  The button is disabled while the debugger waits for a command. Activating the
+  debugger releases the mouse capture. When Bochs runs in a classic Windows
+  console, the button also brings the console window with the debugger command
+  line to the foreground (not yet with other terminals like mintty or Windows
+  Terminal).
+</para>
+</listitem>
+<listitem>
 <para>user button</para>
 <para>
   Press this button if you want to send the keyboard shortcut defined with the
@@ -5866,6 +5914,10 @@ will not be received by the OS running in Bochs.
     <entry>Press the Config button</entry>
   </row>
   <row>
+    <entry>d</entry>
+    <entry>Press the Debugger button (win32 only)</entry>
+  </row>
+  <row>
     <entry>f</entry>
     <entry>Toggle windowed / fullscreen mode (sdl, sdl2 and win32 only)</entry>
   </row>
@@ -5939,6 +5991,13 @@ In the runtime configuration you can change the floppy/CD-ROM image or device,
 change the log options or adjust some other settings. If you have trouble with
 a specific device, you can change the log options for this device only to get
 more information (e.g. report debug messages).
+</para>
+<para>
+If Bochs is compiled with the internal debugger and the win32 display library
+is used, the text mode runtime menu has
+the additional choice "Continue and enter debugger" and the win32 runtime dialog
+has a "Debugger" button. Both continue the simulation and activate the internal
+debugger at runtime (or break into it if it is already active).
 </para>
 </section>
 </section>
@@ -6075,6 +6134,11 @@ features enabled at compile time (3rd column).
   <row>
     <entry>ryzen</entry>
     <entry>AMD Ryzen 7 1700</entry>
+    <entry>cpu level 6, x86-64, avx</entry>
+  </row>
+  <row>
+    <entry>zen3_vermeer</entry>
+    <entry>AMD Ryzen 7 5800X</entry>
     <entry>cpu level 6, x86-64, avx</entry>
   </row>
   <row>
@@ -7393,7 +7457,32 @@ From here, you may use the following commands:
   q                           quit debugger and execution
   quit
   exit
+
+  detach                      leave the debugger and continue execution without it
 </screen>
+</para>
+<para>
+The debugger could also be activated at runtime when Bochs was started without
+the <option>-dbg</option> option: a <link linkend="bochsopt-magicbreak">magic breakpoint</link>,
+the <link linkend="headerbar">debugger button</link> in the headerbar or
+the "Continue and enter debugger" choice of the runtime configuration or
+the debugger choice of the <link linkend="bochsopt-logevents">panic dialog</link>
+(log action "ask", also shown for Ctrl-C in the console)
+activates the debugger and the simulation continues in the debugger mode.
+The <command>detach</command> command leaves the debugger and continues the
+simulation at full speed as if Bochs was started without the debugger.
+Breakpoints, watchpoints and other debugger settings are kept but they are
+inactive until the debugger is activated again by one of the methods above or a
+time breakpoint (<command>sb</command>, <command>sba</command>).
+Activating the debugger at runtime is currently supported with the win32
+display library only. It starts the debugger gui if it is selected with the
+<option>gui</option> parameter of the <option>debugger</option> bochsrc option
+(requires the win32 config interface), the command line debugger otherwise.
+With other display
+libraries the debugger could only be started with the <option>-dbg</option>
+option and after <command>detach</command> it cannot be activated again.
+With the debugger gui the <command>detach</command> command keeps the debugger
+gui window open, its Break button activates the debugger again.
 </para>
 </section>
 
@@ -7664,6 +7753,12 @@ Insert a time break point "delta" instructions into the future ("delta" is a 64-
 
 Insert a time break point at "time" ("time" is a 64-bit integer followed by "L", for example 1000L).
 
+A time break point also activates the debugger after the <command>detach</command>
+command, for example <command>sb 1000000</command> followed by <command>detach</command>
+runs the simulation at full speed for 1000000 ticks. Without the debugger the
+time is checked at the end of the instruction trace, the simulation stops
+at the first instruction boundary at or after the requested time.
+
 <screen>print-stack [<varname>num words</varname>]</screen>
 
 Print the <varname>num words</varname> top 16-bit words on the stack. <varname>Num
@@ -7801,7 +7896,22 @@ For example:
 At runtime you need use the command line option <option>-dbg_gui</option> or the
 command option <option>-dbg</option> in combination with the <option>gui</option>
 parameter of the <option>debugger</option> bochsrc option in order to use the GUI
-instead of the command line debugger.
+instead of the command line debugger. The bochsrc line
+<screen>
+  debugger: activate=1, gui=1
+</screen>
+does the same without any command line option.
+</para>
+<para>
+With the win32 display library the GUI debugger can also be started at runtime:
+if Bochs was started without <option>-dbg</option> and the <option>gui</option>
+parameter of the <option>debugger</option> bochsrc option is set, the GUI debugger
+window is opened when the debugger is activated (debugger button, magic breakpoint,
+runtime configuration or panic dialog, see <xref linkend="internal-debugger">).
+The same bochsrc line could also be given on the command line, for example
+<screen>
+  bochsdbg -q -f bochsrc.txt "debugger: gui=1"
+</screen>
 </para>
 <note><para>The wxWidgets port of Bochs always uses this debugger GUI, since the
 command line interface is not available then.

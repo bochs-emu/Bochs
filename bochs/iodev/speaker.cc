@@ -167,6 +167,8 @@ bx_speaker_c::bx_speaker_c()
 {
   put("speaker", "PCSPK");
 
+  // init() may return early (speaker disabled), the destructor needs a valid mode
+  output_mode = BX_SPK_MODE_NONE;
   beep_frequency = 0.0; // Off
 #ifdef __linux__
   consolefd = -1;
@@ -402,12 +404,12 @@ static struct {
 
 DWORD WINAPI BeepThread(LPVOID)
 {
-  static BOOL threadActive = FALSE;
+  static volatile LONG threadActive = 0;
 
-  while (threadActive) Sleep(10);
-  threadActive = TRUE;
+  // only one Beep() at a time, the check and the set must be atomic
+  while (InterlockedExchange(&threadActive, 1) != 0) Sleep(10);
   Beep(beep_info.frequency, beep_info.msec);
-  threadActive = FALSE;
+  InterlockedExchange(&threadActive, 0);
   return 0;
 }
 

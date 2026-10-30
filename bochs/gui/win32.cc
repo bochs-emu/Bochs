@@ -59,6 +59,13 @@ public:
 #if BX_SHOW_IPS
   virtual void show_ips(Bit32u ips_count);
 #endif
+#if BX_DEBUGGER
+  virtual bool debugger_activation_allowed();
+  virtual void set_display_mode(disp_mode_t newmode);
+#if BX_DEBUGGER_GUI
+  virtual bool start_debug_dialog(void);
+#endif
+#endif
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -121,6 +128,8 @@ static BITMAPINFO* bitmap_info=(BITMAPINFO*)0;
 static RGBQUAD* cmap_index;  // indeces into system colormap
 static HBITMAP MemoryBitmap = NULL;
 static HDC MemoryDC = NULL;
+static HDC FontDC = NULL;
+static HGDIOBJ FontDCdefBitmap = NULL;
 static RECT updated_area;
 static BOOL updated_area_valid = FALSE;
 static HWND desktopWindow;
@@ -178,6 +187,8 @@ static BOOL fix_size = FALSE;
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
 static BOOL gui_debug = FALSE;
 static BOOL win32_enh_dbg_global_ini = FALSE;
+// sent by the simulation thread to start the gui debugger in the GUI thread
+#define BX_WM_START_DEBUG_DIALOG (WM_APP + 1)
 #endif
 static HWND hotKeyReceiver = NULL;
 static HWND saveParent = NULL;
@@ -210,9 +221,12 @@ DWORD WINAPI UIThread(PVOID);
 void SetStatusText(unsigned Num, const char *Text, bool active, Bit8u color=0);
 void terminateEmul(int);
 void create_vga_font(void);
-void DrawBitmap(HDC, HBITMAP, int, int, int, int, int, int, Bit8u, Bit8u);
+void DrawBitmap(HBITMAP, int, int, int, int, int, int, Bit8u, Bit8u);
 void updateUpdated(int,int,int,int);
 static void win32_toolbar_click(int x);
+#if BX_DEBUGGER
+static void win32_focus_debugger_console(void);
+#endif
 
 Bit32u win32_to_bx_key[2][0x100] =
 {
@@ -584,6 +598,10 @@ void terminateEmul(int reason)
   x_tilesize = 0;
 
   if (MemoryDC) DeleteDC (MemoryDC);
+  if (FontDC) {
+    SelectObject(FontDC, FontDCdefBitmap);
+    DeleteDC(FontDC);
+  }
   if (MemoryBitmap) DeleteObject (MemoryBitmap);
 
   delete[] (char*)bitmap_info;
@@ -1024,9 +1042,14 @@ DWORD WINAPI UIThread(LPVOID)
     hdc = GetDC(stInfo.simWnd);
     MemoryBitmap = CreateCompatibleBitmap(hdc, win32_max_xres, win32_max_yres);
     MemoryDC = CreateCompatibleDC(hdc);
+    FontDC = CreateCompatibleDC(hdc);
     ReleaseDC(stInfo.simWnd, hdc);
+    if (FontDC) {
+      // remember the default 1x1 bitmap to deselect the font bitmaps later
+      FontDCdefBitmap = GetCurrentObject(FontDC, OBJ_BITMAP);
+    }
 
-    if (MemoryBitmap && MemoryDC) {
+    if (MemoryBitmap && MemoryDC && FontDC) {
       resize_main_window(FALSE);
       ShowWindow(stInfo.mainWnd, SW_SHOW);
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
@@ -1105,12 +1128,27 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       EnterCriticalSection(&stInfo.keyCS);
       enq_key_event(LOWORD(wParam)-101, TOOLBAR_CLICKED);
       LeaveCriticalSection(&stInfo.keyCS);
+#if BX_DEBUGGER
+      if ((unsigned)(LOWORD(wParam)-101) == bx_gui->get_debugger_headerbar_id()) {
+        win32_focus_debugger_console();
+      }
+#endif
     }
     break;
 
   case WM_SETFOCUS:
     SetFocus(stInfo.simWnd);
     return 0;
+
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
+  case BX_WM_START_DEBUG_DIALOG:
+    // gui debugger activated at runtime, the dialog must be created here in
+    // the GUI thread like on startup
+    gui_debug = TRUE;
+    win32_enh_dbg_global_ini = bx_dbg.dbg_gui_globalini;
+    bx_gui->init_debug_dialog(win32_enh_dbg_global_ini);
+    return 0;
+#endif
 
   case WM_KILLFOCUS:
     enq_key_event(0, FOCUS_CHANGED);
@@ -1408,6 +1446,16 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
           toolbar_cmd = BX_TOOLBAR_FLOPPYB;
         } else if (wParam == 'C') {
           toolbar_cmd = BX_TOOLBAR_COPY;
+#if BX_DEBUGGER
+        } else if (wParam == 'D') {
+          // ignored while the debugger button is disabled (debugger prompt)
+          Bit8u hbar_id = bx_gui->get_debugger_headerbar_id();
+          if ((hbar_id < (unsigned) win32_toolbar_entries) &&
+              SendMessage(hwndTB, TB_ISBUTTONENABLED, hbar_id + 101, 0)) {
+            toolbar_cmd = BX_TOOLBAR_DEBUGGER;
+            win32_focus_debugger_console();
+          }
+#endif
         } else if (wParam == 'F') {
           if (!saveParent) {
             set_fullscreen_mode(TRUE);
@@ -1625,8 +1673,16 @@ void enq_mouse_event(void)
     QueueEvent& current=keyevents[tail];
     current.key_event=MOUSE_MOTION;
     if (win32MouseModeAbsXY) {
-      current.mouse_x = ms_lastx * 0x7fff / dimension_x;
-      current.mouse_y = ms_lasty * 0x7fff / dimension_y;
+      // client coordinates: the guest screen is scaled by stretch_factor
+      // (in fullscreen mode the client area may be larger than the image)
+      int abs_x = ms_lastx * 0x7fff / (int)(dimension_x * stretch_factor);
+      int abs_y = ms_lasty * 0x7fff / (int)(dimension_y * stretch_factor);
+      if (abs_x < 0) abs_x = 0;
+      if (abs_x > 0x7fff) abs_x = 0x7fff;
+      if (abs_y < 0) abs_y = 0;
+      if (abs_y > 0x7fff) abs_y = 0x7fff;
+      current.mouse_x = abs_x;
+      current.mouse_y = abs_y;
     } else {
       current.mouse_x = ms_xdelta;
       current.mouse_y = ms_ydelta;
@@ -1723,6 +1779,11 @@ void bx_win32_gui_c::handle_events(void)
         case BX_TOOLBAR_SAVE_RESTORE:
           save_restore_handler();
           break;
+#if BX_DEBUGGER
+        case BX_TOOLBAR_DEBUGGER:
+          debugger_handler();
+          break;
+#endif
       }
     }
     else {
@@ -1795,14 +1856,11 @@ void bx_win32_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u y
                                Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
                                bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs, bool font2)
 {
-  HDC hdc;
-
   if (!stInfo.UIinited) return;
 
   EnterCriticalSection(&stInfo.drawCS);
-  hdc = GetDC(stInfo.simWnd);
   Bit8u map = (font2) ? 1 : 0;
-  DrawBitmap(hdc, vgafont[map][ch], xc, yc, fw, fh, fx, fy, fc, bc);
+  DrawBitmap(vgafont[map][ch], xc, yc, fw, fh, fx, fy, fc, bc);
   if (curs && (ce >= fy) && (cs < (fh + fy))) {
     if (cs > fy) {
       yc += (cs - fy);
@@ -1811,9 +1869,8 @@ void bx_win32_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u y
     if ((ce - cs + 1) < fh) {
       fh = ce - cs + 1;
     }
-    DrawBitmap(hdc, vgafont[map][ch], xc, yc, fw, fh, fx, cs, bc, fc);
+    DrawBitmap(vgafont[map][ch], xc, yc, fw, fh, fx, cs, bc, fc);
   }
-  ReleaseDC(stInfo.simWnd, hdc);
   LeaveCriticalSection(&stInfo.drawCS);
 }
 
@@ -1828,7 +1885,12 @@ int bx_win32_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
   if (OpenClipboard(stInfo.simWnd)) {
     HGLOBAL hg = GetClipboardData(CF_TEXT);
-    char *data = (char *)GlobalLock(hg);
+    char *data = (hg != NULL) ? (char *)GlobalLock(hg) : NULL;
+    if (data == NULL) {
+      CloseClipboard();
+      BX_ERROR(("paste: no text on the clipboard"));
+      return 0;
+    }
     *nbytes = (Bit32s)strlen(data);
     *bytes = new Bit8u[1 + *nbytes];
     BX_INFO(("found %d bytes on the clipboard", *nbytes));
@@ -1848,12 +1910,26 @@ int bx_win32_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 int bx_win32_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
   if (OpenClipboard(stInfo.simWnd)) {
-    HANDLE hMem = GlobalAlloc(GMEM_ZEROINIT, len);
+    // clipboard data must be movable memory, owned by the system after
+    // a successful SetClipboardData()
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len + 1);
+    if (hMem == NULL) {
+      CloseClipboard();
+      BX_ERROR(("copy: could not allocate clipboard memory"));
+      return 0;
+    }
+    char *data = (char *)GlobalLock(hMem);
+    memcpy(data, text_snapshot, len);
+    data[len] = 0;
+    GlobalUnlock(hMem);
     EmptyClipboard();
-    lstrcpy((char *)hMem, text_snapshot);
-    SetClipboardData(CF_TEXT, hMem);
+    if (SetClipboardData(CF_TEXT, hMem) == NULL) {
+      GlobalFree(hMem);
+      CloseClipboard();
+      BX_ERROR(("copy: could not set clipboard data"));
+      return 0;
+    }
     CloseClipboard();
-    GlobalFree(hMem);
     return 1;
   } else {
     BX_ERROR (("copy: could not open clipboard"));
@@ -1880,7 +1956,6 @@ bool bx_win32_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green,
 
 void bx_win32_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
-  HDC hdc;
   HGDIOBJ oldObj;
   unsigned yt = y_tilesize;
 
@@ -1888,7 +1963,6 @@ void bx_win32_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 	yt = dimension_y - y0;
   }
   EnterCriticalSection(&stInfo.drawCS);
-  hdc = GetDC(stInfo.simWnd);
 
   oldObj = SelectObject(MemoryDC, MemoryBitmap);
 
@@ -1899,7 +1973,6 @@ void bx_win32_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 
   updateUpdated(x0, y0, x0 + x_tilesize, y0 + yt);
 
-  ReleaseDC(stInfo.simWnd, hdc);
   LeaveCriticalSection(&stInfo.drawCS);
 }
 
@@ -2118,48 +2191,34 @@ COLORREF GetColorRef(Bit8u pal_idx)
 }
 
 
-void DrawBitmap(HDC hdc, HBITMAP hBitmap, int xStart, int yStart, int width,
+// FontDC and MemoryDC use the default MM_TEXT mapping mode, so device and
+// logical coordinates are the same (no DPtoLP() conversion required)
+void DrawBitmap(HBITMAP hBitmap, int xStart, int yStart, int width,
                 int height, int fcol, int frow, Bit8u fgcolor, Bit8u bgcolor)
 {
-  BITMAP bm;
-  HDC hdcMem;
-  POINT ptSize, ptOrg;
   HGDIOBJ oldObj;
 
-  hdcMem = CreateCompatibleDC(hdc);
-  SelectObject(hdcMem, hBitmap);
-  SetMapMode(hdcMem, GetMapMode (hdc));
-
-  GetObject(hBitmap, sizeof (BITMAP), (LPVOID) &bm);
-
-  ptSize.x = width;
-  ptSize.y = height;
-
-  DPtoLP(hdc, &ptSize, 1);
-
-  ptOrg.x = fcol;
-  ptOrg.y = frow;
-  DPtoLP(hdcMem, &ptOrg, 1);
+  SelectObject(FontDC, hBitmap);
 
   oldObj = SelectObject(MemoryDC, MemoryBitmap);
 
   COLORREF crFore = SetTextColor(MemoryDC, GetColorRef(bgcolor));
   COLORREF crBack = SetBkColor(MemoryDC, GetColorRef(fgcolor));
   if (xChar > 9) {
-    StretchBlt(MemoryDC, xStart, yStart, ptSize.x, ptSize.y, hdcMem, ptOrg.x,
-              ptOrg.y, ptSize.x / 2, ptSize.y, SRCCOPY);
+    StretchBlt(MemoryDC, xStart, yStart, width, height, FontDC, fcol,
+              frow, width / 2, height, SRCCOPY);
   } else {
-    BitBlt(MemoryDC, xStart, yStart, ptSize.x, ptSize.y, hdcMem, ptOrg.x,
-           ptOrg.y, SRCCOPY);
+    BitBlt(MemoryDC, xStart, yStart, width, height, FontDC, fcol,
+           frow, SRCCOPY);
   }
   SetBkColor(MemoryDC, crBack);
   SetTextColor(MemoryDC, crFore);
 
   SelectObject(MemoryDC, oldObj);
+  // deselect the font bitmap, set_font() may update it with SetBitmapBits()
+  SelectObject(FontDC, FontDCdefBitmap);
 
-  updateUpdated(xStart, yStart, ptSize.x + xStart, ptSize.y + yStart);
-
-  DeleteDC(hdcMem);
+  updateUpdated(xStart, yStart, width + xStart, height + yStart);
 }
 
 
@@ -2192,6 +2251,24 @@ void win32_toolbar_click(int x)
   }
 }
 
+#if BX_DEBUGGER
+// Bring the console window with the debugger command line to the foreground.
+// Called in the GUI thread when the debugger button is pressed (Windows lets
+// only the foreground application change the foreground window). Works with
+// the classic Windows console only, terminals like mintty or Windows Terminal
+// are not handled yet.
+void win32_focus_debugger_console(void)
+{
+  // commands are entered in the gui debugger (active or started on activation)
+  if (bx_dbg.debugger_gui) return;
+
+  HWND hwnd = GetConsoleWindow();
+  if ((hwnd != NULL) && IsWindowVisible(hwnd)) {
+    SetForegroundWindow(hwnd);
+  }
+}
+#endif
+
 void bx_win32_gui_c::mouse_enabled_changed_specific(bool val)
 {
   if ((val != (bool)mouseCaptureMode) && !mouseToggleReq) {
@@ -2222,6 +2299,48 @@ void bx_win32_gui_c::set_mouse_mode_absxy(bool mode)
 {
   win32MouseModeAbsXY = mode;
 }
+
+#if BX_DEBUGGER
+// The debugger can be activated at runtime: the gui debugger if it is
+// selected (debugger: gui=1), the command line debugger otherwise. If the
+// debugger is active the debugger button breaks into it.
+bool bx_win32_gui_c::debugger_activation_allowed()
+{
+  return 1;
+}
+
+#if BX_DEBUGGER_GUI
+// Start the gui debugger at runtime. The dialog must be created by the GUI
+// thread: SendMessage() returns after it exists, so the simulation thread
+// cannot race with the notify callback switch done by the dialog init.
+// Called from the simulation main loop (no stInfo.keyCS held).
+bool bx_win32_gui_c::start_debug_dialog(void)
+{
+  // the gui debugger requires the win32 config interface (see specific_init)
+  if (strcmp(SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE)->get_selected(), "win32config")) {
+    return 0;
+  }
+  if (!stInfo.UIinited) {
+    return 0;
+  }
+  SendMessage(stInfo.mainWnd, BX_WM_START_DEBUG_DIALOG, 0, 0);
+  return 1;
+}
+#endif
+
+// The debugger button is disabled in config mode (debugger prompt or config
+// interface): a click would only be handled after the simulation resumes.
+// PostMessage is used since the caller may hold stInfo.keyCS (config button
+// handler) while the GUI thread waits for it.
+void bx_win32_gui_c::set_display_mode(disp_mode_t newmode)
+{
+  unsigned hbar_id = debugger_hbar_id;
+
+  if (hbar_id < (unsigned) win32_toolbar_entries) {
+    PostMessage(hwndTB, TB_ENABLEBUTTON, hbar_id + 101, MAKELONG(newmode == DISP_MODE_SIM, 0));
+  }
+}
+#endif
 
 #if BX_SHOW_IPS
 VOID CALLBACK MyTimer(HWND hwnd,UINT uMsg, UINT idEvent, DWORD dwTime)

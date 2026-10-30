@@ -8,7 +8,7 @@
 // Copyright (c) 2005       Fabrice Bellard
 // Copyright (c) 2007       OpenMoko, Inc.  (andrew@openedhand.com)
 // Copyright (C) 2004-2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
-// Copyright (C) 2009-2023  The Bochs Project
+// Copyright (C) 2009-2026  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -1137,6 +1137,7 @@ usb_hid_device_c::~usb_hid_device_c(void)
              (d.type == USB_HID_TYPE_KEYBOARD)) {
     DEV_unregister_removable_keyboard((void *) this);
   }
+  bx_pc_system.deactivate_timer(timer_index);
   bx_pc_system.unregisterTimer(timer_index);
 }
 

@@ -104,14 +104,16 @@ public:
 };
 
 bool isValidMSR_IA32_SPEC_CTRL(Bit64u val_64);
+bool isValidMSR_SPEC_CTRL_AMD(Bit64u val_64);
 
-// IA32_SPEC_CTRL MSR, could be virtualized by VMX
+// IA32_SPEC_CTRL MSR, could be virtualized by VMX or SVM
+// present with either Intel (spec_ctrl) or AMD (spec_ctrl_amd) speculation control feature
 class SpecCtrlMSR : public MSR_Descriptor {
 private:
   BX_CPU_C *cpu;
 
 public:
-  SpecCtrlMSR(BX_CPU_C *cpu_ptr): MSR_Descriptor("MSR_IA32_SPEC_CTRL", BX_ISA_SCA_MITIGATIONS), cpu(cpu_ptr) {}
+  SpecCtrlMSR(BX_CPU_C *cpu_ptr, unsigned feature): MSR_Descriptor("MSR_IA32_SPEC_CTRL", feature), cpu(cpu_ptr) {}
 
   virtual bool get(Bit64u *val) {
 #if BX_SUPPORT_VMX >= 2
@@ -130,7 +132,8 @@ public:
     if (cpu->in_vmx_guest && vm->vmexec_ctrls3.VIRTUALIZE_IA32_SPEC_CTRL())
       val = (cpu->msr.ia32_spec_ctrl & vm->ia32_spec_ctrl_mask) | (val & ~vm->ia32_spec_ctrl_mask);
 #endif
-    if (! isValidMSR_IA32_SPEC_CTRL(val)) {
+    bool valid = (get_cpu_feature() == BX_ISA_SPEC_CTRL_AMD) ? isValidMSR_SPEC_CTRL_AMD(val) : isValidMSR_IA32_SPEC_CTRL(val);
+    if (! valid) {
       BX_ERROR(("WRMSR: attempt to set reserved bits of IA32_SPEC_CTRL: 0x" FMT_LL "x", val));
       return false;
     }
@@ -243,6 +246,16 @@ void BX_CPU_C::init_MSRs()
 
   BX_CPU_THIS_PTR msr_desc[BX_MSR_TSC] = new TscMSR(BX_CPU_THIS);
   BX_CPU_THIS_PTR msr_desc[BX_MSR_PLATFORM_ID] = new ConstMSR("MSR_PLATFORM_ID", BX_ISA_PENTIUM, 0); // read only
+
+#if BX_CPU_LEVEL >= 6
+  // Intel processors starting from Nehalem (first Intel cpu with SSE4.2, SYSENTER in long mode is Intel only)
+  if (is_cpu_extension_supported(BX_ISA_SSE4_2) && is_cpu_extension_supported(BX_ISA_SYSENTER_SYSEXIT_LONGMODE)) {
+    // read only, [31:16] enabled cores and [15:0] enabled logical processors in the package
+    Bit64u ncores = BX_CPU_THIS_PTR cpuid->get_ncores();
+    Bit64u nthreads = BX_CPU_THIS_PTR cpuid->get_nthreads();
+    BX_CPU_THIS_PTR msr_desc[BX_MSR_CORE_THREAD_COUNT] = new ConstMSR("MSR_CORE_THREAD_COUNT", BX_ISA_SSE4_2, (ncores << 16) | (ncores * nthreads));
+  }
+#endif
 
 #if BX_SUPPORT_APIC
   BX_CPU_THIS_PTR msr_desc[BX_MSR_APICBASE] = new ApicBaseMSR(BX_CPU_THIS);
@@ -391,16 +404,19 @@ void BX_CPU_C::init_MSRs()
   //     [3]: SKIP_L1DFL_VMENTRY: indicates the hypervisor need not flush the L1D on VM entry
   //     [4]: SSB_NO: Processor is not susceptible to Speculative Store Bypass
   //  [63:5]: reserved
-  BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_ARCH_CAPABILITIES] = new ConstMSR("MSR_IA32_ARCH_CAPABILITIES", BX_ISA_SCA_MITIGATIONS, 0x1F); // read only, set bits [4:0]
-  BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_SPEC_CTRL] = new SpecCtrlMSR(BX_CPU_THIS);
+  BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_ARCH_CAPABILITIES] = new ConstMSR("MSR_IA32_ARCH_CAPABILITIES", BX_ISA_SPEC_CTRL, 0x1F); // read only, set bits [4:0]
+  // SPEC_CTRL and PRED_CMD MSRs are present with either Intel or AMD speculation control feature
+  // (both features are never enabled together)
+  unsigned spec_ctrl_feature = is_cpu_extension_supported(BX_ISA_SPEC_CTRL_AMD) ? BX_ISA_SPEC_CTRL_AMD : BX_ISA_SPEC_CTRL;
+  BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_SPEC_CTRL] = new SpecCtrlMSR(BX_CPU_THIS, spec_ctrl_feature);
   // IA32_PRED_CMD MSR:
   //    [0] - Indirect Branch Prediction Barrier (IBPB)
   // [63:1] - reserved
-  BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_PRED_CMD] = new WriteOnlyMSR("MSR_IA32_PRED_CMD", BX_ISA_SCA_MITIGATIONS, ~BX_CONST64(1));
+  BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_PRED_CMD] = new WriteOnlyMSR("MSR_IA32_PRED_CMD", spec_ctrl_feature, ~BX_CONST64(1));
   // IA32_FLUSH_CMD MSR:
   //    [0] - WBINVD DL1 Cache
   // [63:1] - reserved
-  BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_FLUSH_CMD] = new WriteOnlyMSR("MSR_IA32_FLUSH_CMD", BX_ISA_SCA_MITIGATIONS, ~BX_CONST64(1));
+  BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_FLUSH_CMD] = new WriteOnlyMSR("MSR_IA32_FLUSH_CMD", BX_ISA_SPEC_CTRL, ~BX_CONST64(1));
 
 #if BX_SUPPORT_VMX
   // IA32_FEATURE_CONTROL MSR, locked for writes once the lock bit is set
@@ -464,6 +480,13 @@ void BX_CPU_C::init_MSRs()
   BX_CPU_THIS_PTR ext_msr_desc[BX_MSR_KERNELGSBASE - 0xc0000000] = new VarMSR("MSR_KERNELGSBASE", BX_ISA_LONG_MODE, &BX_CPU_THIS_PTR msr.kernelgsbase, 0, is_canonical_msr);
   BX_CPU_THIS_PTR ext_msr_desc[BX_MSR_TSC_AUX - 0xc0000000] = new VarMSR("MSR_TSC_AUX", BX_ISA_RDTSCP, &BX_CPU_THIS_PTR msr.tsc_aux, BX_CONST64(0xffffffff00000000)); // bits [63:32] are reserved
 #endif
+
+#if BX_SUPPORT_SVM
+  // TSC_RATIO MSR scales the TSC value read by SVM guest
+  BX_CPU_THIS_PTR ext_msr_desc[BX_MSR_TSC_RATIO - 0xc0000000] = new VarMSR("MSR_TSC_RATIO", BX_ISA_SVM, &BX_CPU_THIS_PTR msr.svm_tsc_ratio, BX_SVM_TSC_RATIO_RESERVED_BITS);
+  if (! BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_TSCRATE))
+    BX_CPU_THIS_PTR ext_msr_desc[BX_MSR_TSC_RATIO - 0xc0000000]->disable();
+#endif
 }
 
 void BX_CPU_C::destroy_MSRs()
@@ -496,7 +519,7 @@ void BX_CPU_C::reset_MSRs(unsigned source)
 #if BX_SUPPORT_VMX
   // IA32_FEATURE_CONTROL MSR becomes read only once locked, unlock it on hardware reset
   if (source == BX_RESET_HARDWARE)
-    BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_FEATURE_CONTROL]->set_reserved_bits(~Bit64u(BX_IA32_FEATURE_CONTROL_BITS));
+    BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_FEATURE_CONTROL]->set_read_only(false);
 #endif
 }
 
@@ -641,15 +664,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     Bit32u reason = VMX_VMEXIT_RDMSR;
-    Bit32u qualification = 0, instr_info = 0;
+    Bit32u qualification = 0;
+    unsigned reg = 0;
 #if BX_SUPPORT_AVX
     if (i->getIaOpcode() == BX_IA_RDMSR_EqId) {
       reason = VMX_VMEXIT_RDMSR_IMM;
       qualification = index; // exit qualification is the MSR address
-      instr_info = i->dst() << 3;
+      reg = i->dst();
     }
 #endif
-    VMexit_MSR(reason, index, qualification, instr_info);
+    VMexit_MSR(reason, index, qualification, reg);
   }
 #endif
 
@@ -727,6 +751,20 @@ bool isValidMSR_IA32_SPEC_CTRL(Bit64u val_64)
   //    [10] - BHI_DIS_S: Enables BHI_DIS_S behavior
   // [63:11] - reserved
   if (val_64 & ~(BX_CONST64(0x5FF)))
+    return false;
+
+  return true;
+}
+
+bool isValidMSR_SPEC_CTRL_AMD(Bit64u val_64)
+{
+  //     [0] - IBRS: Indirect Branch Restricted Speculation
+  //     [1] - STIBP: Single Thread Indirect Branch Predictor
+  //     [2] - SSBD: Speculative Store Bypass Disable
+  //   [6:3] - reserved
+  //     [7] - PSFD: Predictive Store Forwarding Disable
+  //  [63:8] - reserved
+  if (val_64 & ~(BX_CONST64(0x87)))
     return false;
 
   return true;
@@ -833,6 +871,13 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
   if (index == BX_MSR_IA32_UINTR_RR)
     uintr_uirr_update(); // potentially signal or clear user-level-interrupt
 #endif
+#if BX_SUPPORT_MEMTYPE
+  // the TLB caches memory type of the page which depends on PAT and MTRRs
+  if (index == BX_MSR_PAT || index == BX_MSR_MTRR_DEFTYPE || (index >= BX_MSR_MTRRPHYSBASE0 && index <= BX_MSR_MTRRPHYSMASK7) ||
+      index == BX_MSR_MTRRFIX64K_00000 || index == BX_MSR_MTRRFIX16K_80000 || index == BX_MSR_MTRRFIX16K_A0000 ||
+      (index >= BX_MSR_MTRRFIX4K_C0000 && index <= BX_MSR_MTRRFIX4K_F8000))
+    TLB_flush();
+#endif
 #if BX_SUPPORT_VMX
   if (index == BX_MSR_IA32_FEATURE_CONTROL) {
     // once the lock bit is set the MSR becomes read only until hardware reset
@@ -879,44 +924,44 @@ bool BX_CPU_C::relocate_apic(Bit64u val_64)
 
   const Bit32u BX_MSR_APICBASE_RESERVED_BITS = (0x2ff | (is_cpu_extension_supported(BX_ISA_X2APIC) ? 0 : 0x400));
 
-  if (apic_global_enable_on()) {
-    Bit32u val32_hi = GET32H(val_64), val32_lo = GET32L(val_64);
-    BX_INFO(("WRMSR: wrote %08x:%08x to MSR_APICBASE", val32_hi, val32_lo));
-    if (! IsValidPhyAddr(val_64)) {
-      BX_ERROR(("relocate_apic: invalid physical address"));
-      return false;
-    }
-    if (val32_lo & BX_MSR_APICBASE_RESERVED_BITS) {
-      BX_ERROR(("relocate_apic: attempt to set reserved bits"));
-      return false;
-    }
+  Bit32u val32_hi = GET32H(val_64), val32_lo = GET32L(val_64);
+  BX_INFO(("WRMSR: wrote %08x:%08x to MSR_APICBASE", val32_hi, val32_lo));
+  if (! IsValidPhyAddr(val_64)) {
+    BX_ERROR(("relocate_apic: invalid physical address"));
+    return false;
+  }
+  if (val32_lo & BX_MSR_APICBASE_RESERVED_BITS) {
+    BX_ERROR(("relocate_apic: attempt to set reserved bits"));
+    return false;
+  }
 
 #if BX_CPU_LEVEL >= 6
-    if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
-      unsigned apic_state = (BX_CPU_THIS_PTR msr.apicbase >> 10) & 3;
-      unsigned new_state = (val32_lo >> 10) & 3;
+  if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
+    unsigned apic_state = (BX_CPU_THIS_PTR msr.apicbase >> 10) & 3;
+    unsigned new_state = (val32_lo >> 10) & 3;
 
-      if (new_state != apic_state) {
-        if (new_state == BX_APIC_STATE_INVALID) {
-          BX_ERROR(("relocate_apic: attempt to set invalid apic state"));
-          return false;
-        }
-        if (apic_state == BX_APIC_X2APIC_MODE && new_state != BX_APIC_GLOBALLY_DISABLED) {
-          BX_ERROR(("relocate_apic: attempt to switch from x2apic -> xapic"));
-          return false;
-        }
+    if (new_state != apic_state) {
+      if (new_state == BX_APIC_STATE_INVALID) {
+        BX_ERROR(("relocate_apic: attempt to set invalid apic state"));
+        return false;
+      }
+      if (apic_state == BX_APIC_X2APIC_MODE && new_state != BX_APIC_GLOBALLY_DISABLED) {
+        BX_ERROR(("relocate_apic: attempt to switch from x2apic -> xapic"));
+        return false;
+      }
+      if (apic_state == BX_APIC_GLOBALLY_DISABLED && new_state == BX_APIC_X2APIC_MODE) {
+        BX_ERROR(("relocate_apic: attempt to switch from disabled apic -> x2apic"));
+        return false;
       }
     }
+  }
 #endif
 
-    BX_CPU_THIS_PTR msr.apicbase = (bx_phy_address) val_64;
-    BX_CPU_THIS_PTR lapic->set_base(BX_CPU_THIS_PTR msr.apicbase);
-    // TLB flush is required for emulation correctness
-    TLB_flush();  // don't care about performance of apic relocation
-  }
-  else {
-    BX_INFO(("WRMSR: MSR_APICBASE APIC global enable bit cleared !"));
-  }
+  // the local APIC could be disabled and re-enabled again by toggling the APIC global enable bit
+  BX_CPU_THIS_PTR msr.apicbase = (bx_phy_address) val_64;
+  BX_CPU_THIS_PTR lapic->set_base(BX_CPU_THIS_PTR msr.apicbase);
+  // TLB flush is required for emulation correctness
+  TLB_flush();  // don't care about performance of apic relocation
 
   return true;
 }
@@ -967,12 +1012,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     Bit32u reason = VMX_VMEXIT_WRMSR;
-    Bit32u qualification = 0, instr_info = 0;
+    Bit32u qualification = 0;
+    unsigned reg = 0;
 #if BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
     if (i->getIaOpcode() == BX_IA_WRMSRNS_IdEq) {
       reason = VMX_VMEXIT_WRMSRNS_IMM;
       qualification = index; // exit qualification is the MSR address
-      instr_info = i->src() << 3;
+      reg = i->src();
     }
     else
 #endif
@@ -980,7 +1026,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
       // WRMSR and WRMSRNS use the same basic exit reason
       qualification = 1; // For WRMSR, the exit qualification is 0, while for WRMSRNS it is 1
     }
-    VMexit_MSR(reason, index, qualification, instr_info);
+    VMexit_MSR(reason, index, qualification, reg);
   }
 #endif
 
@@ -1013,6 +1059,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSRLIST(bxInstruction_c *i)
     BX_ERROR(("RDMSRLIST: RSI and RDI must be 8-byte aligned"));
     exception(BX_GP_EXCEPTION, 0);
   }
+
+#if BX_SUPPORT_VMX >= 2
+  // with MSR bitmaps disabled RDMSRLIST causes VM exit before any memory access, exit qualification is 0
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (! BX_CPU_THIS_PTR vmcs.vmexec_ctrls1.MSR_BITMAPS())
+      VMexit(VMX_VMEXIT_RDMSRLIST, 0);
+  }
+#endif
 
   Bit64u val64;
 
@@ -1066,6 +1120,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSRLIST(bxInstruction_c *i)
     BX_ERROR(("WRMSRLIST: RSI and RDI must be 8-byte aligned"));
     exception(BX_GP_EXCEPTION, 0);
   }
+
+#if BX_SUPPORT_VMX >= 2
+  // with MSR bitmaps disabled WRMSRLIST causes VM exit before any memory access, exit qualification is 0
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (! vm->vmexec_ctrls1.MSR_BITMAPS())
+      VMexit(VMX_VMEXIT_WRMSRLIST, 0);
+  }
+#endif
 
   invalidate_prefetch_q();
 
@@ -1129,7 +1191,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::URDMSR(bxInstruction_c *i)
   {
 #if BX_SUPPORT_VMX
     if (BX_CPU_THIS_PTR in_vmx_guest)
-      VMexit_MSR(VMX_VMEXIT_URDMSR, index, index, i->dst() << 3);
+      VMexit_MSR(VMX_VMEXIT_URDMSR, index, index, i->dst());
 #endif
 
     Bit64u val_64 = 0;
@@ -1172,7 +1234,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UWRMSR(bxInstruction_c *i)
   {
 #if BX_SUPPORT_VMX
     if (BX_CPU_THIS_PTR in_vmx_guest)
-      VMexit_MSR(VMX_VMEXIT_UWRMSR, index, index, i->src() << 3);
+      VMexit_MSR(VMX_VMEXIT_UWRMSR, index, index, i->src());
 #endif
 
     Bit64u val_64 = BX_READ_64BIT_REG(i->src());

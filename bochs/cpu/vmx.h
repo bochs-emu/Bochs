@@ -192,10 +192,12 @@ enum VMX_vmabort_code {
 };
 
 // VMX APIC ACCESS VMEXIT qualification
-const Bit32u VMX_APIC_READ_INSTRUCTION_EXECUTION   = 0x0000;
-const Bit32u VMX_APIC_WRITE_INSTRUCTION_EXECUTION  = 0x1000;
-const Bit32u VMX_APIC_INSTRUCTION_FETCH            = 0x2000; /* won't happen because cpu::prefetch will crash */
-const Bit32u VMX_APIC_ACCESS_DURING_EVENT_DELIVERY = 0x3000;
+const Bit32u VMX_APIC_READ_INSTRUCTION_EXECUTION                  = 0x0000;
+const Bit32u VMX_APIC_WRITE_INSTRUCTION_EXECUTION                 = 0x1000;
+const Bit32u VMX_APIC_INSTRUCTION_FETCH                           = 0x2000; /* instruction fetch from APIC-access page */
+const Bit32u VMX_APIC_ACCESS_DURING_EVENT_DELIVERY                = 0x3000;
+const Bit32u VMX_APIC_GUEST_PHYSICAL_ACCESS_DURING_EVENT_DELIVERY = 0xA000;
+const Bit32u VMX_APIC_GUEST_PHYSICAL_ACCESS_INSTRUCTION_EXECUTION = 0xF000; /* also for instruction fetch */
 
 // VM Functions List
 enum VMFunctions {
@@ -331,6 +333,8 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_64BIT_MSR_DATA_HI                             0x00002403
 #define VMCS_64BIT_ORIGINAL_EVENT_DATA                     0x00002404 /* FRED */
 #define VMCS_64BIT_ORIGINAL_EVENT_DATA_HI                  0x00002405
+#define VMCS_64BIT_VMEXIT_EXT_INSTRUCTION_INFO             0x00002406 /* APX */
+#define VMCS_64BIT_VMEXIT_EXT_INSTRUCTION_INFO_HI          0x00002407
 
 /* VMCS 64-bit guest state fields */
 /* binary 0010_10xx_xxxx_xxx0 */
@@ -866,6 +870,7 @@ typedef struct bx_VMCS
    Bit32u vm_tpr_threshold;
    bx_phy_address apic_access_page;
    unsigned apic_access;
+   unsigned apic_access_len;
 #endif
 
    unsigned posted_intr_notification_vector;

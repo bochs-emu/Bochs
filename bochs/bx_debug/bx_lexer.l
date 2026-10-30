@@ -23,6 +23,11 @@ int bx_yyinput(char *buf, int max_size);
 static char    *lex_input_ptr = NULL;
 static unsigned lex_input_size = 0;
 
+// saved outer input while a nested string is being parsed
+static char    *saved_lex_input_ptr = NULL;
+static unsigned saved_lex_input_size = 0;
+static int      saved_lex_start = 0;
+
 #if BX_SUPPORT_X86_64
   #define LONG_MODE_8BL_REG(reg) \
      { bxlval.uval = reg; return(BX_TOKEN_8BL_REG); }
@@ -55,6 +60,9 @@ static unsigned lex_input_size = 0;
 
 %x EXAMINE
 %x DISASM
+
+/* r8..r31 (r16..r31 are APX extended GPRs), register id is the register number */
+GPR_R8_R31      r([89]|[12][0-9]|3[01])
 
 %%
 <*>[ \t]+       ; // eat up whitespace
@@ -110,6 +118,7 @@ bpd             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DISABLE_BREAKPOI
 quit            |
 exit            |
 q               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_QUIT); }
+detach          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DETACH); }
 x               |
 xp              { BEGIN(EXAMINE); bxlval.sval = strdup(bxtext); return(BX_TOKEN_EXAMINE); }
 restore         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_RESTORE); }
@@ -167,14 +176,7 @@ sil             { LONG_MODE_8BL_REG(BX_8BIT_REG_SIL); }
 dil             { LONG_MODE_8BL_REG(BX_8BIT_REG_DIL); }
 spl             { LONG_MODE_8BL_REG(BX_8BIT_REG_SPL); }
 bpl             { LONG_MODE_8BL_REG(BX_8BIT_REG_BPL); }
-r8b             { LONG_MODE_8BL_REG(BX_8BIT_REG_R8);  }
-r9b             { LONG_MODE_8BL_REG(BX_8BIT_REG_R9);  }
-r10b            { LONG_MODE_8BL_REG(BX_8BIT_REG_R10); }
-r11b            { LONG_MODE_8BL_REG(BX_8BIT_REG_R11); }
-r12b            { LONG_MODE_8BL_REG(BX_8BIT_REG_R12); }
-r13b            { LONG_MODE_8BL_REG(BX_8BIT_REG_R13); }
-r14b            { LONG_MODE_8BL_REG(BX_8BIT_REG_R14); }
-r15b            { LONG_MODE_8BL_REG(BX_8BIT_REG_R15); }
+{GPR_R8_R31}b   { LONG_MODE_8BL_REG(atoi(bxtext+1)); }
 ah              { bxlval.uval = BX_8BIT_REG_AH; return(BX_TOKEN_8BH_REG);}
 bh              { bxlval.uval = BX_8BIT_REG_BH; return(BX_TOKEN_8BH_REG);}
 ch              { bxlval.uval = BX_8BIT_REG_CH; return(BX_TOKEN_8BH_REG);}
@@ -187,14 +189,7 @@ si              { bxlval.uval = BX_16BIT_REG_SI; return(BX_TOKEN_16B_REG);}
 di              { bxlval.uval = BX_16BIT_REG_DI; return(BX_TOKEN_16B_REG);}
 bp              { bxlval.uval = BX_16BIT_REG_BP; return(BX_TOKEN_16B_REG);}
 sp              { bxlval.uval = BX_16BIT_REG_SP; return(BX_TOKEN_16B_REG);}
-r8w             { LONG_MODE_16B_REG(BX_16BIT_REG_R8);  }
-r9w             { LONG_MODE_16B_REG(BX_16BIT_REG_R9);  }
-r10w            { LONG_MODE_16B_REG(BX_16BIT_REG_R10); }
-r11w            { LONG_MODE_16B_REG(BX_16BIT_REG_R11); }
-r12w            { LONG_MODE_16B_REG(BX_16BIT_REG_R12); }
-r13w            { LONG_MODE_16B_REG(BX_16BIT_REG_R13); }
-r14w            { LONG_MODE_16B_REG(BX_16BIT_REG_R14); }
-r15w            { LONG_MODE_16B_REG(BX_16BIT_REG_R15); }
+{GPR_R8_R31}w   { LONG_MODE_16B_REG(atoi(bxtext+1)); }
 eax             { bxlval.uval = BX_32BIT_REG_EAX; return(BX_TOKEN_32B_REG);}
 ebx             { bxlval.uval = BX_32BIT_REG_EBX; return(BX_TOKEN_32B_REG);}
 ecx             { bxlval.uval = BX_32BIT_REG_ECX; return(BX_TOKEN_32B_REG);}
@@ -203,14 +198,7 @@ esi             { bxlval.uval = BX_32BIT_REG_ESI; return(BX_TOKEN_32B_REG);}
 edi             { bxlval.uval = BX_32BIT_REG_EDI; return(BX_TOKEN_32B_REG);}
 ebp             { bxlval.uval = BX_32BIT_REG_EBP; return(BX_TOKEN_32B_REG);}
 esp             { bxlval.uval = BX_32BIT_REG_ESP; return(BX_TOKEN_32B_REG);}
-r8d             { LONG_MODE_32B_REG(BX_32BIT_REG_R8);  }
-r9d             { LONG_MODE_32B_REG(BX_32BIT_REG_R9);  }
-r10d            { LONG_MODE_32B_REG(BX_32BIT_REG_R10); }
-r11d            { LONG_MODE_32B_REG(BX_32BIT_REG_R11); }
-r12d            { LONG_MODE_32B_REG(BX_32BIT_REG_R12); }
-r13d            { LONG_MODE_32B_REG(BX_32BIT_REG_R13); }
-r14d            { LONG_MODE_32B_REG(BX_32BIT_REG_R14); }
-r15d            { LONG_MODE_32B_REG(BX_32BIT_REG_R15); }
+{GPR_R8_R31}d   { LONG_MODE_32B_REG(atoi(bxtext+1)); }
 rax             { LONG_MODE_64B_REG(BX_64BIT_REG_RAX); }
 rbx             { LONG_MODE_64B_REG(BX_64BIT_REG_RBX); }
 rcx             { LONG_MODE_64B_REG(BX_64BIT_REG_RCX); }
@@ -219,14 +207,7 @@ rsi             { LONG_MODE_64B_REG(BX_64BIT_REG_RSI); }
 rdi             { LONG_MODE_64B_REG(BX_64BIT_REG_RDI); }
 rsp             { LONG_MODE_64B_REG(BX_64BIT_REG_RSP); }
 rbp             { LONG_MODE_64B_REG(BX_64BIT_REG_RBP); }
-r8              { LONG_MODE_64B_REG(BX_64BIT_REG_R8);  }
-r9              { LONG_MODE_64B_REG(BX_64BIT_REG_R9);  }
-r10             { LONG_MODE_64B_REG(BX_64BIT_REG_R10); }
-r11             { LONG_MODE_64B_REG(BX_64BIT_REG_R11); }
-r12             { LONG_MODE_64B_REG(BX_64BIT_REG_R12); }
-r13             { LONG_MODE_64B_REG(BX_64BIT_REG_R13); }
-r14             { LONG_MODE_64B_REG(BX_64BIT_REG_R14); }
-r15             { LONG_MODE_64B_REG(BX_64BIT_REG_R15); }
+{GPR_R8_R31}    { LONG_MODE_64B_REG(atoi(bxtext+1)); }
 ip              { return(BX_TOKEN_REG_IP); }
 eip             { return(BX_TOKEN_REG_EIP);}
 rip             { return(BX_TOKEN_REG_RIP);}
@@ -314,6 +295,33 @@ bx_add_lex_input(char *buf)
   // requests from yyinput
 
   bx_flush_buffer( YY_CURRENT_BUFFER );
+}
+
+// Parse a nested string (breakpoint condition evaluated from inside of
+// the CPU loop) in a new lexer buffer, keeping the not yet consumed input
+// of the outer command line. Only one level of nesting is supported.
+  void
+bx_push_lex_input(char *buf)
+{
+  saved_lex_input_ptr  = lex_input_ptr;
+  saved_lex_input_size = lex_input_size;
+  saved_lex_start = YY_START;
+
+  lex_input_ptr  = buf;
+  lex_input_size = strlen(buf);
+
+  bxpush_buffer_state(bx_create_buffer(NULL, YY_BUF_SIZE));
+  BEGIN(INITIAL);
+}
+
+  void
+bx_pop_lex_input(void)
+{
+  bxpop_buffer_state();
+  BEGIN(saved_lex_start);
+
+  lex_input_ptr  = saved_lex_input_ptr;
+  lex_input_size = saved_lex_input_size;
 }
 
 #endif /* if BX_DEBUGGER */

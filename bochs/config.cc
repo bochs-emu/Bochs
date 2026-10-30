@@ -706,6 +706,13 @@ void bx_init_options()
       "cpuid_freq", "CPUID frequency leaves 0x15/0x16 mode",
       "Report CPUID frequency leaves 0x15/0x16 from the hardware dump of the selected model, as not enumerated, or derived from the emulated tick rate (ips)",
       cpuid_freq_names, 0, 0);
+#if BX_PHY_ADDRESS_LONG
+  new bx_param_num_c(cpu_param,
+      "maxphyaddr", "Maximum physical address width (MAXPHYADDR)",
+      "Emulated maximum physical address width reported in CPUID.80000008H:EAX[7:0]",
+      36, 52,
+      BX_PHY_ADDRESS_WIDTH);
+#endif
 #if BX_SUPPORT_MONITOR_MWAIT
   new bx_param_bool_c(cpu_param,
       "mwait_is_nop", "Don't put CPU to sleep state by MWAIT",
@@ -3166,7 +3173,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     if (strncmp(params[1], "enabled=", 8)) {
       PARSE_ERR(("%s: magic_break directive malformed.", context));
     }
-    if ((params[1][8] == '0') || (!bx_dbg.debugger_active)) {
+    // magic break points also activate the debugger when it is not active
+    if (params[1][8] == '0') {
       BX_INFO(("Ignoring magic break points"));
     } else if (params[1][8] == '1') {
       bx_dbg_set_magic_bp_mask(bx_dbg_get_magic_bp_mask_from_str(params[1]));
@@ -3206,7 +3214,18 @@ static int parse_line_formatted(const char *context, int num_params, char *param
   } else if (!strcmp(params[0], "debugger")) {
 #if BX_DEBUGGER
     for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "log=", 4)) {
+      if (!strncmp(params[i], "activate=", 9)) {
+        if (params[i][9] == '0' || !strcmp(&params[i][9], "false")) {
+          bx_dbg.debugger_active = false;
+        } else if (params[i][9] == '1' || !strcmp(&params[i][9], "true")) {
+          SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
+          SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set_enabled(1);
+#if BX_SUPPORT_IODEBUG
+          SIM->get_param(BXPN_IODEBUG_ALL_RINGS)->set_enabled(1);
+#endif
+          bx_dbg.debugger_active = true;
+        }
+      } else if (!strncmp(params[i], "log=", 4)) {
         SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set(&params[i][4]);
       } else if (!strncmp(params[i], "gui=", 4)) {
 #if BX_DEBUGGER_GUI
@@ -3218,6 +3237,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
           bx_dbg.debugger_gui = true;
           bx_dbg.dbg_gui_globalini = true;
         }
+        // with the debugger inactive the gui is used when the debugger is
+        // activated at runtime
 #else
         PARSE_WARN(("%s: Bochs debugger gui not available", context));
 #endif
@@ -3629,6 +3650,9 @@ int bx_write_configuration(const char *rc, int overwrite)
     SIM->get_param_enum(BXPN_CPUID_FREQ)->get_selected());
 #if BX_CPU_LEVEL >= 5
   fprintf(fp, ", ignore_bad_msrs=%d", SIM->get_param_bool(BXPN_IGNORE_BAD_MSRS)->get());
+#endif
+#if BX_PHY_ADDRESS_LONG
+  fprintf(fp, ", maxphyaddr=%u", SIM->get_param_num(BXPN_CPU_MAXPHYADDR)->get());
 #endif
 #if BX_SUPPORT_MONITOR_MWAIT
   fprintf(fp, ", mwait_is_nop=%d", SIM->get_param_bool(BXPN_MWAIT_IS_NOP)->get());

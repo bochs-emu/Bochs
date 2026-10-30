@@ -36,6 +36,12 @@
 #define BX_CR0_CD_MASK         (1 << 30)
 #define BX_CR0_PG_MASK         (1 << 31)
 
+const Bit32u BX_CR0_FLUSH_TLB_MASK = (BX_CR0_PG_MASK | BX_CR0_CD_MASK | BX_CR0_WP_MASK | BX_CR0_PE_MASK);
+
+#if BX_CPU_LEVEL >= 6
+const Bit32u BX_CR0_PDPTE_RELOAD_MASK = (BX_CR0_PG_MASK | BX_CR0_CD_MASK | BX_CR0_NW_MASK | BX_CR0_WP_MASK);
+#endif
+
 struct bx_cr0_t {
   Bit32u  val; // 32bit value of register
 
@@ -172,6 +178,7 @@ struct bx_cr4_t {
 
 #if BX_CPU_LEVEL >= 5
 const bx_address BX_CR4_FLUSH_TLB_MASK = (BX_CR4_PSE_MASK | BX_CR4_PAE_MASK | BX_CR4_PGE_MASK | BX_CR4_LA57_MASK | BX_CR4_PCIDE_MASK | BX_CR4_SMEP_MASK | BX_CR4_SMAP_MASK | BX_CR4_PKE_MASK | BX_CR4_CET_MASK | BX_CR4_PKS_MASK | BX_CR4_LASS_MASK);
+const bx_address BX_CR4_PDPTE_RELOAD_MASK = (BX_CR4_PSE_MASK | BX_CR4_PAE_MASK | BX_CR4_PGE_MASK | BX_CR4_SMEP_MASK | BX_CR4_CET_MASK);
 #endif
 
 #endif  // #if BX_CPU_LEVEL >= 4
@@ -188,6 +195,13 @@ struct bx_dr6_t {
 #define BX_DEBUG_DR_ACCESS_BIT        (1 << 13)
 #define BX_DEBUG_SINGLE_STEP_BIT      (1 << 14)
 #define BX_DEBUG_TRAP_TASK_SWITCH_BIT (1 << 15)
+
+// NOT ARCHITECTURAL: Bochs internal flag kept in debug_trap only, never written to DR6,
+// pending debug exceptions VMCS field or FRED event data.
+// Set by V[P]GATHER*/V[P]SCATTER* when a data breakpoint is pending from an already completed
+// element - such breakpoint is delivered in lieu of a fault triggered by a later element.
+// Cleared together with debug_trap on any event delivery or VM exit.
+#define BX_DEBUG_TRAP_ELEMENT_COMPLETED (1u << 31)
 
   IMPLEMENT_CRREG_ACCESSORS(BD, 13);
   IMPLEMENT_CRREG_ACCESSORS(BS, 14);

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -314,132 +314,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_EqGqR(bxInstruction_c *i)
 //       of whether condition is true or not.  Thus, exceptions may
 //       occur even if the MOV does not take place.
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVO_GqEqR(bxInstruction_c *i)
-{
-  if (get_OF())
-    BX_WRITE_64BIT_REG(i->dst(), BX_READ_64BIT_REG(i->src()));
+// CMOVcc Gq, Eq: move when the condition is true
+#define CMOV_GqEqR(HANDLER, cond)                                                         \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                     \
+  {                                                                                       \
+    if (cond)                                                                             \
+      BX_WRITE_64BIT_REG(i->dst(), BX_READ_64BIT_REG(i->src()));                          \
+                                                                                          \
+    BX_NEXT_INSTR(i);                                                                     \
+  }
 
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNO_GqEqR(bxInstruction_c *i)
-{
-  if (!get_OF())
-    BX_WRITE_64BIT_REG(i->dst(), BX_READ_64BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVB_GqEqR(bxInstruction_c *i)
-{
-  if (get_CF())
-    BX_WRITE_64BIT_REG(i->dst(), BX_READ_64BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNB_GqEqR(bxInstruction_c *i)
-{
-  if (!get_CF())
-    BX_WRITE_64BIT_REG(i->dst(), BX_READ_64BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVZ_GqEqR(bxInstruction_c *i)
-{
-  if (get_ZF())
-    BX_WRITE_64BIT_REG(i->dst(), BX_READ_64BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNZ_GqEqR(bxInstruction_c *i)
-{
-  if (!get_ZF())
-    BX_WRITE_64BIT_REG(i->dst(), BX_READ_64BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVBE_GqEqR(bxInstruction_c *i)
-{
-  if (get_CF() || get_ZF())
-    BX_WRITE_64BIT_REG(i->dst(), BX_READ_64BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNBE_GqEqR(bxInstruction_c *i)
-{
-  if (! (get_CF() || get_ZF()))
-    BX_WRITE_64BIT_REG(i->dst(), BX_READ_64BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVS_GqEqR(bxInstruction_c *i)
-{
-  if (get_SF())
-    BX_WRITE_64BIT_REG(i->dst(), BX_READ_64BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNS_GqEqR(bxInstruction_c *i)
-{
-  if (!get_SF())
-    BX_WRITE_64BIT_REG(i->dst(), BX_READ_64BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVP_GqEqR(bxInstruction_c *i)
-{
-  if (get_PF())
-    BX_WRITE_64BIT_REG(i->dst(), BX_READ_64BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNP_GqEqR(bxInstruction_c *i)
-{
-  if (!get_PF())
-    BX_WRITE_64BIT_REG(i->dst(), BX_READ_64BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVL_GqEqR(bxInstruction_c *i)
-{
-  if (getB_SF() != getB_OF())
-    BX_WRITE_64BIT_REG(i->dst(), BX_READ_64BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNL_GqEqR(bxInstruction_c *i)
-{
-  if (getB_SF() == getB_OF())
-    BX_WRITE_64BIT_REG(i->dst(), BX_READ_64BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVLE_GqEqR(bxInstruction_c *i)
-{
-  if (get_ZF() || (getB_SF() != getB_OF()))
-    BX_WRITE_64BIT_REG(i->dst(), BX_READ_64BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNLE_GqEqR(bxInstruction_c *i)
-{
-  if (! get_ZF() && (getB_SF() == getB_OF()))
-    BX_WRITE_64BIT_REG(i->dst(), BX_READ_64BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
+CMOV_GqEqR(CMOVO_GqEqR, get_OF())
+CMOV_GqEqR(CMOVNO_GqEqR, !get_OF())
+CMOV_GqEqR(CMOVB_GqEqR, get_CF())
+CMOV_GqEqR(CMOVNB_GqEqR, !get_CF())
+CMOV_GqEqR(CMOVZ_GqEqR, get_ZF())
+CMOV_GqEqR(CMOVNZ_GqEqR, !get_ZF())
+CMOV_GqEqR(CMOVBE_GqEqR, get_CF() || get_ZF())
+CMOV_GqEqR(CMOVNBE_GqEqR, ! (get_CF() || get_ZF()))
+CMOV_GqEqR(CMOVS_GqEqR, get_SF())
+CMOV_GqEqR(CMOVNS_GqEqR, !get_SF())
+CMOV_GqEqR(CMOVP_GqEqR, get_PF())
+CMOV_GqEqR(CMOVNP_GqEqR, !get_PF())
+CMOV_GqEqR(CMOVL_GqEqR, getB_SF() != getB_OF())
+CMOV_GqEqR(CMOVNL_GqEqR, getB_SF() == getB_OF())
+CMOV_GqEqR(CMOVLE_GqEqR, get_ZF() || (getB_SF() != getB_OF()))
+CMOV_GqEqR(CMOVNLE_GqEqR, ! get_ZF() && (getB_SF() == getB_OF()))
 
 #endif /* if BX_SUPPORT_X86_64 */

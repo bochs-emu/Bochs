@@ -26,12 +26,21 @@
 // header bar and status bar stuff
 #define BX_HEADER_BAR_Y 32
 
-#if BX_USB_DEBUGGER
-  #define BX_MAX_PIXMAPS 19
-  #define BX_MAX_HEADERBAR_ENTRIES 13
+// debugger button: one headerbar entry, one pixmap
+#if BX_DEBUGGER
+  #define BX_DEBUGGER_HB_ENTRIES 1
+  #define BX_DEBUGGER_PIXMAPS    1
 #else
-  #define BX_MAX_PIXMAPS 17
-  #define BX_MAX_HEADERBAR_ENTRIES 12
+  #define BX_DEBUGGER_HB_ENTRIES 0
+  #define BX_DEBUGGER_PIXMAPS    0
+#endif
+
+#if BX_USB_DEBUGGER
+  #define BX_MAX_PIXMAPS (19 + BX_DEBUGGER_PIXMAPS)
+  #define BX_MAX_HEADERBAR_ENTRIES (13 + BX_DEBUGGER_HB_ENTRIES)
+#else
+  #define BX_MAX_PIXMAPS (17 + BX_DEBUGGER_PIXMAPS)
+  #define BX_MAX_HEADERBAR_ENTRIES (12 + BX_DEBUGGER_HB_ENTRIES)
 #endif
 
 // align pixmaps towards left or right side of header bar
@@ -192,6 +201,10 @@ public:
   static void key_event(Bit32u key);
   static void set_text_charmap(Bit8u map, Bit8u *fbuffer);
   static Bit8u get_mouse_headerbar_id();
+#if BX_DEBUGGER
+  virtual bool debugger_activation_allowed() {return false;}
+  static Bit8u get_debugger_headerbar_id();
+#endif
 
   void init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
             unsigned x_tilesize, unsigned y_tilesize);
@@ -221,6 +234,9 @@ public:
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
   void init_debug_dialog(bool global_ini);
   void close_debug_dialog(void);
+  // start the gui debugger at runtime (debugger activation), returns false
+  // if not supported
+  virtual bool start_debug_dialog(void) {return false;}
 #endif
 #if BX_USE_GUI_CONSOLE
   bool has_gui_console(void) {return console.present;}
@@ -262,6 +278,9 @@ protected:
 #endif
   static void userbutton_handler(void);
   static void save_restore_handler(void);
+#if BX_DEBUGGER
+  static void debugger_handler(void);
+#endif
   // process clicks on the "classic" Bochs headerbar
   void headerbar_click(int x);
   // snapshot helper functions
@@ -297,6 +316,9 @@ protected:
 #if BX_USB_DEBUGGER
   unsigned usbdbg_bmap_id, usbdbg_dis_bmap_id, usbdbg_trigger_bmap_id, usbdbg_hbar_id;
 #endif
+#if BX_DEBUGGER
+  unsigned debugger_bmap_id, debugger_hbar_id;
+#endif
   // the "classic" Bochs headerbar
   unsigned bx_headerbar_entries;
   struct {
@@ -330,6 +352,7 @@ protected:
   Bit16u host_yres;
   Bit16u host_pitch;
   Bit8u host_bpp;
+  Bit8u *tile;
   Bit8u *framebuffer;
   // new text update API
   bool new_text_api;

@@ -956,10 +956,11 @@ Bit32u pit_82C54::get_next_event_time(void)
   Bit32u time1=get_clock_event_time(1);
   Bit32u time2=get_clock_event_time(2);
 
+  // 0 means "no event" for a counter, ignore it when looking for the minimum
   Bit32u out=time0;
-  if (time1 && (time1<out))
+  if (time1 && ((out == 0) || (time1<out)))
     out=time1;
-  if (time2 && (time2<out))
+  if (time2 && ((out == 0) || (time2<out)))
     out=time2;
   return out;
 }

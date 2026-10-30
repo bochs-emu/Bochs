@@ -565,6 +565,14 @@ void BX_CPU_C::handleAvxModeChange(void)
   }
 #endif
 
+#if BX_SUPPORT_APX
+  if (! long64_mode() || ! BX_CPU_THIS_PTR cr4.get_OSXSAVE() ||
+      (~BX_CPU_THIS_PTR xcr0.get32() & BX_XCR0_APX_MASK) != 0)
+    clear_apx_ok();
+  else
+    set_apx_ok();
+#endif
+
   if (BX_CPU_THIS_PTR cr4.get_OSXSAVE()) {
     if ((BX_CPU_THIS_PTR xcr0.get32() & (BX_XCR0_ZMM_HI256_MASK | BX_XCR0_HI_ZMM_MASK | BX_XCR0_OPMASK_MASK)) != 0)
       BX_CPU_THIS_PTR maxvl = BX_VL512;
@@ -632,6 +640,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoEVEX(bxInstruction_c *i)
 
   BX_NEXT_TRACE(i); // keep compiler happy
 }
+
 #endif
 
 #if BX_SUPPORT_AMX
@@ -773,25 +782,55 @@ Bit64u BX_CPU_C::get_Virtual_TSC()
     }
   }
 #endif
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    // The TSC value read by SVM guest is scaled by TSC_RATIO MSR (8.32 fixed point format)
+    // before TSC_OFFSET is added, the MSR is 1.0 when TSC ratio feature is not supported
+    Bit64u tsc_ratio = BX_CPU_THIS_PTR msr.svm_tsc_ratio;
+    if (tsc_ratio != BX_SVM_TSC_RATIO_DEFAULT) {
+      Bit128u product_128 = (Bit128u) tsc * tsc_ratio;
+      tsc = GET128L(product_128 >> 32);
+    }
+  }
+#endif
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM
   tsc += BX_CPU_THIS_PTR tsc_offset;    // BX_CPU_THIS_PTR tsc_offset = 0 if not in VMX or SVM guest
 #endif
   return tsc;
 }
 
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
 Bit64u BX_CPU_C::compute_physical_TSC_delay(Bit64u tsc_delay)
 {
+#if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls1.TSC_OFFSET() && BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.TSC_SCALING()) {
-      // The virtual delay is multiplied by 2^48 (using a shift) to produce a 128-bit 
+      // The virtual delay is multiplied by 2^48 (using a shift) to produce a 128-bit
       // integer. That product is then divided by the TSC multiplier to produce a 64-bit integer.
       // The physical delay is that quotient.
       Bit128u quotient = ((Bit128u) tsc_delay << 48) / BX_CPU_THIS_PTR vmcs.tsc_multiplier;
-      BX_ASSERT(GET128H(quotient) == 0);
-      tsc_delay = GET128L(quotient);
+      // the physical delay could overflow 64-bit when TSC multiplier is less than 1.0
+      if (GET128H(quotient) != 0)
+        tsc_delay = BX_CONST64(0xffffffffffffffff);
+      else
+        tsc_delay = GET128L(quotient);
     }
   }
+#endif
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    Bit64u tsc_ratio = BX_CPU_THIS_PTR msr.svm_tsc_ratio;
+    // TSC ratio of zero freezes the guest TSC, keep the delay unscaled in this case
+    if (tsc_ratio != BX_SVM_TSC_RATIO_DEFAULT && tsc_ratio != 0) {
+      Bit128u quotient = ((Bit128u) tsc_delay << 32) / tsc_ratio;
+      // the physical delay could overflow 64-bit when TSC ratio is less than 1.0
+      if (GET128H(quotient) != 0)
+        tsc_delay = BX_CONST64(0xffffffffffffffff);
+      else
+        tsc_delay = GET128L(quotient);
+    }
+  }
+#endif
   return tsc_delay;
 }
 #endif
@@ -908,6 +947,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPID_Ed(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
+
+#if BX_SUPPORT_X86_64
+  // AMD: SYSENTER is invalid in long mode (both 64-bit and compatibility mode)
+  if (long_mode() && ! is_cpu_extension_supported(BX_ISA_SYSENTER_SYSEXIT_LONGMODE)) {
+    BX_ERROR(("%s: not supported in long mode", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
   if (real_mode()) {
     BX_ERROR(("%s: not recognized in real mode !", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -931,14 +979,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  invalidate_prefetch_q();
-
-  BX_INSTR_FAR_BRANCH_ORIGIN();
-
-  BX_CPU_THIS_PTR clear_VM();       // do this just like the book says to do
-  BX_CPU_THIS_PTR clear_IF();
-  BX_CPU_THIS_PTR clear_RF();
-
 #if BX_SUPPORT_X86_64
   if (long_mode()) {
     if (!IsCanonical(BX_CPU_THIS_PTR msr.sysenter_eip_msr)) {
@@ -951,6 +991,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
     }
   }
 #endif
+
+  invalidate_prefetch_q();
+
+  BX_INSTR_FAR_BRANCH_ORIGIN();
+
+  BX_CPU_THIS_PTR clear_VM();       // do this just like the book says to do
+  BX_CPU_THIS_PTR clear_IF();
+  BX_CPU_THIS_PTR clear_RF();
 
 #if BX_SUPPORT_CET
   if (ShadowStackEnabled(CPL))
@@ -994,6 +1042,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
 
+#if BX_SUPPORT_X86_64
+  // AMD: SYSEXIT is invalid in long mode (both 64-bit and compatibility mode)
+  if (long_mode() && ! is_cpu_extension_supported(BX_ISA_SYSENTER_SYSEXIT_LONGMODE)) {
+    BX_ERROR(("%s: not supported in long mode", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
 #if BX_SUPPORT_X86_64 && BX_SUPPORT_FRED
   if (BX_CPU_THIS_PTR cr4.get_FRED()) {
     BX_ERROR(("%s: Not supported when FRED is enabled in CR4", i->getIaOpcodeNameShort()));
@@ -1011,10 +1067,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
   }
 
   invalidate_prefetch_q();
-
-#if BX_SUPPORT_MONITOR_MWAIT
-  BX_CPU_THIS_PTR monitor.reset_umonitor();
-#endif
 
   BX_INSTR_FAR_BRANCH_ORIGIN();
 
@@ -1139,6 +1191,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
     ECX = EIP;
     temp_RIP = (Bit32u)(BX_CPU_THIS_PTR msr.star);
 
+    // clear VM before loading CS: with VM=1 the mode change would force CPL=3
+    BX_CPU_THIS_PTR clear_VM();
+    BX_CPU_THIS_PTR clear_IF();
+    BX_CPU_THIS_PTR clear_RF();
+
     // set up CS segment, flat, 32-bit DPL=0
     parse_selector((BX_CPU_THIS_PTR msr.star >> 32) & BX_SELECTOR_RPL_MASK,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
@@ -1151,9 +1208,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
 
     setup_flat_SS(0);
 
-    BX_CPU_THIS_PTR clear_VM();
-    BX_CPU_THIS_PTR clear_IF();
-    BX_CPU_THIS_PTR clear_RF();
     RIP = temp_RIP;
   }
 
@@ -1199,10 +1253,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-#if BX_SUPPORT_MONITOR_MWAIT
-  BX_CPU_THIS_PTR monitor.reset_umonitor();
-#endif
-
   BX_INSTR_FAR_BRANCH_ORIGIN();
 
 #if BX_SUPPORT_X86_64
@@ -1235,14 +1285,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
     parse_selector((Bit16u)(((BX_CPU_THIS_PTR msr.star >> 48) + 8) | 3),
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
-    // SS base, limit, attributes unchanged
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p       = 1;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl     = 3;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment = 1;  /* data/code segment */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
+    if (is_cpu_extension_supported(BX_ISA_SYSCALL_SYSRET_LEGACY)) {
+      // SYSCALL_SYSRET_LEGACY selects AMD specific behavior: SS base, limit, attributes unchanged
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p       = 1;
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl     = 3;
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment = 1;  /* data/code segment */
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
+    }
+    else {
+      // Intel: SS is loaded with flat 32-bit DPL=3 segment
+      setup_flat_SS(3);
+    }
 
-    writeEFlags((Bit32u) R11, EFlagsValidMask);
+    // RF and VM are cleared, not loaded from R11
+    writeEFlags((Bit32u) R11 & ~(EFlagsRFMask | EFlagsVMMask), EFlagsValidMask);
     // SYSRET takes the single-step trap by the TF it loads: none when TF = 0, and at once
     // (before the target's first instruction) when TF = 1
     if (! BX_CPU_THIS_PTR get_TF())
@@ -1417,16 +1474,19 @@ void BX_CPU_C::set_PKeys(Bit32u pkru_val, Bit32u pkrs_val)
   BX_CPU_THIS_PTR pkru = pkru_val;
   BX_CPU_THIS_PTR pkrs = pkrs_val;
 
-  for (unsigned i=0; i<16; i++) {
+  // entries [0..15] are used for user pages (PKRU), entries [16..31] for supervisor pages (PKRS)
+  for (unsigned i=0; i<32; i++) {
     BX_CPU_THIS_PTR rd_pkey[i] = BX_CPU_THIS_PTR wr_pkey[i] =
       TLB_SysReadOK | TLB_UserReadOK | TLB_SysWriteOK | TLB_UserWriteOK;
+  }
 
-    if (long_mode()) {
+  if (long_mode()) {
+    for (unsigned i=0; i<16; i++) {
       if (BX_CPU_THIS_PTR cr4.get_PKE()) {
-        // accessDisable bit set
+        // accessDisable bit set: no data accesses to user page are permitted
         if (pkru_val & (1<<(i*2))) {
-          BX_CPU_THIS_PTR rd_pkey[i] &= ~(TLB_UserReadOK | TLB_UserWriteOK);
-          BX_CPU_THIS_PTR wr_pkey[i] &= ~(TLB_UserReadOK | TLB_UserWriteOK);
+          BX_CPU_THIS_PTR rd_pkey[i] = 0;
+          BX_CPU_THIS_PTR wr_pkey[i] = 0;
         }
 
         // writeDisable bit set
@@ -1438,26 +1498,32 @@ void BX_CPU_C::set_PKeys(Bit32u pkru_val, Bit32u pkrs_val)
       }
 
       if (BX_CPU_THIS_PTR cr4.get_PKS()) {
-        // accessDisable bit set
+        // accessDisable bit set: no data accesses to supervisor page are permitted
         if (pkrs_val & (1<<(i*2))) {
-          BX_CPU_THIS_PTR rd_pkey[i] &= ~(TLB_SysReadOK | TLB_SysWriteOK);
-          BX_CPU_THIS_PTR wr_pkey[i] &= ~(TLB_SysReadOK | TLB_SysWriteOK);
+          BX_CPU_THIS_PTR rd_pkey[16+i] = 0;
+          BX_CPU_THIS_PTR wr_pkey[16+i] = 0;
         }
 
         // writeDisable bit set
         if (pkrs_val & (1<<(i*2+1))) {
           if (BX_CPU_THIS_PTR cr0.get_WP())
-            BX_CPU_THIS_PTR wr_pkey[i] &= ~(TLB_SysWriteOK);
+            BX_CPU_THIS_PTR wr_pkey[16+i] &= ~(TLB_SysWriteOK);
         }
       }
     }
+  }
 
 #if BX_SUPPORT_CET
-    // replicate pkey access bits for shadow stack checks
+  // replicate pkey access bits for shadow stack checks
+  for (unsigned i=0; i<32; i++) {
     BX_CPU_THIS_PTR rd_pkey[i] |= BX_CPU_THIS_PTR rd_pkey[i]<<4;
     BX_CPU_THIS_PTR wr_pkey[i] |= BX_CPU_THIS_PTR wr_pkey[i]<<4;
-#endif
   }
+#endif
+
+  // TLB entries are checked against rd_pkey/wr_pkey on every access and don't
+  // need to be invalidated, but the stack cache was validated with old values
+  invalidate_stack_cache();
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPKRU(bxInstruction_c *i)
@@ -1483,8 +1549,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRPKRU(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
 
   BX_CPU_THIS_PTR set_PKeys(EAX, BX_CPU_THIS_PTR pkrs);
-
-  TLB_flush();
 
   BX_NEXT_TRACE(i);
 }

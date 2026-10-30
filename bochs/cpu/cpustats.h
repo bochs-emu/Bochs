@@ -53,6 +53,8 @@ struct bx_cpu_statistics
   // tlb flush statistics
   Bit64u tlbGlobalFlushes;
   Bit64u tlbNonGlobalFlushes;
+  Bit64u tlbInvlpg;
+  Bit64u tlbInvlpgLarge;
 
   // stack prefetch statistics
   Bit64u stackPrefetch;
@@ -66,6 +68,7 @@ struct bx_cpu_statistics
       tlbLookups(0), tlbExecuteLookups(0), tlbWriteLookups(0),
       tlbMisses(0), tlbExecuteMisses(0), tlbWriteMisses(0),
       tlbGlobalFlushes(0), tlbNonGlobalFlushes(0),
+      tlbInvlpg(0), tlbInvlpgLarge(0),
       stackPrefetch(0), smc(0) {}
 
 };

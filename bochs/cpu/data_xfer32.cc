@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -220,162 +220,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_EdGdR(bxInstruction_c *i)
 //       of whether condition is true or not.  Thus, exceptions may
 //       occur even if the MOV does not take place.
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVO_GdEdR(bxInstruction_c *i)
-{
-  if (get_OF())
-    BX_WRITE_32BIT_REGZ(i->dst(), BX_READ_32BIT_REG(i->src()));
+// CMOVcc Gd, Ed: move when the condition is true
+#define CMOV_GdEdR(HANDLER, cond)                                                         \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                     \
+  {                                                                                       \
+    if (cond)                                                                             \
+      BX_WRITE_32BIT_REGZ(i->dst(), BX_READ_32BIT_REG(i->src()));                         \
+                                                                                          \
+    BX_CLEAR_64BIT_HIGH(i->dst()); /* always clear upper part of the register */          \
+                                                                                          \
+    BX_NEXT_INSTR(i);                                                                     \
+  }
 
-  BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNO_GdEdR(bxInstruction_c *i)
-{
-  if (!get_OF())
-    BX_WRITE_32BIT_REGZ(i->dst(), BX_READ_32BIT_REG(i->src()));
-
-  BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVB_GdEdR(bxInstruction_c *i)
-{
-  if (get_CF())
-    BX_WRITE_32BIT_REGZ(i->dst(), BX_READ_32BIT_REG(i->src()));
-
-  BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNB_GdEdR(bxInstruction_c *i)
-{
-  if (!get_CF())
-    BX_WRITE_32BIT_REGZ(i->dst(), BX_READ_32BIT_REG(i->src()));
-
-  BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVZ_GdEdR(bxInstruction_c *i)
-{
-  if (get_ZF())
-    BX_WRITE_32BIT_REGZ(i->dst(), BX_READ_32BIT_REG(i->src()));
-
-  BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNZ_GdEdR(bxInstruction_c *i)
-{
-  if (!get_ZF())
-    BX_WRITE_32BIT_REGZ(i->dst(), BX_READ_32BIT_REG(i->src()));
-
-  BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVBE_GdEdR(bxInstruction_c *i)
-{
-  if (get_CF() || get_ZF())
-    BX_WRITE_32BIT_REGZ(i->dst(), BX_READ_32BIT_REG(i->src()));
-
-  BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNBE_GdEdR(bxInstruction_c *i)
-{
-  if (! (get_CF() || get_ZF()))
-    BX_WRITE_32BIT_REGZ(i->dst(), BX_READ_32BIT_REG(i->src()));
-
-  BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVS_GdEdR(bxInstruction_c *i)
-{
-  if (get_SF())
-    BX_WRITE_32BIT_REGZ(i->dst(), BX_READ_32BIT_REG(i->src()));
-
-  BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNS_GdEdR(bxInstruction_c *i)
-{
-  if (!get_SF())
-    BX_WRITE_32BIT_REGZ(i->dst(), BX_READ_32BIT_REG(i->src()));
-
-  BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVP_GdEdR(bxInstruction_c *i)
-{
-  if (get_PF())
-    BX_WRITE_32BIT_REGZ(i->dst(), BX_READ_32BIT_REG(i->src()));
-
-  BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNP_GdEdR(bxInstruction_c *i)
-{
-  if (!get_PF())
-    BX_WRITE_32BIT_REGZ(i->dst(), BX_READ_32BIT_REG(i->src()));
-
-  BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVL_GdEdR(bxInstruction_c *i)
-{
-  if (getB_SF() != getB_OF())
-    BX_WRITE_32BIT_REGZ(i->dst(), BX_READ_32BIT_REG(i->src()));
-
-  BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNL_GdEdR(bxInstruction_c *i)
-{
-  if (getB_SF() == getB_OF())
-    BX_WRITE_32BIT_REGZ(i->dst(), BX_READ_32BIT_REG(i->src()));
-
-  BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVLE_GdEdR(bxInstruction_c *i)
-{
-  if (get_ZF() || (getB_SF() != getB_OF()))
-    BX_WRITE_32BIT_REGZ(i->dst(), BX_READ_32BIT_REG(i->src()));
-
-  BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNLE_GdEdR(bxInstruction_c *i)
-{
-  if (! get_ZF() && (getB_SF() == getB_OF()))
-    BX_WRITE_32BIT_REGZ(i->dst(), BX_READ_32BIT_REG(i->src()));
-
-  BX_CLEAR_64BIT_HIGH(i->dst()); // always clear upper part of the register
-
-  BX_NEXT_INSTR(i);
-}
+CMOV_GdEdR(CMOVO_GdEdR, get_OF())
+CMOV_GdEdR(CMOVNO_GdEdR, !get_OF())
+CMOV_GdEdR(CMOVB_GdEdR, get_CF())
+CMOV_GdEdR(CMOVNB_GdEdR, !get_CF())
+CMOV_GdEdR(CMOVZ_GdEdR, get_ZF())
+CMOV_GdEdR(CMOVNZ_GdEdR, !get_ZF())
+CMOV_GdEdR(CMOVBE_GdEdR, get_CF() || get_ZF())
+CMOV_GdEdR(CMOVNBE_GdEdR, ! (get_CF() || get_ZF()))
+CMOV_GdEdR(CMOVS_GdEdR, get_SF())
+CMOV_GdEdR(CMOVNS_GdEdR, !get_SF())
+CMOV_GdEdR(CMOVP_GdEdR, get_PF())
+CMOV_GdEdR(CMOVNP_GdEdR, !get_PF())
+CMOV_GdEdR(CMOVL_GdEdR, getB_SF() != getB_OF())
+CMOV_GdEdR(CMOVNL_GdEdR, getB_SF() == getB_OF())
+CMOV_GdEdR(CMOVLE_GdEdR, get_ZF() || (getB_SF() != getB_OF()))
+CMOV_GdEdR(CMOVNLE_GdEdR, ! get_ZF() && (getB_SF() == getB_OF()))

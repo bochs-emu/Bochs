@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -484,7 +484,7 @@ Bit64s hdimage_save_handler(void *class_ptr, bx_param_c *param)
 
   param->get_param_path(imgname, BX_PATHNAME_LEN);
   if (!strncmp(imgname, "bochs.", 6)) {
-    strcpy(imgname, imgname+6);
+    memmove(imgname, imgname+6, strlen(imgname+6) + 1);
   }
   if (SIM->get_param_string(BXPN_RESTORE_PATH)->isempty()) {
     return 0;
@@ -501,7 +501,7 @@ void hdimage_restore_handler(void *class_ptr, bx_param_c *param, Bit64s value)
   if (value != 0) {
     param->get_param_path(imgname, BX_PATHNAME_LEN);
     if (!strncmp(imgname, "bochs.", 6)) {
-      strcpy(imgname, imgname+6);
+      memmove(imgname, imgname+6, strlen(imgname+6) + 1);
     }
     sprintf(path, "%s/%s", SIM->get_param_string(BXPN_RESTORE_PATH)->getptr(), imgname);
     ((device_image_t*)class_ptr)->restore_state(path);
@@ -653,6 +653,11 @@ void device_image_t::register_state(bx_list_c *parent)
 
 /*** flat_image_t function definitions ***/
 
+flat_image_t::flat_image_t()
+{
+  fd = -1;
+}
+
 int flat_image_t::open(const char* _pathname, int flags)
 {
   pathname = _pathname;
@@ -671,6 +676,7 @@ void flat_image_t::close()
 {
   if (fd > -1) {
     bx_close_image(fd, pathname);
+    fd = -1;
   }
 }
 
@@ -740,6 +746,7 @@ char increment_string(char *str, int diff)
 concat_image_t::concat_image_t()
 {
   curr_fd = -1;
+  maxfd = 0;
 }
 
 void concat_image_t::increment_string(char *str)
@@ -755,12 +762,16 @@ int concat_image_t::open(const char* _pathname0, int flags)
   strcpy(pathname1, pathname0);
   BX_DEBUG(("concat_image_t::open"));
   Bit64s start_offset = 0;
+  maxfd = BX_CONCAT_MAX_IMAGES;
   for (int i=0; i<BX_CONCAT_MAX_IMAGES; i++) {
     fd_table[i] = hdimage_open_file(pathname1, flags, &length_table[i], NULL);
     if (fd_table[i] < 0) {
       // open failed.
       // if no FD was opened successfully, return -1 (fail).
-      if (i==0) return -1;
+      if (i==0) {
+        delete [] pathname1;
+        return -1;
+      }
       // otherwise, it only means that all images in the series have
       // been opened.  Record the number of fds opened successfully.
       maxfd = i;
@@ -823,7 +834,7 @@ Bit64s concat_image_t::lseek(Bit64s offset, int whence)
       total_offset += offset;
       break;
     case SEEK_END:
-      total_offset = hd_size - offset;
+      total_offset = hd_size + offset;
       break;
     default:
       return -1;
@@ -1013,7 +1024,7 @@ int sparse_image_t::read_header()
 
 #ifdef _POSIX_MAPPED_FILES
   // Try to memory map from the beginning of the file (0 is trivially a page multiple)
-  void *mmap_header = mmap(NULL, preamble_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  mmap_header = mmap(NULL, preamble_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   if (mmap_header == MAP_FAILED) {
     BX_INFO(("failed to mmap sparse disk file - using conventional file access"));
     mmap_header = NULL;
@@ -1104,26 +1115,32 @@ int sparse_image_t::open(const char* pathname0, int flags)
 
 void sparse_image_t::close()
 {
-  BX_DEBUG(("concat_image_t.close"));
+  BX_DEBUG(("sparse_image_t.close"));
 #ifdef _POSIX_MAPPED_FILES
   if (mmap_header != NULL) {
     int ret = munmap(mmap_header, mmap_length);
     if (ret != 0)
       BX_INFO(("failed to un-memory map sparse disk file"));
+    mmap_header = NULL;
+    pagetable = NULL; // We didn't malloc it
   }
-  pagetable = NULL; // We didn't malloc it
 #endif
   if (fd > -1) {
     bx_close_image(fd, pathname);
+    fd = -1;
   }
   if (pathname != NULL) {
     free(pathname);
+    pathname = NULL;
   }
   if (pagetable != NULL) {
     delete [] pagetable;
+    pagetable = NULL;
   }
   if (parent_image != NULL) {
+    parent_image->close();
     delete parent_image;
+    parent_image = NULL;
   }
 }
 
@@ -1656,6 +1673,8 @@ redolog_t::redolog_t()
   extent_index = (Bit32u)0;
   extent_offset = (Bit32u)0;
   extent_next = (Bit32u)0;
+  bitmap_update = 1;
+  imagepos = 0;
 }
 
 void redolog_t::print_header()
@@ -1881,17 +1900,25 @@ int redolog_t::open(const char* filename, const char *type, int flags)
 
 void redolog_t::close()
 {
-  if (fd >= 0)
+  if (fd >= 0) {
     bx_close_image(fd, pathname);
+    fd = -1;
+  }
 
-  if (pathname != NULL)
+  if (pathname != NULL) {
     delete [] pathname;
+    pathname = NULL;
+  }
 
-  if (catalog != NULL)
+  if (catalog != NULL) {
     delete [] catalog;
+    catalog = NULL;
+  }
 
-  if (bitmap != NULL)
+  if (bitmap != NULL) {
     delete [] bitmap;
+    bitmap = NULL;
+  }
 }
 
 Bit64u redolog_t::get_size()
@@ -2317,7 +2344,9 @@ bool coherency_check(device_image_t *ro_disk, redolog_t *redolog)
 undoable_image_t::undoable_image_t(const char* _redolog_name)
 {
   redolog = new redolog_t();
+  ro_disk = NULL;
   redolog_name = NULL;
+  caps = 0;
   if (_redolog_name != NULL) {
     if ((strlen(_redolog_name) > 0) && (strcmp(_redolog_name,"none") != 0)) {
       redolog_name = new char[strlen(_redolog_name) + 1];
@@ -2389,10 +2418,13 @@ int undoable_image_t::open(const char* pathname, int flags)
 void undoable_image_t::close()
 {
   redolog->close();
-  ro_disk->close();
+  if (ro_disk != NULL)
+    ro_disk->close();
 
-  if (redolog_name != NULL)
+  if (redolog_name != NULL) {
     delete [] redolog_name;
+    redolog_name = NULL;
+  }
 }
 
 Bit64s undoable_image_t::lseek(Bit64s offset, int whence)
@@ -2469,8 +2501,10 @@ void undoable_image_t::restore_state(const char *backup_fname)
 volatile_image_t::volatile_image_t(const char* _redolog_name)
 {
   redolog = new redolog_t();
+  ro_disk = NULL;
   redolog_temp = NULL;
   redolog_name = NULL;
+  caps = 0;
   if (_redolog_name != NULL) {
     if ((strlen(_redolog_name) > 0) && (strcmp(_redolog_name,"none") != 0)) {
       redolog_name = new char[strlen(_redolog_name) + 1];
@@ -2556,17 +2590,22 @@ int volatile_image_t::open(const char* pathname, int flags)
 void volatile_image_t::close()
 {
   redolog->close();
-  ro_disk->close();
+  if (ro_disk != NULL)
+    ro_disk->close();
 
+  if (redolog_temp != NULL) {
 #if defined(WIN32) || BX_WITH_MACOS
-  // on non-unix we have to wait till the file is closed to delete it
-  unlink(redolog_temp);
+    // on non-unix we have to wait till the file is closed to delete it
+    unlink(redolog_temp);
 #endif
-  if (redolog_temp!=NULL)
     delete [] redolog_temp;
+    redolog_temp = NULL;
+  }
 
-  if (redolog_name!=NULL)
+  if (redolog_name != NULL) {
     delete [] redolog_name;
+    redolog_name = NULL;
+  }
 }
 
 Bit64s volatile_image_t::lseek(Bit64s offset, int whence)

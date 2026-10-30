@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -28,7 +28,7 @@
 typedef Bit32u apic_dest_t; /* same definition in apic.h */
 
 extern bool apic_bus_deliver_lowest_priority(Bit8u vector, apic_dest_t dest, bool trig_mode, bool broadcast);
-extern bool apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mode, bool logical_dest, bool level, bool trig_mode);
+extern bool apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mode, bool logical_dest, bool level, bool trig_mode, bool x2apic_dest);
 extern bool apic_bus_broadcast_interrupt(Bit8u vector, Bit8u delivery_mode, bool trig_mode, int exclude_cpu);
 
 #define BX_IOAPIC_NUM_PINS   (0x18)
@@ -61,7 +61,10 @@ public:
   Bit32u get_hi_part () const  { return hi; }
   void set_lo_part (Bit32u val_lo_part) {
     // keep high 32 bits of value, replace low 32, ignore R/O bits
-    lo = val_lo_part & 0xffffafff;
+    // (delivery status and remote IRR keep their current state)
+    lo = (val_lo_part & 0xffffafff) | (lo & 0x00005000);
+    // remote IRR is only defined for level triggered interrupts
+    if (! trigger_mode()) clear_remote_irr();
   }
   void set_hi_part (Bit32u val_hi_part) {
     // keep low 32 bits of value, replace high 32

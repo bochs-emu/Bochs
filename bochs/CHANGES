@@ -1,18 +1,76 @@
 Changes after Bochs 3.1 release:
 
-(up to date with commits done till 30 Sep 2026)
+(up to date with commits done till 28 Oct 2026)
 
 - CPU emulation and instrumentation
+  ! CPUDB: Added AMD Zen3 (Vermeer) CPUID model (features X2APIC, CLWB, UMIP, PKU, CET, VAES, RDPID + introduces CPUID 0x80000021: AMD Extended Feature Identification 2)
   ! Implemented AI Compute Extensions (ACE) emulation according AI Compute Extensions (ACE) Specification rev1.16.2 from x86 Ecosystem Advisory Group
   ! Implemented support for Intel MPX ISA extension
+  ! Implemented support for APX (Advanced Performance Extensions) new instructions, still not enabled in any CPU model
+  ! Implemented SVM Decode Assist, TSC Ratio, Virtual GIF and VMSAVE/VMLOAD virtualization and Supervisor Shadow Stack restrictions (SSSCheck) features + CET state management under SVM
+  ! Implemented SVM SPEC_CTRL virtualization and AMD speculation control (spec_ctrl_amd), enabled in Zen3 model
+    - CPU feature 'sca_mitigations' renamed to 'spec_ctrl' (Intel speculation control), new 'spec_ctrl_amd' feature for AMD speculation control
+  ! Implemented MSR_CORE_THREAD_COUNT (0x35) for Intel Nehalem and later cpu models, reports the configured number of cores and threads
+  ! Configurable Maximum Physical Address Width (MAXPHYADDR) through new 'maxphyaddr' parameter of the 'cpu' bochsrc option (supported maxphyaddr between 36 to 52 bit, default 40)
   ! Improved implementation of x87 transendential instructions (F2XM1/FYL2X/FYL2XP1/FPATAN/FSIN/FCOS/FSINCOS/FPTAN) to match HW
-  - Bugfixes for CPU emulation correctness (critical bugfixes for emulation of AVX_NE_CONVERT, AVX512/AVX512_FP16, AMX, VMX, SVM, CET, FRED)
+  - Bugfixes for CPU emulation correctness (critical bugfixes for emulation of xAPIC, AVX_NE_CONVERT, AVX512/AVX512_FP16/AVX512_BF16, AMX, VMX, SVM, XOP, TBM, CET, FRED, MWAIT)
     full list of all CPU bugfixes can be seen in Bochs source tree @ bochs/cpu/history)
 
 - Bochs debugger
   - Invalidate SMC pages after debugger memory writes
   - Significantly speedup emulation when code breakpoints are defined in internal debugger, up to 2x-3x speedup observed with multiple breakpoints set
   - Allow up to 32 code breakpoints (as they are much less painful for emulation performance now)
+  - Expression evaluation follows C-like operator precedence
+  - Bugfixes in various internal debugger commands:
+    - Invalid input to x/xp and 'info device' commands reports an error instead of terminating Bochs
+    - Fixed 'x /gt' (examine 64-bit values)
+    - x/xp and 'info ivt' no longer print garbage when memory cannot be read
+    - Fixed wrong symbol names shown by symbol lookup, x/xp and bt commands
+    - Fixed 'bt' (backtrace) in 16-bit mode
+    - Fixed deref and the '$' operator in 16/32-bit mode
+    - Fixed 'loadmem' of files larger than 4K
+    - Fixed time breakpoints (sb/sba)
+    - Correctly handle instructions crossing a 4K page boundary in disassembly and step over (p/n) command
+    - 'info tss' now supports all TSS types
+    - 'info linux' detects kernel/user mode correctly for all kernel versions
+    - SMP: breakpoint conditions are evaluated on the CPU that hit the breakpoint, and several commands no longer access the wrong CPU
+    - SMP: on activation debugger switches to the CPU that hit a breakpoint, watchpoint or magic breakpoint
+    - Fixed debugger hang on binary compiled without readline (for example Win32) on a whitespace-only line at the prompt;
+      blank lines in sourced scripts no longer repeat the previous command
+  - Activation of the internal debugger at runtime, when Bochs compiled with the internal debugger
+    was started without -dbg option (currently with the win32 display library only). The gui debugger
+    is activated if it is selected with 'debugger: gui=1' (requires the win32 config interface),
+    the command line debugger otherwise:
+    - Magic breakpoint activates the debugger. Use 'magic_break: enabled=0' to disable it.
+    - New debugger button in the win32 headerbar (also command mode key 'd'), it breaks into the
+      debugger if it is already active
+    - "Continue and enter debugger" choice in the runtime config (text menu and win32 dialog)
+    - The debugger choice of the panic / error "ask" dialog (textconfig and win32 dialog). With
+      'panic: action=ask' this includes Ctrl-C pressed in the console.
+  - Added 'activate' parameter to the 'debugger' bochsrc option: start the debugger on startup
+    (same as the -dbg command line option), e.g. 'debugger: activate=1, gui=1' starts the gui debugger
+  - Added 'detach' debugger command: leave the debugger and continue simulation at full speed without it,
+    the debugger is activated again by magic breakpoint or time breakpoint. With the gui debugger its
+    window stays open and its Break button activates the debugger again.
+    With display libraries other than win32 the debugger cannot be activated again after 'detach'.
+
+- Enhanced (gui) debugger enhancements and bugfixes
+  - Editing memory in linear memory dump wrote the bytes to physical address equal to the linear address
+  - XMM registers view shows the correct upper half of each XMM register
+  - IDT view selects the gate size by CPU mode: 4-byte IVT in real mode, 8-byte gates in protected/V8086 mode,
+    16-byte gates in long mode (including compatibility mode)
+  - GDT view in long mode shows 16-byte LDT/TSS/call gate descriptors as one entry with 64-bit base and long mode type names
+  - DR0-DR3 are shown as 64-bit values in 64-bit mode
+  - IP is shown masked to 16 bits in 16-bit mode
+  - Stack view in 16-bit mode shows 16-bit entries and uses SP for 16-bit stack segment (SS.B=0)
+  - Memory dump search could select rows by comparing past the end of the 4K dump
+  - Register list supports all register groups shown at once in 64-bit mode
+  - Fixed buffer overflows (Find search string, ask dialog reply, font name, bx_enh_dbg.ini parsing)
+  - bx_enh_dbg.ini is sanitized on load: invalid values are reported and ignored
+  - Allow copy text from the output window (^c copies the selected text, ^c without selection still breaks the simulation)
+    - win32: output window is read only and keeps the selection visible, ^a selects all output text
+    - GTK: select the text with the mouse, "Select All" and "Copy" are also available in the right-click menu
+  - win32: much faster Output window updates for long debugger output
 
 - Configure and compile
   - Bochs now require C++11 support for compilation, enforced via configure
@@ -22,6 +80,21 @@ Changes after Bochs 3.1 release:
 - I/O Devices
   - VGA
     - Setting wrong VBE "dispi ID" do not cause PANIC anymore
+    - Fixed guest-to-host heap buffer overflow in text mode with high CRTC start address
+    - Fixed division by zero in planar memory write with zero line offset
+    - Fixed host heap out-of-bounds read in planar memory read beyond the end of the video memory
+    - Fixed division by zero in Input Status 1 read with very short horizontal total
+    - Fixed vertical timer stall when vertical retrace end is beyond vertical total
+  - Voodoo
+    - Fixed crash when the screen is redrawn (e.g. by the debugger) before a display mode is set (#666)
+  - Banshee
+    - Two small fixes in blt_polygon_fill
+    - Fixed clip window for bottom-to-top 2D BLTs
+    - Y direction bit is applied only to screen-to-screen and host-to-screen BLTs (was applied also to stretch BLTs, fills, lines and polygons)
+  - Cirrus
+    - Fixed guest-to-host stack buffer overflow in color expand video-to-video BitBLT
+    - Reject BitBLT operations crossing the video memory boundaries
+    - Fixed division by zero in SVGA memory write with zero pitch
   - GeForce
     - Continue to improve GeForce model
       - #846: Add volume texture support
@@ -31,26 +104,116 @@ Changes after Bochs 3.1 release:
       - #869: Fix object migration between subchannels
       - #871: Implement 2D lines
       - #873: Implement bump mapping with luminance
+      - #928: Add back-transform support for NV20
+      - #942: Fix inline array method handler registration for NV15 (crashes in 3D demos)
+      - #944: Implement 16-bit MMIO writes (PANIC with RivaTuner)
   - Hard drive / HD image
     - VVFAT: Fixed LongName handling in vvfat disks
     - VVFAT: Adding path prefix "fat32:" forces using FAT32 file system
+    - VBOX: Fixed data corruption in images with more than 4GB of allocated data
+    - VMWARE3: Fixed data corruption on Windows hosts (image files were opened in text mode)
+    - Undoable/volatile images: fixed crash and double free when opening the image fails
+    - VPC: fixed multi-sector reads of dynamic VHD images and sequential read/write of fixed VHD images
+    - VVFAT: reject files of 4 GB and more on Windows hosts (were mapped with a wrong size)
+    - CONCAT: fixed uninitialized number of parts, lseek(SEEK_END) and a memory leak
+    - VVFAT: do not crash on blank or malformed lines in vvfat_attr.cfg
   - CD-ROM
     - Model parameter now supports format "VENDOR:PRODUCT:REV" for ATAPI inquiry
+    - Fixed MODE SENSE(6) header and response lengths and GET PERFORMANCE maximum number of descriptors
+    - READ CD/READ(12): reject out of range LBA and too large transfer lengths
+  - Floppy
+    - Fixed parameters decoding of the RESTORE command
+    - Reject read/write/verify of sector number 0
+    - Do not continue DMA transfer after the command finished
+  - PCI and chipset
+    - Fixed guest-to-host heap corruption on PCI configuration space accesses crossing the 0xCFC-0xCFF window
+    - i440FX: fixed write-1-to-clear handling of the PCI status register
+    - PIIX3: asserted PCI interrupt lines now follow PIRQ routing changes
+    - PIIX3: restore the default I/O APIC base on reset
+    - Fixed loading of PCI option ROM images (partial reads, uninitialized ROM padding)
+    - ACPI: unmap the PM/SMBus I/O windows when reset clears their BARs
+    - Fixed spurious rejection of read-only memory handlers (e.g. PCI option ROM) after other memory handlers were unregistered (#932)
+  - Interrupt controllers and timers
+    - IOAPIC: implemented Remote IRR for level triggered interrupts
+    - IOAPIC: a level triggered entry programmed while its input line is already asserted now delivers the interrupt
+    - LAPIC: clear TMR before broadcasting EOI to the IOAPIC (level triggered interrupt could be lost forever,
+             Windows Vista hang with GeForce at the display mode switch)
+    - LAPIC: TSC-deadline timer compared the deadline with system time instead of the guest TSC (interrupt storm after hardware reset or TSC write),
+             IA32_TSC_DEADLINE is cleared when the timer fires
+    - LAPIC: many fixes for SDM compliance:
+      - ExtINT interrupts are delivered bypassing IRR/ISR and processor priority
+      - APIC errors generate the LVT Error interrupt, illegal IPI vector sets Send Illegal Vector in the ESR
+      - Pending interrupt is delivered only if its priority class is higher than the PPR
+      - Self and All-including-self IPI shorthands send only Fixed interrupts
+      - Only 0xFFFFFFFF is x2APIC broadcast destination
+      - INIT keeps IA32_APIC_BASE and only reinitializes the local APIC registers
+      - LVT delivery status and LINT0/LINT1 remote IRR bits are read only
+      - Fixed BX_PANIC when the timer Divide Configuration is changed while the timer counts
+      - Change of the LVT timer mode disarms the timer
+    - PIC: implemented the OCW3 poll command as an interrupt acknowledge
+    - PIC: reset special mask mode and read register select on ICW1
+    - HPET: interrupt routes >= 16 are delivered to the IOAPIC only (were aliased onto PIC IRQs 8-15)
+    - HPET: fixed main counter and comparator state after save/restore
+    - PIT: events of counters 1/2 were not scheduled while counter 0 had no pending event
+    - Slowdown timer synchronization works again after restoring a saved state
+  - DMA
+    - Fixed 16-bit DMA transfers from device to memory (only half of the data was written)
+    - Fixed 64K DMA transfers (transfer length overflow)
+  - Keyboard / mouse
+    - PS/2 mouse "Set Scaling 1:1" command selected 2:1 scaling
+    - Bytes queued while the 8042 output buffer was full are delivered to the right (keyboard or AUX) output buffer
+    - Range check key codes received from the GUI
+  - USB
+    - Fixed USB SCSI disk seek truncated to int (USB disks larger than 2GB failed past 2GB)
+    - USB HID: deactivate the idle timer before unregistering it (PANIC on exit after guest set HID idle rate)
+  - fw_cfg
+    - Fail DMA write requests instead of leaving them pending (matches QEMU)
+  - Serial port
+    - Raw serial mode (Win32): the 1 stop bit setting was ignored
   - Sound
     - SB16: Added parameter 'dsp_realtime' to use realtime mode for the DSP
     - ES1370: Added parameter 'dac_realtime' to use realtime mode for the DACs
     - ALSA sound driver: Added support to specify PCM device
+    - Implement sound buffering
+      - With this change, mixer thread adds short delay before starting sound playback. It allows to get rid of crackling noise during playback.
+  - Networking
+    - VDE: fix networking on FreeBSD
+  - CMOS
+    - Save/restore: the extended CMOS RAM bank (ports 0x72/0x73) is save/restored now
+    - Report an error instead of PANIC when the CMOS image file cannot be written on exit
   - General
     - Set Windows system timer resolution to 1ms. This help to reduce artefacts (clicking noises) during sound playback
+    - Save/restore: failures while saving the simulation state are reported instead of being ignored
 
 - GUI and display libraries
-    - term gui
-      - Fixed terminal init in debugger enabled mode
-      - Added support for the command mode
-      - Added keyboard mapping support and german keymap
+  - General
+    - Allocate the tile buffer for the generic graphics update code once at init (performance)
+  - win32 gui
+    - Fixed crash on paste when the clipboard has no text
+    - Faster text mode character drawing
+    - Fixed heap overflow on clipboard copy
+    - Fixed absolute mouse (USB tablet) coordinates in stretched modes (small modes, autoscale, fullscreen)
+  - sdl2 gui
+    - Faster screen update: only the modified area is copied to the window
+    - Fixed paste (an extra NUL byte was sent to the guest)
+    - Fixed mouse wheel event in absolute mouse mode
+    - Fixed status bar drawing past the window width in narrow video modes
+  - rfb / vncsrv
+    - Fixed hangs and deadlocks when the event queue is full or the headerbar is clicked
+    - Fixed RFB protocol handling: client clipboard text is skipped, unknown message type closes the connection (was 100% CPU loop)
+  - x11 gui
+    - Faster graphics tile update
+  - term gui
+    - Fixed terminal init in debugger enabled mode
+    - Added support for the command mode
+    - Added keyboard mapping support and german keymap
 
 - BIOS
   - ACPI: restore missing IDE0 and IDE1 entries (PNP0600, matching the legacy primary/secondary IDE controller I/O ports and IRQs) in acpi-dsdt.dsl
+  - Fixed loading of optional ROM image at 0xE0000-0xEFFFF: it was loaded to wrong ROM offset (not visible to the guest)
+    and was not properly checked for overlap with the system BIOS
+  - Fixed PANIC "System BIOS must end at 0xfffff" when system BIOS address is specified explicitly
+    in 'romimage' option (e.g. address=0xfffe0000) and Bochs compiled with 64-bit physical address support
 
 -------------------------------------------------------------------------
 Changes in 3.1 (August 23, 2026):

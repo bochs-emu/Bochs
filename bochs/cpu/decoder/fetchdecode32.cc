@@ -442,8 +442,8 @@ static BxOpcodeDecodeDescriptor32 decode32_descriptor[] =
    /* 0F 31 */ { &decoder_simple32, BxOpcodeTable0F31 },
    /* 0F 32 */ { &decoder_simple32, BxOpcodeTable0F32 },
    /* 0F 33 */ { &decoder_simple32, BxOpcodeTable0F33 },
-   /* 0F 34 */ { &decoder_simple32, BxOpcodeTable0F34_32 },
-   /* 0F 35 */ { &decoder_simple32, BxOpcodeTable0F35_32 },
+   /* 0F 34 */ { &decoder_simple32, BxOpcodeTable0F34 },
+   /* 0F 35 */ { &decoder_simple32, BxOpcodeTable0F35 },
    /* 0F 36 */ { &decoder_ud32, NULL },
    /* 0F 37 */ { &decoder32, BxOpcodeTable0F37 },
    /* 0F 38 */ { &decoder32_modrm, NULL },          // 3-byte escape
@@ -954,6 +954,7 @@ int fetchImmediate(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, Bit1
         }
         break;
       case BX_IMMD:
+      case BX_IMMDQ_SE: // 32-bit value, sign extended to 64-bit on use
       case BX_JIMMD:
         if (remain > 3) {
           i->modRMForm.Id = FetchDWORD(iptr);
@@ -1010,9 +1011,7 @@ int fetchImmediate(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, Bit1
         break;
 
       case BX_DIRECT_MEMREF_B:
-      case BX_DIRECT_MEMREF_W:
-      case BX_DIRECT_MEMREF_D:
-      case BX_DIRECT_MEMREF_Q:
+      case BX_DIRECT_MEMREF_OSIZE:
 #if BX_SUPPORT_X86_64
         if (is_64) {
           // For instructions which embed the address in the opcode.
@@ -1229,11 +1228,14 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, 
 }
 
 #if BX_SUPPORT_AVX
-BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, unsigned nnn, unsigned rm, unsigned vvv, unsigned vex_w, Bit32u had_evex = 0, bool displ8 = false)
+BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, unsigned nnn, unsigned rm, unsigned vvv, unsigned vex_w, Bit32u had_evex = 0, bool displ8 = false, BxApxDecode apx = BX_APX_DISABLED)
 {
   bool use_vvv = false;
 #if BX_SUPPORT_EVEX
   unsigned displ8_scale = 1;
+#endif
+#if BX_SUPPORT_APX
+  bool has_dfv = false;
 #endif
 
   // assign sources
@@ -1254,7 +1256,8 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
     case BX_SRC_NNN:
 #if BX_SUPPORT_EVEX
       // #UD if EVEX.R' != 1 when general purpose register is encoded in ModRM.reg
-      if (had_evex != 0 && type >= BX_GPR8 && type <= BX_GPR64) {
+      // (with APX EVEX.R4 is used to encode extended GPRs)
+      if (had_evex != 0 && apx == BX_APX_DISABLED && type >= BX_GPR8 && type <= BX_GPR64) {
         if (nnn >= 16) return BX_EVEX_ILLEGAL_GPR_REGISTER;
       }
 #endif
@@ -1279,7 +1282,7 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
     case BX_SRC_RM:
       if (i->modC0()) {
 #if BX_SUPPORT_EVEX
-        if (type == BX_KMASK_REG) {
+        if (BX_IS_KMASK_REG(type)) {
           rm &= 0x7;
           // vector instruction using opmask as source or dest
           if (i->isZeroMasking())
@@ -1296,8 +1299,13 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
 #endif
 #if BX_SUPPORT_EVEX
         // EVEX.X is ignored when ModRM.rm encodes general purpose register
-        if (had_evex != 0 && type >= BX_GPR8 && type <= BX_GPR64)
+        // (with APX EVEX.B4 is used to encode extended GPRs)
+        if (had_evex != 0 && type >= BX_GPR8 && type <= BX_GPR64) {
           rm &= 0xf;
+#if BX_SUPPORT_APX
+          rm |= (had_evex & 0x8) << 1; // EVEX.B4
+#endif
+        }
 #endif
         i->setSrcReg(n, rm);
       }
@@ -1327,8 +1335,17 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
       }
       break;
     case BX_SRC_VVV:
-      i->setSrcReg(n, vvv);
       use_vvv = true;
+#if BX_SUPPORT_APX
+      if (type == BX_DFV) {
+        i->set_dfv(15 - (vvv & 0xf));
+        has_dfv = true;
+        // EVEX.aaa holds source condition code, not the NF indication
+        i->clearApxEvexNF();
+        break;
+      }
+#endif
+      i->setSrcReg(n, vvv);
 #if BX_SUPPORT_EVEX
       if (type == BX_KMASK_REG) {
         if (vvv >= 8) return BX_EVEX_ILLEGAL_KMASK_REGISTER;
@@ -1337,7 +1354,8 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
           return BX_EVEX_ILLEGAL_ZERO_MASKING_WITH_KMASK_SRC_OR_DEST;
       }
       // #UD if EVEX.V' != 1 when general purpose register is encoded in EVEX.vvvv
-      if (type == BX_GPR32 || type == BX_GPR64) {
+      // (with APX EVEX.V4 is used to encode extended GPRs)
+      if (apx == BX_APX_DISABLED && (type == BX_GPR32 || type == BX_GPR64)) {
         if (vvv >= 16) return BX_EVEX_ILLEGAL_GPR_REGISTER;
       }
 #endif
@@ -1397,6 +1415,14 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
   if (! use_vvv && vvv != 0) {
     return BX_ILLEGAL_VEX_XOP_VVV;
   }
+
+#if BX_SUPPORT_APX
+  // EVEX.aaa[1:0] are reserved for legacy/VEX instructions promoted to EVEX, except for CCMP/CTEST
+  // (instructions with DFV source) where aaa encodes the source condition code
+  // (taken from EVEX payload, opmask stored in the instruction may be overwritten by imm16/imm32)
+  if (apx == BX_APX_PROMOTED && ! has_dfv && ((had_evex >> 16) & 0x3) != 0)
+    return BX_EVEX_RESERVED_BITS_SET;
+#endif
 
   return BX_DECODE_OK;
 }
@@ -1568,7 +1594,9 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   unsigned evex_opc_map = evex & 0x7;
   if (evex_opc_map == 0 || evex_opc_map == 4 || evex_opc_map == 7)
     return(ia_opcode);
-  if (evex_opc_map >= 4) evex_opc_map--; // skipped map4 in the table
+#if BX_SUPPORT_APX == 0
+  if (evex_opc_map >= 4) evex_opc_map--; // skipped map4 in the table if APX is not compiled in
+#endif
 
   sse_prefix = (evex >> 8) & 0x3;
   int vvv = 15 - ((evex >> 11) & 0xf);
@@ -1930,7 +1958,7 @@ int fetchDecode32(const Bit8u *iptr, bool is_32, bxInstruction_c *i, unsigned re
   int ia_opcode = BX_IA_ERROR;
   unsigned seg_override = BX_SEG_REG_NULL;
 #if BX_SUPPORT_CET
-  unsigned seg_override_cet = BX_SEG_REG_NULL;
+  bool seg_override_cet = false;
 #endif
   bool os_32 = is_32, lock = 0;
   unsigned sse_prefix = SSE_PREFIX_NONE;
@@ -1945,7 +1973,7 @@ fetch_b1:
 #if BX_SUPPORT_CET
   // DS prefix is still recorded for CET Endbranch suppress hint even if overridden by other prefixes later
   if (b1 == 0x3e)
-    seg_override_cet = BX_SEG_REG_DS;
+    seg_override_cet = true;
 #endif
 
   switch (b1) {
@@ -2027,7 +2055,7 @@ fetch_b1:
 
   i->setSeg(BX_SEG_REG_DS); // default segment is DS:
 #if BX_SUPPORT_CET
-  i->setCetSegOverride(seg_override_cet);
+  if (seg_override_cet) i->setCetSegOverride();
 #endif
 
   i->modRMForm.Id = 0;
@@ -2127,6 +2155,14 @@ int BX_CPU_C::assignHandler(bxInstruction_c *i, Bit32u fetchModeMask)
       }
     }
   }
+
+#if BX_SUPPORT_APX
+  // APX instructions exist only in 64-bit mode
+  if ((op_flags & BX_PREPARE_APX) != 0 && ! long64_mode()) {
+    i->execute1 = &BX_CPU_C::BxError;
+    return(1);
+  }
+#endif
 #endif
 
   if (! protected_mode()) {
@@ -2205,7 +2241,7 @@ void BX_CPU_C::init_FetchDecodeTables(void)
     BX_PANIC(("init_FetchDecodeTables: CPU features bitmask is empty !"));
 #endif
 
-  if (BX_IA_LAST > 0xfff)
+  if (BX_IA_LAST > 0x1fff)
     BX_PANIC(("init_FetchDecodeTables: too many opcodes defined !"));
 
   for (unsigned n=0; n < BX_IA_LAST; n++) {

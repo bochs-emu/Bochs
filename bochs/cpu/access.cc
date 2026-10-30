@@ -354,8 +354,13 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   if (BX_CPU_THIS_PTR alignment_check() && user) {
     if (pageOffset & ac_mask) {
-      BX_ERROR(("access_read_linear(): #AC misaligned access"));
-      exception(BX_AC_EXCEPTION, 0);
+#if BX_SUPPORT_AVX
+      if (! is_alignment_check_ignored())
+#endif
+      {
+        BX_ERROR(("access_read_linear(): #AC misaligned access"));
+        exception(BX_AC_EXCEPTION, 0);
+      }
     }
   }
 #endif
@@ -462,8 +467,13 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   if (BX_CPU_THIS_PTR alignment_check() && user) {
     if (pageOffset & ac_mask) {
-      BX_ERROR(("access_write_linear(): #AC misaligned access"));
-      exception(BX_AC_EXCEPTION, 0);
+#if BX_SUPPORT_AVX
+      if (! is_alignment_check_ignored())
+#endif
+      {
+        BX_ERROR(("access_write_linear(): #AC misaligned access"));
+        exception(BX_AC_EXCEPTION, 0);
+      }
     }
   }
 #endif

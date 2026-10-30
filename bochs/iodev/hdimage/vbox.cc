@@ -10,7 +10,7 @@
  * Contact: fys [at] fysnet [dot] net
  *
  * Copyright (C) 2015       Benjamin D Lunt.
- * Copyright (C) 2006-2021  The Bochs Project
+ * Copyright (C) 2006-2026  The Bochs Project
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -386,7 +386,7 @@ void vbox_image_t::read_block(const Bit32u index)
     if (dtoh32(mtlb[index]) >= (int) header.blocks_in_hdd) {
       BX_PANIC(("Trying to read past end of image (index out of range)"));
     }
-    offset = dtoh32(mtlb[index]) * header.block_size;
+    offset = (off_t)dtoh32(mtlb[index]) * header.block_size;
     bx_read_image(file_descriptor, header.offset_data + offset, block_data, header.block_size);
 
     BX_DEBUG(("reading block index %d (%d) " FMT_LL "d", index, dtoh32(mtlb[index]), offset));
@@ -413,7 +413,7 @@ void vbox_image_t::write_block(const Bit32u index)
     BX_PANIC(("Trying to write past end of image (index out of range)"));
   }
 
-  offset = dtoh32(mtlb[index]) * header.block_size;
+  offset = (off_t)dtoh32(mtlb[index]) * header.block_size;
 
   BX_DEBUG(("writing block index %d (%d) " FMT_LL "d", index, dtoh32(mtlb[index]), offset));
 

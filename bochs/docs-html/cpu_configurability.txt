@@ -326,7 +326,7 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
  Dependency: longmode
 
-- CPU Feature: RDTSCP
+- CPU Feature: rdtscp
 
  Enables CPUID[0x80000001].EDX[27] flag.
  Enables MSR_TSC_AUX register.
@@ -956,7 +956,7 @@ BX_CPUID_STD7_SUBLEAF0_EBX_MPX;
  Enables CPUID[0x80000008].EBX[0]: CLZERO support flag.
  Enables CLZERO instruction (will #UD otherwise).
 
-- CPU Feature: sca_mitigations
+- CPU Feature: spec_ctrl
 
  Enables IA32_CORE_CAPABILITIES MSR (0xcf), IA32_ARCH_CAPABILITIES MSR (0x10a), IA32_SPEC_CTRL MSR (0x48), IA32_PRED_CMD MSR (0x48) and IA32_FLUSH_CMD MSR (0x10b).
  When enabled reports all possible SCA mitigation controls as supported, for example IA32_ARCH_CAPABILITIES reports all bits set:
@@ -976,6 +976,30 @@ BX_CPUID_STD7_SUBLEAF0_EBX_MPX;
         [31] SSBD: Speculative Store Bypass Disable
 
  Pre-defined CPU models may report only part of the SCA matigation capabilities through CPUID, matching actual CPU architecture.
+
+ Dependency: msr
+
+- CPU Feature: spec_ctrl_amd
+
+ Enables AMD speculation control: SPEC_CTRL MSR (0x48) and PRED_CMD MSR (0x49).
+ SPEC_CTRL MSR is present if either spec_ctrl or spec_ctrl_amd feature is enabled, both features cannot be enabled together.
+ With spec_ctrl_amd only, the SPEC_CTRL MSR supports AMD defined bits:
+        [0]: IBRS: Indirect Branch Restricted Speculation
+        [1]: STIBP: Single Thread Indirect Branch Predictor
+        [2]: SSBD: Speculative Store Bypass Disable
+        [7]: PSFD: Predictive Store Forwarding Disable
+
+ Pre-defined CPU models report AMD speculation control features through CPUID[0x80000008].EBX, for example:
+        [12] IBPB: Indirect Branch Prediction Barrier
+        [14] IBRS: Indirect Branch Restricted Speculation
+        [15] STIBP: Single Thread Indirect Branch Prediction mode
+        [17] StibpAlwaysOn: Processor prefers that STIBP is left on
+        [18] IbrsPreferred: IBRS is preferred over software solution
+        [19] IbrsSameMode: IBRS provides same mode speculation limits
+        [24] SSBD: Speculative Store Bypass Disable
+        [28] PSFD: Predictive Store Forward Disable
+
+ Different CPU models may report different speculation control capabilities through CPUID, matching actual CPU architecture.
 
  Dependency: msr
 
@@ -1126,6 +1150,17 @@ BX_CPUID_STD7_SUBLEAF0_EBX_MPX;
 
  Dependency: BX_SUPPORT_EVEX, BX_SUPPORT_AMX
              avx512, avx10_2, amx
+
+- CPU Feature: apx
+
+ Enables CPUID[0x00000007].subleaf[1].EAX[21]: APX architecture flag.
+ Enables CPUID[0x00000029] APX leaf
+ Enables 16 more GPR registers, NDD form for integer instructions, NF for no flags update
+ Promotes a lot of integer instructions via new REX2 prefix or extended EVEX prefix + adds new APX instructions
+ XSAVE/XRSTOR support of new registers
+ VMX support: report extended register width in VM-exit extended instruction information field
+
+ Dependency: BX_SUPPORT_EVEX, BX_SUPPORT_APX
 
 ---------------------------------------------------------------------------------------------------
 

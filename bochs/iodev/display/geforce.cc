@@ -674,6 +674,10 @@ bool bx_geforce_c::geforce_mem_write_handler(bx_phy_address addr, unsigned len,
     if (len == 1) {
       BX_DEBUG(("MMIO write to 0x%08x, value 0x%02x", offset, *(Bit8u*)data));
       class_ptr->register_write8(offset, *(Bit8u*)data);
+    } else if (len == 2) {
+      Bit16u value = *((Bit16u*)data);
+      BX_DEBUG(("MMIO write to 0x%08x, value 0x%04x", offset, value));
+      class_ptr->register_write16(offset, value);
     } else if (len == 4) {
       Bit32u value = *((Bit32u*)data);
       BX_DEBUG(("MMIO write to 0x%08x, value 0x%08x", offset, value));
@@ -1921,6 +1925,23 @@ void bx_geforce_c::register_write8(Bit32u address, Bit8u value)
     BX_GEFORCE_THIS s.memory[(address - 0x700000) ^ BX_GEFORCE_THIS ramin_flip] = value;
   } else {
     register_write32(address, (register_read32(address) & ~0xFF) | value);
+  }
+}
+
+void bx_geforce_c::register_write16(Bit32u address, Bit16u value)
+{
+  if ((address >= 0x601300 && address < 0x601400) ||
+      (address >= 0x603300 && address < 0x603400)) {
+    Bit32u head = (address >> 13) & 1;
+    Bit32u offset = address & 0x00000fff;
+    if (offset == 0x3b4 || offset == 0x3d4) {
+      if (!head)
+        SVGA_WRITE(offset, value, 2);
+    } else {
+      BX_PANIC(("Unknown register 0x%08x write", address));
+    }
+  } else {
+    register_write32(address, (register_read32(address) & ~0xFFFF) | value);
   }
 }
 
@@ -3234,6 +3255,7 @@ void bx_geforce_c::d3d_texture_process_format(gf_texture* tex)
     case 0x1e: // X8R8G8B8
     case 0x3a: // A8B8G8R8
     case 0x85: // A8R8G8B8
+    case 0x9e: // X8R8G8B8
       tex->color_bytes = 4;
       break;
     default:
@@ -3805,7 +3827,8 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
       break;
     }
     case 0x07:
-    case 0x1e: { // X8R8G8B8
+    case 0x1e:
+    case 0x9e: { // X8R8G8B8
       Bit32u value = dma_read32(tex->dma_obj, tex_ofs);
       color_int[0] = 1;
       color_scale[0] = 1.0f;
@@ -5422,6 +5445,17 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
       }
     }
   }
+
+  // back-transform
+  if ((ch->d3d_transform_execution_mode & 3) != 0 &&
+      (ch->d3d_transform_execution_mode & 4) == 0 &&
+      BX_GEFORCE_THIS card_type == 0x20) {
+    for (Bit32u vi = 0; vi < 3; vi++) {
+      for (Bit32u ci = 0; ci < 3; ci++)
+        vs_out[vi][0][ci] = (vs_out[vi][0][ci] - ch->d3d_viewport_offset[ci]) * vs_out[vi][0][3];
+    }
+  }
+
   bool clipped[3];
   Bit32u clip_count = 0;
   float clip_thresh = BX_GEFORCE_THIS card_type <= 0x20 ?
@@ -5479,8 +5513,11 @@ void bx_geforce_c::d3d_clip_to_screen(gf_channel* ch, float pos_clip[4], float p
 {
   pos_screen[3] = 1.0f / pos_clip[3];
   if (((ch->d3d_transform_execution_mode & 3) != 0 &&
-      (ch->d3d_transform_execution_mode & 0x100) == 0 &&
-      BX_GEFORCE_THIS card_type >= 0x35) ||
+       (ch->d3d_transform_execution_mode & 0x100) == 0 &&
+       BX_GEFORCE_THIS card_type >= 0x35) ||
+      ((ch->d3d_transform_execution_mode & 3) != 0 &&
+       (ch->d3d_transform_execution_mode & 4) == 0 && // back-transform
+       BX_GEFORCE_THIS card_type == 0x20) ||
       (ch->d3d_transform_execution_mode & 3) == 0) {
     for (int i = 0; i < 3; i++) {
       pos_screen[i] = pos_clip[i] * pos_screen[3];
@@ -5488,7 +5525,7 @@ void bx_geforce_c::d3d_clip_to_screen(gf_channel* ch, float pos_clip[4], float p
         pos_screen[i] *= ch->d3d_model_view_matrix[1][i];
         pos_screen[i] += ch->d3d_model_view_matrix[1][i + 4];
       } else {
-        if (BX_GEFORCE_THIS card_type > 0x20)
+        if (BX_GEFORCE_THIS card_type >= 0x35)
           pos_screen[i] *= ch->d3d_viewport_scale[i];
         pos_screen[i] += ch->d3d_viewport_offset[i];
       }
@@ -7774,9 +7811,11 @@ void bx_geforce_c::d3d_mh_0497_609(gf_channel* ch, Bit32u cls, Bit32u method, Bi
     ch->d3d_vertex_b_obj : ch->d3d_vertex_a_obj;
   for (Bit32u v = vertex_first; v <= vertex_last; v++) {
     Bit32u vertex_array_index;
-    if (ch->d3d_index_array_type_16)
+    if (ch->d3d_index_array_type_16) {
       vertex_array_index = BX_GEFORCE_THIS dma_read16(index_array_obj, ch->d3d_index_array_offset + v * 2);
-    else
+      if (vertex_array_index == 0xFFFF)
+        continue;
+    } else
       vertex_array_index = BX_GEFORCE_THIS dma_read32(index_array_obj, ch->d3d_index_array_offset + v * 4);
     BX_GEFORCE_THIS d3d_load_vertex(ch, vertex_array_index);
   }
@@ -8328,7 +8367,7 @@ void bx_geforce_c::init_method_handlers()
   set_d3d_method_handler(1, 0, 0, 0, 0x500, &bx_geforce_c::d3d_mh_draw_arrays);
   set_d3d_method_handler(0, 1, 0, 0, 0x604, &bx_geforce_c::d3d_mh_draw_arrays);
   set_d3d_method_handler(0, 0, 1, 1, 0x605, &bx_geforce_c::d3d_mh_draw_arrays);
-  set_d3d_method_handler(1, 0, 0, 0, 0x600, 0x6ff, &bx_geforce_c::d3d_mh_inline_array);
+  set_d3d_method_handler(1, 0, 0, 0, 0x600, 0x7ff, &bx_geforce_c::d3d_mh_inline_array);
   set_d3d_method_handler(0, 1, 1, 1, 0x606, &bx_geforce_c::d3d_mh_inline_array);
   set_d3d_method_handler(0, 0, 1, 1, 0x607, &bx_geforce_c::d3d_mh_index_array_offset);
   set_d3d_method_handler(0, 0, 1, 1, 0x608, &bx_geforce_c::d3d_mh_index_array_dma);
@@ -8344,13 +8383,13 @@ void bx_geforce_c::init_method_handlers()
   set_d3d_method_handler(1, 0, 0, 0, 0x086, 0x095, &bx_geforce_c::d3d_mh_texture);
   set_d3d_method_handler(0, 1, 0, 0, 0x6c0, 0x6ff, &bx_geforce_c::d3d_mh_texture);
   set_d3d_method_handler(0, 0, 1, 1, 0x680, 0x6ff, &bx_geforce_c::d3d_mh_texture);
-  set_d3d_method_handler(1, 1, 1, 1, 0x758, &bx_geforce_c::d3d_mh_shader_control);
-  set_d3d_method_handler(1, 1, 1, 1, 0x75b, &bx_geforce_c::d3d_mh_semaphore_offset);
-  set_d3d_method_handler(1, 1, 1, 1, 0x75c, &bx_geforce_c::d3d_mh_75c);
-  set_d3d_method_handler(1, 1, 1, 1, 0x75d, &bx_geforce_c::d3d_mh_75d);
-  set_d3d_method_handler(1, 1, 1, 1, 0x763, &bx_geforce_c::d3d_mh_zstencil_clear_value);
-  set_d3d_method_handler(1, 1, 1, 1, 0x764, &bx_geforce_c::d3d_mh_color_clear_value);
-  set_d3d_method_handler(1, 1, 1, 1, 0x765, &bx_geforce_c::d3d_mh_clear_surface);
+  set_d3d_method_handler(0, 1, 1, 1, 0x758, &bx_geforce_c::d3d_mh_shader_control);
+  set_d3d_method_handler(0, 1, 1, 1, 0x75b, &bx_geforce_c::d3d_mh_semaphore_offset);
+  set_d3d_method_handler(0, 1, 1, 1, 0x75c, &bx_geforce_c::d3d_mh_75c);
+  set_d3d_method_handler(0, 1, 1, 1, 0x75d, &bx_geforce_c::d3d_mh_75d);
+  set_d3d_method_handler(0, 1, 1, 1, 0x763, &bx_geforce_c::d3d_mh_zstencil_clear_value);
+  set_d3d_method_handler(0, 1, 1, 1, 0x764, &bx_geforce_c::d3d_mh_color_clear_value);
+  set_d3d_method_handler(0, 1, 1, 1, 0x765, &bx_geforce_c::d3d_mh_clear_surface);
   set_d3d_method_handler(1, 0, 0, 0, 0x0a0, 0x0a1, &bx_geforce_c::d3d_mh_combiner_color_ocw);
   set_d3d_method_handler(0, 1, 0, 0, 0x790, 0x797, &bx_geforce_c::d3d_mh_combiner_color_ocw);
   set_d3d_method_handler(0, 1, 0, 0, 0x798, &bx_geforce_c::d3d_mh_combiner_control);
@@ -8358,9 +8397,9 @@ void bx_geforce_c::init_method_handlers()
   set_d3d_method_handler(0, 1, 0, 0, 0x79c, &bx_geforce_c::d3d_mh_tex_shader_op);
   set_d3d_method_handler(0, 1, 0, 0, 0x79d, &bx_geforce_c::d3d_mh_tex_shader_dotmapping);
   set_d3d_method_handler(0, 1, 0, 0, 0x79e, &bx_geforce_c::d3d_mh_tex_shader_previous);
-  set_d3d_method_handler(1, 1, 1, 1, 0x7a5, &bx_geforce_c::d3d_mh_transform_execution_mode);
-  set_d3d_method_handler(1, 1, 1, 1, 0x7a7, &bx_geforce_c::d3d_mh_transform_program_load);
-  set_d3d_method_handler(1, 1, 1, 1, 0x7a8, &bx_geforce_c::d3d_mh_transform_program_start);
+  set_d3d_method_handler(0, 1, 1, 1, 0x7a5, &bx_geforce_c::d3d_mh_transform_execution_mode);
+  set_d3d_method_handler(0, 1, 1, 1, 0x7a7, &bx_geforce_c::d3d_mh_transform_program_load);
+  set_d3d_method_handler(0, 1, 1, 1, 0x7a8, &bx_geforce_c::d3d_mh_transform_program_start);
   set_d3d_method_handler(0, 1, 0, 0, 0x7a9, &bx_geforce_c::d3d_mh_transform_constant_load);
   set_d3d_method_handler(0, 0, 1, 1, 0x7bf, &bx_geforce_c::d3d_mh_transform_constant_load);
   set_d3d_method_handler(0, 0, 0, 1, 0x7f1, &bx_geforce_c::d3d_mh_4097_7f1);

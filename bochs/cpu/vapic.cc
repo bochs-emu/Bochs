@@ -45,7 +45,7 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::is_virtual_apic_page(bx_phy_address paddr)
   return false;
 }
 
-bool BX_CPP_AttrRegparmN(2) BX_CPU_C::virtual_apic_access_vmexit(unsigned offset, unsigned len)
+bool BX_CPP_AttrRegparmN(3) BX_CPU_C::virtual_apic_access_vmexit(unsigned offset, unsigned len, unsigned rw)
 {
   if((offset & ~0x3) != ((offset+len-1) & ~0x3)) {
     BX_ERROR(("Virtual APIC access at offset 0x%08x spans 32-bit boundary !", offset));
@@ -54,18 +54,21 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::virtual_apic_access_vmexit(unsigned offset
 
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
+  // the operation already virtualized a write to the APIC-access page: any read causes APIC-access
+  // VM exit, a write causes APIC-access VM exit if it has a different page offset or a different size
   if (is_pending(BX_EVENT_VMX_VTPR_UPDATE | BX_EVENT_VMX_VEOI_UPDATE | BX_EVENT_VMX_VIRTUAL_APIC_WRITE)) {
-    if (vm->apic_access != offset) {
-      BX_ERROR(("Second APIC virtualization at offset 0x%08x (first access at offset 0x%08x)", offset, vm->apic_access));
+    if (rw == BX_READ || vm->apic_access != offset || vm->apic_access_len != len) {
+      BX_ERROR(("Second APIC virtualization at offset 0x%08x len=%d (first write at offset 0x%08x len=%d)", offset, len, vm->apic_access, vm->apic_access_len));
       return true;
     }
   }
 
-  // access is not instruction fetch because cpu::prefetch will crash them
+  // access is not instruction fetch, cpu::prefetch causes APIC-access VM exit for them
   if (! vm->vmexec_ctrls1.TPR_SHADOW() || len > 4 || offset >= 0x400)
     return true;
 
   BX_CPU_THIS_PTR vmcs.apic_access = offset;
+  BX_CPU_THIS_PTR vmcs.apic_access_len = len;
   return false;
 }
 
@@ -75,7 +78,7 @@ Bit32u BX_CPU_C::VMX_Read_Virtual_APIC(unsigned offset)
   Bit32u field32;
   // must avoid recursive call to the function when VMX APIC access page = VMX Virtual Apic Page
   BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pAddr, 4, (Bit8u*)(&field32));
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 4, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_VMX_VAPIC_ACCESS, (Bit8u*)(&field32));
+  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 4, MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_READ, BX_VMX_VAPIC_ACCESS, (Bit8u*)(&field32));
   return field32;
 }
 
@@ -84,7 +87,7 @@ void BX_CPU_C::VMX_Write_Virtual_APIC(unsigned offset, int len, Bit8u* val)
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcs.virtual_apic_page_addr + offset;
   // must avoid recursive call to the function when VMX APIC access page = VMX Virtual Apic Page
   BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, pAddr, len, val);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, len, MEMTYPE(resolve_memtype(pAddr)), BX_WRITE, BX_VMX_VAPIC_ACCESS, val);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, len, MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_WRITE, BX_VMX_VAPIC_ACCESS, val);
 }
 
 bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *data)
@@ -92,18 +95,24 @@ bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned le
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
   BX_ASSERT(vm->vmexec_ctrls2.VIRTUALIZE_APIC_ACCESSES());
-  BX_INFO(("Virtual Apic RD 0x" FMT_ADDRX " len = %d", paddr, len));
+  BX_DEBUG(("Virtual Apic RD 0x" FMT_ADDRX " len = %d", paddr, len));
 
   Bit32u offset = PAGE_OFFSET(paddr);
 
-  bool vmexit = virtual_apic_access_vmexit(offset, len);
+  bool vmexit = virtual_apic_access_vmexit(offset, len, BX_READ);
 
-  // access is not instruction fetch because cpu::prefetch will crash them
+  // access is not instruction fetch, cpu::prefetch causes APIC-access VM exit for them
   if (! vmexit) {
 
     if (!vm->vmexec_ctrls2.VIRTUALIZE_APIC_REGISTERS()) {
-      // if 'Virtualize Apic Registers' control is disabled allow only aligned access to VTPR
-      if (offset != BX_LAPIC_TPR) vmexit = true;
+      // if 'Virtualize Apic Registers' control is disabled allow only aligned access to VTPR,
+      // with 'Virtual Interrupt Delivery' also aligned access to VEOI and VICR_LO
+      if (offset != BX_LAPIC_TPR) {
+#if BX_SUPPORT_VMX >= 2
+        if (! vm->vmexec_ctrls2.VIRTUAL_INT_DELIVERY() || (offset != BX_LAPIC_EOI && offset != BX_LAPIC_ICR_LO))
+#endif
+          vmexit = true;
+      }
     }
 
 #if BX_SUPPORT_VMX >= 2
@@ -167,7 +176,7 @@ bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned le
 
   // remap access to virtual apic page
   paddr = vm->virtual_apic_page_addr + offset;
-  BX_NOTIFY_PHY_MEMORY_ACCESS(paddr, len, MEMTYPE(resolve_memtype(paddr)), BX_READ, BX_VMX_VAPIC_ACCESS, (Bit8u*) data);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(paddr, len, MEMTYPE(resolve_memtype(memtype_by_mtrr(paddr))), BX_READ, BX_VMX_VAPIC_ACCESS, (Bit8u*) data);
   return paddr;
 }
 
@@ -176,11 +185,11 @@ void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
   BX_ASSERT(vm->vmexec_ctrls2.VIRTUALIZE_APIC_ACCESSES());
-  BX_INFO(("Virtual Apic WR 0x" FMT_ADDRX " len = %d", paddr, len));
+  BX_DEBUG(("Virtual Apic WR 0x" FMT_ADDRX " len = %d", paddr, len));
 
   Bit32u offset = PAGE_OFFSET(paddr);
 
-  bool vmexit = virtual_apic_access_vmexit(offset, len);
+  bool vmexit = virtual_apic_access_vmexit(offset, len, BX_WRITE);
 
   if (! vmexit) {
 
@@ -222,7 +231,8 @@ void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *
 
     case BX_LAPIC_EOI:
     case BX_LAPIC_ICR_LO:
-      if (vm->vmexec_ctrls2.VIRTUALIZE_APIC_REGISTERS() || vm->vmexec_ctrls2.VIRTUAL_INT_DELIVERY()) {
+      // 'Virtual Interrupt Delivery' alone virtualizes only aligned access to VEOI and VICR_LO
+      if (vm->vmexec_ctrls2.VIRTUALIZE_APIC_REGISTERS() || (vm->vmexec_ctrls2.VIRTUAL_INT_DELIVERY() && (offset & 0x3) == 0)) {
         virtualize_access = true;
       }
       break;
@@ -282,11 +292,11 @@ void BX_CPU_C::VMX_Evaluate_Pending_Virtual_Interrupts(void)
 
   if (! vm->vmexec_ctrls1.INTERRUPT_WINDOW_VMEXIT() && ((vm->rvi >> 4) > (vm->vppr >> 4)))
   {
-    BX_INFO(("Pending Virtual Interrupt Vector 0x%x", vm->rvi));
+    BX_DEBUG(("Pending Virtual Interrupt Vector 0x%x", vm->rvi));
     signal_event(BX_EVENT_PENDING_VMX_VIRTUAL_INTR);
   }
   else {
-    BX_INFO(("Clear Virtual Interrupt Vector 0x%x", vm->rvi));
+    BX_DEBUG(("Clear Virtual Interrupt Vector 0x%x", vm->rvi));
     clear_event(BX_EVENT_PENDING_VMX_VIRTUAL_INTR);
   }
 }
@@ -510,9 +520,10 @@ bool BX_CPU_C::Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64)
       if ((val_64 >> 8) != 0)
         exception(BX_GP_EXCEPTION, 0);
 
+      // the value is stored into virtual-APIC page before self-IPI virtualization or APIC-write VM exit
       Bit8u vector = val_64 & 0xff;
+      VMX_Write_Virtual_X2APIC(BX_LAPIC_SELF_IPI, vector);
       if (vector < 16) {
-        VMX_Write_Virtual_X2APIC(BX_LAPIC_SELF_IPI, vector);
         VMexit(VMX_VMEXIT_APIC_WRITE, BX_LAPIC_SELF_IPI); // trap-like vmexit
       }
       else {
@@ -549,7 +560,7 @@ bool BX_CPU_C::VMX_Posted_Interrupt_Processing(Bit8u vector)
 
   BxMemtype pid_memtype = BX_MEMTYPE_INVALID;
 #if BX_SUPPORT_MEMTYPE
-            pid_memtype = resolve_memtype(vm->pid_addr);
+            pid_memtype = resolve_memtype(memtype_by_mtrr(vm->pid_addr));
 #endif
 
   // clear PID.ON using atomic RMW 'bit clear' operation
@@ -571,15 +582,19 @@ bool BX_CPU_C::VMX_Posted_Interrupt_Processing(Bit8u vector)
   access_write_physical(vm->pid_addr, 32, (Bit8u*)(&tmp));
   BX_NOTIFY_PHY_MEMORY_ACCESS(vm->pid_addr, 32, MEMTYPE(pid_memtype), BX_WRITE, BX_VMX_PID, (Bit8u*)(&tmp));
 
-  Bit32u virr[8];
+  Bit32u pir[8];
   for (unsigned n=0;n<8;n++) {
-    virr[n] = VMX_Read_Virtual_APIC(BX_LAPIC_IRR1 + 16*n); // atomic RMW 
-    virr[n] |= PIR.ymm32u(n);
-    VMX_Write_Virtual_APIC(BX_LAPIC_IRR1 + 16*n, virr[n]);
+    pir[n] = PIR.ymm32u(n);
+    if (pir[n]) { // VIRR is not modified when no PIR bit is set
+      Bit32u virr = VMX_Read_Virtual_APIC(BX_LAPIC_IRR1 + 16*n); // atomic RMW
+      VMX_Write_Virtual_APIC(BX_LAPIC_IRR1 + 16*n, virr | pir[n]);
+    }
   }
 
-  vector = BX_CPU_THIS_PTR lapic->highest_priority_int(virr);
-  if (vector >= vm->rvi) vm->rvi = vector;
+  // RVI is the maximum of old RVI and highest index of the bits that were set in PIR,
+  // RVI is unchanged if PIR is empty
+  int highest = BX_CPU_THIS_PTR lapic->highest_priority_int(pir);
+  if (highest >= 0 && highest > vm->rvi) vm->rvi = highest;
 
   VMX_Evaluate_Pending_Virtual_Interrupts();
 

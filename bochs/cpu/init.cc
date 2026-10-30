@@ -43,7 +43,12 @@
 #include "svm.h"
 #endif
 
+#include "msr.h"
+
 #include <stdlib.h>
+
+unsigned BX_CPU_C::maxphyaddr = BX_PHY_ADDRESS_WIDTH;
+Bit64u   BX_CPU_C::maxphyaddr_mask = (BX_CONST64(1) << BX_PHY_ADDRESS_WIDTH) - 1;
 
 BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
 #if BX_CPU_LEVEL >= 4
@@ -207,6 +212,12 @@ void BX_CPU_C::initialize(void)
   BX_CPU_THIS_PTR cpuid->sanity_checks();
 #endif
 
+#if BX_PHY_ADDRESS_LONG
+  // MAXPHYADDR is static and shared by all CPUs, every CPU sets the same value
+  maxphyaddr = (unsigned) SIM->get_param_num(BXPN_CPU_MAXPHYADDR)->get();
+  maxphyaddr_mask = (BX_CONST64(1) << maxphyaddr) - 1;
+#endif
+
   traceCache = new bxTraceCache_c;
 
   init_FetchDecodeTables(); // must be called after init_isa_features_bitmask()
@@ -277,6 +288,8 @@ void BX_CPU_C::init_statistics(void)
 #if InstrumentTLBFlush
   new bx_shadow_num_c(cpu, "tlbGlobalFlushes", &stats->tlbGlobalFlushes);
   new bx_shadow_num_c(cpu, "tlbNonGlobalFlushes", &stats->tlbNonGlobalFlushes);
+  new bx_shadow_num_c(cpu, "tlbInvlpg", &stats->tlbInvlpg);
+  new bx_shadow_num_c(cpu, "tlbInvlpgLarge", &stats->tlbInvlpgLarge);
 #endif
 
 #if InstrumentStackPrefetch
@@ -337,6 +350,24 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_SIMPLE(cpu, R13);
   BXRS_HEX_PARAM_SIMPLE(cpu, R14);
   BXRS_HEX_PARAM_SIMPLE(cpu, R15);
+#if BX_SUPPORT_APX
+  BXRS_HEX_PARAM_SIMPLE(cpu, R16);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R17);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R18);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R19);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R20);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R21);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R22);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R23);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R24);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R25);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R26);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R27);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R28);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R29);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R30);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R31);
+#endif
   BXRS_HEX_PARAM_SIMPLE(cpu, RIP);
 #else
   BXRS_HEX_PARAM_SIMPLE(cpu, EAX);
@@ -524,7 +555,7 @@ void BX_CPU_C::register_state(void)
     BXRS_HEX_PARAM_FIELD(MSR, ia32_pl3_ssp, msr.ia32_pl_ssp[3]);
   }
 #endif
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SCA_MITIGATIONS)) {
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SPEC_CTRL) || BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SPEC_CTRL_AMD)) {
     BXRS_HEX_PARAM_FIELD(MSR, ia32_spec_ctrl, msr.ia32_spec_ctrl);
   }
 #if BX_SUPPORT_VMX
@@ -545,6 +576,7 @@ void BX_CPU_C::register_state(void)
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SVM)) {
     BXRS_HEX_PARAM_FIELD(MSR, svm_hsave_pa, msr.svm_hsave_pa);
     BXRS_HEX_PARAM_FIELD(MSR, svm_vm_cr, msr.svm_vm_cr);
+    BXRS_HEX_PARAM_FIELD(MSR, svm_tsc_ratio, msr.svm_tsc_ratio);
   }
 #endif
 
@@ -695,6 +727,7 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_SIMPLE32(cpu, async_event);
 
   BXRS_PARAM_BOOL(cpu, in_smm, in_smm);
+  BXRS_PARAM_BOOL(cpu, smm_nmi_blocked, smm_nmi_blocked);
 
 #if BX_DEBUGGER
   bx_list_c *dtlb = new bx_list_c(cpu, "DTLB");
@@ -853,6 +886,14 @@ void BX_CPU_C::after_restore_state(void)
   set_PKeys(BX_CPU_THIS_PTR pkru, BX_CPU_THIS_PTR pkrs);
 #endif
 
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_FEATURE_CONTROL]) {
+    // once the lock bit is set the MSR becomes read only until hardware reset
+    bool locked = (BX_CPU_THIS_PTR msr.ia32_feature_ctrl & BX_IA32_FEATURE_CONTROL_LOCK_BIT) != 0;
+    BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_FEATURE_CONTROL]->set_read_only(locked);
+  }
+#endif
+
   handleCpuContextChange();
 
   assert_checks();
@@ -903,8 +944,20 @@ void BX_CPU_C::reset(unsigned source)
   else
     BX_INFO(("cpu reset"));
 
+#if BX_SUPPORT_APX
+  for (n=0;n<16;n++)
+#else
   for (n=0;n<BX_GENERAL_REGISTERS;n++)
+#endif
     BX_WRITE_32BIT_REGZ(n, 0);
+
+#if BX_SUPPORT_APX
+  // Reset R16-R31 state - unchanged on #INIT
+  if (source == BX_RESET_HARDWARE) {
+    for (n=16;n<BX_GENERAL_REGISTERS;n++)
+      BX_WRITE_32BIT_REGZ(n, 0);
+  }
+#endif
 
 //BX_WRITE_32BIT_REGZ(BX_32BIT_REG_EDX, get_cpu_version_information());
 
@@ -919,6 +972,10 @@ void BX_CPU_C::reset(unsigned source)
   if (source == BX_RESET_HARDWARE)
     BX_CPU_THIS_PTR icount = 0;
   BX_CPU_THIS_PTR icount_last_sync = BX_CPU_THIS_PTR icount;
+
+#if BX_SUPPORT_AVX && BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR ignore_ac_icount = 0;
+#endif
 
   BX_CPU_THIS_PTR inhibit_mask = 0;
   BX_CPU_THIS_PTR inhibit_icount = 0;
@@ -1042,6 +1099,7 @@ void BX_CPU_C::reset(unsigned source)
 
   BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
   BX_CPU_THIS_PTR in_smm = false;
+  BX_CPU_THIS_PTR smm_nmi_blocked = false;
   BX_CPU_THIS_PTR pending_event = 0;
   BX_CPU_THIS_PTR event_mask = 0;
 
@@ -1082,10 +1140,10 @@ void BX_CPU_C::reset(unsigned source)
 
 #if BX_CPU_LEVEL >= 4
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_486))
-    BX_CPU_THIS_PTR dr6.set32(0xFFFF0FF0);
+    BX_CPU_THIS_PTR dr6.val = 0xFFFF0FF0;
   else
 #endif
-    BX_CPU_THIS_PTR dr6.set32(0xFFFF1FF0); // on 386 bit 12 was set to '1 upon reset
+    BX_CPU_THIS_PTR dr6.val = 0xFFFF1FF0; // on 386 bit 12 was set to '1 upon reset
 
   BX_CPU_THIS_PTR dr7.set32(0x00000400);
 
@@ -1115,6 +1173,7 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_SUPPORT_SVM
   BX_CPU_THIS_PTR msr.svm_hsave_pa = 0;
   BX_CPU_THIS_PTR msr.svm_vm_cr = 0;     // enable SVME if was disabled, clear LOCK bit
+  BX_CPU_THIS_PTR msr.svm_tsc_ratio = BX_SVM_TSC_RATIO_DEFAULT; // 1.0
 #endif
 
 #if BX_SUPPORT_CET
@@ -1149,9 +1208,11 @@ void BX_CPU_C::reset(unsigned source)
 /* initialise MSR registers to defaults */
 #if BX_SUPPORT_APIC
   /* APIC Address, APIC enabled and BSP is default, we'll fill in the rest later */
-  BX_CPU_THIS_PTR msr.apicbase = BX_LAPIC_BASE_ADDR;
+  // INIT keeps IA32_APIC_BASE (base address, global enable and x2APIC mode),
+  // only the local APIC registers are reinitialized (SDM 13.12.5)
+  if (source == BX_RESET_HARDWARE)
+    BX_CPU_THIS_PTR msr.apicbase = BX_LAPIC_BASE_ADDR | 0x900;
   BX_CPU_THIS_PTR lapic->reset(source);
-  BX_CPU_THIS_PTR msr.apicbase |= 0x900;
   BX_CPU_THIS_PTR lapic->set_base(BX_CPU_THIS_PTR msr.apicbase);
 #if BX_CPU_LEVEL >= 6
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XAPIC_EXT))
@@ -1312,6 +1373,9 @@ void BX_CPU_C::reset(unsigned source)
 
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM || BX_SUPPORT_FRED
   BX_CPU_THIS_PTR in_event = false;
+#endif
+#if BX_SUPPORT_CET && BX_SUPPORT_VMX
+  BX_CPU_THIS_PTR vmcs.shadow_stack_prematurely_busy = false;
 #endif
 
 #if BX_SUPPORT_VMX

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -293,7 +293,7 @@ void bx_iodebug_c::mem_read(void *cpu, bx_phy_address addr, unsigned len, void *
         fprintf(stderr, "(device origin)\t");
 */
 
-      fprintf(stderr, "range start: \t\t" FMT_PHY_ADDRX "\trange end:\t" FMT_PHY_ADDRX "\n\taddress accessed:\t" FMT_PHY_ADDRX "\tdata written:\t",
+      fprintf(stderr, "range start: \t\t" FMT_PHY_ADDRX "\trange end:\t" FMT_PHY_ADDRX "\n\taddress accessed:\t" FMT_PHY_ADDRX "\tdata read:\t",
               bx_iodebug_s.monitored_mem_areas_start[area],
               bx_iodebug_s.monitored_mem_areas_end[area],
               addr);
@@ -336,7 +336,7 @@ unsigned bx_iodebug_c::range_test(bx_phy_address addr, unsigned len)
     if(bx_iodebug_s.monitored_mem_areas_start[i] != 0 ||
        bx_iodebug_s.monitored_mem_areas_end[i] != 0)
     {
-      if((Bit32u)(addr+len-1) < bx_iodebug_s.monitored_mem_areas_start[i])
+      if((addr+len-1) < bx_iodebug_s.monitored_mem_areas_start[i])
         continue;
 
       if(addr < bx_iodebug_s.monitored_mem_areas_end[i])

@@ -131,40 +131,42 @@ void BX_CPU_C::handleInterruptMaskChange(void)
 
 #if BX_SUPPORT_SVM
     if (BX_CPU_THIS_PTR in_svm_guest) {
-      if ((SVM_V_INTR_PRIO > SVM_V_TPR) || SVM_V_IGNORE_TPR)
+      // virtual interrupts are masked when Virtual GIF is enabled and VGIF is 0
+      if (SVM_V_GIF_ENABLE && ! SVM_V_GIF)
+        mask_event(BX_EVENT_SVM_VIRQ_PENDING);
+      else if ((SVM_V_INTR_PRIO > SVM_V_TPR) || SVM_V_IGNORE_TPR)
         unmask_event(BX_EVENT_SVM_VIRQ_PENDING);
     }
 #endif
-
-    return;
   }
-
-  // EFLAGS.IF was cleared, some events like INTR would be masked
+  else {
+    // EFLAGS.IF was cleared, some events like INTR would be masked
 
 #if BX_SUPPORT_VMX
-  if (BX_CPU_THIS_PTR in_vmx_guest && BX_CPU_THIS_PTR vmcs.pin_vmexec_ctrls.EXTERNAL_INTERRUPT_VMEXIT()) {
-    // if 'External-interrupt exiting' control is set, the value of EFLAGS.IF
-    // doesn't affect interrupt blocking
-    mask_event(BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING | BX_EVENT_PENDING_VMX_VIRTUAL_INTR);
-    unmask_event(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR);
-     return;
-  }
+    if (BX_CPU_THIS_PTR in_vmx_guest && BX_CPU_THIS_PTR vmcs.pin_vmexec_ctrls.EXTERNAL_INTERRUPT_VMEXIT()) {
+      // if 'External-interrupt exiting' control is set, the value of EFLAGS.IF
+      // doesn't affect interrupt blocking
+      mask_event(BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING | BX_EVENT_PENDING_VMX_VIRTUAL_INTR);
+      unmask_event(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR);
+      return;
+    }
 #endif
+
+    mask_event(BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING |
+               BX_EVENT_PENDING_INTR |
+               BX_EVENT_PENDING_LAPIC_INTR |
+               BX_EVENT_PENDING_VMX_VIRTUAL_INTR |
+               BX_EVENT_SVM_VIRQ_PENDING);
+  }
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest && SVM_V_INTR_MASKING) {
-     if (! SVM_HOST_IF)
-       mask_event(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR);
-
-     mask_event(BX_EVENT_SVM_VIRQ_PENDING);
+    // with V_INTR_MASKING the guest EFLAGS.IF masks only virtual interrupts,
+    // physical interrupts are masked by the host EFLAGS.IF (saved by VMRUN)
+    if (SVM_HOST_IF)
+      unmask_event(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR);
+    else
+      mask_event(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR);
   }
-  else
 #endif
-  {
-     mask_event(BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING |
-                BX_EVENT_PENDING_INTR |
-                BX_EVENT_PENDING_LAPIC_INTR |
-                BX_EVENT_PENDING_VMX_VIRTUAL_INTR |
-                BX_EVENT_SVM_VIRQ_PENDING);
-  }
 }

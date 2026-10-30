@@ -137,6 +137,7 @@
 #  zambezi                    AMD FX(tm)-4100 Quad-Core Processor (Zambezi)
 #  trinity_apu                AMD A8-5600K APU (Trinity)
 #  ryzen                      AMD Ryzen 7 1700
+#  zen3_vermeer               AMD Ryzen 7 5800X (Vermeer)
 #  corei7_ivy_bridge_3770k    Intel(R) Core(TM) i7-3770K CPU (Ivy Bridge)
 #  corei7_haswell_4770        Intel(R) Core(TM) i7-4770 CPU (Haswell)
 #  broadwell_ult              Intel(R) Processor 5Y70 CPU (Broadwell)
@@ -207,6 +208,12 @@
 #    Ignore MSR references that Bochs does not understand; print a warning
 #    message instead of generating #GP exception. This option is enabled
 #    by default but will not be available if configurable MSRs are enabled.
+#
+#  MAXPHYADDR:
+#    Emulated maximum physical address width (MAXPHYADDR) in bits, reported
+#    in CPUID.80000008H:EAX[7:0] and used for reserved physical address bits
+#    checks. Valid range is 36 to 52, default is 40. This option exists only
+#    if Bochs compiled with physical address wider than 32 bit.
 #
 #  MWAIT_IS_NOP:
 #    When this option is enabled MWAIT will not put the CPU into a sleep state.
@@ -824,6 +831,13 @@ debug: action=ignore
 # DEBUGGER:
 # This defines the parameters of the Bochs internal debugger:
 #
+#  ACTIVATE:
+#  If this parameter is set to 'true' or '1' the debugger is started on
+#  startup, same as the command line option '-dbg' (the configuration menu
+#  is skipped). If set to 'false' or '0' (default) Bochs is started without
+#  the debugger, it could be activated at runtime (currently with the win32
+#  display library only).
+#
 #  LOG:
 #  Give the path of the log file you'd like Bochs to log debugger output.
 #  If you really don't want it, make it /dev/null or '-'. :^(
@@ -832,11 +846,14 @@ debug: action=ignore
 #  If this parameter is set to 'true' or '1' the debugger gui is used instead
 #  of the command line version. The special value 'globalini' enables the gui
 #  and forces the usage of an ini file from BXSHARE path. The gui parameter is
-#  available only if Bochs is built with debugger gui support and the debugger
-#  is activated with the command line option '-dbg'.
+#  available only if Bochs is built with debugger gui support. The debugger
+#  gui starts on startup with the command line option '-dbg' or with
+#  'activate=1', without them the debugger gui is started when the debugger
+#  is activated at runtime (currently with the win32 display library only).
 #
 # Example:
 #   debugger: log=./debugger.out, gui=true
+#   debugger: activate=1, gui=true
 #=======================================================================
 #debugger: log=/dev/null
 #debugger: log=debugger.out
@@ -1272,9 +1289,13 @@ speaker: enabled=1, mode=sound, volume=8
 
 #=======================================================================
 # MAGIC_BREAK:
-# This enables the "magic breakpoint" feature when using the debugger.
-# The useless cpu instructions XCHG %REGW, %REGW causes Bochs to enter the
-# debugger mode. This might be useful for software development.
+# This enables the "magic breakpoint" feature in Bochs compiled with the
+# internal debugger. The useless cpu instructions XCHG %REGW, %REGW causes
+# Bochs to enter the debugger mode. This might be useful for software
+# development. If Bochs was started without the debugger enabled (no -dbg
+# command line option), the magic breakpoint activates the internal debugger
+# (currently with the win32 display library only).
+# Use enabled=0 to disable the magic breakpoint.
 #
 # You can specify multiple at once:
 #

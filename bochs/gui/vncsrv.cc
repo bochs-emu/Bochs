@@ -7,7 +7,7 @@
 //    Donald Becker
 //    http://www.psyon.org
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -141,6 +141,8 @@ static struct _rfbKeyboardEvent {
 } rfbKeyboardEvent[MAX_KEY_EVENTS];
 static unsigned long rfbKeyboardEvents = 0;
 static BX_MUTEX(bKeyboardInUse);
+// x position of a headerbar click, handled after releasing the event queue
+static int rfbHeaderbarClickX = -1;
 
 // Misc Stuff
 
@@ -261,7 +263,7 @@ void bx_vncsrv_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
       } else if (!strcmp(argv[i], "no_gui_console")) {
         console.present = 0;
       } else {
-        BX_PANIC(("Unknown rfb option '%s'", argv[i]));
+        BX_PANIC(("Unknown vncsrv option '%s'", argv[i]));
       }
     }
   }
@@ -334,19 +336,29 @@ void bx_vncsrv_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
 void bx_vncsrv_gui_c::handle_events(void)
 {
-  BX_LOCK(bKeyboardInUse);
+  int hbar_x;
 
+  BX_LOCK(bKeyboardInUse);
+  rfbHeaderbarClickX = -1;
   if (rfbKeyboardEvents > 0) {
     for (unsigned i = 0; i < rfbKeyboardEvents; i++) {
       if (rfbKeyboardEvent[i].type == KEYBOARD) {
         vncKeyPressed(rfbKeyboardEvent[i].key, rfbKeyboardEvent[i].down);
       } else { //type == MOUSE;
         vncMouseMove(rfbKeyboardEvent[i].x, rfbKeyboardEvent[i].y, rfbKeyboardEvent[i].z, rfbKeyboardEvent[i].down);
+        // a headerbar click discards the remaining events
+        if (rfbHeaderbarClickX >= 0) break;
       }
     }
     rfbKeyboardEvents = 0;
   }
+  hbar_x = rfbHeaderbarClickX;
   BX_UNLOCK(bKeyboardInUse);
+  // the headerbar handlers may open dialogs, so call them without holding
+  // the event queue lock
+  if (hbar_x >= 0) {
+    headerbar_click(hbar_x);
+  }
 
 #if BX_SHOW_IPS
   if (rfbIPSupdate) {
@@ -729,9 +741,8 @@ void bx_vncsrv_gui_c::vncMouseMove(int x, int y, int z, int bmask)
     oldy = y;
   } else {
     if (bmask == 1) {
-      rfbKeyboardEvents = 0;
-      BX_UNLOCK(bKeyboardInUse);
-      headerbar_click(x);
+      // called from handle_events() with the event queue locked
+      rfbHeaderbarClickX = x;
     }
   }
 }
@@ -1229,8 +1240,11 @@ void dokey(rfbBool down, rfbKeySym key, rfbClientPtr cl)
     bx_gui->toggle_mouse_enable();
   } else {
     BX_LOCK(bKeyboardInUse);
-    if (rfbKeyboardEvents >= MAX_KEY_EVENTS)
-        return;
+    if (rfbKeyboardEvents >= MAX_KEY_EVENTS) {
+      // queue full (simulation not handling events), drop it
+      BX_UNLOCK(bKeyboardInUse);
+      return;
+    }
     rfbKeyboardEvent[rfbKeyboardEvents].type = KEYBOARD;
     rfbKeyboardEvent[rfbKeyboardEvents].key = key;
     rfbKeyboardEvent[rfbKeyboardEvents].down = down;
@@ -1247,8 +1261,11 @@ void doptr(int buttonMask, int x, int y, rfbClientPtr cl)
     bx_gui->toggle_mouse_enable();
   } else {
     BX_LOCK(bKeyboardInUse);
-    if (rfbKeyboardEvents >= MAX_KEY_EVENTS)
-        return;
+    if (rfbKeyboardEvents >= MAX_KEY_EVENTS) {
+      // queue full (simulation not handling events), drop it
+      BX_UNLOCK(bKeyboardInUse);
+      return;
+    }
     rfbKeyboardEvent[rfbKeyboardEvents].type = MOUSE;
     rfbKeyboardEvent[rfbKeyboardEvents].x = x;
     rfbKeyboardEvent[rfbKeyboardEvents].y = y;

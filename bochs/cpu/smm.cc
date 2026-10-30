@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2006-2018 Stanislav Shwartsman
+//   Copyright (c) 2006-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -34,17 +34,19 @@
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSM(bxInstruction_c *i)
 {
+#if BX_SUPPORT_SVM
+  // RSM intercept is checked before #UD for RSM outside of SMM: a hypervisor containerizing SMM
+  // runs the SMM handler as a guest (not in SMM) and emulates the intercepted RSM (APM Appendix D)
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_RSM)) Svm_Vmexit(SVM_VMEXIT_RSM);
+  }
+#endif
+
   /* If we are not in System Management Mode, then #UD should be generated */
   if (! BX_CPU_THIS_PTR smm_mode()) {
     BX_INFO(("RSM not in System Management Mode !"));
     exception(BX_UD_EXCEPTION, 0);
   }
-
-#if BX_SUPPORT_SVM
-  if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(SVM_INTERCEPT0_RSM)) Svm_Vmexit(SVM_VMEXIT_RSM);
-  }
-#endif
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx) {
@@ -61,6 +63,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSM(bxInstruction_c *i)
   BX_INFO(("RSM: Resuming from System Management Mode"));
 
   unmask_event(BX_EVENT_SMI | BX_EVENT_NMI | BX_EVENT_VMX_VIRTUAL_NMI);
+
+  // restore the state of blocking by NMI as it was before SMI, when returning to VMX non-root
+  // operation with "virtual NMIs" VM-execution control set NMIs are not blocked and the
+  // virtual-NMI blocking is restored instead
+  if (BX_CPU_THIS_PTR smm_nmi_blocked) {
+#if BX_SUPPORT_VMX
+    if (BX_CPU_THIS_PTR in_smm_vmx_guest && BX_CPU_THIS_PTR vmcs.pin_vmexec_ctrls.VIRTUAL_NMI())
+      mask_event(BX_EVENT_VMX_VIRTUAL_NMI);
+    else
+#endif
+      mask_event(BX_EVENT_NMI);
+  }
 
   Bit32u saved_state[SMM_SAVE_STATE_MAP_SIZE], n;
   // reset reserved bits
@@ -112,6 +126,10 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_CPU_THIS_PTR cr4.set_VMXE(0);
   BX_CPU_THIS_PTR in_smm_vmx = BX_CPU_THIS_PTR in_vmx;
   BX_CPU_THIS_PTR in_smm_vmx_guest = BX_CPU_THIS_PTR in_vmx_guest;
+  if (BX_CPU_THIS_PTR in_smm_vmx && !BX_CPU_THIS_PTR in_smm_vmx_guest) {
+    if (!BX_CPU_THIS_PTR cr0.get_PG() || !BX_CPU_THIS_PTR cr0.get_NE() || !BX_CPU_THIS_PTR cr0.get_PE())
+      BX_PANIC(("SMM save: CR0 state is corrupted while saving state to SMM !"));
+  }
   BX_CPU_THIS_PTR in_vmx = false;
   BX_CPU_THIS_PTR in_vmx_guest = false;
 
@@ -123,6 +141,16 @@ void BX_CPU_C::enter_system_management_mode(void)
 #endif
 
   BX_CPU_THIS_PTR in_smm = true;
+
+  // save the state of blocking by NMI, if the logical processor was in VMX non-root operation
+  // with "virtual NMIs" VM-execution control set the virtual-NMI blocking is saved instead
+  // (part of VMX-critical state)
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_smm_vmx_guest && BX_CPU_THIS_PTR vmcs.pin_vmexec_ctrls.VIRTUAL_NMI())
+    BX_CPU_THIS_PTR smm_nmi_blocked = is_masked_event(BX_EVENT_VMX_VIRTUAL_NMI);
+  else
+#endif
+    BX_CPU_THIS_PTR smm_nmi_blocked = is_masked_event(BX_EVENT_NMI);
 
   mask_event(BX_EVENT_SMI | BX_EVENT_NMI | BX_EVENT_VMX_VIRTUAL_NMI);
 
@@ -208,7 +236,7 @@ void BX_CPU_C::enter_system_management_mode(void)
   handleCpuContextChange();
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  BX_CPU_THIS_PTR monitor.reset_monitor();
+  BX_CPU_THIS_PTR wakeup_monitor();
 #endif
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);
@@ -690,7 +718,7 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
     BX_CPU_THIS_PTR in_vmx_guest = BX_CPU_THIS_PTR in_smm_vmx_guest;
     BX_INFO(("SMM Restore: enable VMX %s mode", BX_CPU_THIS_PTR in_vmx_guest ? "guest" : "host"));
 
-    if (!smm_state->cr0.get_PG() || !smm_state->cr0.get_NE() || smm_state->cr0.get_PE()) {
+    if (!smm_state->cr0.get_PG() || !smm_state->cr0.get_NE() || !smm_state->cr0.get_PE()) {
       if (! BX_CPU_THIS_PTR in_vmx_guest) {
         BX_PANIC(("SMM restore: CR0 state is corrupted in restore image !"));
 
@@ -848,7 +876,7 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
   handleCpuContextChange();
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  BX_CPU_THIS_PTR monitor.reset_monitor();
+  BX_CPU_THIS_PTR wakeup_monitor();
 #endif
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);

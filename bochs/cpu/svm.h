@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2015 Stanislav Shwartsman
+//   Copyright (c) 2011-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -130,8 +130,23 @@ enum SVM_intercept_codes {
 #define SVM_CONTROL32_GUEST_ASID                (0x058)
 #define SVM_CONTROL32_TLB_CONTROL               (0x05c)
 #define SVM_CONTROL_VTPR                        (0x060)
+//   [0] VIRQ, if non-zero VINTR is pending
+//   [1] VGIF
+//   [2] -
+//   [3] V_NMI, if non-zero virtual NMI is pending
+//   [4] V_NMI_MASK, if non-zero virtual NMI is masked
+// [7-5] reserved
 #define SVM_CONTROL_VIRQ                        (0x061)
+// [3-0] VINTR_PRIO - priority of virtual interrupt
+//   [4] VIGN_TPR - if non-zero, the current VINTR ignores the virtual TPR
+// [7-5] reserved
 #define SVM_CONTROL_VINTR_PRIO_IGN_TPR          (0x062)
+//   [0] VINTR_MASKING
+//   [1] VGIF_EN, virtual GIF enable
+//   [2] V_NMI_ENABLE, virtual NMI enable
+// [5-3] reserved
+//   [6] X2VAPIC enable
+//   [7] AVIC enable
 #define SVM_CONTROL_VINTR_MASKING               (0x063)
 #define SVM_CONTROL_VINTR_VECTOR                (0x064)
 #define SVM_CONTROL_INTERRUPT_SHADOW            (0x068)
@@ -141,6 +156,19 @@ enum SVM_intercept_codes {
 #define SVM_CONTROL32_EXITINTINFO               (0x088)
 #define SVM_CONTROL32_EXITINTINFO_ERROR_CODE    (0x08c)
 #define SVM_CONTROL_NESTED_PAGING_ENABLE        (0x090)
+
+// VMCB control area offset 0x090 control bits
+enum {
+  SVM_NESTED_CTRL_NP_ENABLE        = (1 << 0),  // Nested Paging
+  SVM_NESTED_CTRL_SEV_ENABLE       = (1 << 1),  // Secure Encrypted Virtualization
+  SVM_NESTED_CTRL_SEV_ES_ENABLE    = (1 << 2),  // Encrypted State for SEV
+  SVM_NESTED_CTRL_GMET_ENABLE      = (1 << 3),  // Guest Mode Execute Trap
+  SVM_NESTED_CTRL_SSS_CHECK_ENABLE = (1 << 4),  // Supervisor Shadow Stack restrictions
+  SVM_NESTED_CTRL_VTE_ENABLE       = (1 << 5),  // Virtual Transparent Encryption
+  SVM_NESTED_CTRL_ROGPT_ENABLE     = (1 << 6),  // Read Only Guest Page Tables
+  SVM_NESTED_CTRL_INVLPGB_ENABLE   = (1 << 7),  // INVLPGB and TLBSYNC execution in guest
+  SVM_NESTED_CTRL_PML_ENABLE       = (1 << 11)  // Page Modification Logging
+};
 
 #define SVM_VIRTUAL_APIC_BAR                    (0x098)
 
@@ -302,6 +330,14 @@ struct SVM_HOST_STATE
   Bit64u rax;
 
   BxPackedRegister pat_msr;
+
+#if BX_SUPPORT_CET
+  Bit64u ssp;
+  Bit64u msr_ia32_s_cet;
+  Bit64u interrupt_ssp_table_address;
+#endif
+
+  Bit32u spec_ctrl; // host SPEC_CTRL value with SPEC_CTRL virtualization
 };
 
 struct SVM_GUEST_STATE
@@ -327,6 +363,12 @@ struct SVM_GUEST_STATE
   unsigned cpl;
 
   bool inhibit_interrupts;
+
+#if BX_SUPPORT_CET
+  Bit64u ssp;
+  Bit64u msr_ia32_s_cet;
+  Bit64u interrupt_ssp_table_address;
+#endif
 };
 
 struct SVM_CONTROLS
@@ -352,9 +394,16 @@ struct SVM_CONTROLS
   bool v_ignore_tpr;
   bool v_intr_masking;
   Bit8u v_intr_vector;
+  bool v_gif_enable;
+  bool v_gif;
 
   bool nested_paging;
   Bit64u ncr3;
+#if BX_SUPPORT_CET
+  bool sss_check;          // Supervisor Shadow Stack restrictions in nested page tables
+#endif
+
+  bool virt_vmload_vmsave; // VMSAVE and VMLOAD virtualization
 
   Bit16u pause_filter_count;
   Bit16u pause_filter_threshold;
@@ -368,6 +417,8 @@ struct SVM_CONTROLS
 #define SVM_V_IGNORE_TPR   (BX_CPU_THIS_PTR vmcb->ctrls.v_ignore_tpr)
 #define SVM_V_INTR_MASKING (BX_CPU_THIS_PTR vmcb->ctrls.v_intr_masking)
 #define SVM_V_INTR_VECTOR  (BX_CPU_THIS_PTR vmcb->ctrls.v_intr_vector)
+#define SVM_V_GIF_ENABLE   (BX_CPU_THIS_PTR vmcb->ctrls.v_gif_enable)
+#define SVM_V_GIF          (BX_CPU_THIS_PTR vmcb->ctrls.v_gif)
 
 #define SVM_HOST_IF (BX_CPU_THIS_PTR vmcb->host_state.eflags & EFlagsIFMask)
 
@@ -379,6 +430,13 @@ struct SVM_CONTROLS
 #define BX_VM_CR_MSR_DIS_A20M_MASK      (1<<2)
 #define BX_VM_CR_MSR_LOCK_MASK          (1<<3)
 #define BX_VM_CR_MSR_SVMDIS_MASK        (1<<4)
+
+// TSC_RATIO MSR 0xc0000104: TSC ratio in 8.32 fixed point format
+//   [31:0] - fractional part
+//  [39:32] - integer part
+//  [63:40] - reserved, must be zero
+#define BX_SVM_TSC_RATIO_DEFAULT        BX_CONST64(0x0000000100000000)
+#define BX_SVM_TSC_RATIO_RESERVED_BITS  BX_CONST64(0xffffff0000000000)
 
 struct VMCB_CACHE
 {

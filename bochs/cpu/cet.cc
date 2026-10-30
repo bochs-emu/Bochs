@@ -96,7 +96,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::track_indirect(unsigned cpl)
 void BX_CPP_AttrRegparmN(2) BX_CPU_C::track_indirect_if_not_suppressed(bxInstruction_c *i, unsigned cpl)
 {
   if (EndbranchEnabledAndNotSuppressed(cpl)) {
-    if (i->segOverrideCet() == BX_SEG_REG_DS && (BX_CPU_THIS_PTR msr.ia32_cet_control[cpl==3] & BX_CET_ENABLE_NO_TRACK_INDIRECT_BRANCH_PREFIX) != 0)
+    if (i->segOverrideCet() && (BX_CPU_THIS_PTR msr.ia32_cet_control[cpl==3] & BX_CET_ENABLE_NO_TRACK_INDIRECT_BRANCH_PREFIX) != 0)
       return;
 
     BX_CPU_THIS_PTR msr.ia32_cet_control[cpl==3] |= BX_CET_WAIT_FOR_ENBRANCH;
@@ -396,7 +396,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SETSSBSY(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  if (!shadow_stack_atomic_set_busy(ssp_laddr, CPL)) {
+  if (!shadow_stack_atomic_set_busy(ssp_laddr, CPL, long64_mode())) {
     BX_ERROR(("%s: failed to set SSP busy bit", i->getIaOpcodeNameShort()));
     exception(BX_CP_EXCEPTION, BX_CP_SETSSBSY);
   }

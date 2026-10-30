@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////
 // ACPI table structures and generation for UEFI/OVMF support
-// Copyright (C) 2025 The Bochs Project
+// Copyright (C) 2025-2026 The Bochs Project
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef BX_ACPI_TABLES_H
@@ -80,7 +80,9 @@ struct acpi_facs {
     Bit8u reserved2[24];
 };
 
-// FADT - Fixed ACPI Description Table (ACPI 6.0)
+#define ACPI_FADT_VERSION  5    // ACPI 5.0 (good compatibility)
+
+// FADT - Fixed ACPI Description Table
 struct acpi_fadt {
     struct acpi_table_header header;
     Bit32u firmware_ctrl;      // FACS address (32-bit)
@@ -126,6 +128,7 @@ struct acpi_fadt {
     Bit8u reset_value;
     Bit16u arm_boot_arch;
     Bit8u fadt_minor_version;
+#if ACPI_FADT_VERSION >= 2
     // ACPI 2.0+ fields
     Bit64u x_firmware_ctrl;
     Bit64u x_dsdt;
@@ -137,9 +140,16 @@ struct acpi_fadt {
     Bit8u x_pm_tmr_blk[12];
     Bit8u x_gpe0_blk[12];
     Bit8u x_gpe1_blk[12];
+#endif
+#if ACPI_FADT_VERSION >= 5
+    // ACPI version 5.0+
     Bit8u sleep_control_reg[12];
     Bit8u sleep_status_reg[12];
-    Bit64u hypervisor_vendor_id;
+#endif
+#if ACPI_FADT_VERSION >= 6
+    // ACPI version 6.0+
+    Bit64u hypervisor_vendor_id;  // all zeros if hypervisor is not present
+#endif
 };
 
 // MADT - Multiple APIC Description Table

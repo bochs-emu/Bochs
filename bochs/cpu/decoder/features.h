@@ -143,7 +143,8 @@ x86_feature(BX_ISA_UMIP, "umip")                                           /* Us
 x86_feature(BX_ISA_RDPID, "rdpid")                                         /* RDPID Support */
 x86_feature(BX_ISA_TCE, "tce")                                             /* Translation Cache Extensions (TCE) support (AMD) */
 x86_feature(BX_ISA_CLZERO, "clzero")                                       /* CLZERO instruction support (AMD) */
-x86_feature(BX_ISA_SCA_MITIGATIONS, "sca_mitigations")                     /* Report SCA Mitigations in CPUID */
+x86_feature(BX_ISA_SPEC_CTRL, "spec_ctrl")                                 /* Speculation Control and SCA Mitigations (Intel) */
+x86_feature(BX_ISA_SPEC_CTRL_AMD, "spec_ctrl_amd")                         /* Speculation Control (AMD) */
 x86_feature(BX_ISA_CET, "cet")                                             /* Control Flow Enforcement */
 x86_feature(BX_ISA_WRMSRNS, "wrmsrns")                                     /* Non-Serializing version of WRMSR */
 x86_feature(BX_ISA_MSR_IMM, "msr_imm")                                     /* Immediate forms of RDMSR and WRMSRNS */
@@ -160,3 +161,4 @@ x86_feature(BX_ISA_RAO_INT, "rao_int")                                     /* RA
 x86_feature(BX_ISA_MOVRS, "movrs")                                         /* MOVRS instructions support */
 x86_feature(BX_ISA_FRED, "fred")                                           /* FRED: Flexible Return and Event Deivery support */
 x86_feature(BX_ISA_USER_MSR, "user_msr")                                   /* USER_MSR: Support URDMSR/UWRMSR instructions */
+x86_feature(BX_ISA_APX, "apx")                                             /* APX instructions support */

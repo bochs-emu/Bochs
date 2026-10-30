@@ -65,8 +65,7 @@ void BX_CPU_C::avx_masked_load16(bxInstruction_c *i, bx_address eaddr, BxPackedA
   }
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
-  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
-  BX_CPU_THIS_PTR alignment_check_mask = 0;
+  ignore_alignment_check(); // masked load/store never generate #AC
 #endif
 
   for (int n=WORD_ELEMENTS(len)-1; n >= 0; n--) {
@@ -75,10 +74,6 @@ void BX_CPU_C::avx_masked_load16(bxInstruction_c *i, bx_address eaddr, BxPackedA
     else
        op->vmm16u(n) = 0;
   }
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
-#endif
 }
 
 void BX_CPU_C::avx_masked_load32(bxInstruction_c *i, bx_address eaddr, BxPackedAvxRegister *op, Bit32u mask)
@@ -96,8 +91,7 @@ void BX_CPU_C::avx_masked_load32(bxInstruction_c *i, bx_address eaddr, BxPackedA
   }
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
-  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
-  BX_CPU_THIS_PTR alignment_check_mask = 0;
+  ignore_alignment_check(); // masked load/store never generate #AC
 #endif
 
   for (int n=DWORD_ELEMENTS(len)-1; n >= 0; n--) {
@@ -106,10 +100,6 @@ void BX_CPU_C::avx_masked_load32(bxInstruction_c *i, bx_address eaddr, BxPackedA
     else
        op->vmm32u(n) = 0;
   }
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
-#endif
 }
 
 void BX_CPU_C::avx_masked_load64(bxInstruction_c *i, bx_address eaddr, BxPackedAvxRegister *op, Bit32u mask)
@@ -127,8 +117,7 @@ void BX_CPU_C::avx_masked_load64(bxInstruction_c *i, bx_address eaddr, BxPackedA
   }
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
-  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
-  BX_CPU_THIS_PTR alignment_check_mask = 0;
+  ignore_alignment_check(); // masked load/store never generate #AC
 #endif
 
   for (int n=QWORD_ELEMENTS(len)-1; n >= 0; n--) {
@@ -137,10 +126,6 @@ void BX_CPU_C::avx_masked_load64(bxInstruction_c *i, bx_address eaddr, BxPackedA
     else
        op->vmm64u(n) = 0;
   }
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
-#endif
 }
 
 void BX_CPU_C::avx_masked_store8(bxInstruction_c *i, bx_address eaddr, const BxPackedAvxRegister *op, Bit64u mask)
@@ -188,8 +173,7 @@ void BX_CPU_C::avx_masked_store16(bxInstruction_c *i, bx_address eaddr, const Bx
 #endif
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
-  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
-  BX_CPU_THIS_PTR alignment_check_mask = 0;
+  ignore_alignment_check(); // masked load/store never generate #AC
 #endif
 
   // see if you can successfully write all the elements first
@@ -202,10 +186,6 @@ void BX_CPU_C::avx_masked_store16(bxInstruction_c *i, bx_address eaddr, const Bx
     if (mask & (1<<n))
        write_virtual_word(i->seg(), eaddr + 2*n, op->vmm16u(n));
   }
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
-#endif
 }
 
 void BX_CPU_C::avx_masked_store32(bxInstruction_c *i, bx_address eaddr, const BxPackedAvxRegister *op, Bit32u mask)
@@ -225,8 +205,7 @@ void BX_CPU_C::avx_masked_store32(bxInstruction_c *i, bx_address eaddr, const Bx
 #endif
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
-  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
-  BX_CPU_THIS_PTR alignment_check_mask = 0;
+  ignore_alignment_check(); // masked load/store never generate #AC
 #endif
 
   // see if you can successfully write all the elements first
@@ -239,10 +218,6 @@ void BX_CPU_C::avx_masked_store32(bxInstruction_c *i, bx_address eaddr, const Bx
     if (mask & (1<<n))
        write_virtual_dword(i->seg(), eaddr + 4*n, op->vmm32u(n));
   }
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
-#endif
 }
 
 void BX_CPU_C::avx_masked_store64(bxInstruction_c *i, bx_address eaddr, const BxPackedAvxRegister *op, Bit32u mask)
@@ -262,8 +237,7 @@ void BX_CPU_C::avx_masked_store64(bxInstruction_c *i, bx_address eaddr, const Bx
 #endif
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
-  unsigned save_alignment_check_mask = BX_CPU_THIS_PTR alignment_check_mask;
-  BX_CPU_THIS_PTR alignment_check_mask = 0;
+  ignore_alignment_check(); // masked load/store never generate #AC
 #endif
 
   // see if you can successfully write all the elements first
@@ -276,10 +250,6 @@ void BX_CPU_C::avx_masked_store64(bxInstruction_c *i, bx_address eaddr, const Bx
     if (mask & (1<<n))
        write_virtual_qword(i->seg(), eaddr + 8*n, op->vmm64u(n));
   }
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = save_alignment_check_mask;
-#endif
 }
 
 #endif // BX_SUPPORT_AVX

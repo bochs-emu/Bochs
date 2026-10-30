@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2017-2024 Stanislav Shwartsman
+//   Copyright (c) 2017-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -156,16 +156,31 @@ static const Bit64u BxOpcodeTable0F383E[] = { last_opcode(ATTR_SSE_PREFIX_66, BX
 static const Bit64u BxOpcodeTable0F383F[] = { last_opcode(ATTR_SSE_PREFIX_66, BX_IA_PMAXUD_VdqWdq) };
 static const Bit64u BxOpcodeTable0F3840[] = { last_opcode(ATTR_SSE_PREFIX_66, BX_IA_PMULLD_VdqWdq) };
 static const Bit64u BxOpcodeTable0F3841[] = { last_opcode(ATTR_SSE_PREFIX_66, BX_IA_PHMINPOSUW_VdqWdq) };
-static const Bit64u BxOpcodeTable0F3880[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_MOD_MEM, BX_IA_INVEPT) };
-static const Bit64u BxOpcodeTable0F3881[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_MOD_MEM, BX_IA_INVVPID) };
-static const Bit64u BxOpcodeTable0F3882[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_MOD_MEM, BX_IA_INVPCID) };
+static const Bit64u BxOpcodeTable0F3880[] = {
+#if BX_SUPPORT_X86_64
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_MOD_MEM | ATTR_IS64, BX_IA_INVEPT_Gq),
+#endif
+  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_MOD_MEM, BX_IA_INVEPT)
+};
+static const Bit64u BxOpcodeTable0F3881[] = {
+#if BX_SUPPORT_X86_64
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_MOD_MEM | ATTR_IS64, BX_IA_INVVPID_Gq),
+#endif
+  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_MOD_MEM, BX_IA_INVVPID)
+};
+static const Bit64u BxOpcodeTable0F3882[] = {
+#if BX_SUPPORT_X86_64
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_MOD_MEM | ATTR_IS64, BX_IA_INVPCID_Gq),
+#endif
+  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_MOD_MEM, BX_IA_INVPCID)
+};
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable0F388A[] = { last_opcode(ATTR_SSE_NO_PREFIX | ATTR_MOD_MEM | ATTR_IS64, BX_IA_MOVRS_GbEb) };
+static const Bit64u BxOpcodeTable0F388A[] = { last_opcode(ATTR_NO_SSE_PREFIX_F2_F3 | ATTR_MOD_MEM | ATTR_IS64, BX_IA_MOVRS_GbEb) };
 static const Bit64u BxOpcodeTable0F388B[] = {
-  form_opcode(ATTR_SSE_NO_PREFIX | ATTR_MOD_MEM | ATTR_OS64 | ATTR_IS64, BX_IA_MOVRS_GqEq),
-  form_opcode(ATTR_SSE_NO_PREFIX | ATTR_MOD_MEM | ATTR_OS32 | ATTR_IS64, BX_IA_MOVRS_GdEd),
-  last_opcode(ATTR_SSE_NO_PREFIX | ATTR_MOD_MEM | ATTR_OS16 | ATTR_IS64, BX_IA_MOVRS_GwEw)
+  form_opcode(ATTR_NO_SSE_PREFIX_F2_F3 | ATTR_MOD_MEM | ATTR_OS64 | ATTR_IS64, BX_IA_MOVRS_GqEq),
+  form_opcode(ATTR_NO_SSE_PREFIX_F2_F3 | ATTR_MOD_MEM | ATTR_OS32 | ATTR_IS64, BX_IA_MOVRS_GdEd),
+  last_opcode(ATTR_NO_SSE_PREFIX_F2_F3 | ATTR_MOD_MEM | ATTR_OS16 | ATTR_IS64, BX_IA_MOVRS_GwEw)
 };
 #endif
 
@@ -235,8 +250,9 @@ static const Bit64u BxOpcodeTable0F38F8[] = {
 #if BX_SUPPORT_X86_64
   form_opcode(ATTR_IS64 | ATTR_MODC0   | ATTR_SSE_PREFIX_F2, BX_IA_URDMSR_EqGq),
   form_opcode(ATTR_IS64 | ATTR_MODC0   | ATTR_SSE_PREFIX_F3, BX_IA_UWRMSR_GqEq),
-  form_opcode(ATTR_OS64 | ATTR_MOD_MEM | ATTR_SSE_PREFIX_66, BX_IA_MOVDIR64B_GqMdq),
+  form_opcode(ATTR_AS64 | ATTR_MOD_MEM | ATTR_SSE_PREFIX_66, BX_IA_MOVDIR64B_GqMdq),
 #endif
+  form_opcode(ATTR_AS16 | ATTR_MOD_MEM | ATTR_SSE_PREFIX_66, BX_IA_MOVDIR64B_GwMdq),
   last_opcode(            ATTR_MOD_MEM | ATTR_SSE_PREFIX_66, BX_IA_MOVDIR64B_GdMdq)
 };
 

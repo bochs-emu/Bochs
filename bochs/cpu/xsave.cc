@@ -46,8 +46,6 @@ extern XSaveRestoreStateHelper xsave_restore[];
 #define CALL_XSAVE_FN(ptrToFunc)  (ptrToFunc)
 #endif
 
-#include "scalar_arith.h"
-
 #if BX_CPU_LEVEL >= 6
 BX_CPP_INLINE Bit32u xsave_offset_align64_if_needed(Bit32u offset, unsigned feature)
 {
@@ -59,26 +57,43 @@ BX_CPP_INLINE Bit32u xsave_offset_align64_if_needed(Bit32u offset, unsigned feat
   return offset;
 }
 
-BX_CPP_INLINE Bit32u xsave_area_last_byte(Bit32u requested_feature_bitmap, bool compaction = false)
+// Returns the offset after the last byte to access in a compacted XSAVE area: the components layout is
+// defined by xcomp_bv, the area ends after the last component that is also requested via requested_feature_bitmap
+Bit32u xsave_area_last_byte_compaction(Bit32u xcomp_bv, Bit32u requested_feature_bitmap)
 {
-  if (compaction) {
-    Bit32u offset = XSAVE_YMM_STATE_OFFSET;
+  Bit32u offset = XSAVE_YMM_STATE_OFFSET, last_byte = XSAVE_YMM_STATE_OFFSET;
 
-    for (unsigned feature = xcr0_t::BX_XCR0_YMM_BIT; feature < xcr0_t::BX_XCR0_LAST; feature++)
-    {
-      Bit32u feature_mask = (1 << feature);
-      if ((requested_feature_bitmap & feature_mask) != 0) {
-        offset =  xsave_offset_align64_if_needed(offset, feature);
-        offset += xsave_restore[feature].len;
-      }
+  for (unsigned feature = xcr0_t::BX_XCR0_YMM_BIT; feature < xcr0_t::BX_XCR0_LAST; feature++)
+  {
+    Bit32u feature_mask = (1 << feature);
+    if ((xcomp_bv & feature_mask) != 0) {
+      offset =  xsave_offset_align64_if_needed(offset, feature);
+      offset += xsave_restore[feature].len;
+      if ((requested_feature_bitmap & feature_mask) != 0)
+        last_byte = offset;
     }
-
-    return offset;
   }
 
-  unsigned last_feature_to_save = most_significant_bitd(requested_feature_bitmap);
+  return last_byte;
+}
 
-  return xsave_restore[last_feature_to_save].offset + xsave_restore[last_feature_to_save].len;
+// Returns the offset after the last byte to access in a standard format XSAVE area
+Bit32u xsave_area_last_byte(Bit32u requested_feature_bitmap)
+{
+  Bit32u max_size = XSAVE_YMM_STATE_OFFSET; // legacy region + XSAVE header
+
+  // the feature with highest index is not necessarily the last one in the standard format
+  // (APX state reuses the offset of the deprecated MPX BNDREGS state)
+  for (unsigned feature = xcr0_t::BX_XCR0_YMM_BIT; feature < xcr0_t::BX_XCR0_LAST; feature++)
+  {
+    if ((requested_feature_bitmap & (1 << feature)) != 0) {
+      Bit32u size = xsave_restore[feature].offset + xsave_restore[feature].len;
+      if (size > max_size)
+        max_size = size;
+    }
+  }
+
+  return max_size;
 }
 #endif
 
@@ -233,7 +248,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
   if (requested_feature_bitmap & ~(BX_XCR0_FPU_MASK | BX_XCR0_SSE_MASK)) {
     // check that we would not fault while attempting to write, check that we can write-access last byte of the XSAVE area to be written
     // touch the memory but no write actually occurs
-    tickle_write_virtual(i->seg(), (eaddr + xsave_area_last_byte(requested_feature_bitmap, true) - 1) & asize_mask, 1);
+    tickle_write_virtual(i->seg(), (eaddr + xsave_area_last_byte_compaction(requested_feature_bitmap, requested_feature_bitmap) - 1) & asize_mask, 1);
 
     Bit32u offset = XSAVE_YMM_STATE_OFFSET;
 
@@ -428,11 +443,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
     }
   }
 
-  // check that we would not fault while attempting to read, check that we can access last byte of the XSAVE area
-  // touch the memory but no read actually occurs
-  tickle_read_virtual(i->seg(), (eaddr + xsave_area_last_byte(requested_feature_bitmap, compaction) - 1) & asize_mask);
-
   if (compaction) {
+    // check that we would not fault while attempting to read, check that we can access last byte of the XSAVE area
+    // touch the memory but no read actually occurs
+    // in compacted format the components layout is defined by XCOMP_BV, not by RFBM
+    tickle_read_virtual(i->seg(), (eaddr + xsave_area_last_byte_compaction((Bit32u) xcomp_bv, requested_feature_bitmap) - 1) & asize_mask);
+
     Bit32u offset = XSAVE_YMM_STATE_OFFSET;
 
     /////////////////////////////////////////////////////////////////////////////
@@ -457,6 +473,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
     }
   }
   else {
+    // check that we would not fault while attempting to read, check that we can access last byte of the XSAVE area
+    // touch the memory but no read actually occurs
+    tickle_read_virtual(i->seg(), (eaddr + xsave_area_last_byte(requested_feature_bitmap) - 1) & asize_mask);
+
     /////////////////////////////////////////////////////////////////////////////
     for (unsigned feature = xcr0_t::BX_XCR0_YMM_BIT; feature < xcr0_t::BX_XCR0_LAST; feature++)
     {
@@ -1336,6 +1356,46 @@ bool BX_CPU_C::xsave_scaledata_state_xinuse(void)
 }
 #endif // BX_SUPPORT_AMX
 
+#if BX_SUPPORT_APX
+
+void BX_CPU_C::xsave_apx_state(bxInstruction_c *i, bx_address offset)
+{
+  bx_address asize_mask = i->asize_mask();
+
+  for(unsigned index=0; index < 16; index++) {
+    write_virtual_qword(i->seg(), (offset+index*8) & asize_mask, BX_READ_64BIT_REG(index+16));
+  }
+}
+
+void BX_CPU_C::xrstor_apx_state(bxInstruction_c *i, bx_address offset)
+{
+  bx_address asize_mask = i->asize_mask();
+
+  for(unsigned index=0; index < 16; index++) {
+    Bit64u val64 = read_virtual_qword(i->seg(), (offset+index*8) & asize_mask);
+    BX_WRITE_64BIT_REG(index+16, val64);
+  }
+}
+
+void BX_CPU_C::xrstor_init_apx_state(void)
+{
+  // initialize APX registers with reset values
+  for(unsigned index=16; index < 32; index++) {
+    BX_WRITE_64BIT_REG(index, 0);
+  }
+}
+
+bool BX_CPU_C::xsave_apx_state_xinuse(void)
+{
+  for(unsigned index=16; index < 32; index++) {
+    if (BX_READ_64BIT_REG(index)) return true;
+  }
+
+  return false;
+}
+
+#endif
+
 Bit32u BX_CPU_C::get_xinuse_vector(Bit32u requested_feature_bitmap)
 {
   Bit32u xinuse = 0;
@@ -1412,12 +1472,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
   }
 
-#if BX_SUPPORT_VMX
-  if (BX_CPU_THIS_PTR in_vmx_guest) {
-    VMexit(VMX_VMEXIT_XSETBV, 0);
-  }
-#endif
-
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
     if (SVM_INTERCEPT(SVM_INTERCEPT1_XSETBV)) Svm_Vmexit(SVM_VMEXIT_XSETBV);
@@ -1429,6 +1483,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
     BX_ERROR(("XSETBV: The current priveledge level is not 0"));
     exception(BX_GP_EXCEPTION, 0);
   }
+
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    VMexit(VMX_VMEXIT_XSETBV, 0);
+  }
+#endif
 
   // For now hardcoded handle only XCR0 register, it should take a few
   // years until extension will be required

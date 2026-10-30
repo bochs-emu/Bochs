@@ -1516,6 +1516,32 @@ if test "$support_amx" -gt 0 -a "$support_evex" = 0; then
   AC_MSG_ERROR([for AMX support AVX and EVEX emulation must be compiled in!])
 fi
 
+support_apx=0
+APX_LIB_VAR=''
+AC_MSG_CHECKING(for APX extensions support)
+AC_ARG_ENABLE(apx,
+  AS_HELP_STRING([--enable-apx], [support for APX extensions (no)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_APX, 1)
+    APX_LIB_VAR='$(APX_LIB)'
+    support_apx=1
+   elif test "$enableval" = no; then
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_APX, 0)
+   fi
+   ],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_APX, 0)
+  ]
+  )
+AC_SUBST(APX_LIB_VAR)
+
+if test "$support_apx" -gt 0 -a "$support_evex" = 0; then
+  AC_MSG_ERROR([for APX support AVX and EVEX emulation must be compiled in!])
+fi
+
 AC_MSG_CHECKING(for x86 debugger support)
 AC_ARG_ENABLE(x86-debugger,
   AS_HELP_STRING([--enable-x86-debugger], [x86 debugger support (no)]),
@@ -3608,7 +3634,7 @@ AC_PATH_PROG(IASL, iasl, not_found)
 
 AC_CONFIG_FILES([Makefile iodev/Makefile iodev/display/Makefile iodev/hdimage/Makefile \
 	 iodev/usb/Makefile iodev/network/Makefile iodev/sound/Makefile \
-	 bx_debug/Makefile bios/Makefile cpu/Makefile cpu/avx/Makefile \
+	 bx_debug/Makefile bios/Makefile cpu/Makefile cpu/avx/Makefile cpu/apx/Makefile \
 	 cpu/cpudb/Makefile cpu/fpu/Makefile cpu/softfloat3e/Makefile memory/Makefile \
 	 gui/Makefile ${INSTRUMENT_DIR}/Makefile misc/Makefile \
 	 doc/docbook/Makefile build/linux/bochs-dlx bxversion.h bxversion.rc \

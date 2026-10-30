@@ -180,11 +180,13 @@ void bx_pc_system_c::MemoryMappingChanged(void)
     BX_CPU(i)->TLB_flush();
 }
 
-void bx_pc_system_c::invlpg(bx_address addr)
+#if BX_SUPPORT_MONITOR_MWAIT
+void bx_pc_system_c::TLB_disable_host_ptr(bx_phy_address paddr)
 {
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++)
-    BX_CPU(i)->TLB_invlpg(addr);
+    BX_CPU(i)->TLB_disable_host_ptr(PPFOf(paddr));
 }
+#endif
 
 int bx_pc_system_c::Reset(unsigned type)
 {
@@ -433,16 +435,21 @@ void bx_pc_system_c::dumpStatsTimer(void* this_ptr)
 #if BX_DEBUGGER
 void bx_pc_system_c::timebp_handler(void* this_ptr)
 {
-   BX_CPU(0)->break_point = BREAK_POINT_TIME;
+   if (bx_dbg.debugger_active)
+     BX_CPU(0)->break_point = BREAK_POINT_TIME;
+   else
+     bx_dbg_request_activation(0, "time breakpoint"); // activate the debugger
    BX_DEBUG(("Time breakpoint triggered"));
 
    if (timebp_queue_size > 1) {
      Bit64s new_diff = timebp_queue[1] - bx_pc_system.time_ticks();
      bx_pc_system.activate_timer_ticks(timebp_timer, new_diff, 0);
    }
-   timebp_queue_size--;
-   for (int i = 0; i < timebp_queue_size; i++)
-     timebp_queue[i] = timebp_queue[i+1];
+   if (timebp_queue_size > 0) {
+     timebp_queue_size--;
+     for (int i = 0; i < timebp_queue_size; i++)
+       timebp_queue[i] = timebp_queue[i+1];
+   }
 }
 #endif // BX_DEBUGGER
 

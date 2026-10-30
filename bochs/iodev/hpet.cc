@@ -9,7 +9,7 @@
 //
 //  Authors: Beth Kon <bkon@us.ibm.com>
 //
-//  Copyright (C) 2017-2025  The Bochs Project
+//  Copyright (C) 2017-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -129,6 +129,24 @@ static BX_CPP_INLINE int deactivating_bit(Bit64u old, Bit64u _new, Bit64u mask)
   return ((old & mask) && !(_new & mask));
 }
 
+// IRQ lines 0..15 are routed through the PIC (which forwards them to the
+// I/O APIC), lines 16 and up exist on the I/O APIC only
+static void hpet_set_irq_line(int route, bool level)
+{
+  if (route < 16) {
+    if (level) {
+      DEV_pic_raise_irq(route);
+    } else {
+      DEV_pic_lower_irq(route);
+    }
+  }
+#if BX_SUPPORT_APIC
+  else if (DEV_ioapic_present()) {
+    DEV_ioapic_set_irq_level((Bit8u)route, level);
+  }
+#endif
+}
+
 // static memory read/write functions
 
 static bool hpet_read(bx_phy_address a20addr, unsigned len, void *data, void *param)
@@ -138,7 +156,8 @@ static bool hpet_read(bx_phy_address a20addr, unsigned len, void *data, void *pa
 
   if (len == 4) { // must be 32-bit aligned
     if ((a20addr & 0x3) != 0) {
-      BX_PANIC(("Unaligned HPET read at address 0x" FMT_PHY_ADDRX, a20addr));
+      BX_ERROR(("Unaligned HPET read at address 0x" FMT_PHY_ADDRX, a20addr));
+      *((Bit32u *)data) = 0;
       return true;
     }
     value1 = theHPET->read_aligned(a20addr);
@@ -146,7 +165,8 @@ static bool hpet_read(bx_phy_address a20addr, unsigned len, void *data, void *pa
     return true;
   } else if (len == 8) { // must be 64-bit aligned
     if ((a20addr & 0x7) != 0) {
-      BX_PANIC(("Unaligned HPET read at address 0x" FMT_PHY_ADDRX, a20addr));
+      BX_ERROR(("Unaligned HPET read at address 0x" FMT_PHY_ADDRX, a20addr));
+      *((Bit64u *)data) = 0;
       return true;
     }
     value1 = theHPET->read_aligned(a20addr);
@@ -160,7 +180,8 @@ static bool hpet_read(bx_phy_address a20addr, unsigned len, void *data, void *pa
     BX_ERROR(("Unsupported HPET read at address 0x" FMT_PHY_ADDRX " with len = 1", a20addr));
     *((Bit8u *)data) = 0x00;
   } else {
-    BX_PANIC(("Unsupported HPET read at address 0x" FMT_PHY_ADDRX " with len = %i", a20addr, len));
+    BX_ERROR(("Unsupported HPET read at address 0x" FMT_PHY_ADDRX " with len = %i", a20addr, len));
+    memset(data, 0, len);
   }
   return true;
 }
@@ -169,14 +190,14 @@ static bool hpet_write(bx_phy_address a20addr, unsigned len, void *data, void *p
 {
   if (len == 4) { // must be 32-bit aligned
     if ((a20addr & 0x3) != 0) {
-      BX_PANIC(("Unaligned HPET write at address 0x" FMT_PHY_ADDRX, a20addr));
+      BX_ERROR(("Unaligned HPET write at address 0x" FMT_PHY_ADDRX " ignored", a20addr));
       return true;
     }
     theHPET->write_aligned(a20addr, *((Bit32u*) data), true);
     return true;
   } else if (len == 8) { // must be 64-bit aligned
     if ((a20addr & 0x7) != 0) {
-      BX_PANIC(("Unaligned HPET write at address 0x" FMT_PHY_ADDRX, a20addr));
+      BX_ERROR(("Unaligned HPET write at address 0x" FMT_PHY_ADDRX " ignored", a20addr));
       return true;
     }
     Bit64u val64 = *((Bit64u*) data);
@@ -187,7 +208,7 @@ static bool hpet_write(bx_phy_address a20addr, unsigned len, void *data, void *p
   } else if (len == 1) {
     BX_ERROR(("Unsupported HPET write at address 0x" FMT_PHY_ADDRX " with len = 1", a20addr));
   } else {
-    BX_PANIC(("Unsupported HPET write at address 0x" FMT_PHY_ADDRX " with len = %i", a20addr, len));
+    BX_ERROR(("Unsupported HPET write at address 0x" FMT_PHY_ADDRX " with len = %i", a20addr, len));
   }
   return true;
 }
@@ -256,6 +277,9 @@ void bx_hpet_c::register_state(void)
   BXRS_HEX_PARAM_FIELD(list, config, s.config);
   BXRS_HEX_PARAM_FIELD(list, isr, s.isr);
   BXRS_HEX_PARAM_FIELD(list, hpet_counter, s.hpet_counter);
+  // main counter is derived from these while the HPET is enabled
+  BXRS_HEX_PARAM_FIELD(list, hpet_reference_value, s.hpet_reference_value);
+  BXRS_DEC_PARAM_FIELD(list, hpet_reference_time, s.hpet_reference_time);
   for (int i = 0; i < s.num_timers; i++) {
     sprintf(tnum, "timer%d", i);
     tim = new bx_list_c(list, tnum);
@@ -263,6 +287,7 @@ void bx_hpet_c::register_state(void)
     BXRS_HEX_PARAM_FIELD(tim, cmp, s.timer[i].cmp);
     BXRS_HEX_PARAM_FIELD(tim, fsb, s.timer[i].fsb);
     BXRS_DEC_PARAM_FIELD(tim, period, s.timer[i].period);
+    BXRS_HEX_PARAM_FIELD(tim, last_checked, s.timer[i].last_checked);
   }
 }
 
@@ -304,7 +329,7 @@ void bx_hpet_c::update_irq(HPETTimer *timer, bool set)
   }
   mask = (BX_CONST64(1) << timer->tn);
   if (!set || !hpet_enabled()) {
-    DEV_pic_lower_irq(route);
+    hpet_set_irq_line(route, 0);
   } else {
     if (timer->config & HPET_TN_TYPE_LEVEL) {
       /* If HPET_TN_ENABLE bit is 0, "the timer will still operate and
@@ -317,10 +342,10 @@ void bx_hpet_c::update_irq(HPETTimer *timer, bool set)
         Bit32u val32 = (Bit32u)timer->fsb;
         DEV_MEM_WRITE_PHYSICAL((bx_phy_address) (timer->fsb >> 32), sizeof(Bit32u), (Bit8u *) &val32);
       } else if (timer->config & HPET_TN_TYPE_LEVEL) {
-        DEV_pic_raise_irq(route);
+        hpet_set_irq_line(route, 1);
       } else {
-        DEV_pic_lower_irq(route);
-        DEV_pic_raise_irq(route);
+        hpet_set_irq_line(route, 0);
+        hpet_set_irq_line(route, 1);
       }
     }
   }

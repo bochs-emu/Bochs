@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2019-2023  The Bochs Project
+//  Copyright (C) 2019-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -48,7 +48,7 @@ bool BX_CPU_C::is_monitor(bx_phy_address begin_addr, unsigned len)
   bx_phy_address monitor_end = monitor_begin + CACHE_LINE_SIZE - 1;
 
   bx_phy_address end_addr = begin_addr + len;
-  if (begin_addr >= monitor_end || end_addr <= monitor_begin)
+  if (begin_addr > monitor_end || end_addr <= monitor_begin)
     return false;
   else
     return true;
@@ -92,7 +92,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 #endif
   }
 
-  if (RCX != 0) {
+  // RCX specifies optional extensions in 64-bit mode, ECX otherwise,
+  // MONITORX extensions operand is always 32-bit ECX
+  Bit64u extensions = RCX;
+  if (i->getIaOpcode() == BX_IA_MONITORX || ! long64_mode())
+    extensions = ECX;
+
+  if (extensions != 0) {
     BX_ERROR(("%s: no optional extensions supported", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -102,6 +108,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
   // MONITOR/MONITORX performs the same segmentation and paging checks as a 1-byte read
   tickle_read_virtual(i->seg(), eaddr);
 
+#if BX_SUPPORT_SVM
+  // MONITOR intercept is checked after all exceptions (APM Table 15-7)
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(SVM_INTERCEPT1_MONITOR)) Svm_Vmexit(SVM_VMEXIT_MONITOR);
+  }
+#endif
+
   bx_phy_address paddr = BX_CPU_THIS_PTR address_xlation.paddress1;
 #if BX_SUPPORT_MEMTYPE
   if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) {
@@ -110,15 +123,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
   }
 #endif
 
-#if BX_SUPPORT_SVM
-  if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(SVM_INTERCEPT1_MONITOR)) Svm_Vmexit(SVM_VMEXIT_MONITOR);
-  }
-#endif
-
   // Set the monitor immediately. If monitor is still armed when we MWAIT,
   // the processor will stall.
-  bx_pc_system.invlpg(paddr);
+  // Stores to the monitored page through cached direct host pointers would
+  // bypass the monitor check, disable direct access to the page in all processors.
+  bx_pc_system.TLB_disable_host_ptr(paddr);
 
   BX_CPU_THIS_PTR monitor.arm(paddr, (i->getIaOpcode() == BX_IA_MONITOR) ? BX_MONITOR_ARMED_BY_MONITOR : BX_MONITOR_ARMED_BY_MONITORX);
 
@@ -166,45 +175,55 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MONITORLESS_MWAIT))
     supported_bits |= BX_MWAIT_MONITORLESS_MWAIT;
 
-  if (RCX & ~supported_bits) {
+  // RCX specifies optional extensions in 64-bit mode, ECX otherwise,
+  // MWAITX extensions operand is always 32-bit ECX
+  Bit64u extensions = RCX;
+  if (i->getIaOpcode() == BX_IA_MWAITX || ! long64_mode())
+    extensions = ECX;
+
+  if (extensions & ~supported_bits) {
     BX_ERROR(("%s: incorrect optional extensions in RCX", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
+  // MWAIT/MWAITX enters the optimized state only if the monitor was armed by matching
+  // MONITOR/MONITORX instruction, monitorless MWAIT enters it regardless of the monitor state
+  bool enter_optimized_state;
+  if (ECX & BX_MWAIT_MONITORLESS_MWAIT)
+    enter_optimized_state = true;
+  else if (i->getIaOpcode() == BX_IA_MWAITX)
+    enter_optimized_state = BX_CPU_THIS_PTR monitor.armed_by_monitorx();
+  else
+    enter_optimized_state = BX_CPU_THIS_PTR monitor.armed_by_monitor();
+
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
+    // conditional intercept is taken if MWAIT/MWAITX would enter the optimized state
     if (SVM_INTERCEPT(SVM_INTERCEPT1_MWAIT_ARMED))
-      if (BX_CPU_THIS_PTR monitor.armed()) Svm_Vmexit(SVM_VMEXIT_MWAIT_CONDITIONAL);
+      if (enter_optimized_state) Svm_Vmexit(SVM_VMEXIT_MWAIT_CONDITIONAL);
 
     if (SVM_INTERCEPT(SVM_INTERCEPT1_MWAIT)) Svm_Vmexit(SVM_VMEXIT_MWAIT);
   }
 #endif
 
-  if (! (ECX & BX_MWAIT_MONITORLESS_MWAIT)) {
-    // If monitor has already triggered, we just return.
-    bool monitor_armed = true;
-    if (i->getIaOpcode() == BX_IA_MWAITX) {
-      if (! BX_CPU_THIS_PTR monitor.armed_by_monitorx())
-        monitor_armed = false;
-    }
-    else {
-      if (! BX_CPU_THIS_PTR monitor.armed_by_monitor())
-        monitor_armed = false;
-    }
-
-    if (! monitor_armed) {
-      BX_DEBUG(("%s: the MONITOR was not armed or already triggered", i->getIaOpcodeNameShort()));
-      BX_NEXT_TRACE(i);
-    }
-  }
-  else {
-    BX_CPU_THIS_PTR monitor.reset_monitor(); // Monitorless MWAIT
-  }
+  // Address-range monitoring is always clear after MWAIT completes executing,
+  // if the processor did not enter the optimized state
 
   static bool mwait_is_nop = SIM->get_param_bool(BXPN_MWAIT_IS_NOP)->get();
   if (mwait_is_nop) {
+    BX_CPU_THIS_PTR monitor.reset_monitor();
     BX_NEXT_TRACE(i);
   }
+
+  // If monitor has already triggered, we just return.
+  if (! enter_optimized_state) {
+    BX_DEBUG(("%s: the MONITOR was not armed or already triggered", i->getIaOpcodeNameShort()));
+    BX_CPU_THIS_PTR monitor.reset_monitor();
+    BX_NEXT_TRACE(i);
+  }
+
+  if (ECX & BX_MWAIT_MONITORLESS_MWAIT)
+    BX_CPU_THIS_PTR monitor.reset_monitor(); // Monitorless MWAIT
 
   // stops instruction execution and places the processor in a optimized
   // state.  Events that cause exit from MWAIT state are:
@@ -216,10 +235,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
   Bit32u new_state = BX_ACTIVITY_STATE_MWAIT;
   if (ECX & 0x1) {
 #if BX_SUPPORT_VMX
-    // When "interrupt window exiting" VMX control is set MWAIT instruction
-    // won't cause the processor to enter sleep state with EFLAGS.IF = 0
+    // When "interrupt window exiting" VMX control is set or the logical processor has recognized
+    // a pending virtual interrupt MWAIT instruction won't cause the processor to enter sleep state with EFLAGS.IF = 0
     if (BX_CPU_THIS_PTR in_vmx_guest) {
-      if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls1.INTERRUPT_WINDOW_VMEXIT() && ! BX_CPU_THIS_PTR get_IF()) {
+      if ((BX_CPU_THIS_PTR vmcs.vmexec_ctrls1.INTERRUPT_WINDOW_VMEXIT() || is_pending(BX_EVENT_PENDING_VMX_VIRTUAL_INTR)) &&
+          ! BX_CPU_THIS_PTR get_IF())
+      {
+        BX_CPU_THIS_PTR monitor.reset_monitor();
         BX_NEXT_TRACE(i);
       }
     }
@@ -273,7 +295,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMONITOR_Eq(bxInstruction_c *i)
 
   // Set the monitor immediately. If monitor is still armed when we MWAIT,
   // the processor will stall.
-  bx_pc_system.invlpg(paddr);
+  // Stores to the monitored page through cached direct host pointers would
+  // bypass the monitor check, disable direct access to the page in all processors.
+  bx_pc_system.TLB_disable_host_ptr(paddr);
 
   BX_CPU_THIS_PTR monitor.arm(paddr, BX_MONITOR_ARMED_BY_UMONITOR);
 
@@ -304,7 +328,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMWAIT_Ed(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest && BX_CPU_THIS_PTR vmcs.vmexec_ctrls1.RDTSC_VMEXIT()) {
-    VMexit((i->getIaOpcode() == BX_IA_TPAUSE_Ed) ? VMX_VMEXIT_TPAUSE : VMX_VMEXIT_UMWAIT, 0);
+    VMexit_Instruction(i, (i->getIaOpcode() == BX_IA_TPAUSE_Ed) ? VMX_VMEXIT_TPAUSE : VMX_VMEXIT_UMWAIT, BX_READ);
   }
 #endif
 
@@ -324,11 +348,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMWAIT_Ed(bxInstruction_c *i)
     }
   }
   else {
-    BX_CPU_THIS_PTR monitor.reset_umonitor();
+    // TPAUSE resets all address-range monitors (MONITOR, MONITORX and UMONITOR),
+    // stores to a monitored range must not wake TPAUSE
+    BX_CPU_THIS_PTR monitor.reset_monitor();
   }
 
   static bool mwait_is_nop = SIM->get_param_bool(BXPN_MWAIT_IS_NOP)->get();
   if (mwait_is_nop) {
+    BX_CPU_THIS_PTR monitor.reset_umonitor();
     BX_NEXT_TRACE(i);
   }
 
@@ -336,30 +363,35 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMWAIT_Ed(bxInstruction_c *i)
   Bit64u instr_deadline = GET64_FROM_HI32_LO32(EDX, EAX);
   if (instr_deadline <= tsc) {
     BX_DEBUG(("%s: requested deadline is in the past", i->getIaOpcodeNameShort()));
+    BX_CPU_THIS_PTR monitor.reset_umonitor();
     BX_NEXT_TRACE(i);
   }
   Bit64u instr_delay = instr_deadline - tsc;
 
   Bit32u umwait_control_max_delay = (BX_CPU_THIS_PTR msr.ia32_umwait_ctrl & ~0x3);
-//bool using_os_deadline = false; // FIXME
+  bool using_os_deadline = false;
   if (umwait_control_max_delay && umwait_control_max_delay < instr_delay) {
     instr_delay = umwait_control_max_delay;
-//  using_os_deadline = true;
+    using_os_deadline = true;
   }
 
   BX_ASSERT(instr_delay > 0);
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
   instr_delay = compute_physical_TSC_delay(instr_delay);
 #endif
 
   if (instr_delay == 0) {
     BX_DEBUG(("%s: requested delay is 0", i->getIaOpcodeNameShort()));
+    // the OS time limit is already reached
+    if (using_os_deadline) assert_CF();
+    BX_CPU_THIS_PTR monitor.reset_umonitor();
     BX_NEXT_TRACE(i);
   }
 
   BX_DEBUG(("%s entering sleep state with delay=" FMT_LL "d", i->getIaOpcodeNameShort(), instr_delay));
 
-  BX_CPU_THIS_PTR lapic->set_mwaitx_timer(instr_delay);
+  // RFLAGS.CF is set when the timer expires if the delay was limited by the OS time limit
+  BX_CPU_THIS_PTR lapic->set_mwaitx_timer(instr_delay, using_os_deadline);
 
   // An external interrupt causes the processor to exit the implementation-dependent optimized state 
   // regardless of whether maskable-interrupts are inhibited (EFLAGS.IF =0)
@@ -368,9 +400,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMWAIT_Ed(bxInstruction_c *i)
   BX_INSTR_MWAIT(BX_CPU_ID, BX_CPU_THIS_PTR monitor.monitor_addr, CACHE_LINE_SIZE, sleep_state);
 
   enter_sleep_state(sleep_state);
-
-//if (using_os_deadline && tsc >= deadline)
-//  assert_CF();
 #endif
 
   BX_NEXT_TRACE(i);

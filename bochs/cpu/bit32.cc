@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -347,8 +347,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GdEdR(bxInstruction_c *i)
 {
   Bit32u op_32 = popcntd(BX_READ_32BIT_REG(i->src()));
 
-  clearEFlagsOSZAPC();
-  if (! op_32) assert_ZF();
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+  {
+    clearEFlagsOSZAPC();
+    if (! op_32) assert_ZF();
+  }
 
   BX_WRITE_32BIT_REGZ(i->dst(), op_32);
 
@@ -361,8 +366,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TZCNT_GdEdR(bxInstruction_c *i)
   Bit32u op1_32 = BX_READ_32BIT_REG(i->src());
   Bit32u result_32 = tzcntd(op1_32);
 
-  set_CF(! op1_32);
-  set_ZF(! result_32);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+  {
+    set_CF(! op1_32);
+    set_ZF(! result_32);
+  }
 
   BX_WRITE_32BIT_REGZ(i->dst(), result_32);
 
@@ -375,8 +385,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LZCNT_GdEdR(bxInstruction_c *i)
   Bit32u op1_32 = BX_READ_32BIT_REG(i->src());
   Bit32u result_32 = lzcntd(op1_32);
 
-  set_CF(! op1_32);
-  set_ZF(! result_32);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+  {
+    set_CF(! op1_32);
+    set_ZF(! result_32);
+  }
 
   BX_WRITE_32BIT_REGZ(i->dst(), result_32);
 

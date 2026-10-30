@@ -84,7 +84,7 @@ Bit32u bx_acpi_tables_c::build_fadt(Bit8u* buffer, Bit32u facs_offset, Bit32u ds
     // Header
     memcpy(fadt->header.signature, "FACP", 4);
     fadt->header.length = sizeof(struct acpi_fadt);
-    fadt->header.revision = 5;  // ACPI 5.0 (good compatibility)
+    fadt->header.revision = ACPI_FADT_VERSION;
     memcpy(fadt->header.oem_id, ACPI_OEM_ID, 6);
     memcpy(fadt->header.oem_table_id, ACPI_OEM_TABLE_ID, 8);
     fadt->header.oem_revision = 1;

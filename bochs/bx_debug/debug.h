@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -56,6 +56,8 @@ extern "C" {
   extern char *bxtext;  // Using the pointer option rather than array
   extern int bxwrap(void);
   extern void bx_add_lex_input(char *buf);
+  extern void bx_push_lex_input(char *buf);
+  extern void bx_pop_lex_input(void);
 
   // Yacc defs
   extern int bxparse(void);
@@ -149,7 +151,7 @@ void bx_dbg_quit_command(void);
 #define BX_INFO_ZMM_REGS 0x20
 #define BX_INFO_AMX_REGS 0x40
 void bx_dbg_info_registers_command(int);
-void bx_dbg_print_amx_tile_command(int tile);
+void bx_dbg_print_amx_tile_command(unsigned tile);
 void bx_dbg_info_ivt_command(unsigned from, unsigned to);
 void bx_dbg_info_idt_command(unsigned from, unsigned to);
 void bx_dbg_info_gdt_command(unsigned from, unsigned to);
@@ -179,7 +181,7 @@ void bx_dbg_info_device(const char *, const char *);
 void bx_dbg_print_help(void);
 void bx_dbg_calc_command(Bit64u value);
 void bx_dbg_dump_table(void);
-bool bx_dbg_eval_condition(char *condition);
+bool bx_dbg_eval_condition(char *condition, unsigned cpu);
 
 // callbacks from CPU
 void bx_dbg_exception(unsigned cpu, Bit8u vector, Bit16u error_code);
@@ -225,6 +227,9 @@ typedef enum {
 #define BX_DBG_PENDING_IRQ 2
 
 BOCHSAPI void bx_debug_break(void);
+BOCHSAPI void bx_dbg_request_activation(unsigned cpu, const char *reason);
+void bx_dbg_activate(void);
+void bx_dbg_detach_command(void);
 
 BOCHSAPI_MSVCONLY void bx_dbg_exit(int code);
 #if BX_DBG_EXTENSIONS

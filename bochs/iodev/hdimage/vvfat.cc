@@ -928,7 +928,7 @@ int vvfat_image_t::read_directory(int mapping_index)
       set_begin_of_direntry(direntry, first_cluster);
     else
       direntry->begin = 0; // do that later
-    if (finddata.nFileSizeLow > 0x7fffffff) {
+    if ((finddata.nFileSizeHigh != 0) || (finddata.nFileSizeLow > 0x7fffffff)) {
       BX_ERROR(("File '%s' is larger than 2GB", buffer));
       free(buffer);
       FindClose(hFind);
@@ -1253,24 +1253,29 @@ void vvfat_image_t::set_file_attributes(void)
         size_t len = strlen(line);
         if ((len > 0) && (line[len - 1] < ' ')) line[len - 1] = '\0';
         ptr = strtok(line, ":");
+        if (ptr == NULL) {
+          // empty line
+          continue;
+        }
         if (ptr[0] == 34) {
           strcpy(fpath, ptr + 1);
         } else {
           strcpy(fpath, ptr);
         }
-        if (fpath[strlen(fpath) - 1] == 34) {
-          fpath[strlen(fpath) - 1] = '\0';
+        len = strlen(fpath);
+        if ((len > 0) && (fpath[len - 1] == 34)) {
+          fpath[len - 1] = '\0';
         }
         if (strncmp(fpath, vvfat_path, strlen(vvfat_path))) {
           strcpy(path, fpath);
-          sprintf(fpath, "%s/%s", vvfat_path, path);
+          snprintf(fpath, sizeof(fpath), "%s/%s", vvfat_path, path);
         }
         mapping_t* mapping = find_mapping_for_path(fpath);
         if (mapping != NULL) {
           direntry_t* entry = (direntry_t*)array_get(&directory, mapping->dir_index);
           attributes = entry->attributes;
           ptr = strtok(NULL, "");
-          for (i = 0; i < (int)strlen(ptr); i++) {
+          for (i = 0; (ptr != NULL) && (i < (int)strlen(ptr)); i++) {
             switch (ptr[i]) {
               case 'a':
                 attributes &= ~0x20;

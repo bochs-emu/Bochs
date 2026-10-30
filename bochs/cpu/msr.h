@@ -32,22 +32,24 @@ private:
   const char *msrname;
   unsigned cpu_feature;
   bool enabled;    // false if the MSR is not present in current cpu configuration
+  bool readonly;   // any write causes #GP
   Bit64u reserved; // writing 1 to reserved bit causes #GP
   Bit64u ignored;  // writes to ignored bits are ignored, the bits keep their previous value
 
 public:
-  MSR_Descriptor(const char *name, unsigned feature, Bit64u reserved_bits = 0, Bit64u ignored_bits = 0): msrname(name), cpu_feature(feature), enabled(true), reserved(reserved_bits), ignored(ignored_bits) {}
+  MSR_Descriptor(const char *name, unsigned feature, Bit64u reserved_bits = 0, Bit64u ignored_bits = 0): msrname(name), cpu_feature(feature), enabled(true), readonly(false), reserved(reserved_bits), ignored(ignored_bits) {}
   virtual ~MSR_Descriptor() {}
 
   const char* get_name() const { return msrname; }
   unsigned get_cpu_feature() const { return cpu_feature; }
-  bool read_only() const { return ~reserved == 0; }
+  // read only MSR is different from MSR with all bits reserved, the later still allows writing zero
+  bool read_only() const { return readonly; }
 
   void disable() { enabled = false; }
   bool is_enabled() const { return enabled; }
 
   void set_reserved_bits(Bit64u reserved_bits) { reserved = reserved_bits; }
-  void set_read_only() { reserved = ~BX_CONST64(0); }
+  void set_read_only(bool ro = true) { readonly = ro; }
 
   Bit64u get_reserved_bits() const { return reserved; }
   bool check_reserved_bits_violation(Bit64u value) const { return value & reserved; }
@@ -76,7 +78,7 @@ private:
   Bit64u value;
 
 public:
-  ConstMSR(const char *name, unsigned feature, Bit64u val): MSR_Descriptor(name, feature, ~BX_CONST64(0)), value(val) {}
+  ConstMSR(const char *name, unsigned feature, Bit64u val): MSR_Descriptor(name, feature), value(val) { set_read_only(); }
 
   virtual bool get(Bit64u *val) {
     *val = value;
@@ -127,6 +129,8 @@ enum MSR_Register {
 #if BX_SUPPORT_X86_64
   BX_MSR_IA32_USER_MSR_CTL = 0x01c,
 #endif
+
+  BX_MSR_CORE_THREAD_COUNT = 0x035,
 
   BX_MSR_TSC_ADJUST     = 0x03b,
   BX_MSR_TSC_DEADLINE   = 0x6e0,
@@ -290,6 +294,7 @@ enum MSR_Register {
   BX_MSR_GSBASE       = 0xc0000101,
   BX_MSR_KERNELGSBASE = 0xc0000102,
   BX_MSR_TSC_AUX      = 0xc0000103,
+  BX_MSR_TSC_RATIO    = 0xc0000104,
 
   BX_SVM_VM_CR_MSR     = 0xc0010114,
   BX_SVM_IGNNE_MSR     = 0xc0010115,

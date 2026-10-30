@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2025  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -87,6 +87,7 @@ private:
 
   BX_PIC_SMF void   pic_service(bx_pic_t *pic);
   BX_PIC_SMF void   clear_highest_interrupt(bx_pic_t *pic);
+  BX_PIC_SMF Bit8u  poll_command(bx_pic_t *pic);
 };
 
 #endif

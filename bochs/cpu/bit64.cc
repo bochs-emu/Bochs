@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -351,8 +351,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GqEqR(bxInstruction_c *i)
 {
   Bit32u op_32 = popcntq(BX_READ_64BIT_REG(i->src()));
 
-  clearEFlagsOSZAPC();
-  if (! op_32) assert_ZF();
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+  {
+    clearEFlagsOSZAPC();
+    if (! op_32) assert_ZF();
+  }
 
   BX_WRITE_32BIT_REGZ(i->dst(), op_32);
 
@@ -365,8 +370,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TZCNT_GqEqR(bxInstruction_c *i)
   Bit64u op1_64 = BX_READ_64BIT_REG(i->src());
   Bit64u result_64 = tzcntq(op1_64);
 
-  set_CF(! op1_64);
-  set_ZF(! result_64);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+  {
+    set_CF(! op1_64);
+    set_ZF(! result_64);
+  }
 
   BX_WRITE_64BIT_REG(i->dst(), result_64);
 
@@ -379,8 +389,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LZCNT_GqEqR(bxInstruction_c *i)
   Bit64u op1_64 = BX_READ_64BIT_REG(i->src());
   Bit64u result_64 = lzcntq(op1_64);
 
-  set_CF(! op1_64);
-  set_ZF(! result_64);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+  {
+    set_CF(! op1_64);
+    set_ZF(! result_64);
+  }
 
   BX_WRITE_64BIT_REG(i->dst(), result_64);
 

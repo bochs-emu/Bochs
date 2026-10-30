@@ -72,8 +72,10 @@ void bx_extfpuirq_c::reset(unsigned type)
 {
   if (enabled && FERR) {
     DEV_pic_lower_irq(13);
-    bx_pc_system.set_IGNNE(true);
   }
+  // the FPU error state does not survive a reset
+  FERR = false;
+  bx_pc_system.set_IGNNE(false);
 }
 
 // static IO port write callback handler

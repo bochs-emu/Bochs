@@ -71,6 +71,7 @@ bx_devices_c::bx_devices_c()
     irq_handler_name[i] = NULL;
   }
   sound_device_count = 0;
+  timer_handle = BX_NULL_TIMER_HANDLE;
 }
 
 bx_devices_c::~bx_devices_c()
@@ -401,7 +402,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 
   }
 
-  if (timer_handle != BX_NULL_TIMER_HANDLE) {
+  if (timer_handle == BX_NULL_TIMER_HANDLE) {
     timer_handle = DEV_register_timer(this, timer_handler,
       (unsigned) BX_IODEV_HANDLER_PERIOD, 1, 1, "devices.cc");
   }
@@ -515,6 +516,8 @@ void bx_devices_c::exit()
 
   bx_virt_timer.setup();
   bx_slowdown_timer.exit();
+  // pc_system deletes all timers on exit, register again on the next init()
+  timer_handle = BX_NULL_TIMER_HANDLE;
 
   // unload device plugins
   bx_unload_plugins();
@@ -766,7 +769,7 @@ bool bx_devices_c::register_io_read_handler(void *this_ptr, bx_read_handler_t f,
       break;
     }
     curr = curr->next;
-  } while (curr->next != &io_read_handlers);
+  } while (curr != &io_read_handlers);
 
   if (!io_read_handler) {
     io_read_handler = new struct io_handler_struct;
@@ -825,7 +828,7 @@ bool bx_devices_c::register_io_write_handler(void *this_ptr, bx_write_handler_t 
       break;
     }
     curr = curr->next;
-  } while (curr->next != &io_write_handlers);
+  } while (curr != &io_write_handlers);
 
   if (!io_write_handler) {
     io_write_handler = new struct io_handler_struct;
@@ -889,7 +892,7 @@ bool bx_devices_c::register_io_read_handler_range(void *this_ptr, bx_read_handle
       break;
     }
     curr = curr->next;
-  } while (curr->next != &io_read_handlers);
+  } while (curr != &io_read_handlers);
 
   if (!io_read_handler) {
     io_read_handler = new struct io_handler_struct;
@@ -954,7 +957,7 @@ bool bx_devices_c::register_io_write_handler_range(void *this_ptr, bx_write_hand
       break;
     }
     curr = curr->next;
-  } while (curr->next != &io_write_handlers);
+  } while (curr != &io_write_handlers);
 
   if (!io_write_handler) {
     io_write_handler = new struct io_handler_struct;
@@ -1279,6 +1282,10 @@ void bx_devices_c::gen_scancode(Bit32u key)
 {
   bool ret = 0;
 
+  if ((key & 0xff) >= BX_KEY_NBKEYS) {
+    BX_ERROR(("gen_scancode(): invalid key code 0x%08x", key));
+    return;
+  }
   bx_keyboard[0].bxkey_state[key & 0xff] = ((key & BX_KEY_RELEASED) == 0);
   if ((paste.buf != NULL) && (!paste.service)) {
     paste.stop = 1;
@@ -1708,7 +1715,7 @@ void bx_pci_device_c::load_pci_rom(const char *path, memory_handler_t mem_read_h
 {
   struct stat stat_buf;
   int fd, ret;
-  unsigned long size, max_size;
+  unsigned long size, max_size, offset;
   Bit32u pci_rom_size;
 
   if (*path == '\0') {
@@ -1739,7 +1746,7 @@ void bx_pci_device_c::load_pci_rom(const char *path, memory_handler_t mem_read_h
     BX_PANIC(("PCI ROM image too large"));
     return;
   }
-  if ((size % 512) != 0) {
+  if ((size == 0) || ((size % 512) != 0)) {
     close(fd);
     BX_PANIC(("PCI ROM image size must be multiple of 512 (size = %ld)", size));
     return;
@@ -1749,13 +1756,18 @@ void bx_pci_device_c::load_pci_rom(const char *path, memory_handler_t mem_read_h
   }
   pci_rom_size = (max_size << 1);
   pci_rom = new Bit8u[pci_rom_size];
+  // unused part of the ROM BAR window reads as 0xff
+  memset(pci_rom, 0xff, pci_rom_size);
 
+  offset = 0;
   while (size > 0) {
-    ret = read(fd, (bx_ptr_t) pci_rom, size);
+    ret = read(fd, (bx_ptr_t) (pci_rom + offset), size);
     if (ret <= 0) {
       BX_PANIC(("read failed on PCI ROM image: '%s'", path));
+      break;
     }
     size -= ret;
+    offset += ret;
   }
   close(fd);
 
@@ -1778,6 +1790,9 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
     return;
   }
 
+  if ((io_len + (address & 3)) > 4) {
+    io_len = 4 - (address & 3); // clamp io_len
+  }
   // handle base address registers if header type bit #0 and #1 are clear
   if (((pci_conf[0x0e] & 0x03) == 0) && (address >= 0x10) && (address < 0x28)) {
     bnum = ((address - 0x10) >> 2);
@@ -1901,6 +1916,9 @@ Bit32u bx_pci_device_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
   Bit32u value = 0;
 
+  if ((io_len + (address & 3)) > 4) {
+    io_len = 4 - (address & 3); // clamp io_len
+  }
   for (unsigned i=0; i<io_len; i++) {
     value |= (pci_conf[address+i] << (i*8));
   }

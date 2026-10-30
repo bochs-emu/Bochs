@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -131,7 +131,9 @@ const char* stringify_MSR_EFER(Bit32u efer, char *s)
 
 const char* stringify_XCR0(Bit32u xcr0, char *s)
 {
-  sprintf(s, "%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s",
+  sprintf(s, "%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s",
+    (xcr0 & (1<<20)) ? "SCALEDATA" : "scaledata",
+    (xcr0 & (1<<19)) ? "APX" : "apx",
     (xcr0 & (1<<18)) ? "TILEDATA" : "tiledata",
     (xcr0 & (1<<17)) ? "TILECFG" : "tilecfg",
     (xcr0 & (1<<16)) ? "HWP" : "hwp",
@@ -271,6 +273,10 @@ void BX_CPU_C::debug(bx_address offset)
     BX_INFO(("| R10=" FMT_ADDRX64 "  R11=" FMT_ADDRX64 "", R10, R11));
     BX_INFO(("| R12=" FMT_ADDRX64 "  R13=" FMT_ADDRX64 "", R12, R13));
     BX_INFO(("| R14=" FMT_ADDRX64 "  R15=" FMT_ADDRX64 "", R14, R15));
+#if BX_SUPPORT_APX
+    for (unsigned n=16;n < 32; n+=2)
+      BX_INFO(("| R%d=" FMT_ADDRX64 "  R%d=" FMT_ADDRX64 "", n, BX_READ_64BIT_REG(n), n+1, BX_READ_64BIT_REG(n+1)));
+#endif
   }
   else
 #endif

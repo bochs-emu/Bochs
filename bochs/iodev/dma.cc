@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -703,11 +703,13 @@ void bx_dma_c::raise_HLDA(void)
              (BX_DMA_THIS s[ma_sl].chan[channel].current_address << ma_sl);
 
   if (!BX_DMA_THIS s[ma_sl].chan[channel].mode.address_decrement) {
-    maxlen = (BX_DMA_THIS s[ma_sl].chan[channel].current_count + 1) << ma_sl;
-    BX_DMA_THIS TC = (maxlen <= BX_DMA_BUFFER_SIZE);
-    if (maxlen > BX_DMA_BUFFER_SIZE) {
-      maxlen = BX_DMA_BUFFER_SIZE;
+    // up to 0x10000 transfers (0x20000 bytes for 16-bit), does not fit in Bit16u
+    Bit32u bytes_left = ((Bit32u)BX_DMA_THIS s[ma_sl].chan[channel].current_count + 1) << ma_sl;
+    BX_DMA_THIS TC = (bytes_left <= BX_DMA_BUFFER_SIZE);
+    if (bytes_left > BX_DMA_BUFFER_SIZE) {
+      bytes_left = BX_DMA_BUFFER_SIZE;
     }
+    maxlen = (Bit16u)bytes_left;
   } else {
     BX_DMA_THIS TC = (BX_DMA_THIS s[ma_sl].chan[channel].current_count == 0);
     maxlen = 1 << ma_sl;
@@ -731,7 +733,7 @@ void bx_dma_c::raise_HLDA(void)
       else
         BX_PANIC(("no dmaWrite handler for channel %u.", channel));
 
-      DEV_MEM_WRITE_PHYSICAL_DMA(phy_addr, len, buffer);
+      DEV_MEM_WRITE_PHYSICAL_DMA(phy_addr, len * 2, buffer);
 
       BX_DBG_DMA_REPORT(phy_addr, len * 2, BX_WRITE, buffer[0] | (buffer[1] << 16)); // FIXME
     }

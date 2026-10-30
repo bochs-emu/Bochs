@@ -43,7 +43,9 @@ const unsigned BX_LAPIC_LAST_VECTOR  = 0xff;
 
 ///////////// APIC BUS /////////////
 
-bool apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mode, bool logical_dest, bool level, bool trig_mode)
+// x2apic_dest: 32-bit destination sent by a local APIC in x2APIC mode, only 0xffffffff
+// is the physical broadcast (8-bit xAPIC/IOAPIC destination: 0xff is the broadcast)
+bool apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mode, bool logical_dest, bool level, bool trig_mode, bool x2apic_dest)
 {
   if(delivery_mode == APIC_DM_LOWPRI)
   {
@@ -60,7 +62,8 @@ bool apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_m
   // determine destination local apics and deliver
   if(! logical_dest) {
     // physical destination mode
-    if((dest & apic_id_mask) == apic_id_mask) {
+    bool broadcast = x2apic_dest ? (dest == 0xffffffff) : ((dest & apic_id_mask) == apic_id_mask);
+    if(broadcast) {
        return apic_bus_broadcast_interrupt(vector, delivery_mode, trig_mode, apic_id_mask);
     }
     else {
@@ -207,6 +210,7 @@ bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu, unsigned id)
             bx_local_apic_c::mwaitx_timer_expired, 0, 0, 0, "mwaitx_timer");
   BX_DEBUG(("mwaitx_timer is = %d", mwaitx_timer_handle));
   mwaitx_timer_active = false;
+  mwaitx_timer_os_deadline = false;
 #endif
 
   xapic = simulate_xapic; // xAPIC or legacy APIC
@@ -226,6 +230,8 @@ void bx_local_apic_c::reset(unsigned type)
   icr_hi = 0;
   icr_lo = 0;
   task_priority = 0;
+  extint_pending = false;
+  extint_vector = 0;
 
   for(i=0; i<8; i++) {
     irr[i] = isr[i] = tmr[i] = 0;
@@ -485,7 +491,7 @@ Bit32u bx_local_apic_c::read_aligned(bx_phy_address addr)
     }
 #endif
   default:
-      shadow_error_status |= APIC_ERR_ILLEGAL_ADDR;
+      signal_error(APIC_ERR_ILLEGAL_ADDR);
       // but for now I want to know about it in case I missed some.
       BX_ERROR(("APIC read: register %x not implemented", apic_reg));
   }
@@ -611,7 +617,7 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
       break;
 #endif
     default:
-      shadow_error_status |= APIC_ERR_ILLEGAL_ADDR;
+      signal_error(APIC_ERR_ILLEGAL_ADDR);
       // but for now I want to know about it in case I missed some.
       BX_ERROR(("APIC write: register %x not implemented", apic_reg));
   }
@@ -619,33 +625,37 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
 
 void bx_local_apic_c::set_lvt_entry(unsigned apic_reg, Bit32u value)
 {
+  // delivery status (bit 12) and LINT remote IRR (bit 14) are read only
   static Bit32u lvt_mask[] = {
-    0x000710ff, /* TIMER */
-    0x000117ff, /* THERMAL */
-    0x000117ff, /* PERFMON */
-    0x0001f7ff, /* LINT0 */
-    0x0001f7ff, /* LINT1 */
-    0x000110ff, /* ERROR */
-    0x000117ff, /* CMCI */
+    0x000700ff, /* TIMER */
+    0x000107ff, /* THERMAL */
+    0x000107ff, /* PERFMON */
+    0x0001a7ff, /* LINT0 */
+    0x0001a7ff, /* LINT1 */
+    0x000100ff, /* ERROR */
+    0x000107ff, /* CMCI */
   };
 
   unsigned lvt_entry = (apic_reg == BX_LAPIC_LVT_CMCI) ? APIC_LVT_CMCI : (apic_reg - BX_LAPIC_LVT_TIMER) >> 4;
-#if BX_CPU_LEVEL >= 6
   if (apic_reg == BX_LAPIC_LVT_TIMER) {
+#if BX_CPU_LEVEL >= 6
     if (! cpu->is_cpu_extension_supported(BX_ISA_TSC_DEADLINE)) {
       value &= ~0x40000; // cannot enable TSC-Deadline when not supported
     }
-    else {
-      if ((value ^ lvt[lvt_entry]) & 0x40000) {
-         // Transition between TSC-Deadline and other timer modes disarm the timer
-         if(timer_active) {
-            bx_pc_system.deactivate_timer(timer_handle);
-            timer_active = false;
-         }
+#endif
+    if ((value ^ lvt[lvt_entry]) & 0x60000) {
+      // a change of the timer mode field disarms the timer and initializes the
+      // initial count and current count registers, ticksInitial also holds the
+      // TSC-deadline value
+      if(timer_active) {
+        bx_pc_system.deactivate_timer(timer_handle);
+        timer_active = false;
       }
+      timer_initial = 0;
+      timer_current = 0;
+      ticksInitial = 0;
     }
   }
-#endif
 
   lvt[lvt_entry] = value & lvt_mask[lvt_entry];
   if(! software_enabled) {
@@ -678,9 +688,19 @@ void bx_local_apic_c::send_ipi(apic_dest_t dest, Bit32u lo_cmd)
     }
   }
 
+  // Self and All-including-self shorthands are valid only with Fixed delivery mode
+  if ((dest_shorthand == 1 || dest_shorthand == 2) && delivery_mode != APIC_DM_FIXED) {
+    BX_ERROR(("send_ipi: delivery mode %d is invalid with destination shorthand %d, IPI ignored", delivery_mode, dest_shorthand));
+    return;
+  }
+
+  // the IPI with illegal vector is still sent, the receivers report Receive Illegal Vector
+  if ((delivery_mode == APIC_DM_FIXED || delivery_mode == APIC_DM_LOWPRI) && (unsigned) vector < BX_LAPIC_FIRST_VECTOR)
+    signal_error(APIC_ERR_TX_ILLEGAL_VEC);
+
   switch(dest_shorthand) {
   case 0:  // no shorthand, use real destination value
-    accepted = apic_bus_deliver_interrupt(vector, dest, delivery_mode, logical_dest, level, trig_mode);
+    accepted = apic_bus_deliver_interrupt(vector, dest, delivery_mode, logical_dest, level, trig_mode, mode == BX_APIC_X2APIC_MODE);
     break;
   case 1:  // self
     trigger_irq(vector, trig_mode);
@@ -698,8 +718,19 @@ void bx_local_apic_c::send_ipi(apic_dest_t dest, Bit32u lo_cmd)
 
   if(! accepted) {
     BX_DEBUG(("An IPI wasn't accepted, raise APIC_ERR_TX_ACCEPT_ERR"));
-    shadow_error_status |= APIC_ERR_TX_ACCEPT_ERR;
+    signal_error(APIC_ERR_TX_ACCEPT_ERR);
   }
+}
+
+void bx_local_apic_c::signal_error(Bit32u error)
+{
+  // the error interrupt is generated on the first error after the last ESR
+  // write (an ESR write rearms it), record the error first so an illegal
+  // vector in the LVT Error entry cannot recurse
+  bool rearmed = (shadow_error_status == 0);
+  shadow_error_status |= error;
+  if (rearmed && (lvt[APIC_LVT_ERROR] & 0x10000) == 0)
+    trigger_irq(lvt[APIC_LVT_ERROR] & 0xff, APIC_EDGE_TRIGGERED);
 }
 
 void bx_local_apic_c::write_spurious_interrupt_register(Bit32u value)
@@ -730,15 +761,16 @@ void bx_local_apic_c::receive_EOI(Bit32u value)
     BX_DEBUG(("EOI written without any bit in ISR"));
   }
   else {
-    if ((Bit32u) vec != spurious_vector) {
-       BX_DEBUG(("local apic received EOI, hopefully for vector 0x%02x", vec));
-       clear_vector(isr, vec);
-       if(get_vector(tmr, vec)) {
-           apic_bus_broadcast_eoi(vec);
-           clear_vector(tmr, vec);
-       }
-       service_local_apic();
+    // spurious interrupt never enters the ISR, no need to check for the spurious vector
+    BX_DEBUG(("local apic received EOI, hopefully for vector 0x%02x", vec));
+    clear_vector(isr, vec);
+    if(get_vector(tmr, vec)) {
+      clear_vector(tmr, vec);
+      // the EOI may cause an immediate re-delivery of a still asserted
+      // level triggered interrupt which sets the TMR bit again
+      apic_bus_broadcast_eoi(vec);
     }
+    service_local_apic();
   }
 
   if(bx_dbg.apic) print_status();
@@ -756,8 +788,8 @@ void bx_local_apic_c::receive_SEOI(Bit8u vec)
      BX_DEBUG(("local apic received SEOI for vector 0x%02x", vec));
      clear_vector(isr, vec);
      if(get_vector(tmr, vec)) {
-         apic_bus_broadcast_eoi(vec);
          clear_vector(tmr, vec);
+         apic_bus_broadcast_eoi(vec);
      }
      service_local_apic();
   }
@@ -790,11 +822,25 @@ int bx_local_apic_c::highest_priority_int(const Bit32u *array) const
 {
   for (int reg=7; reg>=0; reg--) {
     Bit32u tmp = array[reg];
+// ignore of interrupt vectors < 16 happen naturally as there is no way to ISR to it
+//  if (reg == 0) tmp &= 0xffff0000;
+    if (tmp) {
+      int vector = (reg * 32) + most_significant_bitd(tmp);
+      return vector;
+    }
+  }
+
+  return -1;
+}
+
+// highest priority pending interrupt, only vectors enabled in IER participate
+int bx_local_apic_c::highest_priority_irr(void) const
+{
+  for (int reg=7; reg>=0; reg--) {
+    Bit32u tmp = irr[reg];
 #if BX_CPU_LEVEL >= 6
     tmp &= ier[reg];
 #endif
-// ignore of interrupt vectors < 16 happen naturally as there is no way to ISR to it
-//  if (reg == 0) tmp &= 0xffff0000;
     if (tmp) {
       int vector = (reg * 32) + most_significant_bitd(tmp);
       return vector;
@@ -814,15 +860,12 @@ void bx_local_apic_c::service_local_apic(void)
   if(cpu->is_pending(BX_EVENT_PENDING_LAPIC_INTR)) return;  // INTR already up; do nothing
 
   // find first interrupt in irr.
-  int first_irr = highest_priority_int(irr);
+  int first_irr = highest_priority_irr();
   if (first_irr < 0) return;   // no interrupts, leave INTR=0
-  int first_isr = highest_priority_int(isr);
-  if (first_isr >= 0 && first_irr <= first_isr) {
-    BX_DEBUG(("lapic(%d): not delivering int 0x%02x because int 0x%02x is in service", apic_id, first_irr, first_isr));
-    return;
-  }
-  if(((Bit32u)(first_irr) & 0xf0) <= (task_priority & 0xf0)) {
-    BX_DEBUG(("lapic(%d): not delivering int 0x%02X because task_priority is 0x%02X", apic_id, first_irr, task_priority));
+  // deliver only if the priority class of the interrupt is higher than the processor priority class
+  Bit8u ppr = get_ppr();
+  if(((Bit32u)(first_irr) & 0xf0) <= (ppr & 0xf0)) {
+    BX_DEBUG(("lapic(%d): not delivering int 0x%02X because processor priority is 0x%02X", apic_id, first_irr, ppr));
     return;
   }
   // interrupt has appeared in irr. Raise INTR. When the CPU
@@ -857,8 +900,15 @@ bool bx_local_apic_c::deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_mode
     startup_msg(vector);
     break;
   case APIC_DM_EXTINT:
+    // ExtINT bypasses IRR and ISR and is not subject to processor priority,
+    // the vector was supplied by the 8259 and the handler does not write the
+    // local APIC EOI (SDM 13.8.2/13.8.5)
     BX_DEBUG(("Deliver EXTINT vector %02x", vector));
-    trigger_irq(vector, trig_mode, 1);
+    if (extint_pending)
+      BX_ERROR(("ExtINT vector %02x not acknowledged yet, replaced by vector %02x", extint_vector, vector));
+    extint_vector = vector;
+    extint_pending = true;
+    cpu->signal_event(BX_EVENT_PENDING_LAPIC_INTR);
     break;
   default:
     return false;
@@ -867,23 +917,21 @@ bool bx_local_apic_c::deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_mode
   return true;
 }
 
-void bx_local_apic_c::trigger_irq(Bit8u vector, unsigned trigger_mode, bool bypass_irr_isr)
+void bx_local_apic_c::trigger_irq(Bit8u vector, unsigned trigger_mode)
 {
   BX_DEBUG(("trigger interrupt vector=0x%02x", vector));
 
   if(/* vector > BX_LAPIC_LAST_VECTOR || */ vector < BX_LAPIC_FIRST_VECTOR) {
-    shadow_error_status |= APIC_ERR_RX_ILLEGAL_VEC;
+    signal_error(APIC_ERR_RX_ILLEGAL_VEC);
     BX_INFO(("bogus vector %#x, ignoring ...", vector));
     return;
   }
 
   BX_DEBUG(("triggered vector %#02x", vector));
 
-  if(! bypass_irr_isr) {
-    if(get_vector(irr, vector)) {
-      BX_DEBUG(("triggered vector %#02x not accepted", vector));
-      return;
-    }
+  if(get_vector(irr, vector)) {
+    BX_DEBUG(("triggered vector %#02x not accepted", vector));
+    return;
   }
 
   set_vector(irr, vector);
@@ -911,7 +959,16 @@ Bit8u bx_local_apic_c::acknowledge_int(void)
   if(! cpu->is_pending(BX_EVENT_PENDING_LAPIC_INTR))
     BX_PANIC(("APIC %d acknowledged an interrupt, but INTR=0", apic_id));
 
-  int vector = highest_priority_int(irr);
+  // ExtINT is serviced first, without IRR/ISR update and priority check
+  if (extint_pending) {
+    extint_pending = false;
+    BX_DEBUG(("acknowledge_int() returning ExtINT vector 0x%02x", extint_vector));
+    cpu->clear_event(BX_EVENT_PENDING_LAPIC_INTR);
+    service_local_apic();  // will set INTR again if a fixed interrupt is ready
+    return extint_vector;
+  }
+
+  int vector = highest_priority_irr();
   if (vector < 0 || (vector & 0xf0) <= get_ppr()) {
     cpu->clear_event(BX_EVENT_PENDING_LAPIC_INTR);
     return spurious_vector;
@@ -1007,7 +1064,7 @@ Bit8u bx_local_apic_c::get_apr(void)
   Bit32u tpr  = (task_priority >> 4) & 0xf;
   int first_isr = highest_priority_int(isr);
   if (first_isr < 0) first_isr = 0;
-  int first_irr = highest_priority_int(irr);
+  int first_irr = highest_priority_irr();
   if (first_irr < 0) first_irr = 0;
   Bit32u isrv = (first_isr >> 4) & 0xf;
   Bit32u irrv = (first_irr >> 4) & 0xf;
@@ -1069,6 +1126,9 @@ void bx_local_apic_c::periodic(void)
     // one-shot mode
     timer_current = 0;
     timer_active = false;
+    // TSC-deadline mode: the expired timer clears IA32_TSC_DEADLINE (read as zero if TSC-deadline timer is disabled)
+    if (timervec & 0x40000)
+      ticksInitial = 0;
     BX_DEBUG(("local apic timer(one-shot) triggered int"));
     bx_pc_system.deactivate_timer(timer_handle);
   }
@@ -1080,7 +1140,22 @@ void bx_local_apic_c::set_divide_configuration(Bit32u value)
   // move bit 3 down to bit 0
   value = ((value & 8) >> 1) | (value & 3);
   BX_ASSERT(value >= 0 && value <= 7);
-  timer_divide_factor = (value==7) ? 1 : (2 << value);
+  Bit32u new_divide_factor = (value==7) ? 1 : (2 << value);
+
+  // the counting timer continues from its current count with the new divider:
+  // rebase the start time for get_current_timer_count() and re-arm the timer
+  // for the remaining count (not in TSC-deadline mode, ticksInitial holds the deadline)
+  if(timer_active && (lvt[APIC_LVT_TIMER] & 0x40000) == 0 && new_divide_factor != timer_divide_factor) {
+    Bit32u remaining = get_current_timer_count(); // computed with the old divider
+    timer_divide_factor = new_divide_factor;
+    ticksInitial = bx_pc_system.time_ticks() - Bit64u(timer_initial - remaining) * Bit64u(timer_divide_factor);
+    bx_pc_system.activate_timer_ticks(timer_handle,
+            remaining ? Bit64u(remaining) * Bit64u(timer_divide_factor) : 1, 0);
+  }
+  else {
+    timer_divide_factor = new_divide_factor;
+  }
+
   BX_DEBUG(("set timer divide factor to %d", timer_divide_factor));
 }
 
@@ -1155,7 +1230,9 @@ void bx_local_apic_c::set_tsc_deadline(Bit64u deadline)
   ticksInitial = deadline;
   if (deadline != 0) {
     BX_DEBUG(("APIC: TSC-Deadline is set to " FMT_LL "d", deadline));
-    Bit64u currtime = bx_pc_system.time_ticks();
+    // the deadline is compared with the guest TSC (which is reset on hardware
+    // reset and changed by WRMSR to TSC/TSC_ADJUST), not with the system time
+    Bit64u currtime = cpu->get_TSC();
     timer_active = true;
     bx_pc_system.activate_timer_ticks(timer_handle, (deadline > currtime) ? (deadline - currtime) : 1 , 0);
   }
@@ -1186,6 +1263,12 @@ void bx_local_apic_c::set_vmx_preemption_timer(Bit32u value)
 {
   vmx_preemption_timer_value = value;
   vmx_preemption_timer_initial = bx_pc_system.time_ticks();
+  // timer value of zero expires immediately, the expiration is signaled by the caller,
+  // keep timer state up to date so read_vmx_preemption_timer() would return zero
+  if (value == 0) {
+    deactivate_vmx_preemption_timer();
+    return;
+  }
   vmx_preemption_timer_fire = ((vmx_preemption_timer_initial >> vmx_preemption_timer_rate) + value) << vmx_preemption_timer_rate;
   BX_DEBUG(("VMX Preemption timer: value = %u, rate = %u, init = " FMT_LL "u, fire = " FMT_LL "u", value, vmx_preemption_timer_rate, vmx_preemption_timer_initial, vmx_preemption_timer_fire));
   bx_pc_system.activate_timer_ticks(vmx_timer_handle, vmx_preemption_timer_fire - vmx_preemption_timer_initial, 0);
@@ -1210,9 +1293,10 @@ void bx_local_apic_c::vmx_preemption_timer_expired(void *this_ptr)
 
 #if BX_SUPPORT_MONITOR_MWAIT
 
-void bx_local_apic_c::set_mwaitx_timer(Bit64u value)
+void bx_local_apic_c::set_mwaitx_timer(Bit64u value, bool os_deadline)
 {
   if (mwaitx_timer_active) deactivate_mwaitx_timer();
+  mwaitx_timer_os_deadline = os_deadline;
   if (value) {
     BX_DEBUG(("MWAITX timer: delay value = " FMT_LL "u", value));
     bx_pc_system.activate_timer_ticks(mwaitx_timer_handle, value, 0);
@@ -1231,8 +1315,11 @@ void bx_local_apic_c::deactivate_mwaitx_timer(void)
 void bx_local_apic_c::mwaitx_timer_expired(void *this_ptr)
 {
   bx_local_apic_c *class_ptr = (bx_local_apic_c *) this_ptr;
+  bool os_deadline = class_ptr->mwaitx_timer_os_deadline;
   class_ptr->cpu->wakeup_monitor();
   class_ptr->deactivate_mwaitx_timer();
+  // UMWAIT/TPAUSE woken up by expiration of the OS time limit set RFLAGS.CF
+  if (os_deadline) class_ptr->cpu->assert_CF();
 }
 
 #endif
@@ -1356,6 +1443,8 @@ bool bx_local_apic_c::write_x2apic(unsigned index, Bit32u val32_hi, Bit32u val32
     return false;
   // send self ipi
   case BX_LAPIC_SELF_IPI:
+    if ((val32_lo & 0xff) < BX_LAPIC_FIRST_VECTOR)
+      signal_error(APIC_ERR_TX_ILLEGAL_VEC);
     trigger_irq(val32_lo & 0xff, APIC_EDGE_TRIGGERED);
     return true;
   case BX_LAPIC_ICR_LO:
@@ -1415,6 +1504,8 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
   BXRS_HEX_PARAM_SIMPLE(lapic, task_priority);
   BXRS_HEX_PARAM_SIMPLE(lapic, ldr);
   BXRS_HEX_PARAM_SIMPLE(lapic, dest_format);
+  BXRS_PARAM_BOOL(lapic, extint_pending, extint_pending);
+  BXRS_HEX_PARAM_SIMPLE(lapic, extint_vector);
 
   for (i=0; i<8; i++) {
     sprintf(name, "isr%u", i);
@@ -1464,6 +1555,7 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
 
 #if BX_SUPPORT_MONITOR_MWAIT
   BXRS_PARAM_BOOL(lapic, mwaitx_timer_active, mwaitx_timer_active);
+  BXRS_PARAM_BOOL(lapic, mwaitx_timer_os_deadline, mwaitx_timer_os_deadline);
 #endif
 }
 

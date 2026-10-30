@@ -253,6 +253,7 @@ bool ShowAskDialog()
         gtk_widget_show (AskPrompt);
         gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), AskPrompt, TRUE, TRUE, 5);
         AskEntry = gtk_entry_new ();
+        gtk_entry_set_max_length (GTK_ENTRY (AskEntry), ASKTEXT_MAX - 1);
         // "Enter" (activate) = OK button
         gtk_entry_set_activates_default (GTK_ENTRY (AskEntry), TRUE);
         // increase the width of the Entry to about 80 chars
@@ -268,7 +269,8 @@ bool ShowAskDialog()
     if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_OK)
     {
         entry_text = gtk_entry_get_text (GTK_ENTRY (AskEntry));
-        strcpy (ask_str.reply, entry_text);
+        strncpy (ask_str.reply, entry_text, ASKTEXT_MAX - 1);
+        ask_str.reply[ASKTEXT_MAX - 1] = 0;
         ret = TRUE;
     }
 
@@ -1355,22 +1357,24 @@ gboolean MemMouseDown_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
     return FALSE;
 }
 
+// show the newCPU button as selected
+void SetCPUButton(unsigned oldCPU, unsigned newCPU)
+{
+    // change text on oldCPU button to lowercase and BOLD with markup
+    sprintf (tmpcb, "<b>cpu%u</b>", oldCPU);
+    gtk_label_set_markup (GTK_LABEL(CpuB_label[oldCPU]), tmpcb);
+    // change text on newCPU button to uppercase and BOLD with markup
+    sprintf (tmpcb, "<b>CPU%u</b>", newCPU);
+    gtk_label_set_markup (GTK_LABEL(CpuB_label[newCPU]), tmpcb);
+}
+
 // Change the CPU display
 void CPUb_cb(GtkWidget *widget, gpointer CPUnum)    // "CPUnum" is the value supplied at handler creation
 {
     unsigned int newCPU = GPOINTER_TO_INT(CPUnum);
     if (CurrentCPU != newCPU)
     {
-        // change text on CurrentCPU button to lowercase and BOLD with markup
-        strcpy (tmpcb, "<b>cpu0</b>");
-        tmpcb[6] = CurrentCPU + '0';
-        gtk_label_set_markup (GTK_LABEL(CpuB_label[CurrentCPU]), tmpcb);
-        // change text on newCPU button to uppercase and BOLD with markup
-        strcpy (tmpcb, "<b>CPU0</b>");
-        tmpcb[6] = newCPU + '0';
-        gtk_label_set_markup (GTK_LABEL(CpuB_label[newCPU]), tmpcb);
-        CurrentCPU = newCPU;
-        BottomAsmLA = ~0;       // force an ASM autoload, to repaint
+        SelectCPU(newCPU);
         if (AtBreak != FALSE)   // if at a break, pretend it just happened
             OnBreak();          // refresh the ASM and Register windows
     }
@@ -1451,6 +1455,16 @@ gboolean keydown_event_cb(GtkWidget *widget, GdkEventKey *event, gpointer data)
     switch (event->keyval)
     {
         case  'c':
+            if (Control != 0)
+            {
+                // ^c = copy the text selected in the Output window, or break if nothing is selected
+                GtkTextBuffer *OBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(OText));
+                if (gtk_text_buffer_get_has_selection(OBuffer))
+                {
+                    gtk_text_buffer_copy_clipboard(OBuffer, gtk_clipboard_get(GDK_SELECTION_CLIPBOARD));
+                    return TRUE;
+                }
+            }
         case  'd':
         case  'f':
             if (Control == 0) break;
@@ -2337,6 +2351,8 @@ bool OSInit()
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(ScrlWinOut), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
     OText = gtk_text_view_new();
     gtk_text_view_set_editable(GTK_TEXT_VIEW(OText), FALSE);    // set it to "read only"
+    // the Output window never gets the input focus (the Input window gets all keystrokes),
+    // text can be selected with the mouse and copied by ^c or the popup menu
     gtk_widget_set_can_focus(OText, FALSE);
     gtk_container_add (GTK_CONTAINER(ScrlWinOut), OText);
 // a TextView *already has* a viewport, so DON'T add another one -- or it won't scroll properly!
@@ -2561,24 +2577,26 @@ void MakeBL(TreeParent *h_P, bx_param_c *p)
 
 bool ParseOSSettings(const char *param, const char *value)
 {
-  char *val2, *ptr;
+  int x, y, w, h;
 
   if (!strcmp(param, "FontName")) {
-    strncpy(fontname, value, 80);
+    if (strlen(value) >= sizeof(fontname)) {  // must fit into fontname with the terminating zero
+      fprintf(stderr, "bx_enh_dbg.ini: invalid value '%s' for option '%s'\n", value, param);
+      return 1;
+    }
+    strcpy(fontname, value);
     font_init = 1;
     return 1;
   } else if (!strcmp(param, "MainWindow")) {
-    val2 = strdup(value);
-    ptr = strtok(val2, ",");
-    win_x = atoi(ptr);
-    ptr = strtok(NULL, ",");
-    win_y = atoi(ptr);
-    ptr = strtok(NULL, ",");
-    win_w = atoi(ptr);
-    ptr = strtok(NULL, "\n");
-    win_h = atoi(ptr);
+    if (sscanf(value, "%d , %d , %d , %d", &x, &y, &w, &h) != 4) {
+      fprintf(stderr, "bx_enh_dbg.ini: invalid value '%s' for option '%s'\n", value, param);
+      return 1;
+    }
+    win_x = x;
+    win_y = y;
+    win_w = w;
+    win_h = h;
     window_init = 1;
-    free(val2);
     return 1;
   }
   return 0;

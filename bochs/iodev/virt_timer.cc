@@ -233,9 +233,13 @@ int bx_virt_timer_c::register_timer(void *this_ptr, bx_timer_handler_t handler,
       break;
   }
   // If we didn't find a free slot, increment the bound, numTimers.
-  if (i == numTimers)
+  if (i == numTimers) {
+    if (numTimers >= BX_MAX_VIRTUAL_TIMERS) {
+      BX_PANIC(("register_timer: too many registered virtual timers"));
+      return -1;
+    }
     numTimers++; // One new timer installed.
-  BX_ASSERT(numTimers<BX_MAX_VIRTUAL_TIMERS);
+  }
 
   timer[i].inUse = 1;
   timer[i].period = useconds;

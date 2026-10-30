@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -22,6 +22,7 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
+#include "bx_debug/debug.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_EwIwM(bxInstruction_c *i)
@@ -223,8 +224,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_EwGwR(bxInstruction_c *i)
     66:87F6  | xchg si,si  | 1000011111 110 110 -> 6
     66:87FF  | xchg di,di  | 1000011111 111 111 -> 7
   */
-  if (bx_dbg.debugger_active && bx_dbg.magic_break && i->src() == i->dst() && (bx_dbg.magic_break & (1 << (i->src())))) {
-    BX_CPU_THIS_PTR magic_break = 1;
+  if (bx_dbg.magic_break && i->src() == i->dst() && (bx_dbg.magic_break & (1 << (i->src())))) {
+    if (bx_dbg.debugger_active)
+      BX_CPU_THIS_PTR magic_break = 1;
+    else
+      bx_dbg_request_activation(BX_CPU_ID, "magic breakpoint"); // activate the debugger
     BX_NEXT_INSTR(i);
   }
 #endif
@@ -242,130 +246,29 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_EwGwR(bxInstruction_c *i)
 //       of whether condition is true or not.  Thus, exceptions may
 //       occur even if the MOV does not take place.
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVO_GwEwR(bxInstruction_c *i)
-{
-  if (get_OF())
-    BX_WRITE_16BIT_REG(i->dst(), BX_READ_16BIT_REG(i->src()));
+// CMOVcc Gw, Ew: move when the condition is true
+#define CMOV_GwEwR(HANDLER, cond)                                                         \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                     \
+  {                                                                                       \
+    if (cond)                                                                             \
+      BX_WRITE_16BIT_REG(i->dst(), BX_READ_16BIT_REG(i->src()));                          \
+                                                                                          \
+    BX_NEXT_INSTR(i);                                                                     \
+  }
 
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNO_GwEwR(bxInstruction_c *i)
-{
-  if (!get_OF())
-    BX_WRITE_16BIT_REG(i->dst(), BX_READ_16BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVB_GwEwR(bxInstruction_c *i)
-{
-  if (get_CF())
-    BX_WRITE_16BIT_REG(i->dst(), BX_READ_16BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNB_GwEwR(bxInstruction_c *i)
-{
-  if (!get_CF())
-    BX_WRITE_16BIT_REG(i->dst(), BX_READ_16BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVZ_GwEwR(bxInstruction_c *i)
-{
-  if (get_ZF())
-    BX_WRITE_16BIT_REG(i->dst(), BX_READ_16BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNZ_GwEwR(bxInstruction_c *i)
-{
-  if (!get_ZF())
-    BX_WRITE_16BIT_REG(i->dst(), BX_READ_16BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVBE_GwEwR(bxInstruction_c *i)
-{
-  if (get_CF() || get_ZF())
-    BX_WRITE_16BIT_REG(i->dst(), BX_READ_16BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNBE_GwEwR(bxInstruction_c *i)
-{
-  if (! (get_CF() || get_ZF()))
-    BX_WRITE_16BIT_REG(i->dst(), BX_READ_16BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVS_GwEwR(bxInstruction_c *i)
-{
-  if (get_SF())
-    BX_WRITE_16BIT_REG(i->dst(), BX_READ_16BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNS_GwEwR(bxInstruction_c *i)
-{
-  if (!get_SF())
-    BX_WRITE_16BIT_REG(i->dst(), BX_READ_16BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVP_GwEwR(bxInstruction_c *i)
-{
-  if (get_PF())
-    BX_WRITE_16BIT_REG(i->dst(), BX_READ_16BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNP_GwEwR(bxInstruction_c *i)
-{
-  if (!get_PF())
-    BX_WRITE_16BIT_REG(i->dst(), BX_READ_16BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVL_GwEwR(bxInstruction_c *i)
-{
-  if (getB_SF() != getB_OF())
-    BX_WRITE_16BIT_REG(i->dst(), BX_READ_16BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNL_GwEwR(bxInstruction_c *i)
-{
-  if (getB_SF() == getB_OF())
-    BX_WRITE_16BIT_REG(i->dst(), BX_READ_16BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVLE_GwEwR(bxInstruction_c *i)
-{
-  if (get_ZF() || (getB_SF() != getB_OF()))
-    BX_WRITE_16BIT_REG(i->dst(), BX_READ_16BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMOVNLE_GwEwR(bxInstruction_c *i)
-{
-  if (! get_ZF() && (getB_SF() == getB_OF()))
-    BX_WRITE_16BIT_REG(i->dst(), BX_READ_16BIT_REG(i->src()));
-
-  BX_NEXT_INSTR(i);
-}
+CMOV_GwEwR(CMOVO_GwEwR, get_OF())
+CMOV_GwEwR(CMOVNO_GwEwR, !get_OF())
+CMOV_GwEwR(CMOVB_GwEwR, get_CF())
+CMOV_GwEwR(CMOVNB_GwEwR, !get_CF())
+CMOV_GwEwR(CMOVZ_GwEwR, get_ZF())
+CMOV_GwEwR(CMOVNZ_GwEwR, !get_ZF())
+CMOV_GwEwR(CMOVBE_GwEwR, get_CF() || get_ZF())
+CMOV_GwEwR(CMOVNBE_GwEwR, ! (get_CF() || get_ZF()))
+CMOV_GwEwR(CMOVS_GwEwR, get_SF())
+CMOV_GwEwR(CMOVNS_GwEwR, !get_SF())
+CMOV_GwEwR(CMOVP_GwEwR, get_PF())
+CMOV_GwEwR(CMOVNP_GwEwR, !get_PF())
+CMOV_GwEwR(CMOVL_GwEwR, getB_SF() != getB_OF())
+CMOV_GwEwR(CMOVNL_GwEwR, getB_SF() == getB_OF())
+CMOV_GwEwR(CMOVLE_GwEwR, get_ZF() || (getB_SF() != getB_OF()))
+CMOV_GwEwR(CMOVNLE_GwEwR, ! get_ZF() && (getB_SF() == getB_OF()))

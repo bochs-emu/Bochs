@@ -497,6 +497,7 @@ private:
 
   BX_GEFORCE_SMF Bit8u register_read8(Bit32u address);
   BX_GEFORCE_SMF void  register_write8(Bit32u address, Bit8u value);
+  BX_GEFORCE_SMF void  register_write16(Bit32u address, Bit16u value);
   BX_GEFORCE_SMF Bit32u register_read32(Bit32u address);
   BX_GEFORCE_SMF void  register_write32(Bit32u address, Bit32u value);
 

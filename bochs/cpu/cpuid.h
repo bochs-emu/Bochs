@@ -67,6 +67,10 @@ public:
     return ia_extensions_bitmask[extension / 32] & (1 << (extension % 32));
   }
 
+  unsigned get_nprocessors() const { return nprocessors; }
+  unsigned get_ncores() const { return ncores; }
+  unsigned get_nthreads() const { return nthreads; }
+
 #if BX_SUPPORT_VMX
   virtual Bit32u get_vmx_extensions_bitmask(void) const { return 0; }
 #endif
@@ -137,6 +141,10 @@ protected:
 
   void get_std_cpuid_monitor_mwait_leaf(cpuid_function_t *leaf, Bit32u edx_power_states) const;
 
+#if BX_SUPPORT_APX
+  void get_std_cpuid_apx_leaf(Bit32u subfunction, cpuid_function_t *leaf) const; // leaf 0x29
+#endif
+
   Bit32u get_std_cpuid_leaf_1_ecx(Bit32u extra = 0) const;
   Bit32u get_std_cpuid_leaf_1_edx_common(Bit32u extra = 0) const;
   Bit32u get_std_cpuid_leaf_1_edx(Bit32u extra = 0) const;
@@ -152,6 +160,9 @@ protected:
   Bit32u get_ext_cpuid_leaf_1_edx_intel() const;
 
   void get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const;
+  void get_ext_cpuid_leaf_8_amd(cpuid_function_t *leaf) const;
+
+  void get_ext_cpuid_leaf_1E(cpuid_function_t *leaf) const;
 
   // CPUID leaves 0x15/0x16 declare the TSC and processor base frequencies of
   // the CPU the model was dumped from, while the emulated TSC advances at the
@@ -811,6 +822,144 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT1_ECX_MONITORX_MWAITX        (1 << 29)
 #define BX_CPUID_EXT1_ECX_CODEBP_ADDRMASK_EXT    (1 << 30)
 #define BX_CPUID_EXT1_ECX_RESERVED31             (1 << 31)
+
+// CPUID defines - extended features CPUID[0x80000008].EBX
+// ----------------------------
+
+// [0:0]   CLZERO instruction support
+// [1:1]   InstRetCntMsr: Instruction Retired Counter MSR available
+// [2:2]   RstrFpErrPtrs: FP Error Pointers Restored by XRSTOR
+// [3:3]   INVLPGB and TLBSYNC instruction support
+// [4:4]   RDPRU instruction support
+// [5:5]   reserved
+// [6:6]   BE: Bandwidth Enforcement Extension
+// [7:7]   reserved
+// [8:8]   MCOMMIT instruction support
+// [9:9]   WBNOINVD instruction support
+// [10:10] reserved
+// [11:11] reserved
+// [12:12] IBPB: Indirect Branch Prediction Barrier
+// [13:13] INT_WBINVD: WBINVD/WBNOINVD instructions are interruptible
+// [14:14] IBRS: Indirect Branch Restricted Speculation
+// [15:15] STIBP: Single Thread Indirect Branch Prediction mode
+// [16:16] IbrsAlwaysOn: Setting IBRS to 1 once is recommended
+// [17:17] StibpAlwaysOn: Setting STIBP to 1 once is recommended
+// [18:18] IbrsPreferred: IBRS is preferred to software solution
+// [19:19] IbrsSameMode: IBRS provides same mode speculation limits
+// [20:20] EferLmsleUnsupported: EFER.LMSLE is unsupported
+// [21:21] INVLPGBnestedPages: INVLPGB support for invalidating guest nested translations
+// [22:22] reserved
+// [23:23] reserved
+// [24:24] SSBD: Speculative Store Bypass Disable
+// [25:25] SsbdVirtSpecCtrl: Use VIRT_SPEC_CTL MSR (C001_011Fh) for SSBD
+// [26:26] SsbdNotRequired: SSBD not needed on this processor
+// [27:27] CPPC: Collaborative Processor Performance Control
+// [28:28] PSFD: Predictive Store Forward Disable
+// [29:29] BTC_NO: The processor is not affected by branch type confusion
+// [30:30] IBPB_RET: IBPB clears return address predictor
+// [31:31] reserved
+
+#define BX_CPUID_EXT8_EBX_CLZERO                 (1 <<  0)
+#define BX_CPUID_EXT8_EBX_INST_RET_CNT_MSR       (1 <<  1)
+#define BX_CPUID_EXT8_EBX_RSTR_FP_ERR_PTRS       (1 <<  2)
+#define BX_CPUID_EXT8_EBX_INVLPGB                (1 <<  3)
+#define BX_CPUID_EXT8_EBX_RDPRU                  (1 <<  4)
+#define BX_CPUID_EXT8_EBX_RESERVED5              (1 <<  5)
+#define BX_CPUID_EXT8_EBX_BE                     (1 <<  6)
+#define BX_CPUID_EXT8_EBX_RESERVED7              (1 <<  7)
+#define BX_CPUID_EXT8_EBX_MCOMMIT                (1 <<  8)
+#define BX_CPUID_EXT8_EBX_WBNOINVD               (1 <<  9)
+#define BX_CPUID_EXT8_EBX_RESERVED10             (1 << 10)
+#define BX_CPUID_EXT8_EBX_RESERVED11             (1 << 11)
+#define BX_CPUID_EXT8_EBX_IBPB                   (1 << 12)
+#define BX_CPUID_EXT8_EBX_INT_WBINVD             (1 << 13)
+#define BX_CPUID_EXT8_EBX_IBRS                   (1 << 14)
+#define BX_CPUID_EXT8_EBX_STIBP                  (1 << 15)
+#define BX_CPUID_EXT8_EBX_IBRS_ALWAYS_ON         (1 << 16)
+#define BX_CPUID_EXT8_EBX_STIBP_ALWAYS_ON        (1 << 17)
+#define BX_CPUID_EXT8_EBX_IBRS_PREFERRED         (1 << 18)
+#define BX_CPUID_EXT8_EBX_IBRS_SAME_MODE         (1 << 19)
+#define BX_CPUID_EXT8_EBX_EFER_LMSLE_UNSUPPORTED (1 << 20)
+#define BX_CPUID_EXT8_EBX_INVLPGB_NESTED_PAGES   (1 << 21)
+#define BX_CPUID_EXT8_EBX_RESERVED22             (1 << 22)
+#define BX_CPUID_EXT8_EBX_RESERVED23             (1 << 23)
+#define BX_CPUID_EXT8_EBX_SSBD                   (1 << 24)
+#define BX_CPUID_EXT8_EBX_SSBD_VIRT_SPEC_CTRL    (1 << 25)
+#define BX_CPUID_EXT8_EBX_SSBD_NOT_REQUIRED      (1 << 26)
+#define BX_CPUID_EXT8_EBX_CPPC                   (1 << 27)
+#define BX_CPUID_EXT8_EBX_PSFD                   (1 << 28)
+#define BX_CPUID_EXT8_EBX_BTC_NO                 (1 << 29)
+#define BX_CPUID_EXT8_EBX_IBPB_RET               (1 << 30)
+#define BX_CPUID_EXT8_EBX_RESERVED31             (1 << 31)
+
+// CPUID defines - extended features CPUID[0x80000021].EAX
+// ----------------------------
+
+// [0:0]   NoNestedDataBp: Processor ignores nested data breakpoints
+// [1:1]   FsGsBaseWriteNotSerializing: WRMSR to FS.Base, GS.Base and KernelGSBase MSRs is not serializing
+// [2:2]   LFenceAlwaysSerializing: LFENCE is always dispatch serializing
+// [3:3]   SmmPgCfgLock: SMM paging configuration lock supported
+// [4:4]   reserved
+// [5:5]   reserved
+// [6:6]   NullSelectClearsBase: Null segment selector loads also clear the destination segment register base and limit
+// [7:7]   UpperAddressIgnore: Upper Address Ignore is supported
+// [8:8]   AutomaticIBRS: Automatic IBRS
+// [9:9]   NoSmmCtlMSR: SMM_CTL MSR (C001_0116h) is not supported
+// [10:10] FastShortRepStosb: Fast short REP STOSB supported
+// [11:11] FastShortRepeCmpsb: Fast short REPE CMPSB supported
+// [12:12] PreciseRetirePmc2: PerfEvtSel2[PREC_RET] is supported
+// [13:13] PrefetchCtlMsr: Prefetch control MSR supported
+// [14:14] L2TlbSizeX32: L2TLB sizes are encoded as multiples of 32
+// [15:15] AMD_ERMSB: AMD implementation of Enhanced REP MOVSB/STOSB is supported
+// [16:16] Opcode0F017Reclaim: 0F 01/7 opcode space is reserved for AMD use
+// [17:17] CpuidUserDis: CPUID disable for non-privileged software
+// [18:18] EPSF: Enhanced Predictive Store Forwarding supported
+// [19:19] FAST_REP_SCASB: Fast short REP SCASB supported
+// [20:20] PREFETCHI: IC prefetch supported
+// [21:21] FP512_DOWNGRADE: FP512 is downgraded to FP256
+// [22:22] reserved
+// [23:23] AVX512_BMM: Bit Matrix Multiply instructions supported
+// [24:24] ERAPS: Enhanced Return Address Predictor Security supported
+// [25:25] reserved
+// [26:26] reserved
+// [27:27] SBPB: Selective Branch Predictor Barrier supported
+// [28:28] IBPB_BRTYPE: PRED_CMD[IBPB] clears all branch type predictions from the branch predictor
+// [29:29] SRSO_NO: The processor is not affected by Speculative Return Stack Overflow vulnerability
+// [30:30] SRSO_USER_KERNEL_NO: The processor is not affected by SRSO vulnerability across user/kernel boundaries
+// [31:31] SRSO_MSR_FIX: Software may use MSR_BP_CFG[BpSpecReduce] to mitigate SRSO vulnerability
+
+#define BX_CPUID_EXT21_EAX_NO_NESTED_DATA_BP          (1 <<  0)
+#define BX_CPUID_EXT21_EAX_FSGSBASE_NOT_SERIALIZING   (1 <<  1)
+#define BX_CPUID_EXT21_EAX_LFENCE_ALWAYS_SERIALIZING  (1 <<  2)
+#define BX_CPUID_EXT21_EAX_SMM_PG_CFG_LOCK            (1 <<  3)
+#define BX_CPUID_EXT21_EAX_RESERVED4                  (1 <<  4)
+#define BX_CPUID_EXT21_EAX_RESERVED5                  (1 <<  5)
+#define BX_CPUID_EXT21_EAX_NULL_SELECT_CLEARS_BASE    (1 <<  6)
+#define BX_CPUID_EXT21_EAX_UPPER_ADDRESS_IGNORE       (1 <<  7)
+#define BX_CPUID_EXT21_EAX_AUTOMATIC_IBRS             (1 <<  8)
+#define BX_CPUID_EXT21_EAX_NO_SMM_CTL_MSR             (1 <<  9)
+#define BX_CPUID_EXT21_EAX_FAST_SHORT_REP_STOSB       (1 << 10)
+#define BX_CPUID_EXT21_EAX_FAST_SHORT_REPE_CMPSB      (1 << 11)
+#define BX_CPUID_EXT21_EAX_PRECISE_RETIRE_PMC2        (1 << 12)
+#define BX_CPUID_EXT21_EAX_PREFETCH_CTL_MSR           (1 << 13)
+#define BX_CPUID_EXT21_EAX_L2TLB_SIZE_X32             (1 << 14)
+#define BX_CPUID_EXT21_EAX_AMD_ERMSB                  (1 << 15)
+#define BX_CPUID_EXT21_EAX_OPCODE_0F017_RECLAIM       (1 << 16)
+#define BX_CPUID_EXT21_EAX_CPUID_USER_DIS             (1 << 17)
+#define BX_CPUID_EXT21_EAX_EPSF                       (1 << 18)
+#define BX_CPUID_EXT21_EAX_FAST_REP_SCASB             (1 << 19)
+#define BX_CPUID_EXT21_EAX_PREFETCHI                  (1 << 20)
+#define BX_CPUID_EXT21_EAX_FP512_DOWNGRADE            (1 << 21)
+#define BX_CPUID_EXT21_EAX_RESERVED22                 (1 << 22)
+#define BX_CPUID_EXT21_EAX_AVX512_BMM                 (1 << 23)
+#define BX_CPUID_EXT21_EAX_ERAPS                      (1 << 24)
+#define BX_CPUID_EXT21_EAX_RESERVED25                 (1 << 25)
+#define BX_CPUID_EXT21_EAX_RESERVED26                 (1 << 26)
+#define BX_CPUID_EXT21_EAX_SBPB                       (1 << 27)
+#define BX_CPUID_EXT21_EAX_IBPB_BRTYPE                (1 << 28)
+#define BX_CPUID_EXT21_EAX_SRSO_NO                    (1 << 29)
+#define BX_CPUID_EXT21_EAX_SRSO_USER_KERNEL_NO        (1 << 30)
+#define BX_CPUID_EXT21_EAX_SRSO_MSR_FIX               (1 << 31)
 
 // CPUID defines - SVM features CPUID[0x8000000A].EDX
 // ----------------------------

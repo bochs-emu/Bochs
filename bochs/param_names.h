@@ -52,6 +52,7 @@
 #define BXPN_CPUID_FREQ                  "cpu.cpuid_freq"
 #define BXPN_MWAIT_IS_NOP                "cpu.mwait_is_nop"
 #define BXPN_BRAND_STRING                "cpu.brand_string"
+#define BXPN_CPU_MAXPHYADDR              "cpu.maxphyaddr"
 #define BXPN_MEMORY                      "memory.standard.ram"
 #define BXPN_MEM_SIZE                    "memory.standard.ram.guest"
 #define BXPN_HOST_MEM_SIZE               "memory.standard.ram.host"

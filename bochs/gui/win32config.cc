@@ -75,23 +75,29 @@ int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpDa
 #define BIF_NEWDIALOGSTYLE 0
 #endif
 
+// result must point to a buffer of at least MAX_PATH chars.
+// It is only modified on success.
 int BrowseDir(const char *Title, char *result)
 {
   BROWSEINFO browseInfo;
   LPITEMIDLIST ItemIDList;
+  char dispname[MAX_PATH], path[MAX_PATH];
   int r = -1;
 
   memset(&browseInfo,0,sizeof(BROWSEINFO));
   browseInfo.hwndOwner = GetBochsWindow();
-  browseInfo.pszDisplayName = result;
+  browseInfo.pszDisplayName = dispname;
   browseInfo.lpszTitle = (LPCSTR)Title;
   browseInfo.ulFlags = BIF_NEWDIALOGSTYLE | BIF_RETURNONLYFSDIRS;
   browseInfo.lpfn = BrowseCallbackProc;
   ItemIDList = SHBrowseForFolder(&browseInfo);
   if (ItemIDList != NULL) {
-    *result = 0;
-    if (SHGetPathFromIDList(ItemIDList, result)) {
-      if (result[0]) r = 0;
+    path[0] = 0;
+    if (SHGetPathFromIDList(ItemIDList, path)) {
+      if (path[0]) {
+        lstrcpy(result, path);
+        r = 0;
+      }
     }
     // free memory used
     IMalloc * imalloc = 0;
@@ -121,7 +127,7 @@ static BOOL CALLBACK LogAskProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
         SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Kill simulation");
         SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Abort (dump core)");
 #if BX_DEBUGGER
-        if (bx_dbg.debugger_active) {
+        if (SIM->debugger_activation_allowed()) {
           SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Continue and return to debugger");
         }
 #endif
@@ -276,7 +282,7 @@ BOOL HandlePluginCtrl(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 void SetStandardLogOptions(HWND hDlg)
 {
   int level, idx;
-  int defchoice[5];
+  int defchoice[N_LOGLEV];
 
   for (level=0; level<N_LOGLEV; level++) {
     int mod = 0;
@@ -293,15 +299,16 @@ void SetStandardLogOptions(HWND hDlg)
     if (consensus)
       defchoice[level] = first;
     else
-      defchoice[level] = 4;
+      defchoice[level] = N_ACT; // no change
   }
   for (level=0; level<N_LOGLEV; level++) {
     idx = 0;
     SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_RESETCONTENT, 0, 0);
-    for (int action=0; action<5; action++) {
+    for (int action=0; action<=N_ACT; action++) {
       // the exclude expression allows some choices not being available if they
       // don't make any sense.  For example, it would be stupid to ignore a panic.
-      if (!BX_LOG_OPTS_EXCLUDE(level, action)) {
+      // The "no change" choice is always available.
+      if ((action == N_ACT) || !BX_LOG_OPTS_EXCLUDE(level, action)) {
         SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_ADDSTRING, 0, (LPARAM)log_choices[action]);
         SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_SETITEMDATA, idx, action);
         if (action == defchoice[level]) {
@@ -323,7 +330,7 @@ void SetAdvancedLogOptions(HWND hDlg)
   for (level=0; level<N_LOGLEV; level++) {
     idx = 0;
     SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_RESETCONTENT, 0, 0);
-    for (int action=0; action<4; action++) {
+    for (int action=0; action<N_ACT; action++) {
       // exclude some action / level combinations (see above)
       if (!BX_LOG_OPTS_EXCLUDE(level, action)) {
         SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_ADDSTRING, 0, (LPARAM)log_choices[action]);
@@ -346,15 +353,19 @@ void ApplyLogOptions(HWND hDlg, BOOL advanced)
     mod = SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_GETITEMDATA, idx, 0);
     for (level=0; level<N_LOGLEV; level++) {
       idx = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETCURSEL, 0, 0);
+      if (idx == CB_ERR) continue;
       value = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETITEMDATA, idx, 0);
-      SIM->set_log_action(mod, level, value);
+      if ((value >= 0) && (value < N_ACT)) {
+        SIM->set_log_action(mod, level, value);
+      }
     }
     EnableWindow(GetDlgItem(hDlg, IDDEVLIST), TRUE);
   } else {
     for (level=0; level<N_LOGLEV; level++) {
       idx = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETCURSEL, 0, 0);
+      if (idx == CB_ERR) continue;
       value = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETITEMDATA, idx, 0);
-      if (value < 4) {
+      if ((value >= 0) && (value < N_ACT)) {
         // set new default
         SIM->set_default_log_action(level, value);
         // apply that action to all modules (devices)
@@ -560,18 +571,13 @@ edit_opts_t runtime_options[] = {
 
 void ResizeDialog(HWND hDlg, SIZE size)
 {
-  static RECT ri;
-  static bool dlg_size_init = false;
   RECT r, r0, r1, r2, r3;
-  bool resize0, resize1;
+  bool resize0 = false, resize1 = false;
 
-  if (!dlg_size_init) {
-    GetWindowRect(hDlg, &ri);
-    ri.right -= ri.left;
-    ri.bottom -= ri.top;
-    dlg_size_init = true;
-  }
-  r0 = ri;
+  // current position and size of the dialog
+  GetWindowRect(hDlg, &r0);
+  r0.right -= r0.left;
+  r0.bottom -= r0.top;
   r.left = 0;
   r.top = 0;
   r.right = size.cx + 215;
@@ -614,7 +620,6 @@ void ResizeDialog(HWND hDlg, SIZE size)
   }
   if (resize0) {
     MoveWindow(hDlg, r0.left, r0.top, r0.right, r0.bottom, TRUE);
-    ri = r0;
   }
   if (resize1) {
     MoveWindow(GetDlgItem(hDlg, IDOPTGRP), r1.left, r1.top, r1.right, r1.bottom, TRUE);
@@ -625,7 +630,7 @@ void ResizeDialog(HWND hDlg, SIZE size)
 
 void MainMenuSetTitle(HWND hDlg, const char *rcfile)
 {
-  char title[BX_PATHNAME_LEN];
+  char title[BX_PATHNAME_LEN + 32];
 
   if (lstrlen(rcfile) > 0) {
     wsprintf(title, "Bochs Start Menu (%s)", rcfile);
@@ -633,6 +638,29 @@ void MainMenuSetTitle(HWND hDlg, const char *rcfile)
     wsprintf(title, "Bochs Start Menu (unnamed config)");
   }
   SetWindowText(hDlg, title);
+}
+
+// update all initialized start menu pages after the config has changed
+void RefreshStartOptions(HWND hDlg)
+{
+  int i = 0;
+
+  while (start_options[i].label != NULL) {
+    if (start_options[i].init) {
+      if (!lstrcmp(start_options[i].param, "#plugins")) {
+        InitPluginCtrl(hDlg);
+      } else if (!lstrcmp(start_options[i].param, "#logopts")) {
+        RefreshParamList(hDlg, (bx_list_c*)SIM->get_param("log"));
+        HandleLogOptions(hDlg, WM_COMMAND, IDREVERT, 0);
+      }
+    }
+    i++;
+  }
+  // re-create the current parameter page (contents may have changed)
+  if (SendMessage(GetDlgItem(hDlg, IDEDITBOX), LB_GETCURSEL, 0, 0) != LB_ERR) {
+    SendMessage(hDlg, WM_COMMAND, MAKEWPARAM(IDEDITBOX, LBN_SELCHANGE),
+                (LPARAM)GetDlgItem(hDlg, IDEDITBOX));
+  }
 }
 
 static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -652,11 +680,18 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
     case WM_INITDIALOG:
       runtime = (bool)lParam;
       opts_ptr = NULL;
+      optedit = FALSE;
+      plugin_update = FALSE;
+      optnum = -1;
       if (runtime) {
         SetWindowText(hDlg, "Bochs Runtime Menu");
         EnableWindow(GetDlgItem(hDlg, IDREADRC), FALSE);
         EnableWindow(GetDlgItem(hDlg, IDRESETCFG), FALSE);
         EnableWindow(GetDlgItem(hDlg, IDRESTORE), FALSE);
+        if (SIM->debugger_activation_allowed()) {
+          ShowWindow(GetDlgItem(hDlg, IDRESTORE), SW_HIDE);
+          ShowWindow(GetDlgItem(hDlg, IDDEBUGGER), SW_SHOW);
+        }
         SetWindowText(GetDlgItem(hDlg, IDOK), "&Continue");
         i = 0;
         while (runtime_options[i].label != NULL) {
@@ -701,20 +736,7 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
             SIM->reset_all_param();
             SIM->read_rc(rcfile->getptr());
             MainMenuSetTitle(hDlg, rcfile->getptr());
-            i = 0;
-            while (start_options[i].label != NULL) {
-              if (start_options[i].init) {
-                if (i == 0) {
-                  InitPluginCtrl(hDlg);
-                } else if (!lstrcmp(start_options[i].param, "#logopts")) {
-                  HandleLogOptions(hDlg, WM_COMMAND, IDREVERT, 0);
-                } else {
-                  list = (bx_list_c*)SIM->get_param(opts_ptr->param);
-                  ret = HandleChildWindowEvents(hDlg, optnum, IDREVERT, 0, list);
-                }
-              }
-              i++;
-            }
+            RefreshStartOptions(hDlg);
           }
           delete rcfile;
           break;
@@ -825,6 +847,7 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
           if (MessageBox(hDlg, "Reset all options back to their factory defaults ?",
                          "Reset Configuration", MB_ICONEXCLAMATION | MB_YESNO) == IDYES) {
             SIM->reset_all_param();
+            RefreshStartOptions(hDlg);
           }
           break;
         case IDRESTORE:
@@ -836,14 +859,22 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
             SIM->get_param_string(BXPN_RESTORE_PATH)->set(path);
             if (!SIM->restore_config()) {
               MessageBox(hDlg, "Cannot restore configuration!", "ERROR", MB_ICONERROR);
+              SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(0);
+              RefreshStartOptions(hDlg);
+            } else {
+              EndDialog(hDlg, 1);
             }
-            EndDialog(hDlg, 1);
           }
           break;
         case IDOK:
           if (runtime) {
             SIM->update_runtime_options();
           }
+          EndDialog(hDlg, 1);
+          break;
+        case IDDEBUGGER:
+          SIM->update_runtime_options();
+          SIM->request_debugger_activation("runtime config dialog");
           EndDialog(hDlg, 1);
           break;
         case IDCANCEL:
@@ -877,6 +908,8 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
                 EnableWindow(GetDlgItem(hDlg, IDREADRC), !optedit);
                 EnableWindow(GetDlgItem(hDlg, IDRESETCFG), !optedit);
                 EnableWindow(GetDlgItem(hDlg, IDRESTORE), !optedit);
+              } else {
+                EnableWindow(GetDlgItem(hDlg, IDDEBUGGER), !optedit);
               }
             }
           }
@@ -918,7 +951,7 @@ int MainMenuDialog(HWND hwnd, bool runtime)
 
 // Unfortunetly, Win32 Edit Controls must have \r\n for line feeds, and Bochs uses only \n
 // We must add \r to every \n to get Windows to drop to the next line in an Edit Control.
-void conv_dos2unix(const char *src, char *targ, int max_len)
+void conv_unix2dos(const char *src, char *targ, int max_len)
 {
   char last = 0;
   while (*src && (max_len > 2)) {
@@ -969,7 +1002,7 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
         ncm.cbSize = sizeof(NONCLIENTMETRICS);
         if (SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &ncm, 0))
           SendMessage(hwnd, WM_SETFONT, (WPARAM) CreateFontIndirect(&ncm.lfMessageFont), 0);
-        conv_dos2unix(event->u.logmsg.msg, pname, BX_PATHNAME_LEN);
+        conv_unix2dos(event->u.logmsg.msg, pname, BX_PATHNAME_LEN);
         SendMessage(hwnd, EM_SETSEL, 0, -1);
         SendMessage(hwnd, EM_REPLACESEL, 0, (LPARAM) pname);
         ShowWindow(hwnd, SW_SHOW);
@@ -990,7 +1023,11 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
         opts = sparam->get_options();
         if (opts & sparam->IS_FILENAME) {
           if (opts & sparam->SELECT_FOLDER_DLG) {
-            event->retcode = BrowseDir(sparam->get_label(), sparam->getptr());
+            pname[0] = 0;
+            event->retcode = BrowseDir(sparam->get_label(), pname);
+            if (event->retcode >= 0) {
+              sparam->set(pname);
+            }
           } else {
             event->retcode = AskFilename(GetBochsWindow(), (bx_param_filename_c *)sparam, NULL);
           }
@@ -1025,6 +1062,8 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
         }
         return event;
       }
+      // other parameter types not supported (retcode = -1)
+      return event;
     case BX_SYNC_EVT_TICK: // called periodically by siminterface.
       event->retcode = 0;
       // fall into default case

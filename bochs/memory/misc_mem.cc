@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  I/O memory handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -33,8 +33,6 @@
 #include "pc_system.h"
 #define LOG_THIS BX_MEM(0)->
 
-#define BX_MEM_HANDLERS   ((BX_CONST64(1) << BX_PHY_ADDRESS_WIDTH) >> 20) /* one per megabyte */
-
 #define FLASH_READ_ARRAY  0xff
 #define FLASH_INT_ID      0x90
 #define FLASH_READ_STATUS 0x70
@@ -58,6 +56,11 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host, Bit32u block_size)
 {
   unsigned idx, i;
 
+  if (BX_MEM_THIS memory_handlers != NULL) {
+    BX_INFO(("freeing existing memory handlers"));
+    cleanup_memory(); // also frees memory vector and saves modified flash data
+  }
+
   BX_MEMORY_STUB_C::init_memory(guest, host, block_size);
 
   BX_MEM_THIS smram_available = false;
@@ -71,6 +74,7 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host, Bit32u block_size)
   BX_MEM_THIS pci_enabled = SIM->get_param_bool(BXPN_PCI_ENABLED)->get();
   BX_MEM_THIS bios_write_enabled = false;
   BX_MEM_THIS bios_rom_addr = 0xffff0000;
+  BX_MEM_THIS bios_rom_access = 0;
   BX_MEM_THIS flash_type = 0;
   BX_MEM_THIS flash_status = 0x80;
   BX_MEM_THIS flash_wsm_state = FLASH_READ_ARRAY;
@@ -94,10 +98,10 @@ void ramfile_save_handler(void *devptr, FILE *fp)
   for (Bit32u idx = 0; idx < num_blocks; idx++) {
     if ((BX_MEM(0)->blocks[idx]) && (BX_MEM(0)->blocks[idx] != BX_MEM(0)->swapped_out))
     {
-      bx_phy_address address = bx_phy_address(idx) * BX_MEM_THIS block_size;
+      bx_phy_address address = bx_phy_address(idx) << BX_MEM_THIS block_size_bits;
       if (fseeko64(fp, address, SEEK_SET))
         BX_PANIC(("FATAL ERROR: Could not seek to 0x" FMT_PHY_ADDRX " in overflow file!", address));
-      if (1 != fwrite (BX_MEM(0)->blocks[idx], BX_MEM_THIS block_size, 1, fp))
+      if (1 != fwrite (BX_MEM(0)->blocks[idx], BX_MEM_BLOCK_SIZE, 1, fp))
         BX_PANIC(("FATAL ERROR: Could not write at 0x" FMT_PHY_ADDRX " in overflow file!", address));
     }
   }
@@ -122,19 +126,19 @@ Bit64s memory_param_save_handler(void *devptr, bx_param_c *param)
 #endif
     // Return the block offset into the array
     Bit64u val = (Bit64u) (BX_MEM(0)->blocks[blk_index] - BX_MEM(0)->vector);
-    if ((val & (BX_MEM_THIS block_size-1)) == 0)
-       return val / BX_MEM_THIS block_size;
+    if ((val & (BX_MEM_BLOCK_SIZE-1)) == 0)
+       return val >> BX_MEM_THIS block_size_bits;
   } else if (!strcmp(pname, "flash_data")) {
     bool ret = false;
     if (BX_MEM_THIS flash_modified) {
       param->get_param_path(imgname, BX_PATHNAME_LEN);
       if (!strncmp(imgname, "bochs.", 6)) {
-        strcpy(imgname, imgname+6);
+        memmove(imgname, imgname+6, strlen(imgname) - 6 + 1); // include terminating zero
       }
       if (SIM->get_param_string(BXPN_RESTORE_PATH)->isempty()) {
         return 0;
       }
-      sprintf(path, "%s/%s", SIM->get_param_string(BXPN_RESTORE_PATH)->getptr(), imgname);
+      snprintf(path, sizeof(path), "%s/%s", SIM->get_param_string(BXPN_RESTORE_PATH)->getptr(), imgname);
       ret = BX_MEM_THIS save_flash_data(path);
     }
     return ret;
@@ -160,7 +164,7 @@ void memory_param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
         BX_MEM(0)->blocks[blk_index] = NULL;
         return;
       }
-      BX_MEM(0)->blocks[blk_index] = BX_MEM(0)->vector + val * BX_MEM_THIS block_size;
+      BX_MEM(0)->blocks[blk_index] = BX_MEM(0)->vector + (val << BX_MEM_THIS block_size_bits);
 #if BX_LARGE_RAMFILE
       BX_MEM(0)->read_block(blk_index);
 #endif
@@ -168,12 +172,12 @@ void memory_param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
     if (BX_MEM_THIS flash_modified && val) {
       param->get_param_path(imgname, BX_PATHNAME_LEN);
       if (!strncmp(imgname, "bochs.", 6)) {
-        strcpy(imgname, imgname+6);
+        memmove(imgname, imgname+6, strlen(imgname) - 6 + 1); // include terminating zero
       }
       if (SIM->get_param_string(BXPN_RESTORE_PATH)->isempty()) {
         return;
       }
-      sprintf(path, "%s/%s", SIM->get_param_string(BXPN_RESTORE_PATH)->getptr(), imgname);
+      snprintf(path, sizeof(path), "%s/%s", SIM->get_param_string(BXPN_RESTORE_PATH)->getptr(), imgname);
       BX_MEM_THIS load_flash_data(path);
     }
   }
@@ -361,9 +365,11 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
   }
   if (type == 0) {
     if (romaddress > 0) {
-      if ((romaddress + size) != 0x100000 && (romaddress + size)) {
+      // BIOS must end either at 1M or at 4G (32-bit wrap around to 0)
+      Bit32u rom_end = (Bit32u)(romaddress + size);
+      if (rom_end != 0x100000 && rom_end != 0) {
         close(fd);
-        BX_PANIC(("ROM: System BIOS must end at 0xfffff"));
+        BX_PANIC(("ROM: System BIOS must end at 0xfffff or 0xffffffff"));
         return;
       }
     } else {
@@ -393,7 +399,8 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
       return;
     }
     if ((romaddress < 0xc0000) ||
-        (((romaddress + size - 1) > 0xdffff) && (romaddress < 0xe0000))) {
+        (((romaddress + size - 1) > 0xdffff) && (romaddress < 0xe0000)) ||
+        ((romaddress + size) > 0xf0000)) {
       close(fd);
       BX_PANIC(("ROM: ROM address space out of range"));
       return;
@@ -403,9 +410,10 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
       start_idx = (((Bit32u)romaddress - 0xc0000) >> 11);
       end_idx = start_idx + (size >> 11) + (((size % 2048) > 0) ? 1 : 0);
     } else {
-      offset = romaddress & BIOS_MASK;
+      // E0000-EFFFF is served from the last 128K of the BIOS ROM
+      offset = BIOS_MAP_LAST128K(romaddress);
       start_idx = 64;
-      end_idx = 64;
+      end_idx = 65;
     }
     for (i = start_idx; i < end_idx; i++) {
       if (BX_MEM_THIS rom_present[i]) {
@@ -550,7 +558,11 @@ void BX_MEM_C::load_RAM(const char *path, bx_phy_address ramaddress)
 void BX_MEM_C::reset(void)
 {
   // Reset memory state for UEFI support
-  // UEFI firmware (OVMF) modifies ROM during execution, so we need to reload it on reset
+  // UEFI firmware (OVMF) modifies ROM during execution, so we need to reload it on reset.
+  // Only the system BIOS area of rom[] can be modified by the guest (BIOS write enable or flash),
+  // the expansion ROM area (0xC0000-0xDFFFF) is never written after it was loaded by init code
+  // (system BIOS and option ROMs from main.cc, VGA BIOS from the VGA device only for non-PCI VGA),
+  // so it stays loaded as is.
 
   // Reset flash state to initial values (same as init_memory)
   BX_MEM_THIS bios_write_enabled = false;
@@ -558,35 +570,29 @@ void BX_MEM_C::reset(void)
   BX_MEM_THIS flash_wsm_state = FLASH_READ_ARRAY;
   BX_MEM_THIS flash_modified = false;
 
-  // Clear ROM presence tracking (so load_ROM doesn't PANIC on address conflicts)
-  for (int i = 0; i < 65; i++) {
-    BX_MEM_THIS rom_present[i] = false;
-  }
+  // Clear ROM presence tracking of the system BIOS area (rom_present[64] tracks 0xE0000-0xEFFFF)
+  BX_MEM_THIS rom_present[64] = false;
 
-  // Clear ROM area and reload from disk
-  memset(BX_MEM_THIS rom, 0xff, BIOSROMSZ + EXROMSIZE);
+  // Clear system BIOS area and reload it from disk
+  memset(BX_MEM_THIS rom, 0xff, BIOSROMSZ);
 
   // Reload system BIOS ROM
   BX_MEM_THIS load_ROM(SIM->get_param_string(BXPN_ROM_PATH)->getptr(),
                        SIM->get_param_num(BXPN_ROM_ADDRESS)->get(), 0);
 
-  // Reload VGABIOS ROM if configured
-  if (!SIM->get_param_string(BXPN_VGA_ROM_PATH)->isempty()) {
-    BX_MEM_THIS load_ROM(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr(), 0xc0000, 1);
-  }
-
-  // Reload optional ROMs
+  // Reload optional ROMs mapped into the system BIOS area (0xE0000-0xEFFFF)
   char pname[24];
   for (int i = 0; i < BX_N_OPTROM_IMAGES; i++) {
     sprintf(pname, "%s.%d", BXPN_OPTROM_BASE, i + 1);
     bx_list_c *base = (bx_list_c*)SIM->get_param(pname);
-    if (!SIM->get_param_string("file", base)->isempty()) {
+    if (!SIM->get_param_string("file", base)->isempty() &&
+        SIM->get_param_num("address", base)->get() >= 0xe0000) {
       BX_MEM_THIS load_ROM(SIM->get_param_string("file", base)->getptr(),
                            SIM->get_param_num("address", base)->get(), 2);
     }
   }
 
-  BX_DEBUG(("memory reset: ROM images reloaded"));
+  BX_DEBUG(("memory reset: system BIOS ROM reloaded"));
 }
 
 bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf)
@@ -594,36 +600,21 @@ bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, B
   bx_phy_address a20addr = A20ADDR(addr);
   bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
   struct memory_handler_struct *memory_handler = NULL;
-  bool ret = true, use_memory_handler = false, use_smram = false;
+  bool ret = true;
 
   bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
 #if BX_PHY_ADDRESS_LONG
   if (a20addr > BX_CONST64(0xffffffff)) is_bios = false;
 #endif
 
-  if ((a20addr >= 0x000a0000 && a20addr < 0x000c0000) && BX_MEM_THIS smram_available)
-  {
-    // SMRAM memory space
-    if (BX_MEM_THIS smram_enable || (cpu->smm_mode() && !BX_MEM_THIS smram_restricted))
-      use_smram = true;
-  }
-
-  memory_handler = BX_MEM_THIS memory_handlers[a20addr >> 20];
-  while (memory_handler) {
-    if (memory_handler->begin <= a20addr && memory_handler->end >= a20addr)
-    {
-      if (!use_smram) {
-        use_memory_handler = true;
-        break;
-      }
-    }
-    memory_handler = memory_handler->next;
-  }
+  // SMRAM space accessible to the CPU is never served by memory handlers
+  if (! BX_MEM_THIS is_smram_data_access(a20addr, cpu->smm_mode()))
+    memory_handler = BX_MEM_THIS find_memory_handler(BX_MEM_THIS get_memory_handlers(a20addr), a20addr, false);
 
   for (; len>0; len--) {
     // Keep translated address in sync as we increment a20addr.
     linear_addr = bx_translate_gpa_to_linear(a20addr);
-    if (use_memory_handler) {
+    if (memory_handler) {
       memory_handler->read_handler(a20addr, 1, buf, memory_handler->param);
     }
 #if BX_SUPPORT_PCI
@@ -685,7 +676,7 @@ bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, B
       ret = false; // error, beyond limits of memory
     }
     buf++;
-    a20addr++;
+    a20addr = A20ADDR(a20addr + 1);
   }
   return ret;
 }
@@ -697,38 +688,22 @@ bool BX_MEM_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit
   bx_phy_address a20addr = A20ADDR(addr);
   bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
   struct memory_handler_struct *memory_handler = NULL;
-  bool use_memory_handler = false, use_smram = false;
 
   bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
 #if BX_PHY_ADDRESS_LONG
   if (a20addr > BX_CONST64(0xffffffff)) is_bios = false;
 #endif
 
-  if ((a20addr >= 0x000a0000 && a20addr < 0x000c0000) && BX_MEM_THIS smram_available)
-  {
-    // SMRAM memory space
-    if (BX_MEM_THIS smram_enable || (cpu->smm_mode() && !BX_MEM_THIS smram_restricted))
-      use_smram = true;
-  }
-
-  memory_handler = BX_MEM_THIS memory_handlers[a20addr >> 20];
-  while (memory_handler) {
-    if (memory_handler->begin <= a20addr && memory_handler->end >= a20addr)
-    {
-      if (!use_smram) {
-        use_memory_handler = true;
-        break;
-      }
-    }
-    memory_handler = memory_handler->next;
-  }
+  // SMRAM space accessible to the CPU is never served by memory handlers
+  if (! BX_MEM_THIS is_smram_data_access(a20addr, cpu->smm_mode()))
+    memory_handler = BX_MEM_THIS find_memory_handler(BX_MEM_THIS get_memory_handlers(a20addr), a20addr, false);
 
   dbg_invalidate_smc_pages(a20addr, len);
 
   for (; len>0; len--) {
     // Keep translated address in sync as we increment a20addr.
     linear_addr = bx_translate_gpa_to_linear(a20addr);
-    if (use_memory_handler) {
+    if (memory_handler) {
       memory_handler->write_handler(a20addr, 1, buf, memory_handler->param);
     }
 #if BX_SUPPORT_PCI
@@ -754,7 +729,7 @@ bool BX_MEM_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit
       *(BX_MEM_THIS get_vector(linear_addr)) = *buf;
     }
     buf++;
-    a20addr++;
+    a20addr = A20ADDR(a20addr + 1);
   }
   return true;
 }
@@ -792,16 +767,12 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
   }
 #endif
 
-  struct memory_handler_struct *memory_handler = BX_MEM_THIS memory_handlers[a20addr >> 20];
-  while (memory_handler) {
-    if (memory_handler->begin <= a20addr &&
-        memory_handler->end >= a20addr) {
-      if (memory_handler->da_handler)
-        return memory_handler->da_handler(a20addr, rw, memory_handler->param);
-      else
-        return(NULL); // Vetoed! memory handler for i/o apic, vram, mmio and PCI PnP
-    }
-    memory_handler = memory_handler->next;
+  struct memory_handler_struct *memory_handler = BX_MEM_THIS find_memory_handler(BX_MEM_THIS get_memory_handlers(a20addr), a20addr, false);
+  if (memory_handler) {
+    if (memory_handler->da_handler)
+      return memory_handler->da_handler(a20addr, rw, memory_handler->param);
+    else
+      return(NULL); // Vetoed! memory handler for i/o apic, vram, mmio and PCI PnP
   }
 
   // Never allow direct access in the PCI/MMIO hole, except for the BIOS/UEFI
@@ -904,28 +875,36 @@ BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
     return false;
   if (!read_handler) // allow NULL write and fetch handler
     return false;
+#if BX_PHY_ADDRESS_LONG
+  if (end_addr >= BX_MEM_HANDLERS_ADDR_LIMIT) {
+    BX_ERROR(("Register failed: memory handlers above 0x" FMT_LL "x are not supported (0x" FMT_PHY_ADDRX " - 0x" FMT_PHY_ADDRX ")",
+      BX_MEM_HANDLERS_ADDR_LIMIT, begin_addr, end_addr));
+    return false;
+  }
+#endif
   bool ro_handler = (!write_handler && !da_handler);
+  bool overlap = false;
   BX_INFO(("Register memory access handlers: 0x" FMT_PHY_ADDRX " - 0x" FMT_PHY_ADDRX, begin_addr, end_addr));
-  for (Bit32u page_idx = (Bit32u)(begin_addr >> 20); page_idx <= (Bit32u)(end_addr >> 20); page_idx++) {
-    Bit16u bitmap = 0xffff;
-    bool overlap = false;
-    if (begin_addr > (page_idx << 20)) {
-      bitmap &= (0xffff << ((begin_addr >> 16) & 0xf));
-    }
-    if (end_addr < ((page_idx + 1) << 20)) {
-      bitmap &= (0xffff >> (0x0f - ((end_addr >> 16) & 0xf)));
-    }
-    if (BX_MEM_THIS memory_handlers[page_idx] != NULL) {
-      if (((bitmap & BX_MEM_THIS memory_handlers[page_idx]->bitmap) == bitmap) && ro_handler) {
-        BX_INFO(("Registering overlapping r/o memory handler"));
-        overlap = true;
-      } else if ((bitmap & BX_MEM_THIS memory_handlers[page_idx]->bitmap) != 0) {
-        BX_ERROR(("Register failed: overlapping memory handlers!"));
-        return false;
-      } else {
-        bitmap |= BX_MEM_THIS memory_handlers[page_idx]->bitmap;
+  // check all pages first, so nothing is registered if the range conflicts
+  Bit32u page_idx;
+  for (page_idx = (Bit32u)(begin_addr >> 20); page_idx <= (Bit32u)(end_addr >> 20); page_idx++) {
+    for (struct memory_handler_struct *h = BX_MEM_THIS memory_handlers[page_idx]; h != NULL; h = h->next) {
+      if (begin_addr <= h->end && end_addr >= h->begin) {
+        // a r/o handler (PCI ROM) may share the address range of an existing
+        // handler if it is completely inside of it
+        if (ro_handler && begin_addr >= h->begin && end_addr <= h->end) {
+          overlap = true;
+        } else {
+          BX_ERROR(("Register failed: overlapping memory handlers!"));
+          return false;
+        }
       }
     }
+  }
+  if (overlap) {
+    BX_INFO(("Registering overlapping r/o memory handler"));
+  }
+  for (page_idx = (Bit32u)(begin_addr >> 20); page_idx <= (Bit32u)(end_addr >> 20); page_idx++) {
     struct memory_handler_struct *memory_handler = new struct memory_handler_struct;
     memory_handler->next = BX_MEM_THIS memory_handlers[page_idx];
     BX_MEM_THIS memory_handlers[page_idx] = memory_handler;
@@ -935,7 +914,6 @@ BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
     memory_handler->param = param;
     memory_handler->begin = begin_addr;
     memory_handler->end = end_addr;
-    memory_handler->bitmap = bitmap;
     memory_handler->overlap = overlap;
     if ((begin_addr >= 0xc0000) && (end_addr < 0xe0000)) {
       bx_pc_system.MemoryMappingChanged();
@@ -947,15 +925,15 @@ BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
 bool BX_MEM_C::unregisterMemoryHandlers(void *param, bx_phy_address begin_addr, bx_phy_address end_addr)
 {
   bool ret = true;
+#if BX_PHY_ADDRESS_LONG
+  if (end_addr >= BX_MEM_HANDLERS_ADDR_LIMIT) {
+    BX_ERROR(("Unregister failed: memory handlers above 0x" FMT_LL "x are not supported (0x" FMT_PHY_ADDRX " - 0x" FMT_PHY_ADDRX ")",
+      BX_MEM_HANDLERS_ADDR_LIMIT, begin_addr, end_addr));
+    return false;
+  }
+#endif
   BX_INFO(("Memory access handlers unregistered: 0x" FMT_PHY_ADDRX " - 0x" FMT_PHY_ADDRX, begin_addr, end_addr));
   for (Bit32u page_idx = (Bit32u)(begin_addr >> 20); page_idx <= (Bit32u)(end_addr >> 20); page_idx++) {
-    Bit16u bitmap = 0xffff;
-    if (begin_addr > (page_idx << 20)) {
-      bitmap &= (0xffff << ((begin_addr >> 16) & 0xf));
-    }
-    if (end_addr < ((page_idx + 1) << 20)) {
-      bitmap &= (0xffff >> (0x0f - ((end_addr >> 16) & 0xf)));
-    }
     struct memory_handler_struct *memory_handler = BX_MEM_THIS memory_handlers[page_idx];
     struct memory_handler_struct *prev = NULL;
     // Fixed: Use || (OR) to continue searching until we find an EXACT match
@@ -966,7 +944,6 @@ bool BX_MEM_C::unregisterMemoryHandlers(void *param, bx_phy_address begin_addr, 
           memory_handler->begin != begin_addr ||
           memory_handler->end != end_addr))
     {
-      memory_handler->bitmap &= ~bitmap;
       prev = memory_handler;
       memory_handler = memory_handler->next;
     }

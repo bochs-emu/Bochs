@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2024  The Bochs Project
+//  Copyright (C) 2008-2026  The Bochs Project
 
 #include "bochs.h"
 #include "bx_debug/debug.h"
@@ -150,6 +150,7 @@ Bit32u SelectedBID;
 #define MULTICPU_BTN_BASE   1030
 
 bool UpdInProgress[3];       // flag -- list update incomplete (not OK to paint)
+static bool UpdateOWflag = FALSE;   // Output window text changed, update on the next timer tick
 
 INT_PTR CALLBACK A_DP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
 {
@@ -164,7 +165,7 @@ INT_PTR CALLBACK A_DP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
         case WM_COMMAND:
             if (LOWORD(ww) == IDOK)
             {
-                GetWindowText(GetDlgItem(hh,102),ask_str.reply,100);
+                GetWindowText(GetDlgItem(hh,102),ask_str.reply,ASKTEXT_MAX);
                 EndDialog(hh,IDOK);
                 return 0;
             }
@@ -212,10 +213,32 @@ LRESULT CALLBACK ThisEditProc(HWND hh, UINT mm, WPARAM ww, LPARAM ll)
             // throw away all Enter keys (bell problems)
             if (ww == VK_RETURN)
                 return 0;
+            // ^c and ^a in the Output window are handled on WM_KEYDOWN
+            if (i != 0 && (ww == 3 || ww == 1))
+                return 0;
                 // force all typed input to the Input window (wEdit[0] = Input)
             CallWindowProc(*wEdit, hE_I, mm, ww, ll);
             return 0;
         case WM_KEYDOWN:
+            if (i != 0 && GetKeyState(VK_CONTROL) < 0)
+            {
+                if (ww == 'A')      // ^a = select all text in the Output window
+                {
+                    CallWindowProc(wEdit[1], hh, EM_SETSEL, 0, -1);
+                    return 0;
+                }
+                if (ww == 'C')      // ^c = copy the selected text, or break if nothing is selected
+                {
+                    DWORD SelStart, SelEnd;
+                    CallWindowProc(wEdit[1], hh, EM_GETSEL, (WPARAM) &SelStart, (LPARAM) &SelEnd);
+                    if (SelStart != SelEnd)
+                    {
+                        CallWindowProc(wEdit[1], hh, WM_COPY, 0, 0);
+                        return 0;
+                    }
+                }
+            }
+            // fall through
         case WM_SYSKEYDOWN:
             // simply let parent know about all keydowns in these edit boxes
             SendMessage(GetParent(hh),mm,ww,ll);
@@ -1054,11 +1077,21 @@ void MakeListsGray()
     InvalidateRect(hL[REG_WND],0,TRUE);     // Invalidate all 3 of the ListViews --
     InvalidateRect(hL[ASM_WND],0,TRUE);     // to force a redraw with the new background
     InvalidateRect(hL[DUMP_WND],0,TRUE);
+
+    EnableMenuItem(hCmdMenu, CMD_DETACH, AtBreak ? MF_ENABLED:MF_GRAYED);
+}
+
+// ParseIDText calls this for every line of debugger output (mostly from the bochs
+// thread). Replacing the whole window text each time is slow for long outputs, so
+// only set a flag -- the GUI thread timer (like in the GTK version) updates the window.
+void SetOutWinTxt()
+{
+    UpdateOWflag = TRUE;
 }
 
 // the following routine needs to replace the entire window's text,
 // and then scroll the window to the end of the text
-void SetOutWinTxt()
+static void UpdateOutWinTxt()
 {
     SetWindowText(hE_O,OutWindow);  // replace all text with modified buffer
 //  SendMessage(hE_O,EM_SETSEL,0,-1);   // invisibly selects all, sets caret to end
@@ -1325,7 +1358,9 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
             // Input / Output
             hE_I = CreateWindowEx(0,"edit","",WS_CHILD | WS_VISIBLE,0,0,1,1,hh,(HMENU)1004,GetModuleHandle(0),0);
             // without AUTOHSCROLL, output window text is always supposed to wordwrap
-            hE_O = CreateWindowEx(0,"edit","",WS_VSCROLL | WS_BORDER | WS_CHILD | WS_VISIBLE | ES_MULTILINE,0,0,1,1,hh,(HMENU)1003,GetModuleHandle(0),0);
+            // the output window never gets the input focus (the Input window keeps the caret),
+            // NOHIDESEL keeps the selected text visible, so it can be copied
+            hE_O = CreateWindowEx(0,"edit","",WS_VSCROLL | WS_BORDER | WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_READONLY | ES_NOHIDESEL,0,0,1,1,hh,(HMENU)1003,GetModuleHandle(0),0);
             SendMessage(hE_I,WM_SETFONT,(WPARAM)DefFont, MAKELPARAM(TRUE,0));
             SendMessage(hE_O,WM_SETFONT,(WPARAM)hF,MAKELPARAM(TRUE,0));
 
@@ -1410,6 +1445,7 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
             hCursResize = LoadCursor (NULL,IDC_SIZEWE);
             hCursDock = LoadCursor (NULL,IDC_CROSS);
             SetTimer(hh,2,500,NULL);    // request timer ticks every half a second (to update VGAW)
+            SetTimer(hh,3,50,NULL);     // fast timer ticks to update the Output window text
             UpdInProgress[0] = FALSE;
             UpdInProgress[1] = FALSE;
             UpdInProgress[2] = FALSE;
@@ -1417,6 +1453,16 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
             // Input window caret is created in SetSizeIOS, when the WM_SIZE message arrives
             break;
         }
+
+        case WM_CTLCOLORSTATIC:
+            // keep the white background of the read only Output window
+            if ((HWND) ll == hE_O)
+            {
+                SetBkColor((HDC) ww, GetSysColor(COLOR_WINDOW));
+                SetTextColor((HDC) ww, GetSysColor(COLOR_WINDOWTEXT));
+                return (LRESULT) GetSysColorBrush(COLOR_WINDOW);
+            }
+            break;
 
         case WM_SIZE:
         {
@@ -1484,16 +1530,7 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
                 unsigned int newCPU = LW - MULTICPU_BTN_BASE;
                 if (CurrentCPU != newCPU)
                 {
-                    // change text on CurrentCPU button to lowercase
-                    strcpy (tmpcb, "cpu0");
-                    tmpcb[3] = CurrentCPU + '0';
-                    SendMessage (hCPUt[CurrentCPU],WM_SETTEXT,(WPARAM) 0 ,(LPARAM) tmpcb);
-                    // change text on newCPU button to UPPERCASE
-                    strcpy (tmpcb, "CPU0");
-                    tmpcb[3] = newCPU + '0';
-                    SendMessage (hCPUt[newCPU],WM_SETTEXT,(WPARAM) 0 ,(LPARAM) tmpcb);
-                    CurrentCPU = newCPU;
-                    BottomAsmLA = ~0;       // force an ASM autoload, to repaint
+                    SelectCPU(newCPU);
                     if (AtBreak != FALSE)   // if at a break, pretend it just happened
                         OnBreak();          // refresh the ASM and Register windows
                 }
@@ -1730,6 +1767,15 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
         }
         case WM_TIMER:
         {
+            if (ww == 3)            // fast timer: update the Output window if its text changed
+            {
+                if (UpdateOWflag != FALSE)
+                {
+                    UpdateOWflag = FALSE;
+                    UpdateOutWinTxt();
+                }
+                break;
+            }
             if (PO_Tdelay > 0)      // output window is delaying display of a partial line?
             {
                 if (--PO_Tdelay == 0)   // on a timeout, add a lf to complete the line
@@ -1749,21 +1795,39 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
         }
         case WM_CLOSE:
         {
-            GetWindowRect(hY, &rY);
-            bx_user_quit = 1;
-            SIM->debug_break();
-            KillTimer(hh,2);
-            if (*CustomFont != DefFont)
-                DeleteObject (*CustomFont);
-            DeleteObject(CustomFont[1]);
-            DeleteObject(CustomFont[2]);
-            DeleteObject(CustomFont[3]);
-            DestroyWindow(hY);
-            hY = NULL;
+            if (bx_user_quit) {
+                GetWindowRect(hY, &rY);
+                SIM->debug_break();
+                KillTimer(hh,2);
+                KillTimer(hh,3);
+                if (*CustomFont != DefFont)
+                    DeleteObject (*CustomFont);
+                DeleteObject(CustomFont[1]);
+                DeleteObject(CustomFont[2]);
+                DeleteObject(CustomFont[3]);
+                DestroyWindow(hY);
+                hY = NULL;
+            } else {
+                if (DetachDebugger()) {
+                    ShowWindow(hY, SW_HIDE);
+                }
+                return 0;
+            }
             break;
         }
     }
     return DefWindowProc(hh,mm,ww,ll);
+}
+
+// show the newCPU button as selected
+void SetCPUButton(unsigned oldCPU, unsigned newCPU)
+{
+    // change text on oldCPU button to lowercase
+    sprintf (tmpcb, "cpu%u", oldCPU);
+    SendMessage (hCPUt[oldCPU],WM_SETTEXT,(WPARAM) 0 ,(LPARAM) tmpcb);
+    // change text on newCPU button to UPPERCASE
+    sprintf (tmpcb, "CPU%u", newCPU);
+    SendMessage (hCPUt[newCPU],WM_SETTEXT,(WPARAM) 0 ,(LPARAM) tmpcb);
 }
 
 void HitBreak()
@@ -1777,6 +1841,7 @@ void HitBreak()
     if (doDumpRefresh != FALSE)
         RefreshDataWin();
     OnBreak();
+    ShowWindow(hY, SW_SHOW);
 }
 
 // This function must be called immediately after bochs starts
@@ -1826,7 +1891,7 @@ bool OSInit()
       HDC hdc = GetDC(hY);
       memset(&mylf, 0, sizeof(LOGFONT));
       mylf.lfWeight = FW_NORMAL;
-      GetTextFace(hdc, LF_FULLFACESIZE, mylf.lfFaceName); // (constant is max length of a fontname)
+      GetTextFace(hdc, LF_FACESIZE, mylf.lfFaceName); // (lfFaceName holds LF_FACESIZE chars, including the terminating zero)
       GetTextMetrics(hdc, &tm);
       ReleaseDC(hY, hdc);
       mylf.lfHeight = -(tm.tmHeight);     // request a TOTAL font height of tmHeight
@@ -1894,9 +1959,13 @@ void MakeBL(HTREEITEM *h_P, bx_param_c *p)
 
 bool ParseOSSettings(const char *param, const char *value)
 {
-  char *val2, *ptr;
+  int left, top, right, bottom;
 
   if (!strcmp(param, "FontName")) {
+    if (strlen(value) >= LF_FACESIZE) {   // must fit into lfFaceName with the terminating zero
+      fprintf(stderr, "bx_enh_dbg.ini: invalid value '%s' for option '%s'\n", value, param);
+      return 1;
+    }
     memset(&mylf, 0, sizeof(LOGFONT));
     mylf.lfWeight = FW_NORMAL;
     strcpy(mylf.lfFaceName, value);
@@ -1907,17 +1976,15 @@ bool ParseOSSettings(const char *param, const char *value)
     fontInit |= 2;
     return 1;
   } else if (!strcmp(param, "MainWindow")) {
-    val2 = strdup(value);
-    ptr = strtok(val2, ",");
-    rY.left = atoi(ptr);
-    ptr = strtok(NULL, ",");
-    rY.top = atoi(ptr);
-    ptr = strtok(NULL, ",");
-    rY.right = atoi(ptr);
-    ptr = strtok(NULL, "\n");
-    rY.bottom = atoi(ptr);
+    if (sscanf(value, "%d , %d , %d , %d", &left, &top, &right, &bottom) != 4) {
+      fprintf(stderr, "bx_enh_dbg.ini: invalid value '%s' for option '%s'\n", value, param);
+      return 1;
+    }
+    rY.left = left;
+    rY.top = top;
+    rY.right = right;
+    rY.bottom = bottom;
     windowInit = TRUE;
-    free(val2);
     return 1;
   }
   return 0;

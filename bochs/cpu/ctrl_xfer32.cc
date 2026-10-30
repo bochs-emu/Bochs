@@ -51,8 +51,6 @@ void BX_CPU_C::call_far32(bxInstruction_c *i, Bit16u cs_raw, Bit32u disp32)
 {
   BX_INSTR_FAR_BRANCH_ORIGIN();
 
-  invalidate_prefetch_q();
-
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
@@ -86,8 +84,6 @@ void BX_CPU_C::call_far32(bxInstruction_c *i, Bit16u cs_raw, Bit32u disp32)
 void BX_CPU_C::jmp_far32(bxInstruction_c *i, Bit16u cs_raw, Bit32u disp32)
 {
   BX_INSTR_FAR_BRANCH_ORIGIN();
-
-  invalidate_prefetch_q();
 
   // jump_protected doesn't affect ESP so it is ESP safe
   if (protected_mode()) {
@@ -149,8 +145,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear32_Iw(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32_Iw(bxInstruction_c *i)
 {
-  invalidate_prefetch_q();
-
   BX_INSTR_FAR_BRANCH_ORIGIN();
 
 #if BX_DEBUGGER
@@ -307,181 +301,35 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_Jd(bxInstruction_c *i)
   BX_LINK_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JO_Jd(bxInstruction_c *i)
-{
-  if (get_OF()) {
-    branch_near32(i);
-    BX_LINK_TRACE(i);
+// Jcc Jd: near branch when the condition is true
+#define JCC_Jd(HANDLER, cond)                                                             \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                     \
+  {                                                                                       \
+    if (cond) {                                                                           \
+      branch_near32(i);                                                                   \
+      BX_LINK_TRACE(i);                                                                   \
+    }                                                                                     \
+                                                                                          \
+    BX_INSTR_NEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);                                  \
+    BX_NEXT_INSTR(i); /* trace can continue over non-taken branch */                      \
   }
 
-  BX_INSTR_NEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
-  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNO_Jd(bxInstruction_c *i)
-{
-  if (! get_OF()) {
-    branch_near32(i);
-    BX_LINK_TRACE(i);
-  }
-
-  BX_INSTR_NEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
-  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JB_Jd(bxInstruction_c *i)
-{
-  if (get_CF()) {
-    branch_near32(i);
-    BX_LINK_TRACE(i);
-  }
-
-  BX_INSTR_NEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
-  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNB_Jd(bxInstruction_c *i)
-{
-  if (! get_CF()) {
-    branch_near32(i);
-    BX_LINK_TRACE(i);
-  }
-
-  BX_INSTR_NEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
-  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JZ_Jd(bxInstruction_c *i)
-{
-  if (get_ZF()) {
-    branch_near32(i);
-    BX_LINK_TRACE(i);
-  }
-
-  BX_INSTR_NEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
-  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNZ_Jd(bxInstruction_c *i)
-{
-  if (! get_ZF()) {
-    branch_near32(i);
-    BX_LINK_TRACE(i);
-  }
-
-  BX_INSTR_NEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
-  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JBE_Jd(bxInstruction_c *i)
-{
-  if (get_CF() || get_ZF()) {
-    branch_near32(i);
-    BX_LINK_TRACE(i);
-  }
-
-  BX_INSTR_NEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
-  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNBE_Jd(bxInstruction_c *i)
-{
-  if (! (get_CF() || get_ZF())) {
-    branch_near32(i);
-    BX_LINK_TRACE(i);
-  }
-
-  BX_INSTR_NEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
-  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JS_Jd(bxInstruction_c *i)
-{
-  if (get_SF()) {
-    branch_near32(i);
-    BX_LINK_TRACE(i);
-  }
-
-  BX_INSTR_NEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
-  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNS_Jd(bxInstruction_c *i)
-{
-  if (! get_SF()) {
-    branch_near32(i);
-    BX_LINK_TRACE(i);
-  }
-
-  BX_INSTR_NEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
-  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JP_Jd(bxInstruction_c *i)
-{
-  if (get_PF()) {
-    branch_near32(i);
-    BX_LINK_TRACE(i);
-  }
-
-  BX_INSTR_NEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
-  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNP_Jd(bxInstruction_c *i)
-{
-  if (! get_PF()) {
-    branch_near32(i);
-    BX_LINK_TRACE(i);
-  }
-
-  BX_INSTR_NEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
-  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JL_Jd(bxInstruction_c *i)
-{
-  if (getB_SF() != getB_OF()) {
-    branch_near32(i);
-    BX_LINK_TRACE(i);
-  }
-
-  BX_INSTR_NEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
-  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNL_Jd(bxInstruction_c *i)
-{
-  if (getB_SF() == getB_OF()) {
-    branch_near32(i);
-    BX_LINK_TRACE(i);
-  }
-
-  BX_INSTR_NEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
-  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JLE_Jd(bxInstruction_c *i)
-{
-  if (get_ZF() || (getB_SF() != getB_OF())) {
-    branch_near32(i);
-    BX_LINK_TRACE(i);
-  }
-
-  BX_INSTR_NEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
-  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::JNLE_Jd(bxInstruction_c *i)
-{
-  if (! get_ZF() && (getB_SF() == getB_OF())) {
-    branch_near32(i);
-    BX_LINK_TRACE(i);
-  }
-
-  BX_INSTR_NEAR_BRANCH_NOT_TAKEN(BX_CPU_ID, PREV_RIP);
-  BX_NEXT_INSTR(i); // trace can continue over non-taken branch
-}
+JCC_Jd(JO_Jd, get_OF())
+JCC_Jd(JNO_Jd, ! get_OF())
+JCC_Jd(JB_Jd, get_CF())
+JCC_Jd(JNB_Jd, ! get_CF())
+JCC_Jd(JZ_Jd, get_ZF())
+JCC_Jd(JNZ_Jd, ! get_ZF())
+JCC_Jd(JBE_Jd, get_CF() || get_ZF())
+JCC_Jd(JNBE_Jd, ! (get_CF() || get_ZF()))
+JCC_Jd(JS_Jd, get_SF())
+JCC_Jd(JNS_Jd, ! get_SF())
+JCC_Jd(JP_Jd, get_PF())
+JCC_Jd(JNP_Jd, ! get_PF())
+JCC_Jd(JL_Jd, getB_SF() != getB_OF())
+JCC_Jd(JNL_Jd, getB_SF() == getB_OF())
+JCC_Jd(JLE_Jd, get_ZF() || (getB_SF() != getB_OF()))
+JCC_Jd(JNLE_Jd, ! get_ZF() && (getB_SF() == getB_OF()))
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_Ap(bxInstruction_c *i)
 {
@@ -565,8 +413,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET32(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
-  invalidate_prefetch_q();
-
   BX_INSTR_FAR_BRANCH_ORIGIN();
 
 #if BX_SUPPORT_SVM
@@ -589,10 +435,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET32(bxInstruction_c *i)
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_iret;
-#endif
-
-#if BX_SUPPORT_MONITOR_MWAIT
-  BX_CPU_THIS_PTR monitor.reset_umonitor();
 #endif
 
   RSP_SPECULATIVE;

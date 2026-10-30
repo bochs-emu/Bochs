@@ -89,7 +89,8 @@ enum {
   BX_CI_RT_MISC,
   BX_CI_RT_SAVE_CFG,
   BX_CI_RT_CONT,
-  BX_CI_RT_QUIT
+  BX_CI_RT_QUIT,
+  BX_CI_RT_DEBUGGER
 };
 
 static int text_ci_callback(void *userdata, ci_command_t command);
@@ -123,12 +124,15 @@ char *clean_string(char *s0)
   char *s = s0;
   char *ptr;
   /* find first nonblank */
-  while (isspace(*s))
+  while (isspace((unsigned char)*s))
     s++;
-  /* truncate string at first non-alphanumeric */
+  /* truncate string at end of line */
   ptr = s;
-  while (isprint(*ptr))
+  while ((*ptr != 0) && (*ptr != '\r') && (*ptr != '\n'))
     ptr++;
+  /* remove trailing blanks */
+  while ((ptr > s) && isspace((unsigned char)ptr[-1]))
+    ptr--;
   *ptr = 0;
   return s;
 }
@@ -136,7 +140,7 @@ char *clean_string(char *s0)
 /* returns 0 on success, -1 on failure.  The value goes into out. */
 int ask_uint(const char *prompt, const char *help, Bit32u min, Bit32u max, Bit32u the_default, Bit32u *out, int base)
 {
-  Bit32u n = max + 1;
+  Bit32u n = 0;
   char buffer[1024];
   char *clean;
   int illegal;
@@ -161,7 +165,7 @@ int ask_uint(const char *prompt, const char *help, Bit32u min, Bit32u max, Bit32
       }
       continue;
     }
-    const char *format = (base==10) ? "%d" : "%x";
+    const char *format = (base==10) ? "%u" : "%x";
     illegal = (1 != sscanf(buffer, format, &n));
     if (illegal || n<min || n>max) {
       if (base == 10) {
@@ -179,15 +183,25 @@ int ask_uint(const char *prompt, const char *help, Bit32u min, Bit32u max, Bit32
   }
 }
 
+// The prompt of ask_int() and ask_hex() expects a 64-bit default value only
+// if it uses a FMT_LL conversion, otherwise a 32-bit value.
+static bool is_64bit_format(const char *format)
+{
+  return (strstr(format, FMT_LL) != NULL);
+}
+
 // Identical to ask_uint but uses 64 bits signed integers
 int ask_int(const char *prompt, const char *help, Bit64s min, Bit64s max, Bit64s the_default, Bit64s *out)
 {
-  Bit64s n = max + 1;
+  Bit64s n = 0;
   char buffer[1024];
   char *clean;
   int illegal;
   while (1) {
-    bx_printf(prompt, the_default);
+    if (is_64bit_format(prompt))
+      bx_printf(prompt, the_default);
+    else
+      bx_printf(prompt, (Bit32s)the_default);
     fflush(stdout);
     if (!bx_fgets(buffer, sizeof(buffer), stdin))
       return -1;
@@ -205,6 +219,44 @@ int ask_int(const char *prompt, const char *help, Bit64s min, Bit64s max, Bit64s
     illegal = (1 != sscanf(buffer, FMT_LL "d", &n));
     if (illegal || n<min || n>max) {
       bx_printf("Your choice (%s) was not an integer between " FMT_LL "d and " FMT_LL "d.\n\n",
+             clean, min, max);
+    } else {
+      // choice is okay
+      *out = n;
+      return 0;
+    }
+  }
+}
+
+// Identical to ask_uint in hex mode but uses 64 bits unsigned integers
+int ask_hex(const char *prompt, const char *help, Bit64u min, Bit64u max, Bit64u the_default, Bit64u *out)
+{
+  Bit64u n = 0;
+  char buffer[1024];
+  char *clean;
+  int illegal;
+  while (1) {
+    if (is_64bit_format(prompt))
+      bx_printf(prompt, the_default);
+    else
+      bx_printf(prompt, (Bit32u)the_default);
+    fflush(stdout);
+    if (!bx_fgets(buffer, sizeof(buffer), stdin))
+      return -1;
+    clean = clean_string(buffer);
+    if (strlen(clean) < 1) {
+      // empty line, use the default
+      *out = the_default;
+      return 0;
+    }
+    if ((clean[0] == '?') && (strlen(help) > 0)) {
+      bx_printf("\n%s\n", help);
+      bx_printf("Your choice must be an integer between 0x" FMT_LL "x and 0x" FMT_LL "x.\n\n", min, max);
+      continue;
+    }
+    illegal = (1 != sscanf(buffer, FMT_LL "x", &n));
+    if (illegal || n<min || n>max) {
+      bx_printf("Your choice (%s) was not an integer between 0x" FMT_LL "x and 0x" FMT_LL "x.\n\n",
              clean, min, max);
     } else {
       // choice is okay
@@ -253,9 +305,9 @@ int ask_menu(const char *prompt, const char *help, int n_choices, const char *ch
 
 int ask_yn(const char *prompt, const char *help, Bit32u the_default, Bit32u *out)
 {
-  char buffer[16];
+  char buffer[1024];
   char *clean;
-  *out = 1<<31;
+  *out = 1U<<31;
   while (1) {
     // if there's a %s field, substitute in the default yes/no.
     bx_printf(prompt, the_default ? "yes" : "no");
@@ -285,10 +337,12 @@ int ask_yn(const char *prompt, const char *help, Bit32u the_default, Bit32u *out
 // returns 0 if default was taken
 // returns 1 if value changed
 // returns -2 if help requested
-int ask_string(const char *prompt, const char *the_default, char *out)
+int ask_string(const char *prompt, const char *the_default, char *out, int out_len)
 {
   char buffer[1024];
   char *clean;
+  const char *src;
+  int len, ret = 1;
   assert(the_default != out);
   out[0] = 0;
   bx_printf(prompt, the_default);
@@ -298,13 +352,17 @@ int ask_string(const char *prompt, const char *the_default, char *out)
   clean = clean_string(buffer);
   if (clean[0] == '?')
     return -2;
+  src = clean;
   if (strlen(clean) < 1) {
     // empty line, use the default
-    strcpy(out, the_default);
-    return 0;
+    src = the_default;
+    ret = 0;
   }
-  strcpy(out, clean);
-  return 1;
+  len = (int)strlen(src);
+  if (len >= out_len) len = out_len - 1;
+  memcpy(out, src, len);
+  out[len] = 0;
+  return ret;
 }
 
 /******************************************************************/
@@ -373,6 +431,7 @@ static const char *runtime_menu_prompt =
 "8. Save configuration\n"
 "9. Continue simulation\n"
 "10. Quit now\n"
+"%s"
 "\n"
 "Please choose one:  [9] ";
 
@@ -397,22 +456,28 @@ void build_runtime_options_prompt(const char *format, char *buf, int size)
 {
   bx_list_c *floppyop;
   char pname[80];
-  char buffer[6][128];
+  char buffer[3][CI_PATH_LENGTH + 64];
 
   for (int i=0; i<2; i++) {
     sprintf(pname, "floppy.%d", i);
     floppyop = (bx_list_c*) SIM->get_param(pname);
     if (SIM->get_param_enum("devtype", floppyop)->get() == BX_FDD_NONE)
       strcpy(buffer[i], "(not present)");
+    else if (!SIM->get_param_string("path", floppyop)->getptr()[0])
+      strcpy(buffer[i], "none");
     else {
-      sprintf(buffer[i], "%s, size=%s, %s", SIM->get_param_string("path", floppyop)->getptr(),
+      snprintf(buffer[i], sizeof(buffer[i]), "%s, size=%s, %s", SIM->get_param_string("path", floppyop)->getptr(),
         SIM->get_param_enum("type", floppyop)->get_selected(),
         SIM->get_param_enum("status", floppyop)->get_selected());
-      if (!SIM->get_param_string("path", floppyop)->getptr()[0]) strcpy(buffer[i], "none");
     }
   }
 
-  snprintf(buf, size, format, buffer[0], buffer[1]);
+  if (SIM->debugger_activation_allowed())
+    strcpy(buffer[2], "11. Continue and enter debugger\n");
+  else
+    buffer[2][0] = 0;
+
+  snprintf(buf, size, format, buffer[0], buffer[1], buffer[2]);
 }
 
 int do_menu(const char *pname)
@@ -495,7 +560,7 @@ int bx_text_config_interface(int menu)
               break;
             case 4: bx_write_rc(NULL); break;
             case 5:
-              if (ask_string("\nWhat is the path to restore the Bochs state from?\nTo cancel, type 'none'. [%s] ", "none", sr_path) >= 0) {
+              if (ask_string("\nWhat is the path to restore the Bochs state from?\nTo cancel, type 'none'. [%s] ", "none", sr_path, sizeof(sr_path)) >= 0) {
                 if (strcmp(sr_path, "none")) {
                   SIM->reset_all_param();
                   SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(1);
@@ -542,9 +607,10 @@ int bx_text_config_interface(int menu)
         break;
       case BX_CI_RUNTIME:
         {
-          char prompt[1024];
-          build_runtime_options_prompt(runtime_menu_prompt, prompt, 1024);
-          if (ask_uint(prompt, "", 1, BX_CI_RT_QUIT, BX_CI_RT_CONT, &choice, 10) < 0) return -1;
+          char prompt[1024 + 2 * CI_PATH_LENGTH];
+          build_runtime_options_prompt(runtime_menu_prompt, prompt, sizeof(prompt));
+          unsigned max_choice = SIM->debugger_activation_allowed() ? BX_CI_RT_DEBUGGER : BX_CI_RT_QUIT;
+          if (ask_uint(prompt, "", 1, max_choice, BX_CI_RT_CONT, &choice, 10) < 0) return -1;
           switch (choice) {
             case BX_CI_RT_FLOPPYA:
               if (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() != BX_FDD_NONE) do_menu(BXPN_FLOPPYA);
@@ -568,6 +634,11 @@ int bx_text_config_interface(int menu)
               bx_printf("You chose quit on the configuration interface.\n");
               bx_user_quit = 1;
               return 0;
+            case BX_CI_RT_DEBUGGER:
+              SIM->update_runtime_options();
+              SIM->request_debugger_activation("runtime config menu");
+              bx_printf("Continuing simulation and entering the debugger\n");
+              return 1;
             default: bx_printf("Menu choice %d not implemented.\n", choice);
           }
         }
@@ -614,12 +685,16 @@ void bx_log_options(int individual)
       if (ask_int(log_options_prompt1, "", -1, maxid-1, -1, &id) < 0)
         return;
       if (id < 0) return;
+      if (!strcmp(SIM->get_prefix((int)id), BX_NULL_PREFIX)) {
+        bx_printf("Invalid device ID %d\n", (int)id);
+        continue;
+      }
       bx_printf("Editing log options for the device %s\n", SIM->get_prefix((int)id));
       for (level=0; level<SIM->get_max_log_level(); level++) {
         char prompt[1024];
         int default_action = SIM->get_log_action((int)id, level);
         sprintf(prompt, "Enter action for %s event: [%s] ", SIM->get_log_level_name(level), SIM->get_action_name(default_action));
-        // don't show the no change choice (choices=3)
+        // don't show the no change choice
         if (ask_menu(prompt, "", log_level_n_choices_normal, log_level_choices, default_action, &action)<0)
           return;
         // the exclude expression allows some choices not being available if they
@@ -639,7 +714,7 @@ void bx_log_options(int individual)
       char prompt[1024];
       int action, default_action = N_ACT;  // default to no change
       sprintf(prompt, "Enter action for %s event on all devices: [no change] ", SIM->get_log_level_name(level));
-      // do show the no change choice (choices=4)
+      // do show the no change choice
       if (ask_menu(prompt, "", log_level_n_choices_normal+1, log_level_choices, default_action, &action)<0)
         return;
       if (action < log_level_n_choices_normal) {
@@ -663,7 +738,7 @@ int bx_read_rc(char *rc)
     strcpy(oldrc, "none");
   char newrc[CI_PATH_LENGTH];
   while (1) {
-    if (ask_string("\nWhat is the configuration file name?\nTo cancel, type 'none'. [%s] ", oldrc, newrc) < 0) return -1;
+    if (ask_string("\nWhat is the configuration file name?\nTo cancel, type 'none'. [%s] ", oldrc, newrc, sizeof(newrc)) < 0) return -1;
     if (!strcmp(newrc, "none")) return -1;
     if (SIM->read_rc(newrc) >= 0) return 0;
     bx_printf("The file '%s' could not be found.\n", newrc);
@@ -681,7 +756,7 @@ int bx_write_rc(char *rc)
     oldrc[sizeof(oldrc) - 1] = '\0';
   }
   while (1) {
-    if (ask_string("Save configuration to what file?  To cancel, type 'none'.\n[%s] ", oldrc, newrc) < 0) return -1;
+    if (ask_string("Save configuration to what file?  To cancel, type 'none'.\n[%s] ", oldrc, newrc, sizeof(newrc)) < 0) return -1;
     if (!strcmp(newrc, "none")) return 0;
     // try with overwrite off first
     int status = SIM->write_rc(newrc, 0);
@@ -751,14 +826,14 @@ void bx_plugin_ctrl()
         }
       }
       if (choice == 1) {
-        ask_string("\nEnter the name of the plugin to load.\nTo cancel, type 'none'. [%s] ", "none", plugname);
+        ask_string("\nEnter the name of the plugin to load.\nTo cancel, type 'none'. [%s] ", "none", plugname, sizeof(plugname));
         if (strcmp(plugname, "none")) {
           if (SIM->opt_plugin_ctrl(plugname, 1)) {
             bx_printf("\nLoaded plugin '%s'.\n", plugname);
           }
         }
       } else {
-        ask_string("\nEnter the name of the plugin to unload.\nTo cancel, type 'none'. [%s] ", "none", plugname);
+        ask_string("\nEnter the name of the plugin to unload.\nTo cancel, type 'none'. [%s] ", "none", plugname, sizeof(plugname));
         if (strcmp(plugname, "none")) {
           if (SIM->opt_plugin_ctrl(plugname, 0)) {
             bx_printf("\nUnloaded plugin '%s'.\n", plugname);
@@ -773,7 +848,7 @@ BxEvent *
 textconfig_notify_callback(void *unused, BxEvent *event)
 {
   const char *log_action_ask_choices[] = { "cont", "alwayscont", "die", "abort", "debug" };
-  int log_action_n_choices = 4 + (SIM->debugger_active()||BX_GDBSTUB?1:0);
+  int log_action_n_choices = 4 + (SIM->debugger_activation_allowed()||BX_GDBSTUB?1:0);
 
   event->retcode = -1;
   switch (event->type)
@@ -798,7 +873,7 @@ textconfig_notify_callback(void *unused, BxEvent *event)
         bx_printf("  die        - stop execution now\n");
         bx_printf("  abort      - dump core %s\n", BX_HAVE_ABORT ? "" : "(Disabled)");
 #if BX_DEBUGGER
-        if (SIM->debugger_active()) {
+        if (SIM->debugger_activation_allowed()) {
           bx_printf("  debug      - continue and return to bochs debugger\n");
         }
 #endif
@@ -808,10 +883,10 @@ textconfig_notify_callback(void *unused, BxEvent *event)
 
         int choice;
 ask:
-        if (ask_menu("Choose one of the actions above: [%s] ", "",
-                     log_action_n_choices, log_action_ask_choices, 2, &choice) < 0)
-        event->retcode = -1;
-        // return 0 for continue, 1 for alwayscontinue, 2 for die, 3 for debug.
+        // choice is -1 on error (stream closed)
+        ask_menu("Choose one of the actions above: [%s] ", "",
+                 log_action_n_choices, log_action_ask_choices, 2, &choice);
+        // return 0 for continue, 1 for alwayscontinue, 2 for die, 3 for abort, 4 for debug.
         if (!BX_HAVE_ABORT && choice==BX_LOG_ASK_CHOICE_DUMP_CORE) goto ask;
         fflush(stdout);
         fflush(stderr);
@@ -851,14 +926,15 @@ void text_print(bx_param_c *param)
         bx_param_num_c *nparam = (bx_param_num_c*)param;
         Bit64s nval = nparam->get64();
         if (nparam->get_long_format()) {
-          bx_printf(nparam->get_long_format(), nval);
+          // all long formats are using 32-bit conversions
+          bx_printf(nparam->get_long_format(), (Bit32u)nval);
         } else {
           const char *format;
           int base = nparam->get_base();
           if (base == 16)
-            format = "%s: 0x%x";
+            format = "%s: 0x" FMT_LL "x";
           else
-            format = "%s: %ld";
+            format = "%s: " FMT_LL "d";
           if (nparam->get_label()) {
             bx_printf(format, nparam->get_label(), (Bit64s)nval);
           } else {
@@ -928,34 +1004,47 @@ int text_ask(bx_param_c *param)
   const char *help = param->get_description();
   Bit32u options = param->get_options();
 
+  if (help == NULL) help = "No help available";
+
   bx_printf("\n");
   switch (param->get_type()) {
     case BXT_PARAM_NUM:
       {
         bx_param_num_c *nparam = (bx_param_num_c*)param;
         int status;
-        if (prompt == NULL) {
-          // default prompt, if they didn't set an ask format string
-          text_print(param);
-          bx_printf("\n");
-          if (nparam->get_base() == 16)
-            prompt = "Enter new value in hex or '?' for help: [%x] ";
-          else
-            prompt = "Enter new value or '?' for help: [%d] ";
-        }
-        Bit32u n = nparam->get();
-        Bit64s m = nparam->get64();
-
+        Bit64s min = nparam->get_min();
+        Bit64s max = nparam->get_max();
         if(nparam->get_base() != 10){
-          status = ask_uint(prompt, help, (Bit32u)nparam->get_min(),
-                          (Bit32u)nparam->get_max(), n, &n, nparam->get_base());
+          if (prompt == NULL) {
+            // default prompt, if they didn't set an ask format string
+            text_print(param);
+            bx_printf("\n");
+            if ((Bit64u)max > BX_MAX_BIT32U)
+              prompt = "Enter new value in hex or '?' for help: [" FMT_LL "x] ";
+            else
+              prompt = "Enter new value in hex or '?' for help: [%x] ";
+          }
+          Bit64u n = (Bit64u)nparam->get64();
+          status = ask_hex(prompt, help, (Bit64u)min, (Bit64u)max, n, &n);
+          if (status < 0) return status;
+          nparam->set((Bit64s)n);
         }else{
-          status = ask_int(prompt, help, (Bit64s)nparam->get_min(),
-                          (Bit64s)nparam->get_max(), m, &m);
+          // maximum BX_MAX_BIT64U means no upper limit
+          if ((Bit64u)max == BX_MAX_BIT64U) max = BX_MAX_BIT64S;
+          if (prompt == NULL) {
+            // default prompt, if they didn't set an ask format string
+            text_print(param);
+            bx_printf("\n");
+            if ((min < (Bit64s)BX_MIN_BIT32S) || (max > (Bit64s)BX_MAX_BIT32S))
+              prompt = "Enter new value or '?' for help: [" FMT_LL "d] ";
+            else
+              prompt = "Enter new value or '?' for help: [%d] ";
+          }
+          Bit64s m = nparam->get64();
+          status = ask_int(prompt, help, min, max, m, &m);
+          if (status < 0) return status;
+          nparam->set(m);
         }
-        if (status < 0) return status;
-        if(nparam->get_base() != 10) nparam->set(n);
-        else nparam->set(m);
       }
       break;
     case BXT_PARAM_BOOL:
@@ -1014,7 +1103,7 @@ int text_ask(bx_param_c *param)
         }
         while (1) {
           char buffer[1024];
-          int status = ask_string(prompt, sparam->getptr(), buffer);
+          int status = ask_string(prompt, sparam->getptr(), buffer, sizeof(buffer));
           if (status == -2) {
             bx_printf("\n%s\n", help);
             continue;
@@ -1037,7 +1126,7 @@ int text_ask(bx_param_c *param)
         }
         while (1) {
           char buffer[1024];
-          int status = ask_string(prompt, hparam->getptr(), buffer);
+          int status = ask_string(prompt, hparam->getptr(), buffer, sizeof(buffer));
           if (status == -2) {
             bx_printf("\n%s\n", help);
             continue;
@@ -1070,7 +1159,8 @@ int text_ask(bx_param_c *param)
             child = list->get(i);
             if (child->get_enabled()) {
               if (!SIM->get_init_done() || child->get_runtime_param()) {
-                text_ask(child);
+                int status = text_ask(child);
+                if (status < 0) return status;
               }
             }
           }

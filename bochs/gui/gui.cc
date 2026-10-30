@@ -39,6 +39,9 @@
 #endif
 #include "gui/bitmaps/userbutton.h"
 #include "gui/bitmaps/saverestore.h"
+#if BX_DEBUGGER
+  #include "gui/bitmaps/debugger.h"
+#endif
 
 #if BX_USE_GUI_CONSOLE
 #include "sdl.h"
@@ -139,9 +142,13 @@ bx_gui_c::bx_gui_c(void): disp_mode(DISP_MODE_SIM)
 {
   put("GUI"); // Init in specific_init
   bx_headerbar_entries = 0;
+#if BX_DEBUGGER
+  debugger_hbar_id = BX_MAX_HEADERBAR_ENTRIES;
+#endif
   statusitem_count = 0;
   led_timer_index = BX_NULL_TIMER_HANDLE;
   framebuffer = NULL;
+  tile = NULL;
   guest_textmode = 1;
   guest_fwidth = 8;
   guest_fheight = 16;
@@ -164,6 +171,9 @@ bx_gui_c::~bx_gui_c()
 {
   if (framebuffer != NULL) {
     delete [] framebuffer;
+  }
+  if (tile != NULL) {
+    delete [] tile;
   }
 #if BX_USE_GUI_CONSOLE
   if (console.running) {
@@ -249,6 +259,12 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
   BX_GUI_THIS usbdbg_trigger_bmap_id = create_bitmap(bx_usbdbg_trigger_bmap,
                           BX_USB_BMAP_X, BX_USB_BMAP_Y);
 #endif
+#if BX_DEBUGGER
+  if (BX_GUI_THIS debugger_activation_allowed()) {
+    BX_GUI_THIS debugger_bmap_id = create_bitmap(bx_debugger_bmap,
+                          BX_DEBUGGER_BMAP_X, BX_DEBUGGER_BMAP_Y);
+  }
+#endif
 
   // Add the initial bitmaps to the headerbar, and enable callback routine, for use
   // when that bitmap is clicked on. The floppy and cdrom devices are not
@@ -323,14 +339,29 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
                           BX_GRAVITY_RIGHT, userbutton_handler);
   BX_GUI_THIS set_tooltip(BX_GUI_THIS user_hbar_id, "Send keyboard shortcut");
 
+#if BX_DEBUGGER
+  // Debugger button (left of the user button), created last to keep the
+  // headerbar ids of the other buttons
+  if (BX_GUI_THIS debugger_activation_allowed()) {
+    BX_GUI_THIS debugger_hbar_id = headerbar_bitmap(BX_GUI_THIS debugger_bmap_id,
+                          BX_GRAVITY_RIGHT, debugger_handler);
+    BX_GUI_THIS set_tooltip(BX_GUI_THIS debugger_hbar_id, "Enter or break into the debugger");
+  }
+#endif
+
   if (!parse_user_shortcut(SIM->get_param_string(BXPN_USER_SHORTCUT)->getptr())) {
     SIM->get_param_string(BXPN_USER_SHORTCUT)->set("none");
   }
 
   BX_GUI_THIS charmap_updated = 0;
 
-  if (!BX_GUI_THIS new_gfx_api && (BX_GUI_THIS framebuffer == NULL)) {
-    BX_GUI_THIS framebuffer = new Bit8u[max_xres * max_yres * 4];
+  if (!BX_GUI_THIS new_gfx_api) {
+    if (BX_GUI_THIS framebuffer == NULL) {
+      BX_GUI_THIS framebuffer = new Bit8u[max_xres * max_yres * 4];
+    }
+    if (BX_GUI_THIS tile == NULL) {
+      tile = new Bit8u[BX_GUI_THIS x_tilesize * BX_GUI_THIS y_tilesize * 4];
+    }
   }
   show_headerbar();
 
@@ -729,6 +760,13 @@ void bx_gui_c::set_usbdbg_bitmap(bool trigger)
 }
 #endif
 
+#if BX_DEBUGGER
+void bx_gui_c::debugger_handler(void)
+{
+  SIM->request_debugger_activation("GUI button");
+}
+#endif
+
 void bx_gui_c::toggle_mouse_enable(void)
 {
   int old = SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get();
@@ -1088,6 +1126,14 @@ Bit8u bx_gui_c::get_mouse_headerbar_id()
   return BX_GUI_THIS mouse_hbar_id;
 }
 
+#if BX_DEBUGGER
+// returns BX_MAX_HEADERBAR_ENTRIES if the gui has no debugger button
+Bit8u bx_gui_c::get_debugger_headerbar_id()
+{
+  return BX_GUI_THIS debugger_hbar_id;
+}
+#endif
+
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
 void bx_gui_c::init_debug_dialog(bool global_ini)
 {
@@ -1169,12 +1215,10 @@ Bit8u *bx_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
 void bx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
                                         unsigned w, unsigned h)
 {
-  Bit8u *tile;
   Bit8u *tile_ptr, *fb_ptr;
   Bit16u xc, yc, fb_pitch, tile_pitch;
   Bit8u r, diffx, diffy;
 
-  tile = new Bit8u[BX_GUI_THIS x_tilesize * BX_GUI_THIS y_tilesize * 4];
   diffx = (x0 % BX_GUI_THIS x_tilesize);
   diffy = (y0 % BX_GUI_THIS y_tilesize);
   if (diffx > 0) {
@@ -1199,7 +1243,6 @@ void bx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
       BX_GUI_THIS graphics_tile_update(tile, xc, yc);
     }
   }
-  delete [] tile;
 }
 
 void bx_gui_c::draw_char_common(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc,
@@ -1432,7 +1475,7 @@ void bx_gui_c::graphics_tile_update_common(Bit8u *tile, unsigned x, unsigned y)
       }
       pitch = BX_GUI_THIS guest_xres * pixel_bytes;
       src = tile;
-      dst = BX_GUI_THIS snapshot_buffer + (y * pitch) + x;
+      dst = BX_GUI_THIS snapshot_buffer + (y * pitch) + x * pixel_bytes;
       for (i = 0; i < y_tilesize; i++) {
         memcpy(dst, src, nbytes);
         src += tilebytes;

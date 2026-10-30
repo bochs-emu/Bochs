@@ -9,6 +9,7 @@
 
 #if BX_DEBUGGER
 Bit64u eval_value;
+bool eval_value_valid; // eval_value was set by the last parsed line
 %}
 
 %union {
@@ -16,6 +17,9 @@ Bit64u eval_value;
   Bit64u   uval;
   unsigned bval;
 }
+
+// free strings of tokens discarded during error recovery
+%destructor { free($$); } <sval>
 
 // Common registers
 %type <uval> BX_TOKEN_SEGREG
@@ -52,6 +56,7 @@ Bit64u eval_value;
 %token <sval> BX_TOKEN_DISABLE_BREAKPOINT
 %token <sval> BX_TOKEN_INFO
 %token <sval> BX_TOKEN_QUIT
+%token <sval> BX_TOKEN_DETACH
 %token <sval> BX_TOKEN_R
 %token <sval> BX_TOKEN_REGS
 %token <sval> BX_TOKEN_CPU
@@ -149,10 +154,26 @@ Bit64u eval_value;
 %type <uval> vexpression
 %type <uval> expression
 
-%left '+' '-' '|' '^' '<' '>'
-%left '*' '/' '&' BX_TOKEN_LSHIFT BX_TOKEN_RSHIFT BX_TOKEN_DEREF_CHR
-%left BX_TOKEN_EQ BX_TOKEN_NE BX_TOKEN_LE BX_TOKEN_GE
+/* Operator precedence, lowest to highest, follows C. The seg:offset ':'
+   operator is asymmetric: its rule gets the lowest precedence (SEGOFF)
+   while the ':' token itself gets the highest, so the offset extends as
+   far right as possible and the segment binds tightly on the left:
+     cs:eip+2 = cs:(eip+2), 1+cs:eip = 1+(cs:eip), *ds:esi = *(ds:esi),
+     a:b:c = a:(b:c)
+   The '$' dereference operator binds tighter than any binary operator
+   but looser than unary ones: rax+8$2 = rax+(8$2), *rax$2 = (*rax)$2 */
+%right SEGOFF
+%left '|'
+%left '^'
+%left '&'
+%left BX_TOKEN_EQ BX_TOKEN_NE
+%left '<' '>' BX_TOKEN_LE BX_TOKEN_GE
+%left BX_TOKEN_LSHIFT BX_TOKEN_RSHIFT
+%left '+' '-'
+%left '*' '/'
+%left BX_TOKEN_DEREF_CHR
 %left NOT NEG INDIRECT
+%right ':'
 
 %start commands
 
@@ -188,6 +209,7 @@ command:
     | bpe_command
     | bpd_command
     | quit_command
+    | detach_command
     | examine_command
     | restore_command
     | writemem_command
@@ -224,7 +246,7 @@ command:
     | remlyt_command
     | lyt_command
     | if_command
-    | expression { eval_value = $1; }
+    | expression { eval_value = $1; eval_value_valid = true; }
     |
     | '\n'
       {
@@ -291,7 +313,7 @@ show_command:
     | BX_TOKEN_SHOW BX_TOKEN_ALL '\n'
       {
           bx_dbg_show_command("all");
-          free($1);
+          free($1); free($2);
       }
     | BX_TOKEN_SHOW BX_TOKEN_OFF '\n'
       {
@@ -585,34 +607,42 @@ set_command:
     | BX_TOKEN_SET BX_TOKEN_8BL_REG '=' expression '\n'
       {
         bx_dbg_set_reg8l_value($2, $4);
+        free($1);
       }
     | BX_TOKEN_SET BX_TOKEN_8BH_REG '=' expression '\n'
       {
         bx_dbg_set_reg8h_value($2, $4);
+        free($1);
       }
     | BX_TOKEN_SET BX_TOKEN_16B_REG '=' expression '\n'
       {
         bx_dbg_set_reg16_value($2, $4);
+        free($1);
       }
     | BX_TOKEN_SET BX_TOKEN_32B_REG '=' expression '\n'
       {
         bx_dbg_set_reg32_value($2, $4);
+        free($1);
       }
     | BX_TOKEN_SET BX_TOKEN_64B_REG '=' expression '\n'
       {
         bx_dbg_set_reg64_value($2, $4);
+        free($1);
       }
     | BX_TOKEN_SET BX_TOKEN_REG_EIP '=' expression '\n'
       {
         bx_dbg_set_rip_value($4);
+        free($1);
       }
     | BX_TOKEN_SET BX_TOKEN_REG_RIP '=' expression '\n'
       {
         bx_dbg_set_rip_value($4);
+        free($1);
       }
     | BX_TOKEN_SET BX_TOKEN_SEGREG '=' expression '\n'
       {
         bx_dbg_load_segreg($2, $4);
+        free($1);
       }
     ;
 
@@ -774,22 +804,22 @@ info_command:
     | BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_GENERIC '\n'
       {
         bx_dbg_info_device($3, "");
-        free($1); free($2);
+        free($1); free($2); free($3);
       }
     | BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_GENERIC BX_TOKEN_STRING '\n'
       {
         bx_dbg_info_device($3, $4);
-        free($1); free($2);
+        free($1); free($2); free($3); free($4);
       }
     | BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_STRING '\n'
       {
         bx_dbg_info_device($3, "");
-        free($1); free($2);
+        free($1); free($2); free($3);
       }
     | BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_STRING BX_TOKEN_STRING '\n'
       {
         bx_dbg_info_device($3, $4);
-        free($1); free($2);
+        free($1); free($2); free($3); free($4);
       }
     ;
 
@@ -912,6 +942,14 @@ quit_command:
       BX_TOKEN_QUIT '\n'
       {
         bx_dbg_quit_command();
+        free($1);
+      }
+    ;
+
+detach_command:
+      BX_TOKEN_DETACH '\n'
+      {
+        bx_dbg_detach_command();
         free($1);
       }
     ;
@@ -1097,6 +1135,12 @@ help_command:
        BX_TOKEN_HELP BX_TOKEN_QUIT '\n'
        {
          dbg_printf("q|quit|exit - quit debugger and emulator execution\n");
+         free($1);free($2);
+       }
+     | BX_TOKEN_HELP BX_TOKEN_DETACH '\n'
+       {
+         dbg_printf("detach - leave debugger and continue emulator execution without it,\n");
+         dbg_printf("         the debugger is activated again by magic or time breakpoint\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_CONTINUE '\n'
@@ -1321,7 +1365,6 @@ help_command:
          dbg_printf("u|disasm [/count] <start> <end> - disassemble instructions for given linear address\n");
          dbg_printf("    Optional 'count' is the number of disassembled instructions\n");
          dbg_printf("u|disasm switch-mode - switch between Intel and AT&T disassembler syntax\n");
-         dbg_printf("u|disasm hex on/off - control disasm offsets and displacements format\n");
          dbg_printf("u|disasm size = n - tell debugger what segment size [16|32|64] to use\n");
          dbg_printf("       when \"disassemble\" command is used.\n");
          free($1);free($2);
@@ -1470,6 +1513,7 @@ calc_command:
    BX_TOKEN_CALC expression '\n'
    {
      eval_value = $2;
+     eval_value_valid = true;
      bx_dbg_calc_command($2);
      free($1);
    }
@@ -1504,6 +1548,7 @@ if_command:
    BX_TOKEN_IF expression '\n'
    {
      eval_value = $2 != 0;
+     eval_value_valid = true;
      bx_dbg_calc_command($2);
      free($1);
    }
@@ -1527,7 +1572,7 @@ vexpression:
    | vexpression '+' vexpression     { $$ = $1 + $3; }
    | vexpression '-' vexpression     { $$ = $1 - $3; }
    | vexpression '*' vexpression     { $$ = $1 * $3; }
-   | vexpression '/' vexpression     { $$ = $1 / $3; }
+   | vexpression '/' vexpression     { $$ = ($3 != 0) ? $1 / $3 : 0; }
    | vexpression BX_TOKEN_DEREF_CHR vexpression { $$ = bx_dbg_deref($1, $3, NULL, NULL); }
    | vexpression BX_TOKEN_RSHIFT vexpression { $$ = $1 >> $3; }
    | vexpression BX_TOKEN_LSHIFT vexpression { $$ = $1 << $3; }
@@ -1555,7 +1600,7 @@ expression:
    | BX_TOKEN_REG_EIP                { $$ = bx_dbg_get_eip(); }
    | BX_TOKEN_REG_RIP                { $$ = bx_dbg_get_rip(); }
    | BX_TOKEN_REG_SSP                { $$ = bx_dbg_get_ssp(); }
-   | expression ':' expression       { $$ = bx_dbg_get_laddr ($1, $3); }
+   | expression ':' expression %prec SEGOFF { $$ = bx_dbg_get_laddr ($1, $3); }
    | expression '+' expression       { $$ = $1 + $3; }
    | expression '-' expression       { $$ = $1 - $3; }
    | expression '*' expression       { $$ = $1 * $3; }

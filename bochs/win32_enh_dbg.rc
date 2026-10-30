@@ -17,6 +17,8 @@ MENU_1 MENU
         MENUITEM SEPARATOR
         MENUITEM "Find...\tCtrl+F",CMD_FIND
         MENUITEM "Refresh Screen\tF4",CMD_RFRSH
+        MENUITEM SEPARATOR
+        MENUITEM "Detach Debugger (don't hide)",CMD_DETACH
         END
     POPUP "&View"
         BEGIN

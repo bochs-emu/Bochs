@@ -315,6 +315,9 @@ typedef struct {
   bool dbg_gui_globalini;
 #endif
   Bit8u magic_break;
+  volatile bool activation_request; // request to activate the debugger
+  unsigned activation_cpu;          // CPU which requested the activation
+  const char *activation_reason;    // activation reason (static string)
 #endif
 #if BX_GDBSTUB
   bool gdbstub_enabled;
@@ -396,6 +399,19 @@ enum {
 #define BX_N_PCI_SLOTS 5
 
 void bx_center_print(FILE *file, const char *line, unsigned maxwidth);
+
+// integer base 2 logarithm (index of the most significant set bit), returns 0 for x=0
+BX_CPP_INLINE Bit32u ilog2(Bit32u x)
+{
+  Bit32u count = 0;
+  while(x>>=1) count++;
+  return count;
+}
+
+BX_CPP_INLINE bool is_power_of_2(Bit64u x)
+{
+  return (x & (x - 1)) == 0;
+}
 
 #include "misc/bswap.h"
 

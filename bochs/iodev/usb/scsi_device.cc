@@ -10,7 +10,7 @@
 //  Written by Paul Brook
 //  Updated and added to by Benjamin D Lunt (fys [at] fysnet [dot] net)
 //
-//  Copyright (C) 2007-2023  The Bochs Project
+//  Copyright (C) 2007-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1802,8 +1802,7 @@ void scsi_device_t::seek_complete(SCSIRequest *r)
         return;
       }
     } else {
-      ret = (int) hdimage->lseek(r->sector * block_size, SEEK_SET);
-      if (ret < 0) {
+      if (hdimage->lseek(r->sector * block_size, SEEK_SET) < 0) {
         BX_ERROR(("could not lseek() hard drive image file"));
         scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR, 0, 0);
         return;
@@ -1825,10 +1824,10 @@ void scsi_device_t::seek_complete(SCSIRequest *r)
     bx_gui->statusbar_setitem(statusbar_id, 1, 1);
     n = r->buf_len / block_size;
     if (n) {
-      ret = (int)hdimage->lseek(r->sector * block_size, SEEK_SET);
-      if (ret < 0) {
+      if (hdimage->lseek(r->sector * block_size, SEEK_SET) < 0) {
         BX_ERROR(("could not lseek() hard drive image file"));
         scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR, 0, 0);
+        return;
       }
       i = 0;
       do {

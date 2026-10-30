@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -436,6 +436,10 @@ void bx_vgacore_c::calculate_retrace_timing()
   hfreq = (float)vclock / (crtcp.htotal * cwidth);
   f_htotal_usec = 1000000.0f / hfreq;
   BX_VGA_THIS s.htotal_usec = (Bit32u)f_htotal_usec;
+  if (BX_VGA_THIS s.htotal_usec == 0) {
+    // high video clock with small horizontal total: avoid division by zero
+    BX_VGA_THIS s.htotal_usec = 1;
+  }
   hbstart = BX_VGA_THIS s.CRTC.reg[2];
   BX_VGA_THIS s.hbstart_usec = (Bit32u)((1000000.0 * hbstart * cwidth) / vclock);
   hbend = (BX_VGA_THIS s.CRTC.reg[3] & 0x1f) + ((BX_VGA_THIS s.CRTC.reg[5] & 0x80) >> 2);
@@ -452,7 +456,8 @@ void bx_vgacore_c::calculate_retrace_timing()
   if (BX_VGA_THIS s.vtotal_usec < 8000) {
     BX_VGA_THIS s.vtotal_usec = 14268;
   }
-  if (BX_VGA_THIS s.vrend_usec < 7000) {
+  if ((BX_VGA_THIS s.vrend_usec < 7000) ||
+      (BX_VGA_THIS s.vrend_usec >= BX_VGA_THIS s.vtotal_usec)) {
     BX_VGA_THIS s.vrend_usec = BX_VGA_THIS s.vtotal_usec - 1113;
   }
   BX_VGA_THIS start_vertical_timer();
@@ -1331,6 +1336,7 @@ void bx_vgacore_c::update(void)
   static unsigned cs_counter = 1;
   static bool cs_visible = 0;
   bool cs_toggle = 0;
+  static bool word_mode_256c = false;
 
   cs_counter--;
   /* no screen update necessary */
@@ -1495,7 +1501,7 @@ void bx_vgacore_c::update(void)
         if (BX_VGA_THIS s.CRTC.reg[0x14] & 0x40) { // DW set: doubleword mode
 
           if (BX_VGA_THIS s.misc_output.select_high_bank != 1)
-            BX_PANIC(("update: select_high_bank != 1"));
+            BX_DEBUG(("update: select_high_bank != 1"));
 
           line_offset = BX_VGA_THIS s.line_offset;
           start_addr <<= 2;
@@ -1559,18 +1565,26 @@ void bx_vgacore_c::update(void)
           }
         } else { // word mode
 
-          BX_INFO(("256-color word mode untested"));
+          if (!word_mode_256c) {
+            BX_INFO(("256-color word mode untested"));
+            word_mode_256c = true;
+          }
+          // in word mode the memory address is the CRTC address counter shifted
+          // left by 1 (line_offset is already in memory address units), every
+          // address holds 4 pixels, one in each plane
+          line_offset = BX_VGA_THIS s.line_offset;
+          start_addr <<= 1;
           for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
             for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED (xti, yti)) {
                 for (r=0; r<Y_TILESIZE; r++) {
                   y = yc + r;
                   if (BX_VGA_THIS s.y_doublescan) y >>= 1;
-                  row_addr = start_addr + (y * BX_VGA_THIS s.line_offset);
+                  row_addr = start_addr + (y * line_offset);
                   for (c=0; c<X_TILESIZE; c++) {
                     x = (xc + c) >> 1;
-                    byte_offset = (row_addr + ((x & ~1) << 1)) | (x & 1);
-                    color = BX_VGA_THIS s.memory[start_addr + byte_offset];
+                    byte_offset = (((row_addr + ((x >> 2) << 1)) << 2) | (x & 3)) & 0x3ffff;
+                    color = BX_VGA_THIS s.memory[byte_offset];
                     BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
                   }
                 }
@@ -1647,7 +1661,9 @@ void bx_vgacore_c::update(void)
       MSL = 3;
     }
     rows = (VDE+1)/(MSL+1);
-    if ((rows * tm_info.line_offset) > (1 << 17)) {
+    // the text buffer and the text snapshot hold 128K, the displayed text
+    // (plus one more row for vertical panning) starts at the start address
+    if ((tm_info.start_address + (rows + 1) * tm_info.line_offset) > (1 << 17)) {
       BX_ERROR(("update(): text mode: out of memory"));
       return;
     }
@@ -1747,6 +1763,9 @@ Bit8u bx_vgacore_c::mem_read(bx_phy_address addr)
   }
 
   offset += BX_VGA_THIS s.ext_offset;
+  if (((offset << 2) + 3) >= BX_VGA_THIS s.memsize) {
+    return 0xff; // out of bounds
+  }
 
   switch (BX_VGA_THIS s.graphics_ctrl.read_mode) {
     case 0: /* read mode 0 */
@@ -2218,6 +2237,8 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
         }
         SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
       } else if (BX_VGA_THIS s.graphics_ctrl.shift_reg == 2) {
+        if (BX_VGA_THIS s.line_offset == 0) // CRTC offset register 0x13 programmed to 0
+          return;
         offset -= start_addr;
         x_tileno = (offset % BX_VGA_THIS s.line_offset) * 4 / (X_TILESIZE / 2);
         if (BX_VGA_THIS s.y_doublescan) {

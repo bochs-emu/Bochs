@@ -153,6 +153,15 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   //   2) TSS DPL must be >= TSS selector RPL
   //   3) TSS descriptor is not busy.
 
+#if BX_SUPPORT_SVM
+  // The SVM task switch intercept is checked after the incoming TSS descriptor and task gate
+  // have been checked but before TSS limit checks
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_TASK_SWITCH))
+      SvmInterceptTaskSwitch(tss_selector->value, source, push_error, error_code);
+  }
+#endif
+
   // STEP 2: The processor performs limit-checking on the target TSS
   //         to verify that the TSS limit is greater than or equal
   //         to 67h (2Bh for 16-bit TSS).
@@ -182,13 +191,6 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
     BX_ERROR(("task_switch(): new TSS limit < %d", new_TSS_max));
     exception(BX_TS_EXCEPTION, tss_selector->value & 0xfffc);
   }
-
-#if BX_SUPPORT_SVM
-  if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(SVM_INTERCEPT0_TASK_SWITCH))
-      SvmInterceptTaskSwitch(tss_selector->value, source, push_error, error_code);
-  }
-#endif
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)
@@ -509,6 +511,10 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 
   writeEFlags(newEFLAGS, EFlagsValidMask);
 
+#if BX_SUPPORT_MONITOR_MWAIT
+  BX_CPU_THIS_PTR wakeup_monitor();
+#endif
+
   // Fill in selectors for all segment registers.  If errors
   // occur later, the selectors will at least be loaded.
   parse_selector(raw_cs_selector, &cs_selector);
@@ -795,12 +801,12 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
       }
       SSP = newSSP;
       // failure to set the busy flag in the new shadow stack token causes #TS(new TSS)
-      if (!shadow_stack_atomic_set_busy(SSP, CPL)) {
+      if (!shadow_stack_atomic_set_busy(SSP, CPL, long64_mode())) {
         BX_ERROR(("task_switch: failure to set busy bit in new shadow stack token"));
         exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc);
       }
       if (pushCSLIPSSP) {
-        call_far_shadow_stack_push(oldCS, oldRIP, oldSSP);
+        call_far_shadow_stack_push(oldCS, oldRIP, oldSSP, CPL);
       }
     }
     track_indirect(CPL);

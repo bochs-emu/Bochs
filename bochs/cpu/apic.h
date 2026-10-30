@@ -176,7 +176,7 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
     APIC_ERR_ILLEGAL_ADDR       = 0x80,
     APIC_ERR_RX_ILLEGAL_VEC     = 0x40,
     APIC_ERR_TX_ILLEGAL_VEC     = 0x20,
-    X2APIC_ERR_REDIRECTIBLE_IPI = 0x08,
+    X2APIC_ERR_REDIRECTIBLE_IPI = 0x10,
     APIC_ERR_RX_ACCEPT_ERR      = 0x08,
     APIC_ERR_TX_ACCEPT_ERR      = 0x04,
     APIC_ERR_RX_CHECKSUM        = 0x02,
@@ -190,6 +190,11 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
   Bit32u icr_lo;
 
   Bit32u lvt[APIC_LVT_ENTRIES];
+
+  // ExtINT interrupt delivered by the I/O APIC, bypasses IRR/ISR and the
+  // processor priority, the vector was supplied by the 8259
+  bool extint_pending;
+  Bit8u extint_vector;
 
   Bit32u timer_initial;         // Initial timer count (in order to reload periodic timer)
   Bit32u timer_current;         // Current timer count
@@ -214,6 +219,7 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
 #if BX_SUPPORT_MONITOR_MWAIT
   int mwaitx_timer_handle;
   bool mwaitx_timer_active;
+  bool mwaitx_timer_os_deadline; // UMWAIT/TPAUSE delay limited by IA32_UMWAIT_CONTROL, set CF on expiration
 #endif
 
   BX_CPU_C *cpu;
@@ -245,15 +251,17 @@ public:
   // on local APIC, trigger means raise the CPU's INTR line. For now
   // I also have to raise pc_system.INTR but that should be replaced
   // with the cpu-specific INTR signals.
-  void trigger_irq(Bit8u vector, unsigned trigger_mode, bool bypass_irr_isr = 0);
+  void trigger_irq(Bit8u vector, unsigned trigger_mode);
   void untrigger_irq(Bit8u vector, unsigned trigger_mode);
   Bit8u acknowledge_int(void);  // only the local CPU should call this
   int highest_priority_int(const Bit32u *array) const;
+  int highest_priority_irr(void) const;
   void receive_EOI(Bit32u value = 0);
   void send_ipi(apic_dest_t dest, Bit32u lo_cmd);
   void write_spurious_interrupt_register(Bit32u value);
   void service_local_apic(void);
   void print_status(void);
+  void signal_error(Bit32u error);
   bool match_logical_addr(apic_dest_t address);
   bool deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_mode);
   Bit8u get_tpr(void) const { return task_priority; }
@@ -286,14 +294,14 @@ public:
 #endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  void set_mwaitx_timer(Bit64u value);
+  void set_mwaitx_timer(Bit64u value, bool os_deadline = false);
   void deactivate_mwaitx_timer(void);
   static void mwaitx_timer_expired(void *);
 #endif
 };
 
 bool apic_bus_deliver_lowest_priority(Bit8u vector, apic_dest_t dest, bool trig_mode, bool broadcast);
-BOCHSAPI bool apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mode, bool logical_dest, bool level, bool trig_mode);
+BOCHSAPI bool apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mode, bool logical_dest, bool level, bool trig_mode, bool x2apic_dest);
 bool apic_bus_broadcast_interrupt(Bit8u vector, Bit8u delivery_mode, bool trig_mode, int exclude_cpu);
 
 BX_CPP_INLINE bool is_x2apic_msr_range(Bit32u index) { return index >= 0x800 && index <= 0x8FF; }

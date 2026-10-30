@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2016-2023  The Bochs Project
+//  Copyright (C) 2016-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -142,7 +142,11 @@ enum BxRegs64 {
 #endif
 
 #if BX_SUPPORT_X86_64
-# define BX_GENERAL_REGISTERS 16
+  #if BX_SUPPORT_APX
+    # define BX_GENERAL_REGISTERS 32
+  #else
+    # define BX_GENERAL_REGISTERS 16
+  #endif
 #else
 # define BX_GENERAL_REGISTERS 8
 #endif

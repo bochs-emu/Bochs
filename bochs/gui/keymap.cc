@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2025  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -206,7 +206,7 @@ static Bit32s get_next_keymap_line(FILE *fp, char *bxsym, char *modsym, Bit32s *
         BX_PANIC(("keymap line %d: expected 3 columns", lineCount));
         return -1;
       }
-      if (buf[0] == '\'' && buf[2] == '\'' && buf[3] == 0) {
+      if (buf[0] == '\'' && buf[1] != 0 && buf[2] == '\'' && buf[3] == 0) {
         *ascii = (Bit8u) buf[1];
       } else if (!strcmp(buf, "space")) {
         *ascii = ' ';
@@ -346,5 +346,9 @@ BXKeyEntry *bx_keymap_c::findAsciiChar(Bit8u ch)
 
 const char *bx_keymap_c::getBXKeyName(Bit32u key)
 {
-  return bx_key_symbol[key & 0x7fffffff];
+  key &= 0x7fffffff;
+  if (key >= BX_KEY_NBKEYS) {
+    return "BX_KEY_UNKNOWN";
+  }
+  return bx_key_symbol[key];
 }

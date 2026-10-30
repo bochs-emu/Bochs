@@ -171,6 +171,9 @@ public:
   virtual bool is_agp_device(const char *name);
 #if BX_DEBUGGER
   virtual bool debugger_active() {return bx_dbg.debugger_active;}
+  virtual bool debugger_activation_allowed();
+  virtual void request_debugger_activation(const char *reason);
+  virtual bool start_debug_gui();
   virtual void debug_break();
   virtual void debug_interpret_cmd(char *cmd);
   virtual char *debug_get_next_command();
@@ -876,10 +879,49 @@ bool bx_real_sim_c::is_agp_device(const char *name)
 
 #if BX_DEBUGGER
 
+// Returns true if a request to activate the internal debugger (or to break
+// into it when it is already active) would be accepted.
+bool bx_real_sim_c::debugger_activation_allowed()
+{
+  if (bx_dbg.debugger_active) return true;
+
+  // no gui loaded yet (e.g. log dialog at startup) or already unloaded
+  if (bx_gui == NULL) return false;
+
+  return bx_gui->debugger_activation_allowed();
+}
+
+// this should only be called from the sim_thread.
+void bx_real_sim_c::request_debugger_activation(const char *reason)
+{
+  bx_dbg_request_activation(0, reason);
+}
+
+// Start the gui debugger at runtime, used by the debugger activation if the
+// gui debugger is selected (debugger: gui=1). Returns false if not supported.
+bool bx_real_sim_c::start_debug_gui()
+{
+#if BX_DEBUGGER_GUI
+  if ((bx_gui != NULL) && bx_gui->start_debug_dialog()) {
+    set_debug_gui(1);
+    return 1;
+  }
+#endif
+  return 0;
+}
+
 // this can be safely called from either thread.
 void bx_real_sim_c::debug_break()
 {
-  bx_debug_break();
+  if (bx_dbg.debugger_active) {
+    bx_debug_break();
+  } else {
+    // gui debugger window open while the debugger is detached: activate it.
+    // Called from the gui debugger thread: the async_event update could race
+    // with the cpu, the pending request is then seen on the next async event
+    // or in HLT.
+    bx_dbg_request_activation(0, "GUI debugger break");
+  }
 }
 
 // this should only be called from the sim_thread.
@@ -1200,8 +1242,9 @@ bool bx_real_sim_c::save_state(const char *checkpoint_path)
     sprintf(sr_file, "%s/%s", checkpoint_path, sr_list->get(dev)->get_name());
     fp = fopen(sr_file, "w");
     if (fp != NULL) {
-      save_sr_param(fp, sr_list->get(dev), checkpoint_path, 0);
+      bool ret = save_sr_param(fp, sr_list->get(dev), checkpoint_path, 0);
       fclose(fp);
+      if (!ret) return 0;
     } else {
       return 0;
     }
@@ -1247,10 +1290,13 @@ bool bx_real_sim_c::restore_logopts()
         while (ptr) {
           p = 0;
           while (isspace(ptr[p])) p++;
+          if (!ptr[p]) break;
           strcpy(string, ptr+p);
           while (isspace(string[strlen(string)-1])) string[strlen(string)-1] = 0;
           if (i == 0) {
-            strcpy(devname, string);
+            // module names are short, don't overflow on a malformed file
+            strncpy(devname, string, sizeof(devname) - 1);
+            devname[sizeof(devname) - 1] = 0;
             dev = get_logfn_id(devname);
           } else if (dev >= 0) {
             j = 6;
@@ -1366,7 +1412,7 @@ bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path, co
     return 0;
   }
 
-  sprintf(devstate, "%s/%s", sr_path, restore_name);
+  snprintf(devstate, sizeof(devstate), "%s/%s", sr_path, restore_name);
   BX_INFO(("restoring '%s'", devstate));
   bx_list_c *base = root;
   fp = fopen(devstate, "r");
@@ -1407,10 +1453,11 @@ bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path, co
                   {
                     bx_shadow_data_c *dparam = (bx_shadow_data_c*)param;
                     if (!dparam->is_text_format()) {
-                      sprintf(devdata, "%s/%s", sr_path, ptr);
+                      snprintf(devdata, sizeof(devdata), "%s/%s", sr_path, ptr);
                       fp2 = fopen(devdata, "rb");
                       if (fp2 != NULL) {
                         if (!bx_shadow_data_read(fp2, dparam->getptr(), dparam->get_size(), devdata)) {
+                          fclose(fp);
                           fclose(fp2);
                           return 0;
                         }
@@ -1437,7 +1484,7 @@ bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path, co
                   }
                   break;
                 case BXT_PARAM_FILEDATA:
-                  sprintf(devdata, "%s/%s", sr_path, ptr);
+                  snprintf(devdata, sizeof(devdata), "%s/%s", sr_path, ptr);
                   fp2 = fopen(devdata, "rb");
                   if (fp2 != NULL) {
                     FILE **fpp = ((bx_shadow_filedata_c*)param)->get_fpp();
@@ -1521,11 +1568,11 @@ bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_pat
         if (!dparam->is_text_format()) {
           node->get_param_path(pname, BX_PATHNAME_LEN);
           if (!strncmp(pname, "bochs.", 6)) {
-            strcpy(pname, pname+6);
+            memmove(pname, pname+6, strlen(pname) - 6 + 1); // include terminating zero
           }
           fprintf(fp, "%s\n", pname);
           if (sr_path)
-            sprintf(tmpstr, "%s/%s", sr_path, pname);
+            snprintf(tmpstr, sizeof(tmpstr), "%s/%s", sr_path, pname);
           else
             strcpy(tmpstr, pname);
           fp2 = fopen(tmpstr, "wb");
@@ -1564,9 +1611,9 @@ bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_pat
     case BXT_PARAM_FILEDATA:
       fprintf(fp, "%s.%s\n", node->get_parent()->get_name(), node->get_name());
       if (sr_path)
-        sprintf(tmpstr, "%s/%s.%s", sr_path, node->get_parent()->get_name(), node->get_name());
+        snprintf(tmpstr, sizeof(tmpstr), "%s/%s.%s", sr_path, node->get_parent()->get_name(), node->get_name());
       else
-        sprintf(tmpstr, "%s.%s", node->get_parent()->get_name(), node->get_name());
+        snprintf(tmpstr, sizeof(tmpstr), "%s.%s", node->get_parent()->get_name(), node->get_name());
       fp2 = fopen(tmpstr, "wb");
       if (fp2 != NULL) {
         FILE **fpp = ((bx_shadow_filedata_c*)node)->get_fpp();
@@ -1589,7 +1636,9 @@ bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_pat
         fprintf(fp, "{\n");
         bx_list_c *list = (bx_list_c*)node;
         for (i=0; i < list->get_size(); i++) {
-          save_sr_param(fp, list->get(i), sr_path, level+1);
+          if (!save_sr_param(fp, list->get(i), sr_path, level+1)) {
+            return 0;
+          }
         }
         for (i=0; i<level; i++)
           fprintf(fp, "  ");

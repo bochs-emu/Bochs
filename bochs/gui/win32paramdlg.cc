@@ -42,10 +42,12 @@
 
 char *backslashes(char *s)
 {
-  if (s != NULL) {
-    while (*s != 0) {
-       if (*s == '/') *s = '\\';
-       s++;
+  char *p = s;
+
+  if (p != NULL) {
+    while (*p != 0) {
+       if (*p == '/') *p = '\\';
+       p++;
     }
   }
   return s;
@@ -460,7 +462,14 @@ void CleanupParamDialog(bx_list_c *list)
   if (!embedded || (list == NULL)) {
     DeleteObject(DlgFont);
     DlgFont = NULL;
-    DestroyWindow(hwndTT);
+    if (hwndTT != NULL) {
+      DestroyWindow(hwndTT);
+      hwndTT = NULL;
+    }
+    if (tt_hhk != NULL) {
+      UnhookWindowsHookEx(tt_hhk);
+      tt_hhk = NULL;
+    }
     embedded = false;
   }
   cleanupDlgList(list);
@@ -1033,7 +1042,9 @@ void SetParamList(HWND hDlg, bx_list_c *list)
 
 void ProcessDependentList(HWND hDlg, bx_param_c *param, BOOL enabled);
 
-void ResetParamList(HWND hDlg, bx_list_c *list)
+// force = false: only reset modified edit controls (revert)
+// force = true: update all controls with current parameter values (refresh)
+void ResetParamList(HWND hDlg, bx_list_c *list, bool force)
 {
   bx_param_c *param;
   Bit64s val;
@@ -1050,7 +1061,7 @@ void ResetParamList(HWND hDlg, bx_list_c *list)
     param = list->get(i);
     if (param->get_enabled() && (!SIM->get_init_done() || (SIM->get_init_done() && param->get_runtime_param()))) {
       if (param->get_type() == BXT_LIST) {
-        ResetParamList(hDlg, (bx_list_c*)param);
+        ResetParamList(hDlg, (bx_list_c*)param, force);
       } else if (param->get_type() == BXT_PARAM_BOOL) {
         bx_param_bool_c *bparam = (bx_param_bool_c*)param;
         val = bparam->get();
@@ -1059,7 +1070,7 @@ void ResetParamList(HWND hDlg, bx_list_c *list)
         bx_param_enum_c *eparam = (bx_param_enum_c*)param;
         SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), CB_SETCURSEL, (WPARAM)(eparam->get()-eparam->get_min()), 0);
       } else {
-        if (SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), EM_GETMODIFY, 0, 0)) {
+        if (force || SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), EM_GETMODIFY, 0, 0)) {
           if (param->get_type() == BXT_PARAM_NUM) {
             bx_param_num_c *nparam = (bx_param_num_c*)param;
             if (nparam->get_base() == BASE_HEX) {
@@ -1223,10 +1234,22 @@ void HandleOkCancel(HWND hDlg, UINT_PTR id, bx_list_c *list)
   EndDialog(hDlg, (id == IDOK) ? 1 : -1);
 }
 
+static bool dlg_refresh = false;
+
+void RefreshParamList(HWND hDlg, bx_list_c *list)
+{
+  // ignore control notifications caused by the update
+  dlg_refresh = true;
+  ResetParamList(hDlg, list, true);
+  dlg_refresh = false;
+}
+
 UINT HandleChildWindowEvents(HWND hDlg, UINT mid, UINT_PTR id, UINT_PTR nc, bx_list_c *list)
 {
   UINT i, ret = 0;
   char fname[BX_PATHNAME_LEN];
+
+  if (dlg_refresh) return 0;
 
   if ((id >= ID_BROWSE) && (id < (ID_BROWSE + nextDlgID))) {
     i = (UINT)(id - ID_BROWSE);
@@ -1256,7 +1279,7 @@ UINT HandleChildWindowEvents(HWND hDlg, UINT mid, UINT_PTR id, UINT_PTR nc, bx_l
       if (id == IDAPPLY) {
         SetParamList(hDlg, list);
       } else {
-        ResetParamList(hDlg, list);
+        ResetParamList(hDlg, list, false);
       }
       EnableWindow(GetDlgItem(hDlg, IDAPPLY), FALSE);
       EnableWindow(GetDlgItem(hDlg, IDREVERT), FALSE);

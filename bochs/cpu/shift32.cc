@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -50,11 +50,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EdGdM(bxInstruction_c *i)
 
     write_RMW_linear_dword(result_32);
 
-    SET_FLAGS_OSZAPC_LOGIC_32(result_32);
+#if BX_SUPPORT_APX
+    if (! i->getApxEvexNF())
+#endif
+    {
+      SET_FLAGS_OSZAPC_LOGIC_32(result_32);
 
-    cf = (op1_32 >> (32 - count)) & 0x1;
-    of = cf ^ (result_32 >> 31); // of = cf ^ result31
-    BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(of, cf);
+      cf = (op1_32 >> (32 - count)) & 0x1;
+      of = cf ^ (result_32 >> 31); // of = cf ^ result31
+      BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(of, cf);
+    }
   }
 
   BX_NEXT_INSTR(i);
@@ -117,11 +122,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_EdGdM(bxInstruction_c *i)
 
     write_RMW_linear_dword(result_32);
 
-    SET_FLAGS_OSZAPC_LOGIC_32(result_32);
+#if BX_SUPPORT_APX
+    if (! i->getApxEvexNF())
+#endif
+    {
+      SET_FLAGS_OSZAPC_LOGIC_32(result_32);
 
-    cf = (op1_32 >> (count - 1)) & 0x1;
-    of = ((result_32 << 1) ^ result_32) >> 31; // of = result30 ^ result31
-    BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(of, cf);
+      cf = (op1_32 >> (count - 1)) & 0x1;
+      of = ((result_32 << 1) ^ result_32) >> 31; // of = result30 ^ result31
+      BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(of, cf);
+    }
   }
 
   BX_NEXT_INSTR(i);
@@ -184,7 +194,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EdM(bxInstruction_c *i)
     unsigned bit0  = (result_32 & 0x1);
     unsigned bit31 = (result_32 >> 31);
     // of = cf ^ result31
-    BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(bit0 ^ bit31, bit0);
+#if BX_SUPPORT_APX
+    if (! i->getApxEvexNF())
+#endif
+      BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(bit0 ^ bit31, bit0);
   }
 
   BX_NEXT_INSTR(i);
@@ -244,7 +257,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EdM(bxInstruction_c *i)
     bit31 = (result_32 >> 31) & 1;
     bit30 = (result_32 >> 30) & 1;
     // of = result30 ^ result31
-    BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(bit30 ^ bit31, bit31);
+#if BX_SUPPORT_APX
+    if (! i->getApxEvexNF())
+#endif
+      BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(bit30 ^ bit31, bit31);
   }
 
   BX_NEXT_INSTR(i);
@@ -460,8 +476,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EdM(bxInstruction_c *i)
 
     cf = (op1_32 >> (32 - count)) & 0x1;
     of = cf ^ (result_32 >> 31);
-    SET_FLAGS_OSZAPC_LOGIC_32(result_32);
-    BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(of, cf);
+#if BX_SUPPORT_APX
+    if (! i->getApxEvexNF())
+#endif
+    {
+      SET_FLAGS_OSZAPC_LOGIC_32(result_32);
+      BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(of, cf);
+    }
   }
 
   BX_NEXT_INSTR(i);
@@ -524,8 +545,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EdM(bxInstruction_c *i)
     //            of == 0        if count >= 2
     unsigned of = ((result_32 << 1) ^ result_32) >> 31;
 
-    SET_FLAGS_OSZAPC_LOGIC_32(result_32);
-    BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(of, cf);
+#if BX_SUPPORT_APX
+    if (! i->getApxEvexNF())
+#endif
+    {
+      SET_FLAGS_OSZAPC_LOGIC_32(result_32);
+      BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(of, cf);
+    }
   }
 
   BX_NEXT_INSTR(i);
@@ -583,9 +609,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EdM(bxInstruction_c *i)
 
     write_RMW_linear_dword(result_32);
 
-    SET_FLAGS_OSZAPC_LOGIC_32(result_32);
-    unsigned cf = (op1_32 >> (count - 1)) & 1;
-    BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(0, cf); /* signed overflow cannot happen in SAR instruction */
+#if BX_SUPPORT_APX
+    if (! i->getApxEvexNF())
+#endif
+    {
+      SET_FLAGS_OSZAPC_LOGIC_32(result_32);
+      unsigned cf = (op1_32 >> (count - 1)) & 1;
+      BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(0, cf); /* signed overflow cannot happen in SAR instruction */
+    }
   }
 
   BX_NEXT_INSTR(i);

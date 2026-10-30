@@ -431,6 +431,12 @@ bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_64BIT_ORIGINAL_EVENT_DATA_HI:
       return is_cpu_extension_supported(BX_ISA_FRED);
 #endif
+
+#if BX_SUPPORT_APX
+    case VMCS_64BIT_VMEXIT_EXT_INSTRUCTION_INFO:
+    case VMCS_64BIT_VMEXIT_EXT_INSTRUCTION_INFO_HI:
+      return is_cpu_extension_supported(BX_ISA_APX);
+#endif
 #endif
 
     /* VMCS 64-bit guest state fields */
@@ -896,8 +902,8 @@ void BX_CPU_C::init_secondary_proc_based_vmexec_ctrls(void)
     cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_PML_ENABLE;
   }
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_EXCEPTION)) {
-    if (! BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPTP_SWITCHING))
-      BX_PANIC(("#VE exception feature requires EPTP switching support !"));
+    if (! BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT))
+      BX_PANIC(("#VE exception feature requires EPT support !"));
     cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_EPT_VIOLATION_EXCEPTION;
   }
 #endif

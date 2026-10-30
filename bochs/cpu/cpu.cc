@@ -668,6 +668,17 @@ void BX_CPU_C::prefetch(void)
   // with the old page fetch pointer (SVM decode assist relies on it).
   BX_CPU_THIS_PTR eipPageWindowSize = 0;
 
+#if BX_CPU_LEVEL >= 4
+  // VIF and VIP both set at the beginning of an instruction cause #GP in VME mode
+  // and in PVI mode (CPL=3, any mode including 64-bit)
+  if (USER_PL && BX_CPU_THIS_PTR get_VIP() && BX_CPU_THIS_PTR get_VIF()) {
+    if (BX_CPU_THIS_PTR cr4.get_PVI() || (v8086_mode() && BX_CPU_THIS_PTR cr4.get_VME())) {
+      BX_ERROR(("prefetch: inconsistent VME state"));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+  }
+#endif
+
 #if BX_SUPPORT_X86_64
   if (long64_mode()) {
     if (! IsCanonicalAccess(RIP, BX_EXECUTE, USER_PL)) {
@@ -686,16 +697,6 @@ void BX_CPU_C::prefetch(void)
   else
 #endif
   {
-
-#if BX_CPU_LEVEL >= 4
-    if (USER_PL && BX_CPU_THIS_PTR get_VIP() && BX_CPU_THIS_PTR get_VIF()) {
-      if (BX_CPU_THIS_PTR cr4.get_PVI() || (v8086_mode() && BX_CPU_THIS_PTR cr4.get_VME())) {
-        BX_ERROR(("prefetch: inconsistent VME state"));
-        exception(BX_GP_EXCEPTION, 0);
-      }
-    }
-#endif
-
     BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RIP); /* avoid 32-bit EIP wrap */
     laddr = get_laddr32(BX_SEG_REG_CS, EIP);
     pageOffset = PAGE_OFFSET(laddr);
@@ -772,6 +773,12 @@ void BX_CPU_C::prefetch(void)
     BX_CPU_THIS_PTR eipFetchPtr = fetchPtr;
   }
   else {
+#if BX_SUPPORT_VMX && BX_SUPPORT_X86_64
+    // instruction fetch from VMX APIC-access page always causes APIC-access VM exit
+    if (is_virtual_apic_page(BX_CPU_THIS_PTR pAddrFetchPage))
+      VMexit(VMX_VMEXIT_APIC_ACCESS, pageOffset | VMX_APIC_INSTRUCTION_FETCH);
+#endif
+
     BX_CPU_THIS_PTR eipFetchPtr = (const Bit8u*) getHostMemAddr(BX_CPU_THIS_PTR pAddrFetchPage, BX_EXECUTE);
 
     // Sanity checks
@@ -959,7 +966,7 @@ bool BX_CPU_C::dbg_check_code_bpoints(void)
          (bx_guard.iaddr.vir[n].cs  == cs) &&
          (bx_guard.iaddr.vir[n].eip == debug_eip))
       {
-        if (! bx_guard.iaddr.vir[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.vir[n].condition)) {
+        if (! bx_guard.iaddr.vir[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.vir[n].condition, BX_CPU_ID)) {
           dbg_get_guard_state(&BX_CPU_THIS_PTR guard_found.guard_state);
           BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_VIR;
           BX_CPU_THIS_PTR guard_found.iaddr_index = n;
@@ -975,7 +982,7 @@ bool BX_CPU_C::dbg_check_code_bpoints(void)
       if (bx_guard.iaddr.lin[n].enabled &&
          (bx_guard.iaddr.lin[n].addr == laddr))
       {
-        if (! bx_guard.iaddr.lin[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.lin[n].condition)) {
+        if (! bx_guard.iaddr.lin[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.lin[n].condition, BX_CPU_ID)) {
           dbg_get_guard_state(&BX_CPU_THIS_PTR guard_found.guard_state);
           BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_LIN;
           BX_CPU_THIS_PTR guard_found.iaddr_index = n;
@@ -998,7 +1005,7 @@ bool BX_CPU_C::dbg_check_code_bpoints(void)
       for (unsigned n=0; n<bx_guard.iaddr.num_physical; n++) {
         if (bx_guard.iaddr.phy[n].enabled && (bx_guard.iaddr.phy[n].addr == phy))
         {
-          if (! bx_guard.iaddr.phy[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.phy[n].condition)) {
+          if (! bx_guard.iaddr.phy[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.phy[n].condition, BX_CPU_ID)) {
             dbg_get_guard_state(&BX_CPU_THIS_PTR guard_found.guard_state);
             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_PHY;
             BX_CPU_THIS_PTR guard_found.iaddr_index = n;

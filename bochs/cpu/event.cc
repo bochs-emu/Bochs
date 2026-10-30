@@ -54,7 +54,12 @@ bool BX_CPU_C::handleWaitForEvent(void)
   {
     // user interrupt wakes the logical processor only if it can be delivered (from TPAUSE/UMWAIT at CPL3),
     // it never wakes from HLT/MWAIT which can be executed only with CPL=0
-    if ((is_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR) && (BX_CPU_THIS_PTR get_IF() || BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF)) ||
+    // external interrupt masking is tracked by the event mask: EFLAGS.IF, or host EFLAGS.IF for SVM guest
+    // with V_INTR_MASKING, or not masked at all for VMX guest with external-interrupt exiting
+    // virtual-interrupt delivery wakes the logical processor from the same states as an external interrupt
+    if (is_unmasked_event_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR | BX_EVENT_PENDING_VMX_VIRTUAL_INTR) ||
+        (is_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR | BX_EVENT_PENDING_VMX_VIRTUAL_INTR) &&
+            BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF) ||
 #if BX_SUPPORT_UINTR
          is_unmasked_event_pending(BX_EVENT_PENDING_UINTR) ||
 #endif
@@ -67,8 +72,9 @@ bool BX_CPU_C::handleWaitForEvent(void)
     {
       // interrupt ends the HALT condition
 #if BX_SUPPORT_MONITOR_MWAIT
+      // wakeup from MWAIT/UMWAIT/TPAUSE state also cancels MWAITX/UMWAIT/TPAUSE timer
       if (BX_CPU_THIS_PTR activity_state >= BX_ACTIVITY_STATE_MWAIT)
-        BX_CPU_THIS_PTR monitor.reset_monitor();
+        BX_CPU_THIS_PTR wakeup_monitor();
 #endif
       BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
       break;
@@ -111,6 +117,9 @@ bool BX_CPU_C::handleWaitForEvent(void)
 #if BX_DEBUGGER
     if (bx_dbg.debugger_active && bx_guard.interrupt_requested)
       return 1; // Return to caller of cpu_loop.
+
+    if (bx_dbg.activation_request)
+      return 1; // Return to caller of cpu_loop to activate the debugger.
 #endif
 
     if (bx_pc_system.kill_bochs_request) {
@@ -143,7 +152,8 @@ Bit8u BX_CPU_C::interrupt_acknowledge(void)
   return vector;
 }
 
-void BX_CPU_C::HandleExtInterrupt(void)
+// returns false if the interrupt was consumed by posted-interrupt processing and no event was delivered
+bool BX_CPU_C::HandleExtInterrupt(void)
 {
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
@@ -155,9 +165,9 @@ void BX_CPU_C::HandleExtInterrupt(void)
   if (BX_CPU_THIS_PTR in_vmx_guest) {
 
 #if BX_SUPPORT_VMX >= 2
-    if (is_pending(BX_EVENT_PENDING_VMX_VIRTUAL_INTR)) {
+    if (is_unmasked_event_pending(BX_EVENT_PENDING_VMX_VIRTUAL_INTR)) {
       VMX_Deliver_Virtual_Interrupt();
-      return;
+      return true;
     }
 #endif
 
@@ -168,7 +178,7 @@ void BX_CPU_C::HandleExtInterrupt(void)
   Bit8u vector = interrupt_acknowledge();
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (VMX_Posted_Interrupt_Processing(vector)) return;
+    if (VMX_Posted_Interrupt_Processing(vector)) return false;
   }
 #endif
 
@@ -201,6 +211,7 @@ void BX_CPU_C::HandleExtInterrupt(void)
   }
 
   BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
+  return true;
 }
 
 #if BX_SUPPORT_SVM
@@ -243,6 +254,13 @@ bool BX_CPU_C::handleAsyncEvent(void)
     // setting kill_bochs_request causes the cpu loop to return ASAP.
     return 1; // Return to caller of cpu_loop.
   }
+
+#if BX_DEBUGGER
+  if (bx_dbg.activation_request) {
+    // debugger activation request causes the cpu loop to return ASAP.
+    return 1; // Return to caller of cpu_loop.
+  }
+#endif
 
   // Priority 1: Hardware Reset and Machine Checks
   //   RESET
@@ -405,7 +423,13 @@ bool BX_CPU_C::handleAsyncEvent(void)
   else if (is_unmasked_event_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR |
                                      BX_EVENT_PENDING_VMX_VIRTUAL_INTR))
   {
-    HandleExtInterrupt();
+    if (! HandleExtInterrupt()) {
+      if (BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_HLT) {
+        // posted-interrupt processing returns the logical processor to the HLT state, it wakes up
+        // only if a pending virtual interrupt was recognized and can be delivered (SDM 32.6)
+        return 1; // HALT condition remains, return to caller of cpu_loop
+      }
+    }
   }
 #if BX_SUPPORT_UINTR
   else if (is_unmasked_event_pending(BX_EVENT_PENDING_UINTR))

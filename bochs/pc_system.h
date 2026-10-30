@@ -189,7 +189,9 @@ public:
   void    set_enable_a20(bool value);
   bool    get_enable_a20(void);
   void    MemoryMappingChanged(void); // flush TLB in all CPUs
-  void    invlpg(bx_address addr);    // flush TLB page in all CPUs
+#if BX_SUPPORT_MONITOR_MWAIT
+  void    TLB_disable_host_ptr(bx_phy_address paddr); // disable direct access to physical page in all CPUs
+#endif
   void    exit(void);
   void    register_state(void);
 };

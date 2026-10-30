@@ -163,6 +163,7 @@ void bx_parallel_c::init(void)
       sprintf(name, "Parallel Port %d", i + 1);
       /* parallel interrupt and i/o ports */
       BX_PAR_THIS s[i].IRQ = irqs[i];
+      DEV_register_irq(BX_PAR_THIS s[i].IRQ, name);
       for (unsigned addr=ports[i]; addr<=(unsigned)(ports[i]+2); addr++) {
         DEV_register_ioread_handler(this, read_handler, addr, name, 1);
       }
@@ -359,7 +360,6 @@ void bx_parallel_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #endif  // !BX_USE_PAR_SMF
   Bit8u offset;
   Bit8u port = 0;
-  char name[16];
 
   offset = address & 0x07;
   switch (address & 0x03f8) {
@@ -413,15 +413,13 @@ void bx_parallel_c::write(Bit32u address, Bit32u value, unsigned io_len)
         if ((value & 0x10) == 0x10) {
           if (BX_PAR_THIS s[port].CONTROL.irq == 0) {
             BX_PAR_THIS s[port].CONTROL.irq = 1;
-            sprintf(name, "Parallel Port %d", port+1);
-            DEV_register_irq(BX_PAR_THIS s[port].IRQ, name);
             BX_DEBUG(("parport%d: irq mode selected", port+1));
           }
         } else {
           if (BX_PAR_THIS s[port].CONTROL.irq == 1) {
             BX_PAR_THIS s[port].CONTROL.irq = 0;
-            sprintf(name, "Parallel Port %d", port+1);
-            DEV_unregister_irq(BX_PAR_THIS s[port].IRQ, name);
+            // an acknowledge interrupt still pending is gated off
+            DEV_pic_lower_irq(BX_PAR_THIS s[port].IRQ);
             BX_DEBUG(("parport%d: polling mode selected", port+1));
           }
         }

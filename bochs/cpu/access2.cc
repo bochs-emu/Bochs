@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2019 Stanislav Shwartsman
+//   Copyright (c) 2008-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -1295,10 +1295,10 @@ bool BX_CPP_AttrRegparmN(4) BX_CPU_C::shadow_stack_lock_cmpxchg8b(bx_address off
   }
 }
 
-bool BX_CPP_AttrRegparmN(2) BX_CPU_C::shadow_stack_atomic_set_busy(bx_address offset, unsigned curr_pl)
+bool BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_atomic_set_busy(bx_address offset, unsigned curr_pl, bool long64)
 {
   // set busy fail if address in the token is above 4GB while in compatibility mode
-  return shadow_stack_lock_cmpxchg8b(offset, curr_pl, offset | 0x1, long64_mode() ? offset : GET32L(offset));
+  return shadow_stack_lock_cmpxchg8b(offset, curr_pl, offset | 0x1, long64 ? offset : GET32L(offset));
 }
 
 bool BX_CPP_AttrRegparmN(2) BX_CPU_C::shadow_stack_atomic_clear_busy(bx_address offset, unsigned curr_pl)

@@ -10,7 +10,7 @@
  * Contact: snrrrub@yahoo.com
  *
  * Copyright (C) 2003       Net Integration Technologies, Inc.
- * Copyright (C) 2003-2025  The Bochs Project
+ * Copyright (C) 2003-2026  The Bochs Project
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -286,7 +286,11 @@ int vmware3_image_t::open(const char* _pathname, int flags)
     char* filename = generate_cow_name(pathname, i);
     current = &images[i];
 
-    current->fd = ::open(filename, flags);
+    current->fd = ::open(filename, flags
+#ifdef O_BINARY
+                         | O_BINARY
+#endif
+                         );
     if (current->fd < 0)
       BX_PANIC(("unable to open vmware3 COW Disk file '%s'", filename));
 

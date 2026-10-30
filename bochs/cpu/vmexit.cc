@@ -32,95 +32,184 @@
 
 #include "decoder/ia_opcodes.h"
 
+// ----------------------------------------------------------------------------------------
+//  VM-exit instruction information
+// ----------------------------------------------------------------------------------------
+//
+// The information is built in the format of the VM-exit extended instruction information
+// field (EII, VMCS field 0x2406, introduced by APX, APX spec Table 3.11). The EII format is
+// the same for all instructions and holds full 5-bit register ids (R0-R31). The legacy 32-bit
+// VM-exit instruction information field (VMCS field 0x440E) is derived from it by
+// legacy_instruction_info() below.
+//
+// EII field format:
+//
+//  bits    | field
+// ---------+------------------------------------------------------------------------------
+// [01:00]  | Memory operand scale field (encoded, same encoding as SIB.scale)
+// [03:02]  | Memory operand address size (0 - 16-bit, 1 - 32-bit, 2 - 64-bit)
+// [04:04]  | Memory/Register format (0 - mem, 1 - reg)
+// [06:05]  | Operand size (0 - 16-bit, 1 - 32-bit, 2 - 64-bit)
+// [09:07]  | Memory operand segment register field (0 - ES, 1 - CS, ..., 5 - GS)
+// [10:10]  | Memory operand index field invalid
+// [11:11]  | Memory operand base field invalid
+// [15:12]  | Reserved (0)
+// [20:16]  | Reg1, undefined for memory operand
+// [23:21]  | Reserved (0)
+// [28:24]  | Memory operand index field
+// [31:29]  | Reserved (0)
+// [36:32]  | Memory operand base field
+// [39:37]  | Reserved (0)
+// [44:40]  | Reg2, if exists
+//          | GDTR/IDTR and LDTR/TR access: instruction identity in [41:40], [44:42] reserved
+// [63:45]  | Reserved (0)
+//
 // BX_READ(0) form means nnn(), rm(); BX_WRITE(1) form means rm(), nnn()
-Bit32u gen_instruction_info(bxInstruction_c *i, Bit32u reason, bool rw_form)
+Bit64u gen_instruction_info(bxInstruction_c *i, Bit32u reason, bool rw_form)
 {
-  Bit32u instr_info = 0;
+  Bit64u instr_info = 0;
 
   switch(reason) {
+#if BX_SUPPORT_VMX >= 2
+    case VMX_VMEXIT_GDTR_IDTR_ACCESS:
+      // bits 6:5 hold operand size (0 - 16-bit, 1 - 32-bit), undefined in 64-bit mode
+      if (i->os32L())
+        instr_info |= 1 << 5;
+      // fall through
+    case VMX_VMEXIT_LDTR_TR_ACCESS:
+      // bits 41:40 hold instruction identity (ModRM.nnn[1:0]),
+      // nnn could be extended by REX.R or REX2.R3/R4 so keep only 2 bits
+      if (rw_form == BX_WRITE)
+        instr_info |= Bit64u(i->dst() & 0x3) << 40;
+      else
+        instr_info |= Bit64u(i->src() & 0x3) << 40;
+      break;
+#endif
+
     case VMX_VMEXIT_VMREAD:
     case VMX_VMEXIT_VMWRITE:
 #if BX_SUPPORT_VMX >= 2
-    case VMX_VMEXIT_GDTR_IDTR_ACCESS:
-    case VMX_VMEXIT_LDTR_TR_ACCESS:
     case VMX_VMEXIT_INVEPT:
     case VMX_VMEXIT_INVVPID:
     case VMX_VMEXIT_INVPCID:
 #endif
+      // bits 44:40 hold Reg2
       if (rw_form == BX_WRITE)
-        instr_info |= i->dst() << 28;
+        instr_info |= Bit64u(i->dst()) << 40;
       else
-        instr_info |= i->src() << 28;
+        instr_info |= Bit64u(i->src()) << 40;
       break;
 
     case VMX_VMEXIT_RDRAND:
     case VMX_VMEXIT_RDSEED:
     case VMX_VMEXIT_UMWAIT:
     case VMX_VMEXIT_TPAUSE:
-      // bits 12:11 hold operand size
+      // bits 6:5 hold operand size
       if (i->os64L())
-        instr_info |= 1 << 12;
-      else if (i->as32L())
-        instr_info |= 1 << 11;
+        instr_info |= 2 << 5;
+      else if (i->os32L())
+        instr_info |= 1 << 5;
       break;
 
     default:
       break;
   }
 
-  // --------------------------------------
-  //  instruction information field format
-  // --------------------------------------
-  //
-  // [01:00] | Memory operand scale field (encoded)
-  // [02:02] | Undefined
-  // [06:03] | Reg1, undefined when memory operand
-  // [09:07] | Memory operand address size
-  // [10:10] | Memory/Register format (0 - mem, 1 - reg)
-  // [14:11] | Reserved
-  // [17:15] | Memory operand segment register field
-  // [21:18] | Memory operand index field
-  // [22:22] | Memory operand index field invalid
-  // [26:23] | Memory operand base field
-  // [27:27] | Memory operand base field invalid
-  // [31:28] | Reg2, if exists
-  //
   if (i->modC0()) {
-    // reg/reg format
-    instr_info |= (1 << 10);
+    // reg/reg format, bits 20:16 hold Reg1
+    instr_info |= (1 << 4);
     if (rw_form == BX_WRITE)
-      instr_info |= i->src() << 3;
+      instr_info |= i->src() << 16;
     else
-      instr_info |= i->dst() << 3;
+      instr_info |= i->dst() << 16;
   }
   else {
-    // memory format
+    // memory format, bits 3:2 hold address size
     if (i->as64L())
-        instr_info |= 1 << 8;
+        instr_info |= 2 << 2;
     else if (i->as32L())
-        instr_info |= 1 << 7;
+        instr_info |= 1 << 2;
 
-    instr_info |= i->seg() << 15;
+    // bits 9:7 hold segment register
+    instr_info |= i->seg() << 7;
 
     // index field is always initialized because of gather but not always valid
+    // bits 1:0 hold scale, bits 28:24 hold index register
     if (i->sibIndex() != BX_NIL_REGISTER && i->sibIndex() != 4)
-        instr_info |= i->sibScale() | (i->sibIndex() << 18);
+        instr_info |= i->sibScale() | (i->sibIndex() << 24);
     else
-        instr_info |= 1 << 22; // index invalid
+        instr_info |= 1 << 10; // index invalid
 
-    if (i->sibBase() != BX_NIL_REGISTER)
-        instr_info |= i->sibBase() << 23;
+    // bits 36:32 hold base register
+    // RIP-relative addressing has no base register (RIP is added into the exit qualification)
+    if (i->sibBase() != BX_NIL_REGISTER && i->sibBase() != BX_64BIT_REG_RIP)
+        instr_info |= Bit64u(i->sibBase()) << 32;
     else
-        instr_info |= 1 << 27; // base invalid
+        instr_info |= 1 << 11; // base invalid
   }
 
   return instr_info;
 }
 
+// ----------------------------------------------------------------------------------------
+//  Legacy 32-bit VM-exit instruction information field (VMCS field 0x440E)
+// ----------------------------------------------------------------------------------------
+//
+// Converted from the EII format built by gen_instruction_info(). The legacy layout is
+// defined by SDM Vol3 Tables 30-8 .. 30-15 (Information for VM Exits Due to Instruction
+// Execution). Register fields of the legacy format are only 4 bits wide, so register ids
+// are truncated to 4 bits (R16-R31 are reported as R0-R15, the full id is available only
+// in EII). Without the truncation bit 4 of a register id would spill into the next field
+// (Reg1 into address size, index into index invalid, base into base invalid).
+//
+//  legacy  | taken from EII | field
+// ---------+----------------+-------------------------------------------------------------
+// [01:00]  | [01:00]        | Memory operand scale field (encoded)
+// [02:02]  |                | Undefined (0)
+// [06:03]  | [19:16]        | Reg1, low 4 bits
+// [09:07]  | [03:02]        | Memory operand address size (2 bits in EII, 3 bits in legacy)
+// [10:10]  | [04:04]        | Memory/Register format (0 - mem, 1 - reg)
+// [12:11]  | [06:05]        | Operand size
+// [14:13]  |                | Undefined (0)
+// [17:15]  | [09:07]        | Memory operand segment register field
+// [21:18]  | [27:24]        | Memory operand index field, low 4 bits
+// [22:22]  | [10:10]        | Memory operand index field invalid
+// [26:23]  | [35:32]        | Memory operand base field, low 4 bits
+// [27:27]  | [11:11]        | Memory operand base field invalid
+// [31:28]  | [43:40]        | Reg2, low 4 bits (instruction identity in [29:28])
+//
+static Bit32u legacy_instruction_info(Bit64u ext_instr_info)
+{
+  Bit32u instr_info = 0;
+
+  instr_info |= (Bit32u)( ext_instr_info        & 0x3);       // scale:        EII [01:00] -> [01:00]
+  instr_info |= (Bit32u)((ext_instr_info >> 16) & 0xf) << 3;  // Reg1:         EII [19:16] -> [06:03]
+  instr_info |= (Bit32u)((ext_instr_info >>  2) & 0x3) << 7;  // address size: EII [03:02] -> [08:07]
+  instr_info |= (Bit32u)((ext_instr_info >>  4) & 0x1) << 10; // mem/reg:      EII [04:04] -> [10:10]
+  instr_info |= (Bit32u)((ext_instr_info >>  5) & 0x3) << 11; // operand size: EII [06:05] -> [12:11]
+  instr_info |= (Bit32u)((ext_instr_info >>  7) & 0x7) << 15; // segment:      EII [09:07] -> [17:15]
+  instr_info |= (Bit32u)((ext_instr_info >> 24) & 0xf) << 18; // index:        EII [27:24] -> [21:18]
+  instr_info |= (Bit32u)((ext_instr_info >> 10) & 0x1) << 22; // index inv:    EII [10:10] -> [22:22]
+  instr_info |= (Bit32u)((ext_instr_info >> 32) & 0xf) << 23; // base:         EII [35:32] -> [26:23]
+  instr_info |= (Bit32u)((ext_instr_info >> 11) & 0x1) << 27; // base inv:     EII [11:11] -> [27:27]
+  instr_info |= (Bit32u)((ext_instr_info >> 40) & 0xf) << 28; // Reg2:         EII [43:40] -> [31:28]
+
+  return instr_info;
+}
+
+// save both legacy and extended (APX) VM-exit instruction information fields
+void BX_CPU_C::VMexit_SaveInstructionInfo(Bit64u ext_instr_info)
+{
+  VMwrite32(VMCS_32BIT_VMEXIT_INSTRUCTION_INFO, legacy_instruction_info(ext_instr_info));
+#if BX_SUPPORT_APX
+  if (is_cpu_extension_supported(BX_ISA_APX))
+    VMwrite64(VMCS_64BIT_VMEXIT_EXT_INSTRUCTION_INFO, ext_instr_info);
+#endif
+}
+
 void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_Instruction(bxInstruction_c *i, Bit32u reason, bool rw_form)
 {
   Bit64u qualification = 0;
-  Bit32u instr_info = 0;
 
   switch(reason) {
     case VMX_VMEXIT_VMREAD:
@@ -156,8 +245,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_Instruction(bxInstruction_c *i, Bit
     case VMX_VMEXIT_RDSEED:
     case VMX_VMEXIT_UMWAIT:
     case VMX_VMEXIT_TPAUSE:
-      instr_info = gen_instruction_info(i, reason, rw_form);
-      VMwrite32(VMCS_32BIT_VMEXIT_INSTRUCTION_INFO, instr_info);
+      VMexit_SaveInstructionInfo(gen_instruction_info(i, reason, rw_form));
       break;
 
     default:
@@ -181,7 +269,9 @@ void BX_CPU_C::VMexit_PAUSE(void)
   if (vm->vmexec_ctrls2.PAUSE_LOOP_VMEXIT() && CPL == 0) {
     VMX_PLE *ple = &vm->ple;
     Bit64u currtime = bx_pc_system.time_ticks();
-    if ((currtime - ple->last_pause_time) > ple->pause_loop_exiting_gap) {
+    // the first execution of PAUSE at CPL0 after VM entry is always considered the first
+    // execution of PAUSE in a loop (last_pause_time is reset to zero by VM entry)
+    if (ple->last_pause_time == 0 || (currtime - ple->last_pause_time) > ple->pause_loop_exiting_gap) {
       ple->first_pause_time = currtime;
     }
     else {
@@ -357,25 +447,25 @@ const Bit32u BX_VMX_LO_MSR_END   = 0x00001FFF;
 const Bit32u BX_VMX_HI_MSR_START = 0xC0000000;
 const Bit32u BX_VMX_HI_MSR_END   = 0xC0001FFF;
 
-void BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr, Bit32u qualification, Bit32u instr_info)
+void BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr, Bit32u qualification, unsigned reg)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
   bool readmsr = (op == VMX_VMEXIT_RDMSR || op == VMX_VMEXIT_RDMSR_IMM || op == VMX_VMEXIT_RDMSRLIST || op == VMX_VMEXIT_URDMSR);
 
   // VM exits due to URDMSR, UWRMSR and immediate forms of RDMSR and WRMSRNS
-  // save VM-exit instruction information (bits 6:3 hold the data register operand)
+  // save VM-exit instruction information, the data register operand is Reg1
+  // (EII bits 20:16, legacy instruction information bits 6:3)
   bool save_instr_info = (op == VMX_VMEXIT_URDMSR || op == VMX_VMEXIT_UWRMSR || op == VMX_VMEXIT_RDMSR_IMM || op == VMX_VMEXIT_WRMSRNS_IMM);
 
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
   if (! vm->vmexec_ctrls1.MSR_BITMAPS()) {
     BX_DEBUG(("VMEXIT: %sMSR 0x%08x", (readmsr) ? "RD" : "WR", msr));
-    // for RDMSRLIST and WRMSRLIST, if MSR Bitmaps disabled, exit qualification is 0
-    if (op == VMX_VMEXIT_RDMSRLIST || op == VMX_VMEXIT_WRMSRLIST)
-      qualification = 0;
+    // RDMSRLIST and WRMSRLIST never get here, with MSR bitmaps disabled they VM exit before the MSR loop
+    BX_ASSERT(op != VMX_VMEXIT_RDMSRLIST && op != VMX_VMEXIT_WRMSRLIST);
     if (save_instr_info)
-      VMwrite32(VMCS_32BIT_VMEXIT_INSTRUCTION_INFO, instr_info);
+      VMexit_SaveInstructionInfo(Bit64u(reg) << 16);
     VMexit(op, qualification);
   }
 
@@ -385,7 +475,7 @@ void BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr, Bit32u qualification, Bit32u 
     else {
       // check MSR-HI bitmaps
       bx_phy_address pAddr = vm->msr_bitmap_addr + ((msr - BX_VMX_HI_MSR_START) >> 3) + 1024 + (readmsr ? 0 : 2048);
-      Bit8u field = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_MSR_BITMAP_ACCESS);
+      Bit8u field = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_MSR_BITMAP_ACCESS);
       if (field & (1 << (msr & 7)))
         vmexit = true;
     }
@@ -395,7 +485,7 @@ void BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr, Bit32u qualification, Bit32u 
     else {
       // check MSR-LO bitmaps
       bx_phy_address pAddr = vm->msr_bitmap_addr + (msr >> 3) + (readmsr ? 0 : 2048);
-      Bit8u field = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_MSR_BITMAP_ACCESS);
+      Bit8u field = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_MSR_BITMAP_ACCESS);
       if (field & (1 << (msr & 7)))
         vmexit = true;
     }
@@ -404,7 +494,7 @@ void BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr, Bit32u qualification, Bit32u 
   if (vmexit) {
      BX_DEBUG(("VMEXIT: %sMSR 0x%08x", (readmsr) ? "RD" : "WR", msr));
      if (save_instr_info)
-       VMwrite32(VMCS_32BIT_VMEXIT_INSTRUCTION_INFO, instr_info);
+       VMexit_SaveInstructionInfo(Bit64u(reg) << 16);
      VMexit(op, qualification);
   }
 }
@@ -435,18 +525,18 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
         if ((port & 0x7fff) + len > 0x8000) {
           // special case - the IO access split cross both I/O bitmaps
           pAddr = vm->io_bitmap_addr[0] + 0xfff;
-          bitmap[0] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_IO_BITMAP_ACCESS);
+          bitmap[0] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_IO_BITMAP_ACCESS);
 
           pAddr = vm->io_bitmap_addr[1];
-          bitmap[1] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_IO_BITMAP_ACCESS);
+          bitmap[1] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_IO_BITMAP_ACCESS);
         }
         else {
           // access_read_physical cannot read 2 bytes cross 4K boundary :(
           pAddr = vm->io_bitmap_addr[(port >> 15) & 1] + ((port & 0x7fff) / 8);
-          bitmap[0] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_IO_BITMAP_ACCESS);
+          bitmap[0] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_IO_BITMAP_ACCESS);
 
           pAddr++;
-          bitmap[1] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_IO_BITMAP_ACCESS);
+          bitmap[1] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_IO_BITMAP_ACCESS);
         }
 
         Bit16u combined_bitmap = bitmap[1];
@@ -518,13 +608,14 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
 
        VMwrite_natural(VMCS_GUEST_LINEAR_ADDR, laddr);
 
-       Bit32u instruction_info = i->seg() << 15;
+       // EII format: bits 9:7 hold segment register, bits 3:2 hold address size
+       Bit64u instr_info = i->seg() << 7;
        if (i->as64L())
-         instruction_info |= (1 << 8);
+         instr_info |= (2 << 2);
        else if (i->as32L())
-         instruction_info |= (1 << 7);
+         instr_info |= (1 << 2);
 
-       VMwrite32(VMCS_32BIT_VMEXIT_INSTRUCTION_INFO, instruction_info);
+       VMexit_SaveInstructionInfo(instr_info);
      }
 
      VMexit(VMX_VMEXIT_IO_INSTRUCTION, qualification | (len-1) | (port << 16));
@@ -539,8 +630,9 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
 // [05:04] | CR access type (0 - MOV to CR, 1 - MOV from CR, 2 - CLTS, 3 - LMSW)
 // [06:06] | LMSW operand reg/mem (cleared for CR access and CLTS)
 // [07:07] | reserved
-// [11:08] | Source Operand Register for CR access (cleared for CLTS and LMSW)
-// [15:12] | reserved
+// [12:08] | Source Operand Register for CR access (cleared for CLTS and LMSW)
+//         | 5-bit register id, before APX it was 4-bit register id
+// [15:13] | reserved
 // [31:16] | LMSW source data (cleared for CR access and CLTS)
 // [63:32] | reserved
 //
@@ -687,8 +779,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_CR8_Write(bxInstruction_c *i)
 // [03:00] | Number of DR register
 // [04:04] | DR access type (0 - MOV to DR, 1 - MOV from DR)
 // [07:05] | reserved
-// [11:08] | Source Operand Register
-// [63:12] | reserved
+// [12:08] | Source Operand Register
+//         | 5-bit register id, before APX it was 4-bit register id
+// [63:13] | reserved
 //
 
 void BX_CPU_C::VMexit_DR_Access(unsigned read, unsigned dr, unsigned reg)
@@ -735,7 +828,7 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::Vmexit_Vmread(bxInstruction_c *i)
   if (encoding > 0x7fff) return true;
 
   bx_phy_address pAddr = vm->vmread_bitmap_addr | (encoding >> 3);
-  Bit8u bitmap = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_VMREAD_BITMAP_ACCESS);
+  Bit8u bitmap = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_VMREAD_BITMAP_ACCESS);
 
   if (bitmap & (1 << (encoding & 7)))
     return true;
@@ -760,7 +853,7 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::Vmexit_Vmwrite(bxInstruction_c *i)
   if (encoding > 0x7fff) return true;
 
   bx_phy_address pAddr = vm->vmwrite_bitmap_addr | (encoding >> 3);
-  Bit8u bitmap = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_VMWRITE_BITMAP_ACCESS);
+  Bit8u bitmap = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_VMWRITE_BITMAP_ACCESS);
 
   if (bitmap & (1 << (encoding & 7)))
     return true;
@@ -788,7 +881,7 @@ void BX_CPU_C::Virtualization_Exception(Bit64u qualification, Bit64u guest_physi
 
   BxMemtype ve_info_memtype = BX_MEMTYPE_INVALID;
 #if BX_SUPPORT_MEMTYPE
-            ve_info_memtype = resolve_memtype(vm->ve_info_addr);
+            ve_info_memtype = resolve_memtype(memtype_by_mtrr(vm->ve_info_addr));
 #endif
   Bit32u magic = read_physical_dword(vm->ve_info_addr + 4, MEMTYPE(ve_info_memtype), BX_ACCESS_REASON_NOT_SPECIFIED);
   if (magic != 0) return;
@@ -807,7 +900,7 @@ void BX_CPU_C::Virtualization_Exception(Bit64u qualification, Bit64u guest_physi
   write_physical_qword(vm->ve_info_addr + 8,  ve_info.qualification,       MEMTYPE(ve_info_memtype), BX_ACCESS_REASON_NOT_SPECIFIED);
   write_physical_qword(vm->ve_info_addr + 16, ve_info.guest_linear_addr,   MEMTYPE(ve_info_memtype), BX_ACCESS_REASON_NOT_SPECIFIED);
   write_physical_qword(vm->ve_info_addr + 24, ve_info.guest_physical_addr, MEMTYPE(ve_info_memtype), BX_ACCESS_REASON_NOT_SPECIFIED);
-  write_physical_qword(vm->ve_info_addr + 32, ve_info.eptp_index,          MEMTYPE(ve_info_memtype), BX_ACCESS_REASON_NOT_SPECIFIED);
+   write_physical_word(vm->ve_info_addr + 32, ve_info.eptp_index,          MEMTYPE(ve_info_memtype), BX_ACCESS_REASON_NOT_SPECIFIED);
 
   exception(BX_VE_EXCEPTION, 0);
 }
@@ -832,7 +925,7 @@ void BX_CPU_C::vmx_page_modification_logging(Bit64u guest_laddr, Bit64u guest_pa
 
   if (dirty_update) {
     Bit64u pAddr = vm->pml_address + 8 * vm->pml_index;
-    write_physical_qword(pAddr, LPFOf(guest_paddr), MEMTYPE(resolve_memtype(pAddr)), BX_VMX_PML_WRITE);
+    write_physical_qword(pAddr, LPFOf(guest_paddr), MEMTYPE(resolve_memtype(memtype_by_mtrr(pAddr))), BX_VMX_PML_WRITE);
     vm->pml_index--;
   }
 }

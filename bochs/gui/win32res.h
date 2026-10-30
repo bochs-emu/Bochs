@@ -10,6 +10,7 @@
 #define IDEDITBOX    1170
 #define IDSIMU       1180
 #define IDRESTORE    1185
+#define IDDEBUGGER   1187
 #define IDQUIT       1190
 #define IDOPTGRP     1195
 #define IDNOPARATXT  1205
