@@ -33,8 +33,6 @@
 #include "pc_system.h"
 #define LOG_THIS BX_MEM(0)->
 
-#define BX_MEM_HANDLERS   ((BX_CONST64(1) << BX_PHY_ADDRESS_WIDTH) >> 20) /* one per megabyte */
-
 #define FLASH_READ_ARRAY  0xff
 #define FLASH_INT_ID      0x90
 #define FLASH_READ_STATUS 0x70
@@ -611,7 +609,7 @@ bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, B
 
   // SMRAM space accessible to the CPU is never served by memory handlers
   if (! BX_MEM_THIS is_smram_data_access(a20addr, cpu->smm_mode()))
-    memory_handler = BX_MEM_THIS find_memory_handler(BX_MEM_THIS memory_handlers[a20addr >> 20], a20addr, false);
+    memory_handler = BX_MEM_THIS find_memory_handler(BX_MEM_THIS get_memory_handlers(a20addr), a20addr, false);
 
   for (; len>0; len--) {
     // Keep translated address in sync as we increment a20addr.
@@ -698,7 +696,7 @@ bool BX_MEM_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit
 
   // SMRAM space accessible to the CPU is never served by memory handlers
   if (! BX_MEM_THIS is_smram_data_access(a20addr, cpu->smm_mode()))
-    memory_handler = BX_MEM_THIS find_memory_handler(BX_MEM_THIS memory_handlers[a20addr >> 20], a20addr, false);
+    memory_handler = BX_MEM_THIS find_memory_handler(BX_MEM_THIS get_memory_handlers(a20addr), a20addr, false);
 
   dbg_invalidate_smc_pages(a20addr, len);
 
@@ -769,7 +767,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
   }
 #endif
 
-  struct memory_handler_struct *memory_handler = BX_MEM_THIS find_memory_handler(BX_MEM_THIS memory_handlers[a20addr >> 20], a20addr, false);
+  struct memory_handler_struct *memory_handler = BX_MEM_THIS find_memory_handler(BX_MEM_THIS get_memory_handlers(a20addr), a20addr, false);
   if (memory_handler) {
     if (memory_handler->da_handler)
       return memory_handler->da_handler(a20addr, rw, memory_handler->param);
@@ -878,9 +876,9 @@ BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
   if (!read_handler) // allow NULL write and fetch handler
     return false;
 #if BX_PHY_ADDRESS_LONG
-  // page_idx << 20 calculations below are done in 32-bit
-  if (end_addr > BX_CONST64(0xffffffff)) {
-    BX_PANIC(("registerMemoryHandlers: memory handlers above 4GB are not supported (0x" FMT_PHY_ADDRX " - 0x" FMT_PHY_ADDRX ")", begin_addr, end_addr));
+  if (end_addr >= BX_MEM_HANDLERS_ADDR_LIMIT) {
+    BX_ERROR(("Register failed: memory handlers above 0x" FMT_LL "x are not supported (0x" FMT_PHY_ADDRX " - 0x" FMT_PHY_ADDRX ")",
+      BX_MEM_HANDLERS_ADDR_LIMIT, begin_addr, end_addr));
     return false;
   }
 #endif
@@ -927,6 +925,13 @@ BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
 bool BX_MEM_C::unregisterMemoryHandlers(void *param, bx_phy_address begin_addr, bx_phy_address end_addr)
 {
   bool ret = true;
+#if BX_PHY_ADDRESS_LONG
+  if (end_addr >= BX_MEM_HANDLERS_ADDR_LIMIT) {
+    BX_ERROR(("Unregister failed: memory handlers above 0x" FMT_LL "x are not supported (0x" FMT_PHY_ADDRX " - 0x" FMT_PHY_ADDRX ")",
+      BX_MEM_HANDLERS_ADDR_LIMIT, begin_addr, end_addr));
+    return false;
+  }
+#endif
   BX_INFO(("Memory access handlers unregistered: 0x" FMT_PHY_ADDRX " - 0x" FMT_PHY_ADDRX, begin_addr, end_addr));
   for (Bit32u page_idx = (Bit32u)(begin_addr >> 20); page_idx <= (Bit32u)(end_addr >> 20); page_idx++) {
     struct memory_handler_struct *memory_handler = BX_MEM_THIS memory_handlers[page_idx];

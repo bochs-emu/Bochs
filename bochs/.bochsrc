@@ -209,6 +209,12 @@
 #    message instead of generating #GP exception. This option is enabled
 #    by default but will not be available if configurable MSRs are enabled.
 #
+#  MAXPHYADDR:
+#    Emulated maximum physical address width (MAXPHYADDR) in bits, reported
+#    in CPUID.80000008H:EAX[7:0] and used for reserved physical address bits
+#    checks. Valid range is 36 to 52, default is 40. This option exists only
+#    if Bochs compiled with physical address wider than 32 bit.
+#
 #  MWAIT_IS_NOP:
 #    When this option is enabled MWAIT will not put the CPU into a sleep state.
 #    This option exists only if Bochs compiled with --enable-monitor-mwait.

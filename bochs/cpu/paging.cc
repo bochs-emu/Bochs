@@ -1180,11 +1180,12 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
 // 31-22 | Bits 31-22 of physical address of the 4-MByte page
 // -----------------------------------------------------------
 
-#if BX_PHY_ADDRESS_WIDTH > 40
-const Bit32u PAGING_PDE4M_RESERVED_BITS = (1 << 21); // when physical address is wider than 40 bit only bit 21 is reserved in PDE4M
-#else
-const Bit32u PAGING_PDE4M_RESERVED_BITS = ((1 << (41-BX_PHY_ADDRESS_WIDTH))-1) << (13 + BX_PHY_ADDRESS_WIDTH - 32);
-#endif
+// PA is the minimum of 40 and MAXPHYADDR, bits 21:PA-19 are reserved
+BX_CPP_INLINE Bit32u PAGING_PDE4M_RESERVED_BITS()
+{
+  unsigned pa = (BX_CPU_C::maxphyaddr < 40) ? BX_CPU_C::maxphyaddr : 40;
+  return ((1 << (41-pa))-1) << (pa-19);
+}
 
 // Translate a linear address to a physical address in legacy paging mode
 bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_mask, unsigned user, unsigned rw)
@@ -1229,14 +1230,14 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
 #if BX_CPU_LEVEL >= 5
     if ((curr_entry & 0x80) != 0 && BX_CPU_THIS_PTR cr4.get_PSE()) {
       // 4M paging, only if CR4.PSE enabled, ignore PDE.PS otherwise
-      if (curr_entry & PAGING_PDE4M_RESERVED_BITS) {
+      if (curr_entry & PAGING_PDE4M_RESERVED_BITS()) {
         BX_DEBUG(("PSE PDE4M: reserved bit is set: PDE=0x%08x", entry[BX_LEVEL_PDE]));
         page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, user, rw);
       }
 
       // make up the physical frame number
       ppf = (curr_entry & 0xffc00000);
-#if BX_PHY_ADDRESS_WIDTH > 32
+#if BX_PHY_ADDRESS_LONG
       ppf |= ((bx_phy_address)(curr_entry & 0x003fe000)) << 19;
 #endif
       lpf_mask = 0x3fffff;
@@ -1995,14 +1996,14 @@ bx_phy_address BX_CPU_C::nested_walk_legacy(bx_phy_address guest_paddr, unsigned
 
     if ((curr_entry & 0x80) != 0 && host_state->cr4.get_PSE()) {
       // 4M paging, only if CR4.PSE enabled, ignore PDE.PS otherwise
-      if (curr_entry & PAGING_PDE4M_RESERVED_BITS) {
+      if (curr_entry & PAGING_PDE4M_RESERVED_BITS()) {
         BX_DEBUG(("Nested PSE Walk PDE4M: reserved bit is set: PDE=0x%08x", entry[BX_LEVEL_PDE]));
         nested_page_fault(ERROR_RESERVED | ERROR_PROTECTION, guest_paddr, rw, is_page_walk);
       }
 
       // make up the physical frame number
       ppf = (curr_entry & 0xffc00000) | (guest_paddr & 0x003ff000);
-#if BX_PHY_ADDRESS_WIDTH > 32
+#if BX_PHY_ADDRESS_LONG
       ppf |= ((bx_phy_address)(curr_entry & 0x003fe000)) << 19;
 #endif
       break;
@@ -2662,7 +2663,7 @@ bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_ad
         if (level == BX_LEVEL_PDE && (pte & 0x80) != 0 && the_cr4.get_PSE()) {
           offset_mask = 0x3fffff;
           pt_address = pte & 0xffc00000;
-#if BX_PHY_ADDRESS_WIDTH > 32
+#if BX_PHY_ADDRESS_LONG
           pt_address += ((bx_phy_address)(pte & 0x003fe000)) << 19;
 #endif
           break;

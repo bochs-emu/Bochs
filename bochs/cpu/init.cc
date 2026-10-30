@@ -47,6 +47,9 @@
 
 #include <stdlib.h>
 
+unsigned BX_CPU_C::maxphyaddr = BX_PHY_ADDRESS_WIDTH;
+Bit64u   BX_CPU_C::maxphyaddr_mask = (BX_CONST64(1) << BX_PHY_ADDRESS_WIDTH) - 1;
+
 BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
 #if BX_CPU_LEVEL >= 4
    , cpuid(NULL)
@@ -79,6 +82,12 @@ BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
 #endif
 
   stats = NULL;
+
+#if BX_PHY_ADDRESS_LONG
+  // MAXPHYADDR is static and shared by all CPUs, every CPU sets the same value
+  maxphyaddr = (unsigned) SIM->get_param_num(BXPN_CPU_MAXPHYADDR)->get();
+  maxphyaddr_mask = (BX_CONST64(1) << maxphyaddr) - 1;
+#endif
 
   srand(time(NULL)); // initialize random generator for RDRAND/RDSEED
 }

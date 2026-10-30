@@ -706,6 +706,13 @@ void bx_init_options()
       "cpuid_freq", "CPUID frequency leaves 0x15/0x16 mode",
       "Report CPUID frequency leaves 0x15/0x16 from the hardware dump of the selected model, as not enumerated, or derived from the emulated tick rate (ips)",
       cpuid_freq_names, 0, 0);
+#if BX_PHY_ADDRESS_LONG
+  new bx_param_num_c(cpu_param,
+      "maxphyaddr", "Maximum physical address width (MAXPHYADDR)",
+      "Emulated maximum physical address width reported in CPUID.80000008H:EAX[7:0]",
+      36, 52,
+      BX_PHY_ADDRESS_WIDTH);
+#endif
 #if BX_SUPPORT_MONITOR_MWAIT
   new bx_param_bool_c(cpu_param,
       "mwait_is_nop", "Don't put CPU to sleep state by MWAIT",
@@ -3643,6 +3650,9 @@ int bx_write_configuration(const char *rc, int overwrite)
     SIM->get_param_enum(BXPN_CPUID_FREQ)->get_selected());
 #if BX_CPU_LEVEL >= 5
   fprintf(fp, ", ignore_bad_msrs=%d", SIM->get_param_bool(BXPN_IGNORE_BAD_MSRS)->get());
+#endif
+#if BX_PHY_ADDRESS_LONG
+  fprintf(fp, ", maxphyaddr=%u", SIM->get_param_num(BXPN_CPU_MAXPHYADDR)->get());
 #endif
 #if BX_SUPPORT_MONITOR_MWAIT
   fprintf(fp, ", mwait_is_nop=%d", SIM->get_param_bool(BXPN_MWAIT_IS_NOP)->get());

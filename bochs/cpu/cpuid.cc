@@ -1597,7 +1597,7 @@ void bx_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
 {
   // virtual & phys address size in low 2 bytes of EAX.
   // TODO: physical address width should be 32-bit when no PSE-36 is supported
-  Bit32u phy_addr_width = BX_PHY_ADDRESS_WIDTH;
+  Bit32u phy_addr_width = BX_CPU_C::maxphyaddr;
   Bit32u lin_addr_width = is_cpu_extension_supported(BX_ISA_LONG_MODE) ? 
                                 (is_cpu_extension_supported(BX_ISA_LA57) ? 57 : 48) : 32;
 

@@ -28,9 +28,7 @@
 
 #include "instrument.h"
 
-const Bit64u BX_PHY_ADDRESS_MASK = ((((Bit64u)(1)) << BX_PHY_ADDRESS_WIDTH) - 1);
-
-const Bit64u BX_PHY_ADDRESS_RESERVED_BITS = (~BX_PHY_ADDRESS_MASK);
+#define BX_PHY_ADDRESS_RESERVED_BITS (~BX_CPU_C::maxphyaddr_mask)
 
 #if defined(NEED_CPU_REG_SHORTCUTS)
 
@@ -426,16 +424,6 @@ BX_CPP_INLINE Bit64u CanonicalizeAddress57(Bit64u laddr)
 }
 
 #endif
-
-BX_CPP_INLINE bool IsValidPhyAddr(bx_phy_address addr)
-{
-  return ((addr & BX_PHY_ADDRESS_RESERVED_BITS) == 0);
-}
-
-BX_CPP_INLINE bool IsValidPageAlignedPhyAddr(bx_phy_address addr)
-{
-  return ((addr & (BX_PHY_ADDRESS_RESERVED_BITS | 0xfff)) == 0);
-}
 
 const Bit32u CACHE_LINE_SIZE = 64;
 
@@ -960,6 +948,10 @@ public: // for now...
 #endif
 
   Bit32u ia_extensions_bitmask[BX_ISA_EXTENSIONS_ARRAY_SIZE];
+
+  // maximum physical address width (MAXPHYADDR), same for all CPUs
+  static unsigned maxphyaddr;
+  static Bit64u maxphyaddr_mask;
 
 #define BX_CPUID_SUPPORT_ISA_EXTENSION(feature) \
    (BX_CPU_THIS_PTR ia_extensions_bitmask[feature/32] & (1<<(feature%32)))
@@ -6417,6 +6409,16 @@ public: // for now...
   BX_SMF int load_MSRs(const char *file);
 #endif
 };
+
+BX_CPP_INLINE bool IsValidPhyAddr(bx_phy_address addr)
+{
+  return ((addr & BX_PHY_ADDRESS_RESERVED_BITS) == 0);
+}
+
+BX_CPP_INLINE bool IsValidPageAlignedPhyAddr(bx_phy_address addr)
+{
+  return ((addr & (BX_PHY_ADDRESS_RESERVED_BITS | 0xfff)) == 0);
+}
 
 #if BX_CPU_LEVEL >= 5
 BX_CPP_INLINE void BX_CPU_C::prepareFPU2MMX(void)

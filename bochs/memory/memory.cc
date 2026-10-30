@@ -70,7 +70,7 @@ void BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned le
       goto mem_write;
   }
 
-  memory_handler = BX_MEM_THIS find_memory_handler(BX_MEM_THIS memory_handlers[a20addr >> 20], a20addr, true);
+  memory_handler = BX_MEM_THIS find_memory_handler(BX_MEM_THIS get_memory_handlers(a20addr), a20addr, true);
   while (memory_handler) {
     if (memory_handler->write_handler(a20addr, len, data, memory_handler->param))
       return;
@@ -208,7 +208,7 @@ void BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
       goto mem_read;
   }
 
-  memory_handler = BX_MEM_THIS find_memory_handler(BX_MEM_THIS memory_handlers[a20addr >> 20], a20addr, false);
+  memory_handler = BX_MEM_THIS find_memory_handler(BX_MEM_THIS get_memory_handlers(a20addr), a20addr, false);
   while (memory_handler) {
     if (memory_handler->read_handler(a20addr, len, data, memory_handler->param))
     {
