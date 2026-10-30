@@ -440,6 +440,12 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
   invalidate_prefetch_q();
   invalidate_stack_cache();
 
+  INC_TLBFLUSH_STAT(tlbInvlpg);
+#if BX_CPU_LEVEL >= 5
+  if (BX_CPU_THIS_PTR ITLB.split_large | BX_CPU_THIS_PTR DTLB.split_large)
+    INC_TLBFLUSH_STAT(tlbInvlpgLarge);
+#endif
+
   BX_DEBUG(("TLB_invlpg(0x" FMT_ADDRX "): invalidate TLB entry", laddr));
   BX_CPU_THIS_PTR DTLB.invlpg(laddr);
   BX_CPU_THIS_PTR ITLB.invlpg(laddr);

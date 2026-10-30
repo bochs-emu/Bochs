@@ -279,6 +279,8 @@ void BX_CPU_C::init_statistics(void)
 #if InstrumentTLBFlush
   new bx_shadow_num_c(cpu, "tlbGlobalFlushes", &stats->tlbGlobalFlushes);
   new bx_shadow_num_c(cpu, "tlbNonGlobalFlushes", &stats->tlbNonGlobalFlushes);
+  new bx_shadow_num_c(cpu, "tlbInvlpg", &stats->tlbInvlpg);
+  new bx_shadow_num_c(cpu, "tlbInvlpgLarge", &stats->tlbInvlpgLarge);
 #endif
 
 #if InstrumentStackPrefetch
