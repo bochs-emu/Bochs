@@ -1181,7 +1181,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
 // -----------------------------------------------------------
 
 #if BX_PHY_ADDRESS_WIDTH > 40
-const Bit32u PAGING_PDE4M_RESERVED_BITS = 0; // there are no reserved bits in PDE4M when physical address is wider than 40 bit
+const Bit32u PAGING_PDE4M_RESERVED_BITS = (1 << 21); // when physical address is wider than 40 bit only bit 21 is reserved in PDE4M
 #else
 const Bit32u PAGING_PDE4M_RESERVED_BITS = ((1 << (41-BX_PHY_ADDRESS_WIDTH))-1) << (13 + BX_PHY_ADDRESS_WIDTH - 32);
 #endif
