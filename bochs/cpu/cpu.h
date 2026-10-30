@@ -443,7 +443,7 @@ class BX_CPU_C;
 class BX_MEM_C;
 class bxInstruction_c;
 class bx_local_apic_c;
-class AMX;
+struct AMX;
 class bxTraceCache_c;
 struct bxTraceCacheEntry_c;
 struct bxICacheEntry_c;
