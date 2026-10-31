@@ -223,6 +223,12 @@ void bx_devices_c::init(BX_MEM_C *newmem)
         }
       } else if (!strcmp(argv[i], "nofdc")) {
         pci.advopts |= BX_PCI_ADVOPT_NOFDC;
+      } else if (!strcmp(argv[i], "ich7ide")) {
+        if (chipset != BX_PCI_CHIPSET_I430FX) {
+          pci.advopts |= BX_PCI_ADVOPT_ICH7IDE;
+        } else {
+          BX_ERROR(("ICH7 IDE not supported by PCI chipset"));
+        }
       } else {
         BX_ERROR(("Unknown advanced PCI option '%s'", argv[i]));
       }
@@ -1194,6 +1200,15 @@ bool bx_devices_c::is_agp_present(void)
 {
 #if BX_SUPPORT_PCI
   return (pci.enabled && ((pci.advopts & BX_PCI_ADVOPT_NOAGP) == 0));
+#else
+  return false;
+#endif
+}
+
+bool bx_devices_c::is_ich7_ide(void)
+{
+#if BX_SUPPORT_PCI
+  return (pci.enabled && ((pci.advopts & BX_PCI_ADVOPT_ICH7IDE) != 0));
 #else
   return false;
 #endif

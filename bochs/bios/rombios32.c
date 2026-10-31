@@ -1069,8 +1069,9 @@ static void pci_bios_init_device(PCIDevice *d)
         if (vendor_id == PCI_VENDOR_ID_INTEL &&
            (device_id == PCI_DEVICE_ID_INTEL_82371FB_1 ||
             device_id == PCI_DEVICE_ID_INTEL_82371SB_1 ||
-            device_id == PCI_DEVICE_ID_INTEL_82371AB)) {
-            /* PIIX3/PIIX4 IDE */
+            device_id == PCI_DEVICE_ID_INTEL_82371AB ||
+            device_id == PCI_DEVICE_ID_INTEL_ICH7_IDE)) {
+            /* PIIX3/PIIX4 IDE, ICH7 PATA (Bochs PCI option 'ich7ide') */
             pci_config_writew(d, 0x40, 0x8000); // enable IDE0
             pci_config_writew(d, 0x42, 0x8000); // enable IDE1
             goto default_map;
