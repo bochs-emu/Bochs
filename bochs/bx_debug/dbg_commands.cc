@@ -3666,32 +3666,51 @@ void bx_dbg_calc_command(Bit64u value)
   dbg_printf("0x" FMT_LL "x " FMT_LL "d\n", eval_value, eval_value);
 }
 
-// Evaluate breakpoint condition in the context of the CPU which hit the
-// breakpoint. The condition is parsed while the CPU loop runs from inside of
-// the outer command (continue, step, ...), so the lexer input and the parser
-// lookahead of the outer command line are preserved. A condition which fails
-// to parse or does not produce a value is treated as true (stop).
-bool bx_dbg_eval_condition(char *condition, unsigned cpu)
+// Evaluate a debugger expression (registers, symbols, seg:ofs, arithmetic) in the
+// context of the given CPU. The expression is wrapped in parentheses, so only an
+// expression can be parsed -- never a command. The lexer input and the parser
+// lookahead of an outer command line are preserved (breakpoint conditions are
+// evaluated while the CPU loop runs from inside of continue, step, ...).
+// Returns false if the expression cannot be parsed or does not produce a value.
+bool bx_dbg_eval_expression(const char *expr, unsigned cpu, Bit64u *value)
 {
   extern bool eval_value_valid;
   extern int bxchar;
+  char buf[512];
+
+  size_t len = strlen(expr);
+  while (len > 0 && (expr[len-1] == '\n' || expr[len-1] == '\r'))
+    len--;                                 // breakpoint conditions end with '\n'
+  if (len == 0 || len > sizeof(buf) - 4 || memchr(expr, '\n', len) != NULL)
+    return false;
+  sprintf(buf, "(%.*s)\n", (int) len, expr);
+
   int saved_bxchar = bxchar;
   unsigned saved_dbg_cpu = dbg_cpu;
-
   dbg_cpu = cpu;
   eval_value_valid = false;
-  bx_push_lex_input(condition);
+  bx_push_lex_input(buf);
   int ret = bxparse();
   bx_pop_lex_input();
   bxchar = saved_bxchar;
   dbg_cpu = saved_dbg_cpu;
 
-  if (ret != 0 || !eval_value_valid) {
+  if (ret != 0 || !eval_value_valid)
+    return false;
+  *value = eval_value;
+  return true;
+}
+
+// Evaluate breakpoint condition in the context of the CPU which hit the
+// breakpoint. A condition which fails to evaluate is treated as true (stop).
+bool bx_dbg_eval_condition(char *condition, unsigned cpu)
+{
+  Bit64u value;
+  if (! bx_dbg_eval_expression(condition, cpu, &value)) {
     dbg_printf("CPU%u: cannot evaluate breakpoint condition, stopping: %s", cpu, condition);
     return true;
   }
-
-  return eval_value != 0;
+  return value != 0;
 }
 
 bx_address bx_dbg_get_ssp(void)

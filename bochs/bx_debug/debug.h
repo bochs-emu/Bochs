@@ -181,6 +181,7 @@ void bx_dbg_info_device(const char *, const char *);
 void bx_dbg_print_help(void);
 void bx_dbg_calc_command(Bit64u value);
 void bx_dbg_dump_table(void);
+bool bx_dbg_eval_expression(const char *expr, unsigned cpu, Bit64u *value);
 bool bx_dbg_eval_condition(char *condition, unsigned cpu);
 
 // callbacks from CPU

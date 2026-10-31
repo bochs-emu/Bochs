@@ -2161,10 +2161,14 @@ static bool InitDataDump(bool isLinear, Bit64u newDS)
 #endif
             sprintf(tmpcb,"0x%X",(Bit32u) DumpStart);
 
-        if (AskText("4K Memory Dump","4K Memory Dump -- Enter Address (use 0x for hex):",tmpcb) == FALSE)
+        if (AskText("4K Memory Dump","4K Memory Dump -- Enter Address (expression: 0x1000, rsp+0x10, cs:rip):",tmpcb) == FALSE)
             return FALSE;
 
-        newDS = ParseNumber(tmpcb,FALSE);     // input either hex or decimal
+        if (! bx_dbg_eval_expression(tmpcb, CurrentCPU, &newDS))
+        {
+            DispMessage ("Cannot evaluate the address expression","Input Error");
+            return FALSE;
+        }
         newDS &= ~15;                   // force Mem Dump to be 16b aligned
         MsgOnErr = TRUE;
     }
@@ -2463,9 +2467,14 @@ static void doDisAsm()
         return;
     sprintf (tmpcb,"0x" FMT_LL "X",CurrentAsmLA);
     if (AskText("Disassemble",
-        "Disassemble -- Enter Linear Start Address (use 0x for hex):",tmpcb) == FALSE)
+        "Disassemble -- Enter Linear Start Address (expression: 0x1000, rip-0x20, cs:rip):",tmpcb) == FALSE)
         return;
-    Bit64u h = ParseNumber(tmpcb,FALSE);             // input either hex or decimal
+    Bit64u h;
+    if (! bx_dbg_eval_expression(tmpcb, CurrentCPU, &h))
+    {
+        DispMessage ("Cannot evaluate the address expression","Input Error");
+        return;
+    }
     sprintf (tmpcb,"%d",NumLines);
     if (AskText("Disassemble","Number of lines: (Max. 2048)",tmpcb) == FALSE)
         return;
@@ -2603,7 +2612,12 @@ void ChangeReg()
     sprintf (tmpcb,"0x" FMT_LL "X", rV[i]);
     if (AskText("Change Register Value",RDispName[i],tmpcb))
     {
-        Bit64u val = ParseNumber(tmpcb,TRUE);     // input either hex or decimal
+        Bit64u val;
+        if (! bx_dbg_eval_expression(tmpcb, CurrentCPU, &val))  // e.g. 0x1234, -1, rax+8
+        {
+            DispMessage ("Cannot evaluate the register value expression","Input Error");
+            return;
+        }
 #if BX_SUPPORT_X86_64
         if (i >= EAX_Rnum && i <= EIP_Rnum) // must use RAX-RIP when setting 32b registers
             i -= EAX_Rnum - RAX_Rnum;
