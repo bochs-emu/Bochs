@@ -184,6 +184,11 @@ Changes after Bochs 3.1 release:
     - Fail DMA write requests instead of leaving them pending (matches QEMU)
     - Fixed host heap out-of-bounds read by DMA READ after DMA SKIP past the end of the item
     - UEFI ACPI tables: added SSDT with Processor objects (required for Mac OS X guest boot) (#933)
+    - Arch-local keys are kept apart from the standard keys (IRQ0 override and HPET entries overwrote UUID and
+      NOGRAPHIC, arch-local keys were not readable and selecting them read out of bounds)
+    - UEFI ACPI tables: FADT does not advertise a 32-bit PM timer (PIIX4 PM timer is 24-bit), GPE0 block is placed
+      on the PIIX4 GPSTS/GPEN registers, FIRMWARE_CTRL is zero when the 64-bit X_FIRMWARE_CTRL pointer to the FACS
+      is used (both were set, the ACPI spec requires FIRMWARE_CTRL to be zero when X_FIRMWARE_CTRL is used)
   - Serial / Parallel port
     - Raw serial mode (Win32): the 1 stop bit setting was ignored
     - Serial: LSR read clears the parity error bit
