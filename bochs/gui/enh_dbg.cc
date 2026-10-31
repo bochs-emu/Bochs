@@ -1239,7 +1239,8 @@ static void InitRegObjects()
 }
 
 static void FillStack();
-static void RefreshDataDump(Bit8u *buffer);
+static bool RefreshDataDump(Bit8u *buffer);
+static bool DumpReadOK = TRUE;  // FALSE = the last read of the MemDump memory failed, DataDump is not valid
 
 void doUpdate()
 {
@@ -1253,8 +1254,8 @@ void doUpdate()
     if (DViewMode == VIEW_STACK) {  // in stack view mode, keep the stack updated
         FillStack();
     } else if ((DViewMode == VIEW_MEMDUMP) && DumpInitted) {
-        RefreshDataDump(tmpbuffer);
-        if (memcmp(DataDump, tmpbuffer, 4096)) {
+        // redisplay if the memory changed, became unreadable or is readable again
+        if (! RefreshDataDump(tmpbuffer) || ! DumpReadOK || memcmp(DataDump, tmpbuffer, 4096)) {
             doDumpRefresh = TRUE;
         }
     }
@@ -1556,7 +1557,6 @@ static void FillStack()
     Bit64u StackLA, EndLA;
     unsigned int len, i, wordsize, overlap;
     int j;
-    bool LglAddy;
     bool UpdateDisp;
     char *cp, *cpp;
     DumpRow r;          // cols: 0 = address, 1 = hex value, 17 = decimal value
@@ -1579,26 +1579,15 @@ static void FillStack()
     // TODO: enforce that cp is wordsize aligned
     // also -- enforce that StackLA is wordsize aligned
     cp = CurStack;
-    i = (unsigned) StackLA & 0xfff; // where is stack bottom, in its 4K memory page?
-    if (i > 0x1000 - len)           // does len cross a 4K boundary?
+    if (! bx_dbg_read_linear(CurrentCPU, StackLA, len, (Bit8u *) cp))
     {
-        unsigned int ReadSize = 0x1000 - i;
-        // read up to the 4K boundary, then try to read the last chunk
-        if (bx_dbg_read_linear(CurrentCPU, StackLA, ReadSize, (Bit8u *) cp) == FALSE)
-        {
-            // no data to show -- just one error message
-            sprintf (r.txt[DUMP_INFO_COL],"illegal address");
-            StartListUpdate(DUMP_WND);
-            InsertListRow(r.cols, DUMP_COLS, DUMP_WND, 0, LGRP_NONE);
-            EndListUpdate(DUMP_WND);
-            return;
-        }
-        LglAddy = bx_dbg_read_linear(CurrentCPU, StackLA + ReadSize, len + i - 0x1000, (Bit8u *) cp + ReadSize);
-        if (! LglAddy)
-            len = ReadSize;
+        // no data to show -- just one error message
+        sprintf (r.txt[DUMP_INFO_COL],"illegal address");
+        StartListUpdate(DUMP_WND);
+        InsertListRow(r.cols, DUMP_COLS, DUMP_WND, 0, LGRP_NONE);
+        EndListUpdate(DUMP_WND);
+        return;
     }
-    else
-        bx_dbg_read_linear(CurrentCPU, StackLA, len, (Bit8u *) cp);
 
     UpdateDisp = CpuModeChange;     // calculate which stack entries have changed
     cp = CurStack;
@@ -1863,24 +1852,14 @@ static void FillDataX(char* t, unsigned char C, bool doHex)
     }
 }
 
-static void RefreshDataDump(Bit8u *buffer)
+// re-load 4k of MemDump data at DumpStart from bochs emulated linear or physical memory
+// returns FALSE on a read error (buffer content is then not valid)
+static bool RefreshDataDump(Bit8u *buffer)
 {
-    bool retval = TRUE;
-
-    // re-load 4k DataDump array from bochs emulated linear or physical memory
-    if (LinearDump) {
-        // cannot read linear mem across a 4K boundary -- so break the read in two
-        // -- calculate location of 4K boundary (h):
-        unsigned len = (int) DumpStart & 0xfff;
-        unsigned i = 4096 - len;
-        Bit64u h = DumpStart + i;
-        retval = bx_dbg_read_linear(CurrentCPU, DumpStart, i, buffer);
-        if (retval != FALSE && len != 0)
-            retval = bx_dbg_read_linear(CurrentCPU, h, len, buffer + i);
-    } else {
-        retval = bx_mem.dbg_fetch_mem(BX_CPU(CurrentCPU),
-            (bx_phy_address)DumpStart, 4096, buffer);
-    }
+    if (LinearDump)
+        return bx_dbg_read_linear(CurrentCPU, DumpStart, 4096, buffer);
+    else
+        return bx_mem.dbg_fetch_mem(BX_CPU(CurrentCPU), (bx_phy_address) DumpStart, 4096, buffer);
 }
 
 // display the MemDump window
@@ -1891,7 +1870,7 @@ void ShowData()
     char tmphex[40];
 
     if (doDumpRefresh) {
-        RefreshDataDump((Bit8u*)DataDump);
+        DumpReadOK = RefreshDataDump((Bit8u*)DataDump);
     }
     doDumpRefresh = FALSE;
     StartListUpdate(DUMP_WND);
@@ -1907,6 +1886,14 @@ void ShowData()
         else
 #endif
             sprintf(r.txt[0],"0x%08X",(Bit32u) (DumpStart + i));
+
+        if (! DumpReadOK)
+        {
+            // no data to show -- just one error message
+            strcpy(r.txt[DUMP_INFO_COL], "illegal address");
+            InsertListRow(r.cols, DUMP_COLS, DUMP_WND, 0, LGRP_NONE);
+            break;
+        }
 
         *tmphex = 0;
         for(unsigned y = 0; y < 16; y++)
@@ -2154,7 +2141,7 @@ static bool AskText(const char *title, const char *prompt, char *DefaultText)
 // newDS = illegal (1) is a flag to ask the user for a DumpStart address
 static bool InitDataDump(bool isLinear, Bit64u newDS)
 {
-    bool retval = TRUE;
+    bool retval;
     bool MsgOnErr = FALSE;
     if (! AtBreak)
         return FALSE;
@@ -2175,29 +2162,22 @@ static bool InitDataDump(bool isLinear, Bit64u newDS)
         MsgOnErr = TRUE;
     }
 
-    // load 4k DataDump array from bochs emulated linear or physical memory
+    // load 4k of bochs emulated linear or physical memory, a read error may leave
+    // a partially filled buffer -- so DataDump is only replaced if the read worked
+    Bit8u newdata[4096];
     if (isLinear)
-    {
-        // cannot read linear mem across a 4K boundary -- so break the read in two
-        // -- calculate location of 4K boundary (h):
-        unsigned len = (int) newDS & 0xfff;
-        unsigned i = 4096 - len;
-        Bit64u h = newDS + i;
-        retval = bx_dbg_read_linear(CurrentCPU, newDS,i,(Bit8u *)DataDump);
-        if (retval != FALSE && len != 0)
-            retval = bx_dbg_read_linear(CurrentCPU, h,len,(Bit8u *)DataDump + i);
-    }
-    else {
-        retval = (bool) bx_mem.dbg_fetch_mem(BX_CPU(CurrentCPU),
-            (bx_phy_address)newDS, 4096, (Bit8u *)DataDump);
-    }
+        retval = bx_dbg_read_linear(CurrentCPU, newDS, 4096, newdata);
+    else
+        retval = bx_mem.dbg_fetch_mem(BX_CPU(CurrentCPU), (bx_phy_address)newDS, 4096, newdata);
     if (retval == FALSE)
     {
-        // assume that the DataDump array is still valid -- fetch_mem should error without damage
+        // the previous MemDump stays as it is
         if (MsgOnErr)
             DispMessage ("Address range was not legal memory","Memory Error");
         return retval;
     }
+    memcpy(DataDump, newdata, 4096);
+    DumpReadOK = TRUE;
 
     SA_valid = FALSE;       // any previous MemDump click is now irrelevant
     ResizeColmns = TRUE;    // autosize column 0 once
@@ -2403,6 +2383,8 @@ static void doFind()
     }
     else
     {
+        if (! DumpReadOK)       // nothing to search in an unreadable MemDump
+            return;
         if (AskText("Memory Dump Search",
             "Sequential hex bytes (e.g 00FEFA - no spaces), or ascii string (max. 16b):",tmpcb) == FALSE)
             return;
@@ -2624,7 +2606,7 @@ void SetMemLine(int L)
     // get base address of "line" of data -- each line (L) is 16 bytes
     char addrstr[64];
     Bit64u h = DumpStart + (L<<4);
-    if (! AtBreak || L >= 256)
+    if (! AtBreak || L >= 256 || ! DumpReadOK)  // no data to edit in an unreadable MemDump
         return;
 
     if (! LinearDump)
