@@ -95,6 +95,19 @@ Bit32u xsave_area_last_byte(Bit32u requested_feature_bitmap)
 
   return max_size;
 }
+
+// Returns the offset of the first byte to access in XSAVE area: x87 state, MXCSR or XSAVE header
+// if neither of them is accessed, standard format accesses MXCSR also when AVX state is requested
+BX_CPP_INLINE Bit32u xsave_area_first_byte(Bit32u requested_feature_bitmap, bool compaction)
+{
+  if ((requested_feature_bitmap & BX_XCR0_FPU_MASK) != 0)
+    return XSAVE_FPU_STATE_OFFSET;
+  if ((requested_feature_bitmap & BX_XCR0_SSE_MASK) != 0)
+    return 24; // MXCSR
+  if (! compaction && (requested_feature_bitmap & BX_XCR0_YMM_MASK) != 0)
+    return 24; // MXCSR
+  return 512;  // XSAVE header
+}
 #endif
 
 /* 0F AE /4 */
@@ -131,9 +144,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   Bit32u xinuse = get_xinuse_vector(requested_feature_bitmap);
 
   if (requested_feature_bitmap) {
-    // check that we would not fault while attempting to write, check that we can write-access last byte of the XSAVE area to be written
-    // touch the memory but no write actually occurs
+    // check that we would not fault while attempting to write, check that we can write-access last and first bytes of the XSAVE area
+    // to be written, touch the memory but no write actually occurs
     tickle_write_virtual(i->seg(), (eaddr + xsave_area_last_byte(requested_feature_bitmap) - 1) & asize_mask, 1);
+    tickle_write_virtual(i->seg(), (eaddr + xsave_area_first_byte(requested_feature_bitmap, false)) & asize_mask, 1);
 
     /////////////////////////////////////////////////////////////////////////////
     if ((requested_feature_bitmap & BX_XCR0_FPU_MASK) != 0)
@@ -235,9 +249,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
   Bit64u xstate_bv = requested_feature_bitmap & xinuse;
   Bit64u xcomp_bv = requested_feature_bitmap | XSAVEC_COMPACTION_ENABLED;
 
-  // check that we would not fault while attempting to write, check that we can write-access last byte of the XSAVE area to be written
-  // (at least the XSAVE header) before anything is written, touch the memory but no write actually occurs
+  // check that we would not fault while attempting to write, check that we can write-access last (at least the XSAVE header)
+  // and first bytes of the XSAVE area before anything is written, touch the memory but no write actually occurs
   tickle_write_virtual(i->seg(), (eaddr + xsave_area_last_byte_compaction(requested_feature_bitmap, requested_feature_bitmap) - 1) & asize_mask, 1);
+  tickle_write_virtual(i->seg(), (eaddr + xsave_area_first_byte(requested_feature_bitmap, true)) & asize_mask, 1);
 
   if ((xstate_bv & BX_XCR0_FPU_MASK) != 0)
   {
@@ -400,13 +415,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
     return;
   }
 
-  // check that we would not fault while attempting to read, check that we can access last byte of the XSAVE area
+  // check that we would not fault while attempting to read, check that we can access last and first bytes of the XSAVE area
   // before any state is modified, touch the memory but no read actually occurs
   // in compacted format the components layout is defined by XCOMP_BV, not by RFBM
-  if (compaction)
+  if (compaction) {
     tickle_read_virtual(i->seg(), (eaddr + xsave_area_last_byte_compaction((Bit32u) xcomp_bv, requested_feature_bitmap) - 1) & asize_mask);
-  else
+    tickle_read_virtual(i->seg(), (eaddr + xsave_area_first_byte(requested_feature_bitmap & (Bit32u) xcomp_bv, true)) & asize_mask);
+  }
+  else {
     tickle_read_virtual(i->seg(), (eaddr + xsave_area_last_byte(requested_feature_bitmap) - 1) & asize_mask);
+    tickle_read_virtual(i->seg(), (eaddr + xsave_area_first_byte(requested_feature_bitmap, false)) & asize_mask);
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   // Legacy form of XRSTOR loads the MXCSR register from memory whenever the
