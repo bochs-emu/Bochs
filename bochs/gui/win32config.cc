@@ -65,7 +65,11 @@ int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpDa
   char path[MAX_PATH];
 
   if (uMsg == BFFM_INITIALIZED) {
-    GetCurrentDirectory(MAX_PATH, path);
+    if ((lpData != 0) && (((const char*)lpData)[0] != 0)) {
+      lstrcpyn(path, (const char*)lpData, MAX_PATH);
+    } else {
+      GetCurrentDirectory(MAX_PATH, path);
+    }
     SendMessage(hwnd, BFFM_SETSELECTION, TRUE, (LPARAM)path);
   }
   return 0;
@@ -75,8 +79,8 @@ int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpDa
 #define BIF_NEWDIALOGSTYLE 0
 #endif
 
-// result must point to a buffer of at least MAX_PATH chars.
-// It is only modified on success.
+// result must point to a buffer of at least MAX_PATH chars. If not empty,
+// it is used as initial folder. It is only modified on success.
 int BrowseDir(const char *Title, char *result)
 {
   BROWSEINFO browseInfo;
@@ -90,6 +94,7 @@ int BrowseDir(const char *Title, char *result)
   browseInfo.lpszTitle = (LPCSTR)Title;
   browseInfo.ulFlags = BIF_NEWDIALOGSTYLE | BIF_RETURNONLYFSDIRS;
   browseInfo.lpfn = BrowseCallbackProc;
+  browseInfo.lParam = (LPARAM)result;
   ItemIDList = SHBrowseForFolder(&browseInfo);
   if (ItemIDList != NULL) {
     path[0] = 0;
@@ -109,10 +114,17 @@ int BrowseDir(const char *Title, char *result)
   return r;
 }
 
+static void LogAskAddChoice(HWND hDlg, const char *text, int choice)
+{
+  LRESULT idx = SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)text);
+  SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_SETITEMDATA, idx, choice);
+}
+
 static BOOL CALLBACK LogAskProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   BxEvent *event;
   int level;
+  LRESULT idx;
 
   switch (msg) {
     case WM_INITDIALOG:
@@ -121,14 +133,16 @@ static BOOL CALLBACK LogAskProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
       SetWindowText(hDlg, SIM->get_log_level_name(level));
       SetWindowText(GetDlgItem(hDlg, IDASKDEV), event->u.logmsg.prefix);
       SetWindowText(GetDlgItem(hDlg, IDASKMSG), event->u.logmsg.msg);
-      SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Continue");
-      SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Continue and don't ask again");
+      LogAskAddChoice(hDlg, "Continue", BX_LOG_ASK_CHOICE_CONTINUE);
+      LogAskAddChoice(hDlg, "Continue and don't ask again", BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS);
       if (event->u.logmsg.mode == BX_LOG_DLG_ASK) {
-        SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Kill simulation");
-        SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Abort (dump core)");
+        LogAskAddChoice(hDlg, "Kill simulation", BX_LOG_ASK_CHOICE_DIE);
+#if BX_HAVE_ABORT
+        LogAskAddChoice(hDlg, "Abort (dump core)", BX_LOG_ASK_CHOICE_DUMP_CORE);
+#endif
 #if BX_DEBUGGER
         if (SIM->debugger_activation_allowed()) {
-          SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Continue and return to debugger");
+          LogAskAddChoice(hDlg, "Continue and return to debugger", BX_LOG_ASK_CHOICE_ENTER_DEBUG);
         }
 #endif
         SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_SETCURSEL, 2, 0);
@@ -143,7 +157,12 @@ static BOOL CALLBACK LogAskProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
     case WM_COMMAND:
       switch (LOWORD(wParam)) {
         case IDOK:
-          EndDialog(hDlg, SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_GETCURSEL, 0, 0));
+          idx = SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_GETCURSEL, 0, 0);
+          if (idx == LB_ERR) {
+            EndDialog(hDlg, BX_LOG_ASK_CHOICE_DIE);
+          } else {
+            EndDialog(hDlg, SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_GETITEMDATA, idx, 0));
+          }
           break;
         case IDCANCEL:
           EndDialog(hDlg, BX_LOG_ASK_CHOICE_DIE);
@@ -763,8 +782,12 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
           rcfile->set_extension("bxrc");
           if (AskFilename(hDlg, rcfile, NULL) > 0) {
             SIM->reset_all_param();
-            SIM->read_rc(rcfile->getptr());
-            MainMenuSetTitle(hDlg, rcfile->getptr());
+            if (SIM->read_rc(rcfile->getptr()) >= 0) {
+              MainMenuSetTitle(hDlg, rcfile->getptr());
+            } else {
+              MessageBox(hDlg, "Failed to read configuration file!", "ERROR", MB_ICONERROR);
+              MainMenuSetTitle(hDlg, "");
+            }
             RefreshStartOptions(hDlg);
           }
           delete rcfile;
@@ -775,8 +798,11 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
           rcfile->set_extension("bxrc");
           rcfile->set_options(rcfile->SAVE_FILE_DIALOG);
           if (AskFilename(hDlg, rcfile, NULL) > 0) {
-            SIM->write_rc(rcfile->getptr(), 1);
-            MainMenuSetTitle(hDlg, rcfile->getptr());
+            if (SIM->write_rc(rcfile->getptr(), 1) >= 0) {
+              MainMenuSetTitle(hDlg, rcfile->getptr());
+            } else {
+              MessageBox(hDlg, "Failed to write configuration file!", "ERROR", MB_ICONERROR);
+            }
           }
           delete rcfile;
           break;
@@ -1056,7 +1082,7 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
         opts = sparam->get_options();
         if (opts & sparam->IS_FILENAME) {
           if (opts & sparam->SELECT_FOLDER_DLG) {
-            pname[0] = 0;
+            lstrcpyn(pname, sparam->getptr(), MAX_PATH);
             event->retcode = BrowseDir(sparam->get_label(), pname);
             if (event->retcode >= 0) {
               sparam->set(pname);
