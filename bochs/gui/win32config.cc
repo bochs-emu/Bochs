@@ -439,6 +439,9 @@ void BuildLogModulesList(HWND hDlg)
   }
 }
 
+// controls for the "log" parameter list created (start menu only)
+static BOOL log_param_list = FALSE;
+
 void InitLogOptions(HWND hDlg, BOOL advanced)
 {
   BuildLogModulesList(hDlg);
@@ -450,6 +453,7 @@ void InitLogOptions(HWND hDlg, BOOL advanced)
     SetStandardLogOptions(hDlg);
     CreateParamList(hDlg, 0, 0, 206, 135, false, (bx_list_c*)SIM->get_param("log"), 2);
     CreateParamDlgTooltip(hDlg);
+    log_param_list = TRUE;
   }
 }
 
@@ -508,7 +512,7 @@ UINT HandleLogOptions(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
               break;
             case IDAPPLY:
             case IDREVERT:
-              if (SIM->get_param("log") != NULL) {
+              if (log_param_list && (SIM->get_param("log") != NULL)) {
                 ret = HandleChildWindowEvents(hDlg, 0, LOWORD(wParam), noticode, (bx_list_c*)SIM->get_param("log"));
               }
               if (LOWORD(wParam) == IDAPPLY) {
@@ -530,7 +534,7 @@ UINT HandleLogOptions(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
               }
               break;
             default:
-              if (SIM->get_param("log") != NULL) {
+              if (log_param_list && (SIM->get_param("log") != NULL)) {
                 ret = HandleChildWindowEvents(hDlg, 0, LOWORD(wParam), noticode, (bx_list_c*)SIM->get_param("log"));
               }
           }
@@ -565,7 +569,7 @@ void ShowLogOptions(HWND hDlg, bool show, bool refresh)
   ShowWindow(GetDlgItem(hDlg, IDREVERT), show ? SW_NORMAL : SW_HIDE);
   EnableWindow(GetDlgItem(hDlg, IDAPPLY), FALSE);
   EnableWindow(GetDlgItem(hDlg, IDREVERT), show ? FALSE : TRUE);
-  if (SIM->get_param("log") != NULL) {
+  if (log_param_list && (SIM->get_param("log") != NULL)) {
     ShowParamList(hDlg, 0, show, (bx_list_c*)SIM->get_param("log"));
   }
 }
@@ -731,6 +735,7 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
       optedit = FALSE;
       plugin_update = FALSE;
       optnum = -1;
+      log_param_list = FALSE;
       if (runtime) {
         SetWindowText(hDlg, "Bochs Runtime Menu");
         EnableWindow(GetDlgItem(hDlg, IDREADRC), FALSE);
