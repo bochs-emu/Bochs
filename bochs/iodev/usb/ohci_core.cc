@@ -1208,7 +1208,7 @@ int bx_ohci_core_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed, int toggl
     else {
       ilen = ((int) TD_GET_BE(td) - TD_GET_CBP(td)) + 1;
       if (ilen < 0)
-        len = 0x1001 + len;
+        len = 0x1001 + ilen;
       else
         len = (unsigned) ilen;
     }
