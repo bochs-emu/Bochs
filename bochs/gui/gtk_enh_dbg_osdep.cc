@@ -1992,14 +1992,14 @@ void ListClr_PaintCb(GtkTreeViewColumn *col,
             // set fg (and bg if requested) according to color list
         Bit8u ClrFlgs = RegColor[ RitemToRnum[rownum] ];
         // RitemToRnum converts a ListView row number to the corresponding Register number.
-        // RegColor has the 0x80 bit set if the register is supposed to be red.
+        // RegColor has the RCLR_CHANGED bit set if the register is supposed to be red.
         // Background color index is in the low nibble of ClrFlgs/RegColor.
         if (SeeRegColors != FALSE)
             g_object_set(renderer, "cell-background-gdk", &ColorList[ClrFlgs &7], "cell-background-set", TRUE, NULL);
         else
             g_object_set(renderer, "cell-background-gdk", &white, "cell-background-set", TRUE, NULL);
 
-        if ((ClrFlgs & 0x80) != 0)      // should this register be red?
+        if ((ClrFlgs & RCLR_CHANGED) != 0)      // should this register be red?
             g_object_set(renderer, "foreground-gdk", &fg_red, "foreground-set", TRUE, NULL);
         else
             g_object_set(renderer, "foreground-gdk", &fg_black, "foreground-set", TRUE, NULL);

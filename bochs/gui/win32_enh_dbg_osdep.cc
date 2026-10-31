@@ -1690,11 +1690,11 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
                     d->clrTextBk = RGB(255,255,255);
 
                     // RitemToRnum converts a ListView row number to the corresponding Register number.
-                    // RegColor has the 0x80 bit set if the register is supposed to be red.
+                    // RegColor has the RCLR_CHANGED bit set if the register is supposed to be red.
                     // Background color index is in the low nibble of ClrFlgs/RegColor.
                     if (SeeRegColors != FALSE)
                         d->clrTextBk = ColorList[ClrFlgs &7];
-                    if ((ClrFlgs & 0x80) != 0)      // should this register be red?
+                    if ((ClrFlgs & RCLR_CHANGED) != 0)      // should this register be red?
                         d->clrText = RGB(255,0,0);
                     if (!AtBreak)
                         d->clrTextBk = RGB(210,210,210);    // gray out the background if "running"

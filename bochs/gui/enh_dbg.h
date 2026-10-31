@@ -408,8 +408,33 @@ enum {
 #define EXTRA_REGS  28
 
 extern Bit8u RegColor[STD_REG_NUM+EXTRA_REGS];   // specifies foreground and background color of registers
-// Text color is red if the upper bit is set. Background is set according to ColorList.
+// Text color is red if RCLR_CHANGED is set. Background is set according to ColorList.
 extern int RitemToRnum[STD_REG_NUM+EXTRA_REGS];   // mapping from Reg List Item# to register number
+
+// RegColor background color index (into ColorList) for each register type
+enum {
+  RCLR_GPR64 = 0,           // RAX-R31, EFLAGS (and all EXTRA_REGS parts)
+  RCLR_GPR32,               // EAX-EIP
+  RCLR_SEG,                 // CS-GS
+  RCLR_SYS,                 // GDTR, IDTR, LDTR, TR
+  RCLR_CTRL,                // CR0-CR4, EFER
+  RCLR_FPU,                 // ST0-ST7
+  RCLR_SSE,                 // XMM0-XMM15
+  RCLR_DBG                  // DR0-DR7
+};
+
+#define RCLR_CHANGED    0x80    // RegColor flag: register value changed (show in red)
+
+// InsertListRow "grouping" values
+enum {
+  LGRP_GPR = 0,             // GP registers and EFLAGS
+  LGRP_SEG_SYS,             // segment and system registers
+  LGRP_CTRL,                // control registers
+  LGRP_FPU,                 // FPU / MMX registers
+  LGRP_SSE,                 // SSE registers
+  LGRP_DBG,                 // debug registers
+  LGRP_NONE = 8             // no group
+};
 
 // do the linear breakpoint list as 2 arrays, rather than a structure -- much easier to search!
 extern bx_address BrkLAddr[BX_DBG_MAX_LIN_BPOINTS+1];
