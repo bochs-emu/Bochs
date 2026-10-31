@@ -485,6 +485,7 @@ void bx_usb_ehci_c::register_state(void)
     BXRS_HEX_PARAM_FIELD(reg, ptc, BX_EHCI_THIS hub.usb_port[i].portsc.ptc);
     BXRS_HEX_PARAM_FIELD(reg, pic, BX_EHCI_THIS hub.usb_port[i].portsc.pic);
     BXRS_PARAM_BOOL(reg, po, BX_EHCI_THIS hub.usb_port[i].portsc.po);
+    BXRS_PARAM_BOOL(reg, pp, BX_EHCI_THIS hub.usb_port[i].portsc.pp);
     BXRS_HEX_PARAM_FIELD(reg, ls, BX_EHCI_THIS hub.usb_port[i].portsc.ls);
     BXRS_PARAM_BOOL(reg, pr, BX_EHCI_THIS hub.usb_port[i].portsc.pr);
     BXRS_PARAM_BOOL(reg, sus, BX_EHCI_THIS hub.usb_port[i].portsc.sus);
