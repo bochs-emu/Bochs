@@ -417,8 +417,8 @@ int usb_msd_device_c::uasp_do_command(USBPacket *p)
         break;
       case IU_TMF_RESET_LUN:
         treq = uasp_find_request(0xFFFFFFFF, lun);
-        BX_DEBUG(("IU_TMF_RESET_LUN: tag = 0x%04X", treq->tag));
         if (treq != NULL) {
+          BX_DEBUG(("IU_TMF_RESET_LUN: tag = 0x%04X", treq->tag));
           s.scsi_dev->scsi_cancel_io(treq->tag);
           req->result = STATUS_GOOD;
         } else
