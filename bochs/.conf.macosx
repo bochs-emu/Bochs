@@ -39,6 +39,7 @@ CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-all-optimizations \
     --enable-cpu-level=6 --enable-3dnow --enable-x86-64 --enable-vmx=2 \
     --enable-svm --enable-avx --enable-evex --enable-cet --enable-fred \
     --enable-pci --enable-clgd54xx --enable-geforce --enable-voodoo \
+    --enable-rage128 \
     --enable-usb --enable-usb-ohci --enable-usb-ehci --enable-usb-xhci \
     --enable-busmouse"
 
@@ -80,4 +81,3 @@ else
 fi
 
 ./configure $CONFIGURE_ARGS
-
