@@ -1,6 +1,6 @@
 Changes after Bochs 3.1 release:
 
-(up to date with commits done till 28 Oct 2026)
+(up to date with commits done till 31 Oct 2026)
 
 - CPU emulation and instrumentation
   ! CPUDB: Added AMD Zen3 (Vermeer) CPUID model (features X2APIC, CLWB, UMIP, PKU, CET, VAES, RDPID + introduces CPUID 0x80000021: AMD Extended Feature Identification 2)
@@ -13,7 +13,7 @@ Changes after Bochs 3.1 release:
   ! Implemented MSR_CORE_THREAD_COUNT (0x35) for Intel Nehalem and later cpu models, reports the configured number of cores and threads
   ! Configurable Maximum Physical Address Width (MAXPHYADDR) through new 'maxphyaddr' parameter of the 'cpu' bochsrc option (supported maxphyaddr between 36 to 52 bit, default 40)
   ! Improved implementation of x87 transendential instructions (F2XM1/FYL2X/FYL2XP1/FPATAN/FSIN/FCOS/FSINCOS/FPTAN) to match HW
-  - Bugfixes for CPU emulation correctness (critical bugfixes for emulation of xAPIC, AVX_NE_CONVERT, AVX512/AVX512_FP16/AVX512_BF16, AMX, VMX, SVM, XOP, TBM, CET, FRED, MWAIT)
+  - Bugfixes for CPU emulation correctness (critical bugfixes for emulation of xAPIC, AVX_NE_CONVERT, AVX512/AVX512_FP16/AVX512_BF16, AMX, VMX, SVM, XOP, TBM, CET, FRED, MWAIT, XSAVE)
     full list of all CPU bugfixes can be seen in Bochs source tree @ bochs/cpu/history)
 
 - Bochs debugger
@@ -71,6 +71,13 @@ Changes after Bochs 3.1 release:
     - win32: output window is read only and keeps the selection visible, ^a selects all output text
     - GTK: select the text with the mouse, "Select All" and "Copy" are also available in the right-click menu
   - win32: much faster Output window updates for long debugger output
+  - Memory dump and stack views show "illegal address" when the guest memory cannot be read (stale data was shown),
+    a failed new memory dump keeps the previous dump unchanged
+  - Segment, system and control registers are read only in the register view (the direct change did not reload
+    the descriptor cache and skipped the mode/paging side effects and validity checks)
+  - Accept expressions in GUI debugger dialogs
+    The GUI debugger memory dump address, disassemble start address and change register value dialogs accept
+    expressions like rsp+0x10, cs:rip or rax+8 instead of plain numbers only.
 
 - Configure and compile
   - Bochs now require C++11 support for compilation, enforced via configure
@@ -85,6 +92,7 @@ Changes after Bochs 3.1 release:
     - Fixed host heap out-of-bounds read in planar memory read beyond the end of the video memory
     - Fixed division by zero in Input Status 1 read with very short horizontal total
     - Fixed vertical timer stall when vertical retrace end is beyond vertical total
+    - Fixed 256-color word mode screen update address calculation
   - Voodoo
     - Fixed crash when the screen is redrawn (e.g. by the debugger) before a display mode is set (#666)
   - Banshee
@@ -107,6 +115,8 @@ Changes after Bochs 3.1 release:
       - #928: Add back-transform support for NV20
       - #942: Fix inline array method handler registration for NV15 (crashes in 3D demos)
       - #944: Implement 16-bit MMIO writes (PANIC with RivaTuner)
+      - #945: Fix out of bounds vertex data read with NV40 (geometry corruption in 3D demos)
+      - #948: Fix uninitialized BAR2 size (PANIC on BAR2 write)
   - Hard drive / HD image
     - VVFAT: Fixed LongName handling in vvfat disks
     - VVFAT: Adding path prefix "fat32:" forces using FAT32 file system
@@ -133,6 +143,8 @@ Changes after Bochs 3.1 release:
     - Fixed loading of PCI option ROM images (partial reads, uninitialized ROM padding)
     - ACPI: unmap the PM/SMBus I/O windows when reset clears their BARs
     - Fixed spurious rejection of read-only memory handlers (e.g. PCI option ROM) after other memory handlers were unregistered (#932)
+    - PCI IDE: ignore the reserved PRD address bit 0, zero-fill the rest of the PRD area for short ATAPI DMA data
+    - PCI IDE: PCI status register is read only / write-1-to-clear
   - Interrupt controllers and timers
     - IOAPIC: implemented Remote IRR for level triggered interrupts
     - IOAPIC: a level triggered entry programmed while its input line is already asserted now delivers the interrupt
@@ -156,6 +168,7 @@ Changes after Bochs 3.1 release:
     - HPET: fixed main counter and comparator state after save/restore
     - PIT: events of counters 1/2 were not scheduled while counter 0 had no pending event
     - Slowdown timer synchronization works again after restoring a saved state
+    - IOAPIC, HPET: misaligned, odd sized or undefined guest MMIO accesses are reported as errors instead of PANIC
   - DMA
     - Fixed 16-bit DMA transfers from device to memory (only half of the data was written)
     - Fixed 64K DMA transfers (transfer length overflow)
@@ -163,13 +176,18 @@ Changes after Bochs 3.1 release:
     - PS/2 mouse "Set Scaling 1:1" command selected 2:1 scaling
     - Bytes queued while the 8042 output buffer was full are delivered to the right (keyboard or AUX) output buffer
     - Range check key codes received from the GUI
+    - Busmouse: motion is no longer lost while the counters are held
   - USB
     - Fixed USB SCSI disk seek truncated to int (USB disks larger than 2GB failed past 2GB)
     - USB HID: deactivate the idle timer before unregistering it (PANIC on exit after guest set HID idle rate)
   - fw_cfg
     - Fail DMA write requests instead of leaving them pending (matches QEMU)
-  - Serial port
+    - Fixed host heap out-of-bounds read by DMA READ after DMA SKIP past the end of the item
+    - UEFI ACPI tables: added SSDT with Processor objects (required for Mac OS X guest boot) (#933)
+  - Serial / Parallel port
     - Raw serial mode (Win32): the 1 stop bit setting was ignored
+    - Serial: LSR read clears the parity error bit
+    - Parallel: the IRQ is registered once at init (enabling the IRQ by the guest could PANIC with an IRQ conflict)
   - Sound
     - SB16: Added parameter 'dsp_realtime' to use realtime mode for the DSP
     - ES1370: Added parameter 'dac_realtime' to use realtime mode for the DACs
@@ -183,6 +201,7 @@ Changes after Bochs 3.1 release:
     - Report an error instead of PANIC when the CMOS image file cannot be written on exit
   - General
     - Set Windows system timer resolution to 1ms. This help to reduce artefacts (clicking noises) during sound playback
+    - PC speaker: fixed use of uninitialized output mode when the speaker is disabled, atomic lock for the Win32 beep thread
     - Save/restore: failures while saving the simulation state are reported instead of being ignored
 
 - GUI and display libraries
@@ -193,6 +212,15 @@ Changes after Bochs 3.1 release:
     - Faster text mode character drawing
     - Fixed heap overflow on clipboard copy
     - Fixed absolute mouse (USB tablet) coordinates in stretched modes (small modes, autoscale, fullscreen)
+  - win32 config interface
+    - Fixed buffer overflows in the string dialog and the plugin control
+    - Standard log options wrote invalid log actions, "end simulation" is listed in the advanced log options, runtime log page fixed
+    - Pages are refreshed after reading a config file and after reset to factory defaults
+    - Config file read / write errors are reported in the start menu
+    - Simulation is not started if restoring the saved state failed
+    - Numeric input is validated, bytestring parameters are handled in the string dialog (invalid raw byte input reported)
+    - Folder browser starts at the current value
+    - Fixed parameter dialog list cleanup and scrolling
   - sdl2 gui
     - Faster screen update: only the modified area is copied to the window
     - Fixed paste (an extra NUL byte was sent to the guest)
