@@ -290,6 +290,66 @@ Bit32u bx_acpi_tables_c::build_hpet(Bit8u* buffer)
     return sizeof(struct acpi_hpet);
 }
 
+// SSDT with a Processor object for every CPU in the \_PR scope, same layout
+// as the processor SSDT built by the legacy Bochs BIOS (bios/rombios32.c).
+// Processor IDs match the ACPI processor IDs of the MADT Local APIC entries.
+// Mac OS X (AppleACPIPlatform) enumerates CPUs only from the ACPI namespace
+// and never finishes the boot without them.
+Bit32u bx_acpi_tables_c::build_ssdt(Bit8u* buffer, Bit32u num_cpus)
+{
+    struct acpi_table_header* ssdt = (struct acpi_table_header*)buffer;
+    memset(ssdt, 0, sizeof(struct acpi_table_header));
+
+    memcpy(ssdt->signature, "SSDT", 4);
+    ssdt->revision = 1;
+    memcpy(ssdt->oem_id, ACPI_OEM_ID, 6);
+    memcpy(ssdt->oem_table_id, ACPI_OEM_TABLE_ID, 8);
+    ssdt->oem_revision = 1;
+    memcpy(ssdt->asl_compiler_id, ACPI_ASL_COMPILER_ID, 4);
+    ssdt->asl_compiler_revision = 1;
+
+    if (num_cpus > 0xff) num_cpus = 0xff;
+
+    Bit8u* p = buffer + sizeof(struct acpi_table_header);
+
+    // length of the scope body excluding PkgLength: NameSeg + 13 bytes per Processor
+    Bit32u length = 0x0d * num_cpus + 4;
+
+    *p++ = 0x10; // ScopeOp
+    if (length <= 0x3e) {
+        *p++ = (Bit8u)(length + 1); // one byte PkgLength
+    } else {
+        *p++ = (Bit8u)(0x40 | ((length + 2) & 0xf)); // two bytes PkgLength
+        *p++ = (Bit8u)((length + 2) >> 4);
+    }
+    *p++ = '_'; *p++ = 'P'; *p++ = 'R'; *p++ = '_';
+
+    for (Bit32u i = 0; i < num_cpus; i++) {
+        *p++ = 0x5B; // ProcessorOp
+        *p++ = 0x83;
+        *p++ = 0x0B; // PkgLength
+        *p++ = 'C';  // Name (CPUx or CPxx)
+        *p++ = 'P';
+        if ((i & 0xf0) != 0)
+            *p++ = (Bit8u)((i >> 4) < 0xa ? (i >> 4) + '0' : (i >> 4) + 'A' - 0xa);
+        else
+            *p++ = 'U';
+        *p++ = (Bit8u)((i & 0xf) < 0xa ? (i & 0xf) + '0' : (i & 0xf) + 'A' - 0xa);
+        *p++ = (Bit8u) i; // ProcessorID
+        *p++ = 0x10; // Processor block address 0x0000B010
+        *p++ = 0xB0;
+        *p++ = 0x00;
+        *p++ = 0x00;
+        *p++ = 0x06; // Processor block length
+    }
+
+    Bit32u size = (Bit32u)(p - buffer);
+    ssdt->length = size;
+    ssdt->checksum = calculate_checksum(buffer, size);
+
+    return size;
+}
+
 Bit32u bx_acpi_tables_c::build_xsdt(Bit8u* buffer, Bit32u* table_offsets, Bit32u num_tables)
 {
     Bit32u header_size = sizeof(struct acpi_table_header);
@@ -463,10 +523,16 @@ void bx_acpi_tables_c::generate_tables(Bit64u ram_size, Bit32u num_cpus)
     offset += hpet_size;
     offset = (offset + 7) & ~7;
     
-    // 6. XSDT (Extended System Description Table)
-    // Contains pointers to FADT, MADT, HPET (not DSDT, that's referenced in FADT)
-    Bit32u table_offsets[] = { fadt_offset, madt_offset, hpet_offset };
-    Bit32u num_tables = 3;
+    // 6. SSDT with the processor objects
+    Bit32u ssdt_offset = offset;
+    Bit32u ssdt_size = build_ssdt(tables_blob + offset, num_cpus);
+    offset += ssdt_size;
+    offset = (offset + 7) & ~7;
+
+    // 7. XSDT (Extended System Description Table)
+    // Contains pointers to FADT, MADT, HPET, SSDT (not DSDT, that's referenced in FADT)
+    Bit32u table_offsets[] = { fadt_offset, madt_offset, hpet_offset, ssdt_offset };
+    Bit32u num_tables = 4;
     Bit32u xsdt_offset = offset;
     Bit32u xsdt_size = build_xsdt(tables_blob + offset, table_offsets, num_tables);
     offset += xsdt_size;
@@ -474,10 +540,10 @@ void bx_acpi_tables_c::generate_tables(Bit64u ram_size, Bit32u num_cpus)
     
     tables_size = offset;
     
-    // 7. Build RSDP (goes in separate blob)
+    // 8. Build RSDP (goes in separate blob)
     build_rsdp(xsdt_offset);
-    
-    // 8. Build loader commands
+
+    // 9. Build loader commands
     loader_capacity = 32 * sizeof(struct qemu_loader_entry);
     loader_blob = new Bit8u[loader_capacity];
     memset(loader_blob, 0, loader_capacity);

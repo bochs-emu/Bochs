@@ -273,6 +273,7 @@ private:
     Bit32u build_fadt(Bit8u* buffer, Bit32u facs_offset, Bit32u dsdt_offset);
     Bit32u build_madt(Bit8u* buffer, Bit32u num_cpus);
     Bit32u build_hpet(Bit8u* buffer);
+    Bit32u build_ssdt(Bit8u* buffer, Bit32u num_cpus);
     Bit32u build_xsdt(Bit8u* buffer, Bit32u* table_offsets, Bit32u num_tables);
     void build_rsdp(Bit32u xsdt_offset);
     
