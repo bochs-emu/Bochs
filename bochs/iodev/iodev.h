@@ -128,6 +128,7 @@ class cdrom_base_c;
 #define BX_PCI_ADVOPT_ALTDEVMAP 0x04
 #define BX_PCI_ADVOPT_NOAGP     0x08
 #define BX_PCI_ADVOPT_NOFDC     0x10
+#define BX_PCI_ADVOPT_ICH7IDE   0x20
 
 enum {
   BX_PCI_BAR_TYPE_NONE = 0,
@@ -461,6 +462,7 @@ public:
                        const Bit8u *iomask, const char *name, bool ioae);
 #endif
   bool is_agp_present();
+  bool is_ich7_ide();
 
   static void timer_handler(void *);
   void timer(void);
