@@ -176,6 +176,7 @@ private:
   void generate_e820_map(void);
   void generate_hpet_config(void);
   void generate_acpi_tables(void);
+  void generate_smbios_tables(void);
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
