@@ -1276,6 +1276,24 @@ void doUpdate()
     UpdateStatus();         // Mode and Eflags may have changed status
 }
 
+#define DUMP_COLS       18  // number of columns in the DUMP_WND list
+#define DUMP_INFO_COL   17  // last column: "info" text, decimal value or ascii dump
+#define DUMP_COL_LEN    48  // fits 32 hex digits (16 byte word size) or 16 ascii chars
+
+// one row of the DUMP_WND list, every column has its own storage and starts empty
+// (do not copy a DumpRow -- cols[] points into its own txt[])
+struct DumpRow {
+    char *cols[DUMP_COLS];              // what InsertListRow receives
+    char txt[DUMP_COLS][DUMP_COL_LEN];  // private storage for each column
+
+    DumpRow() {
+        for (int i = 0; i < DUMP_COLS; i++) {
+            txt[i][0] = 0;
+            cols[i] = txt[i];
+        }
+    }
+};
+
 // Fill the GDT ListView, reading GDT data directly from bochs linear mem
 static void FillGDT()
 {
@@ -1283,31 +1301,10 @@ static void FillGDT()
     unsigned int row = 0;
     unsigned int k = (GDT_Len + 1) / 8;
     Bit8u gdtbuf[16];
-    char *cols[18];
-    char gdttxt[100];
     doDumpRefresh = FALSE;
 
     Bit64u laddr = rV[GDTRnum];
     StartListUpdate(DUMP_WND);
-
-    *gdttxt = 0;
-    cols[0]= gdttxt + 1;
-    cols[1]= gdttxt + 30;
-    cols[2]= gdttxt + 50;
-    cols[3]= gdttxt + 90;
-    cols[4]= gdttxt;    // columns #5 to 17 are blank
-    cols[5]= gdttxt;
-    cols[6]= gdttxt;
-    cols[7]= gdttxt;
-    cols[8]= gdttxt;
-    cols[9]= gdttxt;
-    cols[10]= gdttxt;
-    cols[11]= gdttxt;
-    cols[12]= gdttxt;
-    cols[13]= gdttxt;
-    cols[14]= gdttxt;
-    cols[15]= gdttxt;
-    cols[16]= gdttxt;
 
 #if BX_SUPPORT_X86_64
     bool LongMode = (CpuMode == BX_MODE_LONG_64 || CpuMode == BX_MODE_LONG_COMPAT);
@@ -1315,16 +1312,13 @@ static void FillGDT()
 
     for(i = 0; i < k; i++)
     {
+        DumpRow r;      // cols: 0 = selector, 1 = base, 2 = limit, 3 = DPL, 17 = info
         // read 2 dwords from bochs linear mem into "buffer"
-        sprintf(cols[0], "%02u (Selector 0x%04X)", i, i << 3);
+        sprintf(r.txt[0], "%02u (Selector 0x%04X)", i, i << 3);
         if (bx_dbg_read_linear(CurrentCPU, laddr, 8, gdtbuf) == FALSE)      // abort the current GDT dump on a memory error
         {
-            cols[1]= gdttxt;    // ERROR - blank out cols #2 - 4 for this new row
-            cols[2]= gdttxt;
-            cols[3]= gdttxt;
-            cols[17] = gdttxt + 30;
-            strcpy (cols[17],"illegal address");
-            InsertListRow(cols, 18, DUMP_WND, row, LGRP_NONE);  // 18 cols, "no group"
+            strcpy (r.txt[DUMP_INFO_COL],"illegal address");
+            InsertListRow(r.cols, DUMP_COLS, DUMP_WND, row, LGRP_NONE);
             break;      // the list is finalized after the loop
         }
         laddr += 8;
@@ -1353,20 +1347,19 @@ static void FillGDT()
             limit = limit * 4096 + 4095;   // and the bottom 12 bits aren't tested
 
         GroupId = LGRP_NONE; // default to "blank" group
-        cols[17]= (char*)GDTsT[0]; // default info string is blank
         j = 8;              // default GDT type (group) is blank
         if ((gdtbuf[5] & 0x10) == 0)    // 'S' bit clear = System segment
         {
             GroupId = 1;
             if (limit == 0 && (gdtbuf[5] & 0x80) == 0)      // 'P' (present) bit
                 GroupId = 0;
-            // point to the approprate info string for the GDT system segment type
+            // the approprate info string for the GDT system segment type
 #if BX_SUPPORT_X86_64
             if (LongMode)
-                cols[17] = (char*)GDTsT64[(int) (gdtbuf[5] & 0xf)];
+                strcpy(r.txt[DUMP_INFO_COL], GDTsT64[(int) (gdtbuf[5] & 0xf)]);
             else
 #endif
-                cols[17] = (char*)GDTsT[(int) (gdtbuf[5] & 0xf)];
+                strcpy(r.txt[DUMP_INFO_COL], GDTsT[(int) (gdtbuf[5] & 0xf)]);
         }
         else        // it's an 'executable' code or data segment
         {
@@ -1379,7 +1372,7 @@ static void FillGDT()
 #ifndef IS_WIN98
             GroupId = j;            // use GroupIDs on XP and higher systems
 #else
-            cols[17] = (char*)GDTt2[j];    // otherwise, put descriptive text in "info" column
+            strcpy(r.txt[DUMP_INFO_COL], GDTt2[j]);    // otherwise, put descriptive text in "info" column
 #endif
         }
 
@@ -1393,16 +1386,16 @@ static void FillGDT()
         if ((gdtbuf[6] & 0x60) == 0x20)     // test for longmode segment
         {
             base = 0;       // the base is always 0 in longmode, with "no" limit
-            sprintf(cols[2],"0xFFFFFFFFFFFFFFFF");
+            sprintf(r.txt[2],"0xFFFFFFFFFFFFFFFF");
         }
         else
-            sprintf(cols[2],"0x%X",limit);
-        sprintf(cols[1],"0x" FMT_LLCAPX,base);
-        sprintf(cols[3],"%u", (gdtbuf[5] & 0x60) >> 5);
+            sprintf(r.txt[2],"0x%X",limit);
+        sprintf(r.txt[1],"0x" FMT_LLCAPX,base);
+        sprintf(r.txt[3],"%u", (gdtbuf[5] & 0x60) >> 5);
 
         if (i == 0)
-            cols[17] = (char*)GDTt2[7];    // call "Null" selector "unused"
-        InsertListRow(cols, 18, DUMP_WND, row, GroupId);    // 18 cols
+            strcpy(r.txt[DUMP_INFO_COL], GDTt2[7]);    // call "Null" selector "unused"
+        InsertListRow(r.cols, DUMP_COLS, DUMP_WND, row, GroupId);
         ++row;
         if (Desc16)
             ++i;        // skip the GDT slot holding the second half of the descriptor
@@ -1420,29 +1413,9 @@ static void FillIDT()
     Bit16u sel;
     Bit32u ofs;
     unsigned int i;
-    char *cols[18];
-    char idttxt[80];
+    DumpRow r;          // cols: 0 = vector, 17 = gate selector:offset
+    char *info = r.txt[DUMP_INFO_COL];
     doDumpRefresh = FALSE;
-
-    *idttxt = 0;
-    cols[0]= idttxt + 1;
-    cols[1]= idttxt;    // columns #2 to 17 are blank
-    cols[2]= idttxt;
-    cols[3]= idttxt;
-    cols[4]= idttxt;
-    cols[5]= idttxt;
-    cols[6]= idttxt;
-    cols[7]= idttxt;
-    cols[8]= idttxt;
-    cols[9]= idttxt;
-    cols[10]= idttxt;
-    cols[11]= idttxt;
-    cols[12]= idttxt;
-    cols[13]= idttxt;
-    cols[14]= idttxt;
-    cols[15]= idttxt;
-    cols[16]= idttxt;
-    cols[17]= idttxt + 10;
 
     unsigned entrysize = 8;     // protected and V8086 mode: 8 byte gates
     if (CpuMode == BX_MODE_IA32_REAL)
@@ -1460,11 +1433,11 @@ static void FillIDT()
         k = 256;
     for(i = 0; i < k; i++)
     {
-        sprintf(idttxt + 1, "%02X", i);     // interrupt vector number
+        sprintf(r.txt[0], "%02X", i);     // interrupt vector number
         if (bx_dbg_read_linear(CurrentCPU, laddr, entrysize, idtbuf) == FALSE)      // abort the current IDT dump on a memory error
         {
-            strcpy (cols[17],"illegal address");
-            InsertListRow(cols, 18, DUMP_WND, i, LGRP_NONE);    // 18 cols, "no group"
+            strcpy (info,"illegal address");
+            InsertListRow(r.cols, DUMP_COLS, DUMP_WND, i, LGRP_NONE);
             break;      // the list is finalized after the loop
         }
         laddr += entrysize;
@@ -1475,13 +1448,13 @@ static void FillIDT()
         switch (CpuMode)
         {
             case BX_MODE_IA32_REAL:
-                sprintf(cols[17],"0x%04X:0x%04X", sel, ofs);
+                sprintf(info,"0x%04X:0x%04X", sel, ofs);
                 break;
 
             case BX_MODE_IA32_V8086:
             case BX_MODE_IA32_PROTECTED:
                 ofs |= ((Bit32u) idtbuf[6] << 16) | ((Bit32u) idtbuf[7] << 24);
-                sprintf(cols[17],"0x%04X:0x%08X", sel, ofs);
+                sprintf(info,"0x%04X:0x%08X", sel, ofs);
                 // TODO: also print some flags from idtbuf[5], maybe, in another column
                 break;
 
@@ -1490,12 +1463,12 @@ static void FillIDT()
                 Bit64u off64 = (Bit64u)(ofs | ((Bit32u) idtbuf[6] << 16) | ((Bit32u) idtbuf[7] << 24));
                 off64 |= ((Bit64u) idtbuf[8] << 32) | ((Bit64u) idtbuf[9] << 40);
                 off64 |= ((Bit64u) idtbuf[10] << 48) | ((Bit64u) idtbuf[11] << 56);
-                sprintf(cols[17],"0x%04X:0x" FMT_LLCAPX, sel, off64);
+                sprintf(info,"0x%04X:0x" FMT_LLCAPX, sel, off64);
                 // TODO: also print some flags from idtbuf[5], maybe, in another column
                 break;
         }
 
-        InsertListRow(cols, 18, DUMP_WND, i, LGRP_NONE);    // 18 cols, "no group"
+        InsertListRow(r.cols, DUMP_COLS, DUMP_WND, i, LGRP_NONE);
     }
     RedrawColumns(DUMP_WND);
     EndListUpdate(DUMP_WND);
@@ -1503,29 +1476,12 @@ static void FillIDT()
 
 
 // insert one entry into the Paging data list (a linear and a physical addy)
-static void AddPagingLine(int LC, char *pa_lin, char *pa_phy)
+static void AddPagingLine(int LC, const char *pa_lin, const char *pa_phy)
 {
-    char zero = 0;
-    char *cols[18];
-    cols[0]= pa_lin;
-    cols[1]= &zero; // columns #2 to 17 are blank
-    cols[2]= &zero;
-    cols[3]= &zero;
-    cols[4]= &zero;
-    cols[5]= &zero;
-    cols[6]= &zero;
-    cols[7]= &zero;
-    cols[8]= &zero;
-    cols[9]= &zero;
-    cols[10]= &zero;
-    cols[11]= &zero;
-    cols[12]= &zero;
-    cols[13]= &zero;
-    cols[14]= &zero;
-    cols[15]= &zero;
-    cols[16]= &zero;
-    cols[17]= pa_phy;
-    InsertListRow(cols, 18, DUMP_WND, LC, LGRP_NONE);   // 18 cols, "no group"
+    DumpRow r;
+    strcpy(r.txt[0], pa_lin);
+    strcpy(r.txt[DUMP_INFO_COL], pa_phy);
+    InsertListRow(r.cols, DUMP_COLS, DUMP_WND, LC, LGRP_NONE);
 }
 
 // lifted from bx_dbg_dump_table in dbg_main of the internal debugger
@@ -1603,28 +1559,7 @@ static void FillStack()
     bool LglAddy;
     bool UpdateDisp;
     char *cp, *cpp;
-    char *cols[18];
-    char stktxt[120];
-
-    *stktxt = 0;
-    cols[0]= stktxt + 1;
-    cols[1]= stktxt + 40;
-    cols[2]= stktxt;    // columns #3 to 17 are blank
-    cols[3]= stktxt;
-    cols[4]= stktxt;
-    cols[5]= stktxt;
-    cols[6]= stktxt;
-    cols[7]= stktxt;
-    cols[8]= stktxt;
-    cols[9]= stktxt;
-    cols[10]= stktxt;
-    cols[11]= stktxt;
-    cols[12]= stktxt;
-    cols[13]= stktxt;
-    cols[14]= stktxt;
-    cols[15]= stktxt;
-    cols[16]= stktxt;
-    cols[17]= stktxt + 80;
+    DumpRow r;          // cols: 0 = address, 1 = hex value, 17 = decimal value
     doDumpRefresh = FALSE;
     bx_address StackPtr = (bx_address) rV[RSP_Rnum];
     if (! In64Mode && BX_CPU(CurrentCPU)->sregs[BX_SEG_REG_SS].cache.u.segment.d_b == 0)
@@ -1652,9 +1587,9 @@ static void FillStack()
         if (bx_dbg_read_linear(CurrentCPU, StackLA, ReadSize, (Bit8u *) cp) == FALSE)
         {
             // no data to show -- just one error message
-            sprintf (cols[17],"illegal address");
+            sprintf (r.txt[DUMP_INFO_COL],"illegal address");
             StartListUpdate(DUMP_WND);
-            InsertListRow(cols, 18, DUMP_WND, 0, LGRP_NONE);    // 18 cols, "no group"
+            InsertListRow(r.cols, DUMP_COLS, DUMP_WND, 0, LGRP_NONE);
             EndListUpdate(DUMP_WND);
             return;
         }
@@ -1743,30 +1678,30 @@ static void FillStack()
 #if BX_SUPPORT_X86_64
         if (In64Mode) {
             Bit64s tmp = *((Bit64s *) cp);
-            FmtHex(cols[0], 39, StackLA, 16);
-            FmtHex(cols[1], 40, tmp, 16);
-            upr(cols[1]);       // 64-bit stack values are always shown in upper case
-            sprintf (cols[17], FMT_LL "d",tmp);
+            FmtHex(r.txt[0], DUMP_COL_LEN, StackLA, 16);
+            FmtHex(r.txt[1], DUMP_COL_LEN, tmp, 16);
+            upr(r.txt[1]);      // 64-bit stack values are always shown in upper case
+            sprintf (r.txt[DUMP_INFO_COL], FMT_LL "d",tmp);
         }
         else
 #endif
         {
             int tmp;
-            FmtHex(cols[0], 39, StackLA, 8);
-            upr(cols[0]);       // 32-bit stack addresses are always shown in upper case
+            FmtHex(r.txt[0], DUMP_COL_LEN, StackLA, 8);
+            upr(r.txt[0]);      // 32-bit stack addresses are always shown in upper case
             if (! In32Mode)
             {
                 tmp = *((Bit16s *) cp);
-                FmtHex(cols[1], 40, (Bit16u) tmp, 4);  // 16-bit stack entry, no sign extension
+                FmtHex(r.txt[1], DUMP_COL_LEN, (Bit16u) tmp, 4);  // 16-bit stack entry, no sign extension
             }
             else
             {
                 tmp = *((Bit32s *) cp);
-                FmtHex(cols[1], 40, (Bit32u) tmp, 8);
+                FmtHex(r.txt[1], DUMP_COL_LEN, (Bit32u) tmp, 8);
             }
-            sprintf (cols[17],"%d",tmp);
+            sprintf (r.txt[DUMP_INFO_COL],"%d",tmp);
         }
-        InsertListRow(cols, 18, DUMP_WND, i, LGRP_NONE);    // 18 cols, "no group"
+        InsertListRow(r.cols, DUMP_COLS, DUMP_WND, i, LGRP_NONE);
         StackLA += wordsize;
         cp += wordsize;
         ++i;
@@ -1777,50 +1712,32 @@ static void FillStack()
 }
 
 // utility function to print breakpoints in a unified way
-static void prtbrk (Bit32u seg, Bit64u addy, unsigned int id, bool enabled, char *cols[])
+// cols: 0 = [seg:]address, 1 = enabled (y/n), 17 = breakpoint id
+static void prtbrk (Bit32u seg, Bit64u addy, unsigned int id, bool enabled, DumpRow *r)
 {
     int i = 0;
     if (! enabled)
-        *cols[1] = 'n';
+        strcpy(r->txt[1], "n");
     else
-        *cols[1] = 'y';
-    sprintf (cols[17],"%u",id);
+        strcpy(r->txt[1], "y");
+    sprintf (r->txt[DUMP_INFO_COL],"%u",id);
     if (seg <= 0xffff){
         i= 5;
-        sprintf (cols[0],"%04X:",seg);
+        sprintf (r->txt[0],"%04X:",seg);
     }
 
-    sprintf (cols[0] + i,FMT_LLCAPX,addy);
+    sprintf (r->txt[0] + i,FMT_LLCAPX,addy);
 }
 
 // Displays all Breakpoints and Watchpoints
 static void FillBrkp()
 {
     int LineCount, totqty, i;
-    char *cols[18];
-    char brktxt[60];
     unsigned int brktype;
     extern bx_guard_t bx_guard;
 
     doDumpRefresh = FALSE;
 
-    *brktxt = 0;
-    brktxt[49] = 0;     // 0 terminate the "enabled" string
-    cols[2]= brktxt;    // columns #3 to 17 are blank
-    cols[3]= brktxt;
-    cols[4]= brktxt;
-    cols[5]= brktxt;
-    cols[6]= brktxt;
-    cols[7]= brktxt;
-    cols[8]= brktxt;
-    cols[9]= brktxt;
-    cols[10]= brktxt;
-    cols[11]= brktxt;
-    cols[12]= brktxt;
-    cols[13]= brktxt;
-    cols[14]= brktxt;
-    cols[15]= brktxt;
-    cols[16]= brktxt;
     StartListUpdate(DUMP_WND);
     i = 256;
     while (--i >= 0)
@@ -1835,28 +1752,26 @@ static void FillBrkp()
     LineCount = 0;
     for (brktype = 0; brktype < 5; brktype++)
     {
-        cols[0]= brktxt;
-        cols[1]= brktxt;
-        cols[17]= brktxt;
-        InsertListRow(cols, 18, DUMP_WND, LineCount++, LGRP_NONE);  // make a blank row
-        cols[0]= (char*)BrkName[brktype];
-        InsertListRow(cols, 18, DUMP_WND, LineCount++, LGRP_NONE);  // brkpt "type" as only text on row
-        cols[0]= brktxt + 1;
+        DumpRow blank;
+        InsertListRow(blank.cols, DUMP_COLS, DUMP_WND, LineCount++, LGRP_NONE);  // make a blank row
+        DumpRow title;
+        strcpy(title.txt[0], BrkName[brktype]);
+        InsertListRow(title.cols, DUMP_COLS, DUMP_WND, LineCount++, LGRP_NONE);  // brkpt "type" as only text on row
         if (brktype < 3)
         {
-            cols[17]= brktxt + 50;  // only breakpoints have IDs
-            cols[1]= brktxt + 48;   // and can be "enabled"
+            // only breakpoints have IDs and can be "enabled"
             if (brktype == 0)
             {
 #if (BX_DBG_MAX_LIN_BPOINTS > 0)
                 totqty = bx_guard.iaddr.num_linear;
                 for (i = 0; i < totqty; i++)
                 {
+                    DumpRow r;
                     BrkpIDMap[LineCount] = bx_guard.iaddr.lin[i].bpoint_id;
                     prtbrk (0xf0000, (Bit64u) bx_guard.iaddr.lin[i].addr,
                         (unsigned) BrkpIDMap[LineCount],
-                        bx_guard.iaddr.lin[i].enabled, cols);
-                    InsertListRow(cols, 18, DUMP_WND, LineCount++, LGRP_NONE);
+                        bx_guard.iaddr.lin[i].enabled, &r);
+                    InsertListRow(r.cols, DUMP_COLS, DUMP_WND, LineCount++, LGRP_NONE);
                 }
 #endif
                 EndLinEntry = LineCount;
@@ -1867,11 +1782,12 @@ static void FillBrkp()
                 totqty = bx_guard.iaddr.num_physical;
                 for (i = 0; i < totqty; i++)
                 {
+                    DumpRow r;
                     BrkpIDMap[LineCount] = bx_guard.iaddr.phy[i].bpoint_id;
                     prtbrk (0xf0000, (Bit64u) bx_guard.iaddr.phy[i].addr,
                         (unsigned) BrkpIDMap[LineCount],
-                        bx_guard.iaddr.phy[i].enabled, cols);
-                    InsertListRow(cols, 18, DUMP_WND, LineCount++, LGRP_NONE);
+                        bx_guard.iaddr.phy[i].enabled, &r);
+                    InsertListRow(r.cols, DUMP_COLS, DUMP_WND, LineCount++, LGRP_NONE);
                 }
 #endif
                 EndPhyEntry = LineCount;
@@ -1882,12 +1798,13 @@ static void FillBrkp()
                 totqty = bx_guard.iaddr.num_virtual;
                 for (i = 0; i < totqty; i++)
                 {
+                    DumpRow r;
                     BrkpIDMap[LineCount] = bx_guard.iaddr.vir[i].bpoint_id;
                     prtbrk (bx_guard.iaddr.vir[i].cs,
                     (Bit64u) bx_guard.iaddr.vir[i].eip,
                         (unsigned) BrkpIDMap[LineCount],
-                        bx_guard.iaddr.vir[i].enabled, cols);
-                    InsertListRow(cols, 18, DUMP_WND, LineCount++, LGRP_NONE);
+                        bx_guard.iaddr.vir[i].enabled, &r);
+                    InsertListRow(r.cols, DUMP_COLS, DUMP_WND, LineCount++, LGRP_NONE);
                 }
 #endif
             }
@@ -1899,9 +1816,10 @@ static void FillBrkp()
             WWPSnapCount = num_write_watchpoints;
             for (i = 0; i < totqty; i++)
             {
+                DumpRow r;
                 WWP_Snapshot[i] = write_watchpoint[i].addr;
-                sprintf (cols[0], FMT_PHY_ADDRX, (bx_phy_address) write_watchpoint[i].addr);
-                InsertListRow(cols, 18, DUMP_WND, LineCount++, LGRP_NONE);
+                sprintf (r.txt[0], FMT_PHY_ADDRX, (bx_phy_address) write_watchpoint[i].addr);
+                InsertListRow(r.cols, DUMP_COLS, DUMP_WND, LineCount++, LGRP_NONE);
             }
         }
         else
@@ -1911,9 +1829,10 @@ static void FillBrkp()
             RWPSnapCount = num_read_watchpoints;
             for (i = 0; i < totqty; i++)
             {
+                DumpRow r;
                 RWP_Snapshot[i] = read_watchpoint[i].addr;
-                sprintf (cols[0], FMT_PHY_ADDRX, (bx_phy_address) read_watchpoint[i].addr);
-                InsertListRow(cols, 18, DUMP_WND, LineCount++, LGRP_NONE);
+                sprintf (r.txt[0], FMT_PHY_ADDRX, (bx_phy_address) read_watchpoint[i].addr);
+                InsertListRow(r.cols, DUMP_COLS, DUMP_WND, LineCount++, LGRP_NONE);
             }
         }
     }
@@ -1969,52 +1888,32 @@ void ShowData()
 {
     unsigned int i;
     char *x;
-    char *cols[18];
-    char mdtxt[200];
     char tmphex[40];
 
     if (doDumpRefresh) {
         RefreshDataDump((Bit8u*)DataDump);
     }
-    *mdtxt = 0;
-    cols[0]= mdtxt + 1;     // the amount of storage needed for each column is complicated
-    cols[1]= mdtxt + 20;
-    cols[2]= mdtxt + 60;
-    cols[3]= mdtxt + 64;
-    cols[4]= mdtxt + 70;
-    cols[5]= mdtxt + 74;
-    cols[6]= mdtxt + 84;
-    cols[7]= mdtxt + 88;
-    cols[8]= mdtxt + 94;
-    cols[9]= mdtxt + 100;
-    cols[10]= mdtxt + 120;
-    cols[11]= mdtxt + 124;
-    cols[12]= mdtxt + 130;
-    cols[13]= mdtxt + 134;
-    cols[14]= mdtxt + 144;
-    cols[15]= mdtxt + 148;
-    cols[16]= mdtxt + 154;
-    cols[17]= mdtxt + 160;
     doDumpRefresh = FALSE;
     StartListUpdate(DUMP_WND);
 
     x = DataDump;       // data dumps are ALWAYS 4K
     for(i = 0; i < 4096; i += 16)
     {
+        // cols: 0 = address, 1..16 = hex words (one every DumpAlign columns), 17 = ascii
+        DumpRow r;
 #if BX_SUPPORT_X86_64
         if (In64Mode)
-            sprintf(cols[0],"0x" FMT_LLCAPX,DumpStart + i);
+            sprintf(r.txt[0],"0x" FMT_LLCAPX,DumpStart + i);
         else
 #endif
-            sprintf(cols[0],"0x%08X",(Bit32u) (DumpStart + i));
+            sprintf(r.txt[0],"0x%08X",(Bit32u) (DumpStart + i));
 
         *tmphex = 0;
-        *cols[17] = 0;
         for(unsigned y = 0; y < 16; y++)
         {
             if ((DumpInAsciiMode & 1) != 0)
                 // verify the char is printable, then append it to the "ascii" column
-                FillDataX(cols[17],x[y],FALSE);
+                FillDataX(r.txt[DUMP_INFO_COL],x[y],FALSE);
 
             if ((DumpInAsciiMode & 2) != 0)
             {
@@ -2022,12 +1921,12 @@ void ShowData()
                 FillDataX(tmphex,x[y],TRUE);
                 if (((y + 1) & (DumpAlign - 1)) == 0)
                 {
-                    strcpy (cols[y+2-DumpAlign], tmphex);
+                    strcpy (r.txt[y+2-DumpAlign], tmphex);
                     *tmphex = 0;        // FillDataX APPENDS, so you need to clear the buffer
                 }
             }
         }
-        InsertListRow(cols, 18, DUMP_WND, i>>4, LGRP_NONE); // 18 cols, list2, "no group"
+        InsertListRow(r.cols, DUMP_COLS, DUMP_WND, i>>4, LGRP_NONE);
         x+= 16;         // bump to the next row of data
     }
 
