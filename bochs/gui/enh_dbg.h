@@ -343,7 +343,8 @@ enum {
   CR2_Rnum,
   CR3_Rnum,
   CR4_Rnum,
-  EFER_Rnum,                // currently used to mark the last entry in rV[]
+  EFER_Rnum,
+  XCR0_Rnum,                // last entry in rV[] (only available if XSAVE is supported)
   ST0_Rnum,
   ST1_Rnum,
   ST2_Rnum,
@@ -406,6 +407,8 @@ enum {
 };
 
 #define EXTRA_REGS  28
+
+#define RV_REGS     (XCR0_Rnum + 1)     // number of registers kept in rV[] (RAX - XCR0)
 
 extern Bit8u RegColor[STD_REG_NUM+EXTRA_REGS];   // specifies foreground and background color of registers
 // Text color is red if RCLR_CHANGED is set. Background is set according to ColorList.

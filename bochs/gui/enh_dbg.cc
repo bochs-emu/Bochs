@@ -224,6 +224,7 @@ static const RegDesc RegTable[] = {
     { CR3_Rnum,  "cr3",    "CR3"              },
     { CR4_Rnum,  "cr4",    CR4_PARAM("CR4")   },
     { EFER_Rnum, "efer",   EFER_PARAM("MSR.EFER") },
+    { XCR0_Rnum, "xcr0",   NULL               },    // bound in InitRegObjects, only exists with XSAVE
     { DR0_Rnum,  "dr0",    "DR0"              },
     { DR1_Rnum,  "dr1",    "DR1"              },
     { DR2_Rnum,  "dr2",    "DR2"              },
@@ -236,8 +237,8 @@ static const RegDesc RegTable[] = {
 
 static char RDispName[STD_REG_NUM][8];  // display names (case per UprCase) of the RegTable registers
 static bx_param_num_c *RegObject[BX_MAX_SMP_THREADS_SUPPORTED][STD_REG_NUM + EXTRA_REGS];
-Bit64u rV[EFER_Rnum + 1];   // current values of registers
-Bit64u PV[EFER_Rnum + 1];   // previous values of registers
+Bit64u rV[RV_REGS];         // current values of registers
+Bit64u PV[RV_REGS];         // previous values of registers
 Bit32s GDT_Len;             // "limits" (= bytesize-1) for GDT and IDT
 Bit32s IDT_Len;
 Bit8u RegColor[STD_REG_NUM+EXTRA_REGS];    // specifies foreground and background color of registers
@@ -714,7 +715,7 @@ void ParseIDText(const char *x)
 // load appropriate register values from simulation into local rV[] array
 static void FillRegs()
 {
-    int i = EFER_Rnum + 1;      // EFER is the highest reg # in rV
+    int i = RV_REGS;            // XCR0 is the highest reg # in rV
     while (--i >= 0)
     {
         if (RegObject[CurrentCPU][i] != NULL)
@@ -959,8 +960,8 @@ static int AddGPRegs(int itemnum)
         showEreg = SeeReg[0];       // get user option setting for EAX, etc.
         int LastGPR = R15_Rnum;
 #if BX_SUPPORT_APX
-        if (BX_CPU(CurrentCPU)->is_cpu_extension_supported(BX_ISA_APX))
-            LastGPR = R31_Rnum;     // APX extended GPRs R16-R31
+        if (rV[XCR0_Rnum] & BX_XCR0_APX_MASK)
+            LastGPR = R31_Rnum;     // APX extended GPRs R16-R31, only when enabled in XCR0
 #endif
         for (i = RAX_Rnum; i <= LastGPR; i++)
         {
@@ -1031,15 +1032,17 @@ static int AddSysRegs(int itemnum)
     return itemnum;
 }
 
-// add control registers (CR0 - CR4, EFER) to the Register list
+// add control registers (CR0 - CR4, EFER, XCR0) to the Register list
 static int AddCtrlRegs(int itemnum)
 {
     char hex[20];
 
-    for (int i = CR0_Rnum; i <= EFER_Rnum; i++)
+    for (int i = CR0_Rnum; i <= XCR0_Rnum; i++)
     {
+        if (i == XCR0_Rnum && RegObject[CurrentCPU][XCR0_Rnum] == NULL)
+            break;      // no XCR0 without XSAVE support
         int digits = 8;
-        if (In64Mode && (i == CR2_Rnum || i == CR3_Rnum))
+        if (In64Mode && (i == CR2_Rnum || i == CR3_Rnum || i == XCR0_Rnum))
             digits = 16;
         FmtHex(hex, sizeof(hex), rV[i], digits);
         itemnum = AddRegRow(itemnum, i, RDispName[i], hex, NULL, LGRP_CTRL);
@@ -1069,7 +1072,7 @@ static void LoadRegList()
         itemnum = AddCtrlRegs(itemnum);
 
     // set the "red" flag in the register colors if value changed
-    for (i = 0; i <= EFER_Rnum; i++)
+    for (i = 0; i < RV_REGS; i++)
     {
         if (rV[i] != PV[i])
             RegColor[i] |= RCLR_CHANGED;
@@ -1218,6 +1221,10 @@ static void InitRegObjects()
 #endif
 
 #if BX_CPU_LEVEL >= 6
+        // XCR0 exists only if the CPU supports XSAVE
+        if (SIM->get_param("XCR0", cpu_list) != NULL)
+            RegObject[cpu][XCR0_Rnum] = SIM->get_param_num("XCR0", cpu_list);
+
         CpuSupportSSE = SIM->get_param("SSE", cpu_list) != NULL;
 
         if (CpuSupportSSE) {
@@ -2039,7 +2046,7 @@ void SelectCPU(unsigned newCPU)
 // performs tasks whenever the simulation "breaks"
 void OnBreak()
 {
-    int i = EFER_Rnum + 1;
+    int i = RV_REGS;
     // show the CPU selected by the debugger (the CPU which hit a breakpoint
     // or requested the debugger activation, or changed by "cpu" command)
     SelectCPU(dbg_cpu);
@@ -2585,7 +2592,13 @@ void ChangeReg()
         return;
 
     int i = RitemToRnum[L];
-    if (i > EFER_Rnum)      // TODO: extend this to more reg -- need display names for all
+    // only GP registers, RIP and EFLAGS can be changed here, a direct param write of the others
+    // would bypass the side effects and validity checks of the instructions that load them:
+    // segment registers (CS - GS) - only the selector is written, the descriptor cache is not reloaded
+    // system registers (GDTR, IDTR, LDTR, TR) - only the base is written
+    // control registers (CR0 - CR4, EFER, XCR0) - mode, paging, TLB, MOV CRn/WRMSR/XSETBV checks
+    // TODO: FPU/SSE/debug registers above XCR0 need display names before they can be changed
+    if (i >= CS_Rnum)
         return;
     sprintf (tmpcb,"0x" FMT_LL "X", rV[i]);
     if (AskText("Change Register Value",RDispName[i],tmpcb))
