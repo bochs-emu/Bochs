@@ -359,6 +359,7 @@ void bx_geforce_c::svga_init_members()
 
   if (BX_GEFORCE_THIS card_type == 0x15) {
     BX_GEFORCE_THIS s.memsize = 64 * 1024 * 1024;
+    BX_GEFORCE_THIS bar2_size = 0;
     // Guess
     BX_GEFORCE_THIS straps0_primary_original = (0x7FF86C6B | 0x00000180);
   } else if (BX_GEFORCE_THIS card_type == 0x20) {
@@ -367,11 +368,13 @@ void bx_geforce_c::svga_init_members()
     // Matches real hardware with exception of disabled TV out
     BX_GEFORCE_THIS straps0_primary_original = (0x7FF86C6B | 0x00000180);
   } else {
-    if (BX_GEFORCE_THIS card_type == 0x35)
+    if (BX_GEFORCE_THIS card_type == 0x35) {
       BX_GEFORCE_THIS s.memsize = 128 * 1024 * 1024;
-    else
+      BX_GEFORCE_THIS bar2_size = 0;
+    } else {
       BX_GEFORCE_THIS s.memsize = 256 * 1024 * 1024;
-    BX_GEFORCE_THIS bar2_size = 0x01000000;
+      BX_GEFORCE_THIS bar2_size = 0x01000000;
+    }
     // Guess
     BX_GEFORCE_THIS straps0_primary_original = (0x7FF86C4B | 0x00000180);
   }
@@ -626,7 +629,8 @@ bool bx_geforce_c::geforce_mem_read_handler(bx_phy_address addr, unsigned len,
     return true;
   }
 
-  if (class_ptr->card_type != 0x35 && addr >= class_ptr->pci_bar[2].addr &&
+  if (class_ptr->bar2_size != 0 &&
+      addr >= class_ptr->pci_bar[2].addr &&
       addr < (class_ptr->pci_bar[2].addr + class_ptr->bar2_size)) {
     Bit32u offset = addr & (class_ptr->bar2_size - 1);
     if (class_ptr->card_type >= 0x40) {
@@ -693,7 +697,8 @@ bool bx_geforce_c::geforce_mem_write_handler(bx_phy_address addr, unsigned len,
     return true;
   }
 
-  if (class_ptr->card_type != 0x35 && addr >= class_ptr->pci_bar[2].addr &&
+  if (class_ptr->bar2_size != 0 &&
+      addr >= class_ptr->pci_bar[2].addr &&
       addr < (class_ptr->pci_bar[2].addr + class_ptr->bar2_size)) {
     Bit32u offset = addr & (class_ptr->bar2_size - 1);
     if (class_ptr->card_type >= 0x40) {
@@ -9396,7 +9401,7 @@ void bx_geforce_c::svga_init_pcihandlers(void)
   BX_GEFORCE_THIS init_bar_mem(0, GEFORCE_PNPMMIO_SIZE, geforce_mem_read_handler, geforce_mem_write_handler);
   BX_GEFORCE_THIS pci_conf[0x14] = 0x08;
   BX_GEFORCE_THIS init_bar_mem(1, BX_GEFORCE_THIS s.memsize, geforce_mem_read_handler, geforce_mem_write_handler);
-  if (BX_GEFORCE_THIS card_type != 0x15 && BX_GEFORCE_THIS card_type != 0x35) {
+  if (BX_GEFORCE_THIS bar2_size != 0) {
     if (BX_GEFORCE_THIS card_type == 0x20)
       BX_GEFORCE_THIS pci_conf[0x18] = 0x08;
     BX_GEFORCE_THIS init_bar_mem(2, BX_GEFORCE_THIS bar2_size, geforce_mem_read_handler, geforce_mem_write_handler);
