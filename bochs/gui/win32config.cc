@@ -156,7 +156,8 @@ static BOOL CALLBACK LogAskProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
 static BOOL CALLBACK StringParamProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   static bx_param_string_c *param;
-  char buffer[512];
+  static int maxlen;
+  char *buffer;
   const char *title;
 
   switch (msg) {
@@ -167,8 +168,18 @@ static BOOL CALLBACK StringParamProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
         title = param->get_name();
       }
       SetWindowText(hDlg, title);
-      SetWindowText(GetDlgItem(hDlg, IDSTRING), param->getptr());
-      SendMessage(GetDlgItem(hDlg, IDSTRING), EM_SETLIMITTEXT, param->get_maxsize(), 0);
+      if (param->get_type() == BXT_PARAM_BYTESTRING) {
+        // hex bytes with separator
+        maxlen = param->get_maxsize() * 3;
+        buffer = new char[maxlen + 1];
+        param->dump_param(buffer, maxlen + 1);
+        SetWindowText(GetDlgItem(hDlg, IDSTRING), buffer);
+        delete [] buffer;
+      } else {
+        maxlen = param->get_maxsize();
+        SetWindowText(GetDlgItem(hDlg, IDSTRING), param->getptr());
+      }
+      SendMessage(GetDlgItem(hDlg, IDSTRING), EM_SETLIMITTEXT, maxlen, 0);
       return TRUE;
     case WM_CLOSE:
       EndDialog(hDlg, -1);
@@ -176,8 +187,18 @@ static BOOL CALLBACK StringParamProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
     case WM_COMMAND:
       switch (LOWORD(wParam)) {
         case IDOK:
-          GetDlgItemText(hDlg, IDSTRING, buffer, param->get_maxsize() + 1);
-          param->set(buffer);
+          buffer = new char[maxlen + 1];
+          GetDlgItemText(hDlg, IDSTRING, buffer, maxlen + 1);
+          if (param->get_type() == BXT_PARAM_BYTESTRING) {
+            if (param->parse_param(buffer) == 0) {
+              MessageBox(hDlg, "Illegal raw byte format", "Error", MB_ICONERROR);
+              delete [] buffer;
+              break;
+            }
+          } else {
+            param->set(buffer);
+          }
+          delete [] buffer;
           EndDialog(hDlg, 1);
           break;
         case IDCANCEL:
@@ -228,7 +249,7 @@ BOOL HandlePluginCtrl(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   int i;
   long code;
-  char plugname[20], message[80];
+  char plugname[BX_PATHNAME_LEN], message[BX_PATHNAME_LEN + 32];
   BOOL changed = FALSE;
 
   switch (msg) {
@@ -251,6 +272,10 @@ BOOL HandlePluginCtrl(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
           break;
         case IDLOAD:
           i = SendMessage(GetDlgItem(hDlg, IDPLUGLIST1), LB_GETCURSEL, 0, 0);
+          if ((i == LB_ERR) ||
+              (SendMessage(GetDlgItem(hDlg, IDPLUGLIST1), LB_GETTEXTLEN, i, 0) >= (LRESULT)sizeof(plugname))) {
+            break;
+          }
           SendMessage(GetDlgItem(hDlg, IDPLUGLIST1), LB_GETTEXT, i, (LPARAM)plugname);
           if (SIM->opt_plugin_ctrl(plugname, 1)) {
             wsprintf(message, "Plugin '%s' loaded", plugname);
@@ -263,6 +288,10 @@ BOOL HandlePluginCtrl(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
           break;
         case IDUNLOAD:
           i = SendMessage(GetDlgItem(hDlg, IDPLUGLIST2), LB_GETCURSEL, 0, 0);
+          if ((i == LB_ERR) ||
+              (SendMessage(GetDlgItem(hDlg, IDPLUGLIST2), LB_GETTEXTLEN, i, 0) >= (LRESULT)sizeof(plugname))) {
+            break;
+          }
           SendMessage(GetDlgItem(hDlg, IDPLUGLIST2), LB_GETTEXT, i, (LPARAM)plugname);
           if (SIM->opt_plugin_ctrl(plugname, 0)) {
             wsprintf(message, "Plugin '%s' unloaded", plugname);
@@ -1012,7 +1041,11 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
       return event;
     case BX_SYNC_EVT_ML_MSG_BOX_KILL:
       if (event->param0) {
+        HFONT font = (HFONT)SendMessage((HWND) event->param0, WM_GETFONT, 0, 0);
         DestroyWindow((HWND) event->param0);
+        if (font != NULL) {
+          DeleteObject(font);
+        }
         event->param0 = NULL;
       }
       return event;
