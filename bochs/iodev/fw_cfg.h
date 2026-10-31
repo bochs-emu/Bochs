@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2025  The Bochs Project
+//  Copyright (C) 2025-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -123,6 +123,8 @@ struct fw_cfg_files {
 
 // Maximum entries (increased to support file slots starting at 0x20)
 #define FW_CFG_MAX_ENTRY    0x4000
+// Maximum arch-local entries (keys FW_CFG_ARCH_LOCAL + n)
+#define FW_CFG_ARCH_MAX_ENTRY 0x10
 
 // DMA signature
 #define FW_CFG_DMA_SIGNATURE 0x51454d5520434647ULL /* "QEMU CFG" */
@@ -158,6 +160,7 @@ public:
 
 private:
   bx_fw_cfg_entry_t entries[FW_CFG_MAX_ENTRY];
+  bx_fw_cfg_entry_t arch_entries[FW_CFG_ARCH_MAX_ENTRY];
   Bit16u cur_entry;
   Bit32u cur_offset;
   Bit64u dma_addr;
@@ -166,6 +169,7 @@ private:
   fw_cfg_files *file_dir;
   int file_count;
   
+  bx_fw_cfg_entry_t *get_entry(Bit16u key);
   void add_bytes(Bit16u key, Bit8u *data, Bit32u len);
   void add_file(const char *filename, Bit8u *data, Bit32u len);
   void add_i16(Bit16u key, Bit16u value);
