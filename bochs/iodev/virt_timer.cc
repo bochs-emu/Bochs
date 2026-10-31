@@ -140,7 +140,7 @@ void bx_virt_timer_c::periodic(Bit64u time_passed, bool mode)
   s[mode].current_timers_time += time_passed;
 
   //If no events are occurring, just pass the time and we're done.
-  if (time_passed < s[mode].timers_next_event_time) return;
+  if (s[mode].timers_next_event_time != 0) return;
 
   //Starting timer handler calls.
   in_timer_handler = 1;
