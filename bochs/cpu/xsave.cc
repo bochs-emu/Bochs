@@ -372,7 +372,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
       exception(BX_GP_EXCEPTION, 0);
     }
 
-    if (xstate_bv & ~xcomp_bv) {
+    // XCOMP_BV[63] is the compaction flag, XSTATE_BV[63] must be 0
+    if (xstate_bv & ~(xcomp_bv & ~XSAVEC_COMPACTION_ENABLED)) {
       BX_ERROR(("%s: xstate_bv set a bit which is not in xcomp_bv state", i->getIaOpcodeNameShort()));
       exception(BX_GP_EXCEPTION, 0);
     }
