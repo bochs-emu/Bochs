@@ -255,8 +255,6 @@ bool LinearDump = TRUE;        // FALSE = memdump uses physical addressing
 
 char *tmpcb;                   // 512b is allocated in bigbuf
 char *CurStack;                // Stack workspace (400b usually)
-static char AsciiHex[512];     // Unsigned char to printable hex xlat table
-static char UCtable[256];
 
 char bigbuf[outbufSIZE];       // 40K preallocated storage for all char buffers (see DoAllInit)
 char *DbgAppendPtr = bigbuf;
@@ -344,30 +342,6 @@ static const short nDock[36] = {     // lookup table for alternate DockOrders
     0x132, 0x123, 0x321, 0x321, 0x123, 0x231
 };
 
-static void MakeXlatTables()
-{
-    char *p, c;
-    int i = 256;
-    while (--i >= 0)            // make an upper case translation table
-        UCtable[i]= toupper(i);
-    p = AsciiHex;               //  then also make a "hex" table
-    for ( i = 0; i < 256; i++)
-    {
-        c = i >> 4;
-        if (c > 9)
-            c += 'A' - 10;  // do all hex in uppercase
-        else
-            c += '0';
-        *(p++)= c;
-        c = i & 0xf;
-        if (c > 9)
-            c += 'A' - 10;
-        else
-            c += '0';
-        *(p++)= c;
-    }
-}
-
 static int DoMatch(const char *text, const char *p, bool IsCaseSensitive)
 {
     // probably the MOST DIFFICULT FUNCTION in TurboIRC
@@ -390,7 +364,7 @@ static int DoMatch(const char *text, const char *p, bool IsCaseSensitive)
                     else
                         continue;
                 }
-                if (UCtable[(int) text[pT]] != UCtable[(int) p[pP]])
+                if (toupper((unsigned char) text[pT]) != toupper((unsigned char) p[pP]))
                     return MATCH_FALSE;
                 continue;
 
@@ -501,7 +475,7 @@ static void upr(char* d)
             p += 2;
         else
         {
-            *p = UCtable[(int) *p]; // use the lookup table created by MakeXlatTables
+            *p = toupper((unsigned char) *p);
             ++p;
         }
     }
@@ -607,48 +581,25 @@ void UpdateStatus()
     PrevAtBreak = AtBreak;
 }
 
-// binary conversion (and validity testing) on hex/decimal char string inputs
-static Bit64u cvthex(const char *p, Bit64u errval)
+// convert a user typed number to binary: decimal, hex with 0x prefix, or
+// hex without prefix if it contains hex letters (e.g. "1f").
+// A leading '-' is allowed only if negok (decimal only).
+static Bit64u ParseNumber(const char *s, bool negok)
 {
-    Bit64u ret = 0;
-    bool end = FALSE;
-    while (! end)
-    {
-        if (*p >= '0' && *p <= '9')             // test for digits
-            ret = (ret << 4) | (*(p++) - '0');
-        else if ((*p | 0x20) >= 'a' && (*p | 0x20) <= 'f')  // test for hex letters
-            ret = (ret << 4) | ((*(p++) | 0x20) - 'a' + 10);    // 0xA = 10, of course
-        else
-            end = TRUE;
-    }
-    if (*p != 0 && *p != ' ' && *p != '\t')     // hex must end on a whitespace
-        return errval;
-    return ret;
-}
+    char *end;
 
-static Bit64u cvt64(const char *nstr, bool negok)
-{
-    const char *p, *s;
-    Bit64u ret = 0;
-    bool neg = FALSE;
-    p= nstr;
-    while (*p==' ' || *p == '\t')
-        ++p;
-    if (*p == '-' && negok != FALSE)
+    while (*s == ' ' || *s == '\t')
+        ++s;
+    if (*s == '-')
     {
-        ++p;
-        neg = TRUE;
+        if (! negok)
+            return 0;
+        return 0 - (Bit64u) strtoull(s + 1, NULL, 10);
     }
-    if (*p == '0' && (p[1] | 0x20) == 'x' && neg == FALSE)
-        return cvthex (p+2, 0);
-    s = p;
-    while (*p >= '0' && *p <= '9')
-        ret = (ret * 10) + *(p++) - '0';
-    if ((*p | 0x20) >= 'a' && (*p | 0x20) <= 'f' && neg == FALSE)
-        return cvthex (s, ret);
-    if (neg != FALSE)
-        return 0 - ret;
-    return ret;
+    Bit64u val = strtoull(s, &end, 10);
+    if (isxdigit((unsigned char) *end) || *end == 'x' || *end == 'X')
+        val = strtoull(s, NULL, 16);    // also accepts the 0x prefix
+    return val;
 }
 
 // "singlestep" disassembly lines from the internal debugger are sometimes ignored
@@ -969,24 +920,10 @@ static void FillAsm(Bit64u LAddr, int MaxLines)
                 LAddr += len;   // calculate next LAddr
 
                 // then build the "bytes" column entry
-                s = cols[1];
-                *(s++) = '(';   // begin with the bytecount in parens
-                i = len;
-                if (len > 9)
-                {
-                    *(s++)=  '1';   // len < 16, so convert to decimal the easy way
-                    i -= 10;
-                }
-                *(s++) = i + '0';
-                *(s++) = ')';
-                *(s++) = ' ';
+                s = cols[1];    // begin with the bytecount in parens
+                s += sprintf(s, "(%d) ", len);
                 while (len-- > 0)
-                {
-                    i = (unsigned char) *(p++);
-                    *(s++) = AsciiHex[2*i];
-                    *(s++) = AsciiHex[2*i+1];
-                }
-                *s = 0;     // zero terminate the "bytes" string
+                    s += sprintf(s, "%02X", (unsigned char) *(p++));
 
                 // then, finalize the ASM disassembly text
                 if (UprCase)   // do any requested uppercase conversion on the text
@@ -1523,9 +1460,7 @@ static void FillIDT()
         k = 256;
     for(i = 0; i < k; i++)
     {
-        idttxt[1] = AsciiHex[2*i];
-        idttxt[2] = AsciiHex[2*i+1];
-        idttxt[3] = 0;
+        sprintf(idttxt + 1, "%02X", i);     // interrupt vector number
         if (bx_dbg_read_linear(CurrentCPU, laddr, entrysize, idtbuf) == FALSE)      // abort the current IDT dump on a memory error
         {
             strcpy (cols[17],"illegal address");
@@ -2000,9 +1935,7 @@ static void FillDataX(char* t, unsigned char C, bool doHex)
 
     if (doHex)
     {
-        *d = AsciiHex[2*C];
-        d[1] = AsciiHex[2*C + 1];
-        d[2] = 0;
+        sprintf(d, "%02X", C);
         if (isLittleEndian) // little endian => reverse hex digits
         {
             strcat(d,t);
@@ -2168,7 +2101,6 @@ static void DoAllInit()
     for (i = 0; i < STD_REG_NUM; i++)
         RegColor[i] = GetRegColor(i);
 
-    MakeXlatTables();   // create UpperCase and AsciiHex translation tables
     MakeRDnames();      // create Rnames from lower-case register names
     InitRegObjects();   // get/store all the bx_param_num_c objects for the registers
 }
@@ -2339,7 +2271,7 @@ static bool InitDataDump(bool isLinear, Bit64u newDS)
         if (AskText("4K Memory Dump","4K Memory Dump -- Enter Address (use 0x for hex):",tmpcb) == FALSE)
             return FALSE;
 
-        newDS = cvt64(tmpcb,FALSE);     // input either hex or decimal
+        newDS = ParseNumber(tmpcb,FALSE);     // input either hex or decimal
         newDS &= ~15;                   // force Mem Dump to be 16b aligned
         MsgOnErr = TRUE;
     }
@@ -2627,7 +2559,7 @@ static void doStepN()
     sprintf (tmpcb,"%d",PrevStepNSize);
     if (AskText("Singlestep N times","Number of steps (use 0x for hex):",tmpcb) == FALSE)
         return;
-    Bit32u i = (Bit32u) cvt64(tmpcb,FALSE);        // input either hex or decimal
+    Bit32u i = (Bit32u) ParseNumber(tmpcb,FALSE);        // input either hex or decimal
     if (i == 0)
         return;
     PrevStepNSize = i;
@@ -2645,7 +2577,7 @@ static void doDisAsm()
     if (AskText("Disassemble",
         "Disassemble -- Enter Linear Start Address (use 0x for hex):",tmpcb) == FALSE)
         return;
-    Bit64u h = cvt64(tmpcb,FALSE);             // input either hex or decimal
+    Bit64u h = ParseNumber(tmpcb,FALSE);             // input either hex or decimal
     sprintf (tmpcb,"%d",NumLines);
     if (AskText("Disassemble","Number of lines: (Max. 2048)",tmpcb) == FALSE)
         return;
@@ -2777,7 +2709,7 @@ void ChangeReg()
     sprintf (tmpcb,"0x" FMT_LL "X", rV[i]);
     if (AskText("Change Register Value",RDispName[i],tmpcb))
     {
-        Bit64u val = cvt64(tmpcb,TRUE);     // input either hex or decimal
+        Bit64u val = ParseNumber(tmpcb,TRUE);     // input either hex or decimal
 #if BX_SUPPORT_X86_64
         if (i >= EAX_Rnum && i <= EIP_Rnum) // must use RAX-RIP when setting 32b registers
             i -= EAX_Rnum - RAX_Rnum;
