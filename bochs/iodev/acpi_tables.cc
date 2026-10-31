@@ -92,7 +92,8 @@ Bit32u bx_acpi_tables_c::build_fadt(Bit8u* buffer, Bit32u facs_offset, Bit32u ds
     fadt->header.asl_compiler_revision = 1;
     
     // FACS and DSDT pointers - store actual offsets, loader will convert to addresses
-    fadt->firmware_ctrl = facs_offset;
+    // FIRMWARE_CTRL must be 0 when X_FIRMWARE_CTRL is used (set below)
+    fadt->firmware_ctrl = 0;
     fadt->dsdt = dsdt_offset;
     
     // Power management profile
@@ -118,9 +119,9 @@ Bit32u bx_acpi_tables_c::build_fadt(Bit8u* buffer, Bit32u facs_offset, Bit32u ds
     fadt->pm_tmr_blk = 0xB008;
     fadt->pm_tmr_len = 4;
     
-    // GPE0 block
-    fadt->gpe0_blk = 0xB020;
-    fadt->gpe0_blk_len = 8;
+    // GPE0 block (PIIX4 GPSTS at PMBA+0x0C, GPEN at PMBA+0x0E)
+    fadt->gpe0_blk = 0xB00C;
+    fadt->gpe0_blk_len = 4;
     
     // P_LVL latencies (not supported)
     fadt->p_lvl2_lat = 0xFFFF;
@@ -167,10 +168,10 @@ Bit32u bx_acpi_tables_c::build_fadt(Bit8u* buffer, Bit32u facs_offset, Bit32u ds
     
     // GPE0 Block
     fadt->x_gpe0_blk[0] = 1;         // SystemIO
-    fadt->x_gpe0_blk[1] = 64;        // Bit width (8 bytes)
+    fadt->x_gpe0_blk[1] = 32;        // Bit width (4 bytes)
     fadt->x_gpe0_blk[2] = 0;
     fadt->x_gpe0_blk[3] = 1;         // Byte access
-    *((Bit64u*)&fadt->x_gpe0_blk[4]) = 0xB020;
+    *((Bit64u*)&fadt->x_gpe0_blk[4]) = 0xB00C;
     
     // Checksum will be recalculated by loader after patching
     fadt->header.checksum = 0;
@@ -555,10 +556,6 @@ void bx_acpi_tables_c::generate_tables(Bit64u ram_size, Bit32u num_cpus)
     
     // Allocate the RSDP in FSEG (below 1MB, for BIOS compatibility)
     add_loader_allocate("etc/acpi/rsdp", 16, QEMU_LOADER_ALLOC_FSEG);
-    
-    // Patch FADT.firmware_ctrl (32-bit) to point to FACS
-    add_loader_add_pointer("etc/acpi/tables", "etc/acpi/tables",
-                          fadt_offset + offsetof(struct acpi_fadt, firmware_ctrl), 4);
     
     // Patch FADT.dsdt (32-bit) to point to DSDT
     add_loader_add_pointer("etc/acpi/tables", "etc/acpi/tables",
