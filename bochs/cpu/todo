@@ -15,7 +15,11 @@ TODO (know issues in CPU model):
 
 [!] AMD and Intel x86_64 implementations are different.
     Currently Bochs emulation is according to Intel version.
-    Do we need to support both ?
+    AMD behavior supported in some places under amd_implementation.
+    More AMD specific behavior to discover and implement
+
+[!] AMD misaligned SSE mode should convert #GP on misaligned SSE access to #AC
+    exception when #AC is enabled
 
 [!] VMX:
 
@@ -23,17 +27,14 @@ TODO (know issues in CPU model):
 
 [!] SVM:
 
-   - Decoding assists, VMCB clean are not implemented yet
+   - VMCB clean are not implemented yet
    - Advanced Virtual Interrupt Controller (AVIC) not implemented yet
-   - More?
-
-[!] AMD misaligned SSE mode should convert #GP on misaligned SSE access to #AC
-    exception when #AC is enabled
+   - More (there are a lot more if going to more modern AMD architectures)
 
 [!] TODO: Convert CPUDB to plugins and search for them in runtime
 
 ------------------------------------------------------------------------------------
-[!] No plans for MPX, Intel Processor Trace, LWP.
+[!] No plans for Intel Processor Trace, LWP.
     Their emulation would greatly affect emulation performance.
     Could be implemented through instrumentation if ***really*** needed.
 ------------------------------------------------------------------------------------
@@ -46,3 +47,4 @@ TODO (know issues in CPU model):
      - BUSY bit in TSS
      - Busy bit in shadow stack
      - RSTORSSP
+
