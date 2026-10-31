@@ -447,12 +447,13 @@ int AskFilename(HWND hwnd, bx_param_filename_c *param, char *buffer)
     ofn.Flags |= OFN_FILEMUSTEXIST;
     ret = GetOpenFileName(&ofn);
   }
-  if (buffer != NULL) {
-    lstrcpyn(buffer, filename, BX_PATHNAME_LEN);
+  if (ret != 0) {
+    if (buffer != NULL) {
+      lstrcpyn(buffer, filename, BX_PATHNAME_LEN);
+    } else {
+      param->set(filename);
+    }
   } else {
-    param->set(filename);
-  }
-  if (ret == 0) {
     errcode = CommDlgExtendedError();
     if (errcode == 0) {
       ret = -1;
@@ -741,7 +742,7 @@ HWND CreateInput(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_param_
   } else {
     nparam = (bx_param_num_c*)param;
     if (nparam->get_base() == BASE_HEX) {
-      wsprintf(buffer, "0x%x", nparam->get());
+      wsprintf(buffer, "0x%I64x", nparam->get64());
       hexedit = TRUE;
     } else {
       wsprintf(buffer, "%I64d", nparam->get64());
@@ -778,6 +779,23 @@ HWND CreateInput(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_param_
   return Input;
 }
 
+// empty choices are not added to the combobox, so the item index may differ
+// from the choice index (stored as item data)
+void SelectComboChoice(HWND Combo, bx_param_enum_c *eparam)
+{
+  int i, count;
+  LRESULT choice = (LRESULT)(eparam->get() - eparam->get_min());
+
+  count = SendMessage(Combo, CB_GETCOUNT, 0, 0);
+  for (i = 0; i < count; i++) {
+    if (SendMessage(Combo, CB_GETITEMDATA, (WPARAM)i, 0) == choice) {
+      SendMessage(Combo, CB_SETCURSEL, (WPARAM)i, 0);
+      return;
+    }
+  }
+  SendMessage(Combo, CB_SETCURSEL, (WPARAM)-1, 0);
+}
+
 HWND CreateCombobox(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_param_enum_c *eparam)
 {
   HWND Combo;
@@ -807,7 +825,7 @@ HWND CreateCombobox(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_par
     }
     j++;
   }
-  SendMessage(Combo, CB_SETCURSEL, (WPARAM)(eparam->get()-eparam->get_min()), 0);
+  SelectComboChoice(Combo, eparam);
   SendMessage(Combo, WM_SETFONT, (WPARAM)DlgFont, TRUE);
   ShowWindow(Combo, hide ? SW_HIDE : SW_SHOW);
   return Combo;
@@ -1133,6 +1151,7 @@ BOOL SetParamList(HWND hDlg, bx_list_c *list)
       } else if (param->get_type() == BXT_PARAM_ENUM) {
         bx_param_enum_c *eparam = (bx_param_enum_c*)param;
         idx = (LRESULT)(SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), CB_GETCURSEL, 0, 0));
+        if (idx == CB_ERR) continue;
         val = (LRESULT)(SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), CB_GETITEMDATA, (WPARAM)idx, 0) + eparam->get_min());
         if (val != eparam->get()) {
           GetDlgItemText(hDlg, ID_PARAM + cid, buffer, 80);
@@ -1198,13 +1217,13 @@ void ResetParamList(HWND hDlg, bx_list_c *list, bool force)
         SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), BM_SETCHECK, val ? BST_CHECKED : BST_UNCHECKED, 0);
       } else if (param->get_type() == BXT_PARAM_ENUM) {
         bx_param_enum_c *eparam = (bx_param_enum_c*)param;
-        SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), CB_SETCURSEL, (WPARAM)(eparam->get()-eparam->get_min()), 0);
+        SelectComboChoice(GetDlgItem(hDlg, ID_PARAM + cid), eparam);
       } else {
         if (force || SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), EM_GETMODIFY, 0, 0)) {
           if (param->get_type() == BXT_PARAM_NUM) {
             bx_param_num_c *nparam = (bx_param_num_c*)param;
             if (nparam->get_base() == BASE_HEX) {
-              wsprintf(buffer, "0x%x", nparam->get());
+              wsprintf(buffer, "0x%I64x", nparam->get64());
             } else {
               wsprintf(buffer, "%I64d", nparam->get64());
             }
@@ -1287,6 +1306,10 @@ void ProcessDependentList(HWND hDlg, bx_param_c *param, BOOL enabled)
     if (param->get_type() == BXT_PARAM_ENUM) {
       eparam = (bx_param_enum_c*)param;
       value = SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), CB_GETCURSEL, 0, 0);
+      if (value == CB_ERR) {
+        return;
+      }
+      value = SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), CB_GETITEMDATA, (WPARAM)value, 0);
       enable_bitmap = eparam->get_dependent_bitmap(value + eparam->get_min());
       mask = 0x1;
       for (i = 0; i < deplist->get_size(); i++) {
@@ -1318,7 +1341,12 @@ void ProcessDependentList(HWND hDlg, bx_param_c *param, BOOL enabled)
       if (param->get_type() == BXT_PARAM_BOOL) {
         value = SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), BM_GETCHECK, 0, 0);
       } else if (param->get_type() == BXT_PARAM_NUM) {
-        value = GetDlgItemInt(hDlg, ID_PARAM + cid, NULL, FALSE);
+        GetWindowText(GetDlgItem(hDlg, ID_PARAM + cid), buffer, BX_PATHNAME_LEN);
+        if (((bx_param_num_c*)param)->get_base() == BASE_HEX) {
+          value = (strtoull(buffer, NULL, 16) != 0);
+        } else {
+          value = (strtoll(buffer, NULL, 10) != 0);
+        }
       } else {
         GetWindowText(GetDlgItem(hDlg, ID_PARAM + cid), buffer, BX_PATHNAME_LEN);
         value = (lstrlen(buffer) > 0) && (strcmp(buffer, "none"));
@@ -1520,7 +1548,7 @@ static INT_PTR CALLBACK FloppyParamDlgProc(HWND Window, UINT AMessage, WPARAM wP
   int i;
   RECT r, r2;
   SIZE size;
-  char mesg[MAX_PATH];
+  char mesg[MAX_PATH + 64];
   char path[MAX_PATH];
 
   switch (AMessage) {
@@ -1559,6 +1587,10 @@ static INT_PTR CALLBACK FloppyParamDlgProc(HWND Window, UINT AMessage, WPARAM wP
           GetDlgItemText(Window, path_id, path, MAX_PATH);
           backslashes(path);
           i = SendMessage(GetDlgItem(Window, type_id), CB_GETCURSEL, 0, 0);
+          if (i == CB_ERR) {
+            return TRUE;
+          }
+          i = SendMessage(GetDlgItem(Window, type_id), CB_GETITEMDATA, (WPARAM)i, 0);
           if (CreateImage(Window, floppy_type_n_sectors[i], path)) {
             wsprintf(mesg, "Created a %s disk image called %s", floppy_type_names[i], path);
             MessageBox(Window, mesg, "Image created", MB_OK);
@@ -1568,7 +1600,7 @@ static INT_PTR CALLBACK FloppyParamDlgProc(HWND Window, UINT AMessage, WPARAM wP
         default:
           ret = HandleChildWindowEvents(Window, 0, code, noticode, NULL);
           if (ret == BXPD_SET_PATH) {
-            SendMessage(GetDlgItem(Window, status_id), BM_SETCHECK, BST_CHECKED, 0);
+            SendMessage(GetDlgItem(Window, status_id), CB_SELECTSTRING, (WPARAM)-1, (LPARAM)"inserted");
             SendMessage(GetDlgItem(Window, type_id), CB_SELECTSTRING, (WPARAM)-1, (LPARAM)"auto");
             EnableWindow(GetDlgItem(Window, IDCREATE), FALSE);
           } else if (ret == BXPD_UPDATE_DEPS) {
@@ -1576,7 +1608,10 @@ static INT_PTR CALLBACK FloppyParamDlgProc(HWND Window, UINT AMessage, WPARAM wP
               EnableWindow(GetDlgItem(Window, IDCREATE), IsWindowEnabled(GetDlgItem(Window, type_id)));
             } else if (code == type_id) {
               i = SendMessage(GetDlgItem(Window, type_id), CB_GETCURSEL, 0, 0);
-              EnableWindow(GetDlgItem(Window, IDCREATE), (i != 0));
+              if (i != CB_ERR) {
+                i = SendMessage(GetDlgItem(Window, type_id), CB_GETITEMDATA, (WPARAM)i, 0);
+              }
+              EnableWindow(GetDlgItem(Window, IDCREATE), (i > 0));
             }
           }
       }
