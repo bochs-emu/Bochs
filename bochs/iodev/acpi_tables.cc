@@ -131,8 +131,8 @@ Bit32u bx_acpi_tables_c::build_fadt(Bit8u* buffer, Bit32u facs_offset, Bit32u ds
     fadt->flags = (1 << 0)    // WBINVD supported
                 | (1 << 4)    // Proc C1 supported  
                 | (1 << 5)    // P_LVL2_UP (uniprocessor only)
-                | (1 << 8)    // RTC_S4 supported
-                | (1 << 10);  // 32-bit PM timer
+                | (1 << 8);   // RTC_S4 supported
+    // Note: bit 10 (TMR_VAL_EXT) is not set, the PIIX4 PM timer is 24-bit
     // Note: bit 20 (HW_REDUCED_ACPI) is intentionally NOT set!
     
     // IA-PC boot architecture flags
