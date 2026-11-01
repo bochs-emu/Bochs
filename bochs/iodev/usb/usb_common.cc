@@ -5,7 +5,7 @@
 // Generic USB emulation code
 //
 // Copyright (c) 2005       Fabrice Bellard
-// Copyright (C) 2009-2023  Benjamin D Lunt (fys at fysnet net)
+// Copyright (C) 2009-2026  Benjamin D Lunt (fys at fysnet net)
 //               2009-2023  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -401,8 +401,11 @@ int usb_device_c::handle_packet(USBPacket *p)
         BX_INFO(("Some devices (more than you think) will not initialize correctly without this (non-USB compliant) sequence."));
       }
       d.first8 = 1;
-      
+
       if (d.setup_buf[0] & USB_DIR_IN) {
+        // we can't return more than our data buffer holds
+        if (d.setup_len > (int) sizeof(d.data_buf))
+          d.setup_len = sizeof(d.data_buf);
         ret = handle_control((d.setup_buf[0] << 8) | d.setup_buf[1],
                              (d.setup_buf[3] << 8) | d.setup_buf[2],
                              (d.setup_buf[5] << 8) | d.setup_buf[4],
@@ -412,8 +415,14 @@ int usb_device_c::handle_packet(USBPacket *p)
         if (ret < d.setup_len)
           d.setup_len = ret;
         d.setup_state = SETUP_STATE_DATA_IN;
-      } else
+      } else {
+        // the OUT data stage is collected in our data buffer
+        if (d.setup_len > (int) sizeof(d.data_buf)) {
+          BX_ERROR(("SETUP: OUT request length (%d) is larger than our buffer (%d).", d.setup_len, (int) sizeof(d.data_buf)));
+          goto fail;
+        }
         d.setup_state = SETUP_STATE_DATA_OUT;
+      }
       break;
       
     case USB_TOKEN_IN:
