@@ -111,6 +111,8 @@ public:
   BX_SB16_BUFINL bool hascommand(void) { return havecommand; }  // return if there is a pending command
   BX_SB16_BUFINL int commandbytes(void) { return bytesneeded; } // return the length of the command
 
+  void register_state(bx_list_c *parent, const char *name); // save/restore support
+
 
 private:
   Bit8u *buffer;

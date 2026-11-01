@@ -483,6 +483,10 @@ void bx_sb16_c::register_state(void)
   BXRS_PARAM_BOOL(mpu, singlecommand, MPU.singlecommand);
   new bx_shadow_num_c(mpu, "current_timer", &MPU.current_timer);
   new bx_shadow_num_c(mpu, "last_delta_time", &MPU.last_delta_time);
+  MPU_B.datain.register_state(mpu, "datain");
+  MPU_B.dataout.register_state(mpu, "dataout");
+  MPU_B.cmd.register_state(mpu, "cmd");
+  MPU_B.midicmd.register_state(mpu, "midicmd");
   bx_list_c *patchtbl = new bx_list_c(mpu, "patchtable");
   for (i=0; i<16; i++) {
     sprintf(name, "0x%02x", i);
@@ -492,6 +496,8 @@ void bx_sb16_c::register_state(void)
     new bx_shadow_num_c(patch, "program", &MPU.program[i]);
   }
   bx_list_c *dsp = new bx_list_c(list, "dsp");
+  DSP_B.datain.register_state(dsp, "datain");
+  DSP_B.dataout.register_state(dsp, "dataout");
   new bx_shadow_num_c(dsp, "resetport", &DSP.resetport, BASE_HEX);
   new bx_shadow_num_c(dsp, "speaker", &DSP.speaker, BASE_HEX);
   new bx_shadow_num_c(dsp, "prostereo", &DSP.prostereo, BASE_HEX);
@@ -538,6 +544,8 @@ void bx_sb16_c::register_state(void)
   new bx_shadow_data_c(list, "mixer_reg", MIXER.reg, BX_SB16_MIX_REG, 1);
   bx_list_c *emul = new bx_list_c(list, "emul");
   new bx_shadow_num_c(emul, "remaps", &EMUL.remaps);
+  EMUL.datain.register_state(emul, "datain");
+  EMUL.dataout.register_state(emul, "dataout");
   bx_list_c *remap = new bx_list_c(emul, "remaplist");
   for (i=0; i<BX_SB16_MAX_REMAPS; i++) {
     sprintf(name, "0x%02x", i);
@@ -3184,6 +3192,20 @@ bool bx_sb16_buffer::commanddone(void)
     return 1;  // yes, it's done
 
   return 0;    // no, it's not
+}
+
+// register the buffer contents and the command state for save/restore
+void bx_sb16_buffer::register_state(bx_list_c *parent, const char *name)
+{
+  bx_list_c *list = new bx_list_c(parent, name);
+  if (length > 0) {
+    new bx_shadow_data_c(list, "buffer", buffer, length);
+  }
+  new bx_shadow_num_c(list, "head", &head);
+  new bx_shadow_num_c(list, "tail", &tail);
+  new bx_shadow_num_c(list, "command", &command, BASE_HEX);
+  BXRS_PARAM_BOOL(list, havecommand, havecommand);
+  new bx_shadow_num_c(list, "bytesneeded", &bytesneeded);
 }
 
 // runtime parameter handlers
