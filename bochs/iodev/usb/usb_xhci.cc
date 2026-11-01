@@ -3159,7 +3159,7 @@ void bx_usb_xhci_c::write_event_TRB(unsigned interrupter, Bit64u parameter, Bit3
   // the Interrupter Target field of a TRB is 10 bits wide, but we only have INTERRUPTERS interrupters
   if (interrupter >= INTERRUPTERS) {
     BX_ERROR(("Write Event TRB: Interrupter Target out of range (%d). Using interrupter 0.", interrupter));
-    interrupter = 0;
+    return;
   }
 
   // write the TRB
