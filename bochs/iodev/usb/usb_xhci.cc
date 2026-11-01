@@ -3455,6 +3455,13 @@ int bx_usb_xhci_c::validate_slot_context(const struct SLOT_CONTEXT *slot_context
       if (slot_context->int_target >= MaxIntrs)
         ret = PARAMETER_ERROR;
 
+      // the Root Hub Port Number is used as an index to our port registers (1 based)
+      if ((trb_command == ADDRESS_DEVICE) &&
+          ((slot_context->rh_port_num < 1) || (slot_context->rh_port_num > BX_XHCI_THIS hub.n_ports))) {
+        BX_ERROR(("Address Device: Root Hub Port Number out of range (%d)", slot_context->rh_port_num));
+        ret = PARAMETER_ERROR;
+      }
+
       // xHCI v1.0, section 4.6.5, page 92: the slot state should be zero
       if (slot_context->slot_state != 0) {
         BX_DEBUG(("Address Device/Evaluate Context: Slot State != 0"));
@@ -3519,7 +3526,8 @@ int bx_usb_xhci_c::validate_ep_context(const struct EP_CONTEXT *ep_context, int 
   int speed = -1;
 
   // get the device's speed
-  if ((port_num >= 0) && (BX_XHCI_THIS hub.usb_port[port_num].device != NULL)) {
+  if ((port_num >= 0) && (port_num < (int) BX_XHCI_THIS hub.n_ports) &&
+      (BX_XHCI_THIS hub.usb_port[port_num].device != NULL)) {
     speed = BX_XHCI_THIS hub.usb_port[port_num].device->get_speed();
   } else {
     BX_ERROR(("Validate EP Context: Invalid port_num (%d) sent.", port_num));
@@ -3701,6 +3709,9 @@ int bx_usb_xhci_c::broadcast_speed(SLOT_CONTEXT& slot_context)
 int bx_usb_xhci_c::broadcast_packet(USBPacket *p, int port)
 {
   int ret = USB_RET_NODEV;
+
+  if ((port < 0) || (port >= (int) BX_XHCI_THIS hub.n_ports))
+    return ret;
 
   if (BX_XHCI_THIS hub.usb_port[port].device != NULL)
     ret = BX_XHCI_THIS hub.usb_port[port].device->handle_packet(p);
