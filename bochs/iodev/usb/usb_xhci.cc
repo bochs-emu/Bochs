@@ -2481,6 +2481,7 @@ Bit64u bx_usb_xhci_c::process_transfer_ring(int slot, int ep, Bit64u ring_addr, 
           p->packet.complete_dev = BX_XHCI_THIS_PTR;
           p->packet.strm_pid = primary_sid;
           p->slot_ep = (slot << 8) | ep;
+          ret = 0;  // a TRB that doesn't send a packet (SET_ADDRESS, No Op) is successful
           switch (cur_direction) {
             case USB_TOKEN_OUT:
             case USB_TOKEN_SETUP:
@@ -2498,7 +2499,8 @@ Bit64u bx_usb_xhci_c::process_transfer_ring(int slot, int ep, Bit64u ring_addr, 
               } else {
                 ret = BX_XHCI_THIS broadcast_packet(&p->packet, port_num - 1);
                 len = transfer_length;
-                BX_XHCI_THIS hub.slots[slot].ep_context[ep].edtla += len;
+                if ((ret >= 0) || (ret == USB_RET_ASYNC))
+                  BX_XHCI_THIS hub.slots[slot].ep_context[ep].edtla += len;
                 BX_DEBUG(("OUT: Transferred %d bytes (ret = %d)", len, ret));
               }
               break;
@@ -2523,19 +2525,21 @@ Bit64u bx_usb_xhci_c::process_transfer_ring(int slot, int ep, Bit64u ring_addr, 
               spd_occurred = 1;
             } else
               bytes_not_transferred = 0;
-          } else {
-            switch (ret) {
-              case USB_RET_STALL:
-                comp_code = STALL_ERROR;
-                break;
-              case USB_RET_BABBLE:
-                comp_code = BABBLE_DETECTION;
-                break;
-              default:
-                comp_code = TRANSACTION_ERROR;
-            }
-            len = 0;
           }
+        }
+        // an error in any direction (a NAK is retried below)
+        if ((ret < 0) && (ret != USB_RET_NAK)) {
+          switch (ret) {
+            case USB_RET_STALL:
+              comp_code = STALL_ERROR;
+              break;
+            case USB_RET_BABBLE:
+              comp_code = BABBLE_DETECTION;
+              break;
+            default:
+              comp_code = TRANSACTION_ERROR;
+          }
+          len = 0;
         }
         remove_async_packet(&BX_XHCI_THIS packets, p);
 
