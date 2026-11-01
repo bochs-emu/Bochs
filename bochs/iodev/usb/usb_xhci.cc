@@ -3094,6 +3094,17 @@ void bx_usb_xhci_c::process_command_ring(void)
   }
 }
 
+// returns the count of Event Ring Segment Table entries we can use.
+// (ERSTSZ may be written with any value, but we only have room for (1<<MAX_SEG_TBL_SZ_EXP) entries)
+static unsigned erst_size(unsigned erstabsize)
+{
+  if (erstabsize == 0)
+    return 1;
+  if (erstabsize > (1 << MAX_SEG_TBL_SZ_EXP))
+    return (1 << MAX_SEG_TBL_SZ_EXP);
+  return erstabsize;
+}
+
 void bx_usb_xhci_c::init_event_ring(unsigned interrupter)
 {
   const Bit64u addr = BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erstba.erstabadd;
@@ -3104,19 +3115,28 @@ void bx_usb_xhci_c::init_event_ring(unsigned interrupter)
   BX_XHCI_THIS hub.ring_members.event_rings[interrupter].count = 0;
   DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) addr, sizeof(BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys),
     (Bit8u *) BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys);
+
+  // check that the guest uses correct segment sizes
+  // (an invalid size is clamped so that we never run off the segment)
+  for (int i=0; i<(1<<MAX_SEG_TBL_SZ_EXP); i++) {
+    BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[i].size &= 0xFFFF;
+    if ((BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[i].size < 16) ||
+        (BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[i].size > 4096)) {
+      if (i < (int) erst_size(BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erstsz.erstabsize)) {
+        BX_ERROR(("Event Ring Segment %d has a size of %d which is invalid.", i,
+          BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[i].size));
+      }
+      if (BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[i].size < 16)
+        BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[i].size = 16;
+      else
+        BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[i].size = 4096;
+    }
+  }
+
   BX_XHCI_THIS hub.ring_members.event_rings[interrupter].cur_trb =
     BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[0].addr;
   BX_XHCI_THIS hub.ring_members.event_rings[interrupter].trb_count =
     BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[0].size;
-
-  // check that the guest uses correct segment sizes
-  for (int i=0; i<BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erstsz.erstabsize; i++) {
-    if ((BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[i].size < 16) ||
-        (BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[i].size > 4096)) {
-      BX_ERROR(("Event Ring Segment %d has a size of %d which is invalid.", i,
-        BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[i].size));
-    }
-  }
 
   // dump the event segment table
   BX_DEBUG(("Interrupter %02i: Event Ring Table (at 0x" FMT_ADDRX64 ") has %d entries:", interrupter,
@@ -3158,8 +3178,8 @@ void bx_usb_xhci_c::write_event_TRB(unsigned interrupter, Bit64u parameter, Bit3
 
   if (BX_XHCI_THIS hub.ring_members.event_rings[interrupter].trb_count == 0) {
     BX_XHCI_THIS hub.ring_members.event_rings[interrupter].count++;
-    if (BX_XHCI_THIS hub.ring_members.event_rings[interrupter].count ==
-        BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erstsz.erstabsize) {
+    if (BX_XHCI_THIS hub.ring_members.event_rings[interrupter].count >=
+        erst_size(BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erstsz.erstabsize)) {
       BX_XHCI_THIS hub.ring_members.event_rings[interrupter].rcs ^= 1;
       BX_XHCI_THIS hub.ring_members.event_rings[interrupter].count = 0;
     }
