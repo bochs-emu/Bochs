@@ -252,7 +252,7 @@ int bx_soundlow_wavein_alsa_c::openwaveinput(const char *wavedev, sound_record_h
     alsa_wavein.device = wavedev;
   }
   record_handler = rh;
-  if (rh != NULL) {
+  if ((rh != NULL) && (record_timer_index == BX_NULL_TIMER_HANDLE)) {
     record_timer_index = DEV_register_timer(this, record_timer_handler, 1, 1, 0, "wavein");
     // record timer: inactive, continuous, frequency variable
   }

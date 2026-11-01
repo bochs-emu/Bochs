@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2024  The Bochs Project
+//  Copyright (C) 2024-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -155,7 +155,7 @@ int bx_soundlow_wavein_pulse_c::openwaveinput(const char *wavedev, sound_record_
 {
   UNUSED(wavedev);
   record_handler = rh;
-  if (rh != NULL) {
+  if ((rh != NULL) && (record_timer_index == BX_NULL_TIMER_HANDLE)) {
     record_timer_index = DEV_register_timer(this, record_timer_handler, 1, 1, 0, "wavein");
     // record timer: inactive, continuous, frequency variable
   }

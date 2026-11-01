@@ -98,6 +98,7 @@ int bx_soundlow_waveout_file_c::openwaveoutput(const char *wavedev)
     wavefile = fopen(wavedev, "wb");
     if (wavefile == NULL) {
       BX_ERROR(("Failed to open WAVE output file %s.", wavedev));
+      return BX_SOUNDLOW_ERR;
     } else if (type == BX_SOUNDFILE_VOC) {
       VOC_init_file();
     } else if (type == BX_SOUNDFILE_WAV) {
@@ -305,8 +306,9 @@ int bx_soundlow_midiout_file_c::sendmidicommand(int delta, int command, int leng
       writedeltatime(delta);
     }
     fputc(command, midifile);
-    if ((command == 0xf0) ||
-        (command == 0xf7))    // write event length for sysex/meta events
+    if ((type == BX_SOUNDFILE_MID) &&
+        ((command == 0xf0) ||
+         (command == 0xf7)))  // write event length for sysex/meta events
       writedeltatime(length);
 
     fwrite(data, 1, length, midifile);
