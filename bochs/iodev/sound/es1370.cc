@@ -528,7 +528,10 @@ Bit32u bx_es1370_c::read(Bit32u address, unsigned io_len)
     case ES1370_CODEC:
       {
         Bit8u index = BX_ES1370_THIS s.codec_index;
-        val = BX_ES1370_THIS s.codec_reg[index] | (index << 8);
+        val = index << 8;
+        if (index < BX_ES1370_CODEC_REGS) {
+          val |= BX_ES1370_THIS s.codec_reg[index];
+        }
       }
       break;
     case ES1370_SCTL:

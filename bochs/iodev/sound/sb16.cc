@@ -985,7 +985,13 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
          // set samplerate for output
        case 0x42:
          // 1,2: hi(frq) lo(frq)
-         DSP_B.datain.getw1(&(DSP.dma.param.samplerate));
+         DSP_B.datain.getw1(&length);
+         if (length == 0) {
+           writelog(WAVELOG(3), "DSP command %x: sample rate 0 ignored",
+                    DSP_B.datain.currentcommand());
+           break;
+         }
+         DSP.dma.param.samplerate = length;
          DSP.dma.timeconstant = 65536 - (Bit32u) 256000000 / (Bit32u) DSP.dma.param.samplerate;
          break;
 
@@ -2804,11 +2810,13 @@ void bx_sb16_c::write(Bit32u address, Bit32u value, unsigned io_len)
   if (io_len == 2) {
     write(address, (Bit8u)value, 1);
     write(address + 1, (value >> 8), 1);
+    return;
   }
 #else
   if (io_len == 2) {
     write_handler(this_ptr, address, (Bit8u)value, 1);
     write_handler(this_ptr, address + 1, (value >> 8), 1);
+    return;
   }
 #endif  // !BX_USE_SB16_SMF
 
@@ -2974,7 +2982,7 @@ bx_sb16_buffer::bx_sb16_buffer()
 void bx_sb16_buffer::init(int bufferlen)
 {
   if (buffer != NULL)       // Was it initialized before?
-    delete buffer;
+    delete [] buffer;
 
   length = bufferlen;
   buffer = new Bit8u[length];
@@ -3038,10 +3046,10 @@ bool bx_sb16_buffer::puts(const char *data, ...)
 
   va_list ap;
   va_start(ap, data);
-  vsprintf(string, data, ap);
+  int strlength = vsnprintf(string, length, data, ap);
   va_end(ap);
 
-  if ((int) strlen(string) >= length)
+  if (strlength >= length)
     BX_PANIC(("bx_sb16_buffer: puts() too long!"));
 
   while (string[index] != 0)
@@ -3077,7 +3085,7 @@ bool bx_sb16_buffer::get(Bit8u *data)
       // Buffer is empty. Still, if it was initialized, return
       // the last byte again.
       if (length > 0)
-        (*data) = buffer[ (tail - 1) % length ];
+        (*data) = buffer[(tail + length - 1) % length];
       return 0;       // buffer empty
   }
 
