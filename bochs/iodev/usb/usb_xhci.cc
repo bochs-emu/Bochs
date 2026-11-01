@@ -2616,6 +2616,17 @@ void bx_usb_xhci_c::process_command_ring(void)
   while ((trb.command & 1) == BX_XHCI_THIS hub.ring_members.command_ring.rcs) {
     org_addr = BX_XHCI_THIS hub.ring_members.command_ring.dq_pointer;
     trb_command = TRB_GET_TYPE(trb.command);
+    // the Slot ID field is 8 bits wide, but we only have MAX_SLOTS slots
+    slot = TRB_GET_SLOT(trb.command);
+    if ((slot >= MAX_SLOTS) &&
+        ((trb_command == DISABLE_SLOT) || (trb_command == ADDRESS_DEVICE) ||
+         (trb_command == CONFIG_EP) || (trb_command == EVALUATE_CONTEXT) ||
+         (trb_command == STOP_EP) || (trb_command == SET_TR_DEQUEUE) ||
+         (trb_command == RESET_DEVICE))) {
+      BX_ERROR(("0x" FORMATADDRESS ": Command Ring: Slot ID out of range (slot = %d, command = %d)",
+        (bx_phy_address) org_addr, slot, trb_command));
+      write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(SLOT_NOT_ENABLED), TRB_SET_SLOT(slot) | TRB_SET_TYPE(COMMAND_COMPLETION), 1);
+    } else
     switch (trb_command) {
       // is a LINK trb.
       case LINK:
@@ -2991,7 +3002,9 @@ void bx_usb_xhci_c::process_command_ring(void)
         ep = TRB_GET_EP(trb.command);
         // A Stop Endpoint Command received while an endpoint is in the Error state shall have no effect and shall
         // generate a Command Completion Event with the Completion Code set to Context State Error.
-        if (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.ep_state == EP_STATE_ERROR)
+        if (!BX_XHCI_THIS hub.slots[slot].enabled)
+          comp_code = SLOT_NOT_ENABLED;
+        else if (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.ep_state == EP_STATE_ERROR)
           comp_code = CONTEXT_STATE_ERROR;
         else {
           BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.ep_state = EP_STATE_STOPPED;
@@ -3036,8 +3049,10 @@ void bx_usb_xhci_c::process_command_ring(void)
 
       case RESET_DEVICE:
         slot = TRB_GET_SLOT(trb.command);  // slots are 1 based
-        if ((BX_XHCI_THIS hub.slots[slot].slot_context.slot_state == SLOT_STATE_ADDRESSED) ||
-            (BX_XHCI_THIS hub.slots[slot].slot_context.slot_state == SLOT_STATE_CONFIGURED)) {
+        if (!BX_XHCI_THIS hub.slots[slot].enabled) {
+          comp_code = SLOT_NOT_ENABLED;
+        } else if ((BX_XHCI_THIS hub.slots[slot].slot_context.slot_state == SLOT_STATE_ADDRESSED) ||
+                   (BX_XHCI_THIS hub.slots[slot].slot_context.slot_state == SLOT_STATE_CONFIGURED)) {
           BX_XHCI_THIS hub.slots[slot].slot_context.slot_state = SLOT_STATE_DEFAULT;
           BX_XHCI_THIS hub.slots[slot].slot_context.entries = 1;
           BX_XHCI_THIS hub.slots[slot].slot_context.device_address = 0;
