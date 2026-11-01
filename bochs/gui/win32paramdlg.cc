@@ -33,10 +33,12 @@
 
 #include "scrollwin.h"
 
-#define ID_LABEL 1000
-#define ID_PARAM 1500
-#define ID_BROWSE 2000
-#define ID_UPDOWN 2500
+// control id ranges for dynamically created controls (up to 1000 each)
+// must not overlap with the dialog resource ids (see win32res.h)
+#define ID_LABEL  4000
+#define ID_PARAM  5000
+#define ID_BROWSE 6000
+#define ID_UPDOWN 7000
 
 // helper function
 
@@ -408,7 +410,7 @@ int AskFilename(HWND hwnd, bx_param_filename_c *param, char *buffer)
     param->get(filename, BX_PATHNAME_LEN);
   }
   // common file dialogs don't accept raw device names
-  if ((isalpha(filename[0])) && (filename[1] == ':') && (strlen(filename) == 2)) {
+  if ((isalpha((unsigned char)filename[0])) && (filename[1] == ':') && (strlen(filename) == 2)) {
     filename[0] = 0;
   }
   title = param->get_label();
@@ -772,6 +774,11 @@ HWND CreateInput(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_param_
             UDS_ALIGNRIGHT | UDS_SETBUDDYINT;
     Updown = CreateUpDownControl(style, 0, 0, 0, 0, hDlg, ID_UPDOWN + cid, NULL, Input,
                                  (int)nparam->get_max(), (int)nparam->get_min(), (int)nparam->get());
+    // CreateUpDownControl() only supports 16-bit range and position
+    SendMessage(Updown, UDM_SETRANGE32, (WPARAM)(int)nparam->get_min(), (LPARAM)(int)nparam->get_max());
+    if ((nparam->get() < -32768) || (nparam->get() > 32767)) {
+      SendMessage(Updown, UDM_SETPOS32, 0, (LPARAM)(int)nparam->get());
+    }
     ShowWindow(Updown, hide ? SW_HIDE : SW_SHOW);
   }
   SendMessage(Input, WM_SETFONT, (WPARAM)DlgFont, TRUE);
@@ -883,7 +890,8 @@ UINT GetLabelText(bx_param_c *param, bx_list_c *list, char *buffer)
   if (label == NULL) {
     label = param->get_name();
   }
-  if ((list->get_options() & list->SHOW_GROUP_NAME) && (param->get_group() != NULL)) {
+  if ((list->get_options() & list->SHOW_GROUP_NAME) && (param->get_group() != NULL) &&
+      ((lstrlen(param->get_group()) + lstrlen(label)) < 510)) {
     wsprintf(tmpbuf, "%s %s", param->get_group(), label);
   } else {
     lstrcpyn(tmpbuf, label, 512);
