@@ -958,20 +958,25 @@ bool bx_usb_ehci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
 bool bx_usb_ehci_c::mem_write(bx_phy_address addr, unsigned len, void *data)
 {
 #endif
-  Bit32u value = *((Bit32u *) data);
-  Bit32u value_hi = *((Bit32u *) ((Bit8u *) data + 4));     // Q: should value and value_hi to be swapped on BIG_ENDIAN platform ?
+  Bit32u value = 0, value_hi = 0;     // Q: should value and value_hi to be swapped on BIG_ENDIAN platform ?
   bool oldcfg, oldpo, oldpr, oldfpr;
   int i, port;
   const Bit32u offset = (Bit32u) (addr - BX_EHCI_THIS pci_bar[0].addr);
 
-  // modify val and val_hi per len of data to write
+  // get val and val_hi per len of data to write (don't read past the data)
   switch (len) {
   case 1:
-    value &= 0xFF;
+    value = *((Bit8u *) data);
+    break;
   case 2:
-    value &= 0xFFFF;
-  case 4:
-    value_hi = 0;
+    value = *((Bit16u *) data);
+    break;
+  case 8:
+    value = *((Bit32u *) data);
+    value_hi = *((Bit32u *) ((Bit8u *) data + 4));
+    break;
+  default:
+    value = *((Bit32u *) data);
     break;
   }
 
