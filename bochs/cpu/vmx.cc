@@ -410,7 +410,7 @@ BX_CPP_INLINE void BX_CPU_C::VMfail(Bit32u error_code)
 {
   clearEFlagsOSZAPC();
 
-  if ((BX_CPU_THIS_PTR vmcsptr != BX_INVALID_VMCSPTR)) { // executed only if there is a current VMCS
+  if (BX_CPU_THIS_PTR vmcsptr != BX_INVALID_VMCSPTR) { // executed only if there is a current VMCS
      assert_ZF();
      VMwrite32(VMCS_32BIT_INSTRUCTION_ERROR, error_code);
   }

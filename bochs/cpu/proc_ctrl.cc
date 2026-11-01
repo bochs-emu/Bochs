@@ -318,6 +318,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 
   BX_INSTR_CLFLUSH(BX_CPU_ID, laddr, BX_CPU_THIS_PTR address_xlation.paddress1);
 
+#if BX_X86_DEBUGGER
+  hwbreakpoint_match(laddr, 1, BX_READ);
+#endif
+
   BX_NEXT_INSTR(i);
 }
 

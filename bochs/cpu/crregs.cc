@@ -1723,8 +1723,7 @@ void BX_CPU_C::hwbreakpoint_match(bx_address laddr, unsigned len, unsigned rw)
   }
 }
 
-Bit32u BX_CPU_C::hwdebug_compare(bx_address laddr_0, unsigned size,
-                          unsigned opa, unsigned opb)
+Bit32u BX_CPU_C::hwdebug_compare(bx_address laddr_0, unsigned size, unsigned opa, unsigned opb)
 {
   Bit32u dr7 = BX_CPU_THIS_PTR dr7.get32();
 

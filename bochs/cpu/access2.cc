@@ -328,10 +328,6 @@ BX_CPU_C::tickle_read_linear(unsigned s, bx_address laddr)
 #if BX_SUPPORT_MEMTYPE
   BX_CPU_THIS_PTR address_xlation.memtype1  = tlbEntry->get_memtype();
 #endif
-
-#if BX_X86_DEBUGGER
-  hwbreakpoint_match(laddr, 1, BX_READ);
-#endif
 }
 
   void BX_CPP_AttrRegparmN(3)
@@ -389,10 +385,6 @@ BX_CPU_C::tickle_write_linear(unsigned s, bx_address laddr, unsigned len)
     BX_CPU_THIS_PTR address_xlation.memtype2  = tlbEntry->get_memtype();
 #endif
   }
-
-#if BX_X86_DEBUGGER
-  hwbreakpoint_match(laddr, len+1, BX_WRITE);
-#endif
 }
 
   Bit8u BX_CPP_AttrRegparmN(2)
