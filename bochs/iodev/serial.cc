@@ -887,8 +887,12 @@ Bit32u bx_serial_c::read(Bit32u address, unsigned io_len)
         BX_SER_THIS s[port].int_ident.int_ID = 0x0;
         BX_SER_THIS s[port].int_ident.ipending = 1;
       }
-      BX_SER_THIS s[port].tx_interrupt = false;
-      lower_interrupt(port);
+      // reading IIR clears the THRE interrupt only if it is the one reported
+      if (BX_SER_THIS s[port].int_ident.ipending == 0 &&
+          BX_SER_THIS s[port].int_ident.int_ID == 0x1) {
+        BX_SER_THIS s[port].tx_interrupt = false;
+        lower_interrupt(port);
+      }
 
       val = (Bit8u)BX_SER_THIS s[port].int_ident.ipending  |
             (BX_SER_THIS s[port].int_ident.int_ID << 1) |
@@ -1180,6 +1184,16 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
       BX_SER_THIS s[port].fifo_cntl.enable = new_b0;
       if (new_b1) {
         BX_SER_THIS s[port].rx_fifo_end = 0;
+        if (BX_SER_THIS s[port].fifo_cntl.enable) {
+          // receive FIFO is empty now: no data ready, no RX / timeout interrupt
+          bx_pc_system.deactivate_timer(BX_SER_THIS s[port].fifo_timer_index);
+          BX_SER_THIS s[port].line_status.rxdata_ready = 0;
+          BX_SER_THIS s[port].rx_interrupt = false;
+          BX_SER_THIS s[port].rx_ipending = false;
+          BX_SER_THIS s[port].fifo_interrupt = false;
+          BX_SER_THIS s[port].fifo_ipending = false;
+          lower_interrupt(port);
+        }
       }
       if (new_b2) {
         BX_SER_THIS s[port].tx_fifo_end = 0;
@@ -1213,6 +1227,11 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
         }
       }
 #endif // BX_USE_RAW_SERIAL
+      // stop and parity bits change the character time
+      if ((new_b2 != BX_SER_THIS s[port].line_cntl.stopbits) ||
+          (new_b3 != BX_SER_THIS s[port].line_cntl.parity_enable)) {
+        restart_timer = 1;
+      }
       /* These are ignored, but set them up so they can be read back */
       BX_SER_THIS s[port].line_cntl.stopbits = new_b2;
       BX_SER_THIS s[port].line_cntl.parity_enable = new_b3;
@@ -1252,8 +1271,11 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (restart_timer) {
         // Start the receive polling process if not already started
         // and there is a valid baudrate.
+        // start bit + 5..8 data bits + optional parity bit + 1 or 2 stop bits
         BX_SER_THIS s[port].databyte_usec = (Bit32u)(1000000.0 / BX_SER_THIS s[port].baudrate *
-                                                     (BX_SER_THIS s[port].line_cntl.wordlen_sel + 7));
+                                                     (BX_SER_THIS s[port].line_cntl.wordlen_sel + 7 +
+                                                      BX_SER_THIS s[port].line_cntl.parity_enable +
+                                                      BX_SER_THIS s[port].line_cntl.stopbits));
         bx_pc_system.activate_timer(BX_SER_THIS s[port].rx_timer_index,
                                     BX_SER_THIS s[port].databyte_usec,
                                     0); /* not continuous */
@@ -1280,7 +1302,17 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
       BX_SER_THIS s[port].modem_cntl.dtr  = new_b0;
       BX_SER_THIS s[port].modem_cntl.rts  = new_b1;
       BX_SER_THIS s[port].modem_cntl.out1 = new_b2;
-      BX_SER_THIS s[port].modem_cntl.out2 = new_b3;
+      if (new_b3 != BX_SER_THIS s[port].modem_cntl.out2) {
+        // OUT2 gates the interrupt output of the UART
+        BX_SER_THIS s[port].modem_cntl.out2 = new_b3;
+        if (!new_b3) {
+          DEV_pic_lower_irq(BX_SER_THIS s[port].IRQ);
+        } else if (BX_SER_THIS s[port].rx_interrupt || BX_SER_THIS s[port].tx_interrupt ||
+                   BX_SER_THIS s[port].ls_interrupt || BX_SER_THIS s[port].ms_interrupt ||
+                   BX_SER_THIS s[port].fifo_interrupt) {
+          DEV_pic_raise_irq(BX_SER_THIS s[port].IRQ);
+        }
+      }
 
       if (new_b4 != BX_SER_THIS s[port].modem_cntl.local_loopback) {
         BX_SER_THIS s[port].modem_cntl.local_loopback = new_b4;
