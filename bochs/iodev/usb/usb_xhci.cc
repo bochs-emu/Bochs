@@ -2862,9 +2862,13 @@ void bx_usb_xhci_c::process_command_ring(void)
             }
           }
           if (dc) {
-            BX_XHCI_THIS hub.slots[slot].slot_context.entries = 1;
-            BX_XHCI_THIS hub.slots[slot].slot_context.slot_state = SLOT_STATE_ADDRESSED;
-            update_slot_context(slot);
+            if (BX_XHCI_THIS hub.slots[slot].slot_context.slot_state >= SLOT_STATE_ADDRESSED) {
+              BX_XHCI_THIS hub.slots[slot].slot_context.entries = 1;
+              BX_XHCI_THIS hub.slots[slot].slot_context.slot_state = SLOT_STATE_ADDRESSED;
+              update_slot_context(slot);
+              comp_code = TRB_SUCCESS;
+            } else
+              comp_code = CONTEXT_STATE_ERROR;
           } else
 
           if (BX_XHCI_THIS hub.slots[slot].slot_context.slot_state >= SLOT_STATE_ADDRESSED) {
@@ -2872,13 +2876,14 @@ void bx_usb_xhci_c::process_command_ring(void)
             if ((d_flags & 3) > 0)    // the D0 (slot) and D1 (ep0) bits must be cleared
               comp_code = PARAMETER_ERROR;
             if ((a_flags & 3) == 1) { // the A0 (slot) bit must be set, and A1 (ep0) must be cleared
-              comp_code = validate_slot_context(&slot_context, trb_command, slot);
+              if (comp_code == TRB_SUCCESS)
+                comp_code = validate_slot_context(&slot_context, trb_command, slot);
             } else {
               comp_code = PARAMETER_ERROR;
             }
 
-            // Check all the input context entries with an a_flag == 1
-            for (i=2; i<32; i++) {
+            // Check all the input context entries with an a_flag == 1 (if no error so far)
+            for (i=2; (i<32) && (comp_code == TRB_SUCCESS); i++) {
               if (a_flags & (1<<i)) {
                 copy_ep_from_buffer(&ep_context, &buffer[CONTEXT_SIZE + (CONTEXT_SIZE * i)]);
                 if (i > slot_context.entries) {
