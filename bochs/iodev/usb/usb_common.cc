@@ -500,10 +500,14 @@ int usb_device_c::handle_packet(USBPacket *p)
               BX_ERROR(("DATA IN EP%d: Packet Toggle indicator doesn't match Device Toggle indicator. %d != %d", p->devep, p->toggle, get_toggle(p->devep)));
               goto fail;
             }
-            set_toggle(p->devep, get_toggle(p->devep) ^ 1); // toggle the bit
           }
 #endif
           ret = handle_data(p);
+#if HANDLE_TOGGLE_CONTROL
+          // the toggle bit only advances with a successful (or deferred) transaction, not on a NAK or STALL
+          if ((p->toggle > -1) && ((ret >= 0) || (ret == USB_RET_ASYNC)))
+            set_toggle(p->devep, get_toggle(p->devep) ^ 1); // toggle the bit
+#endif
           break;
       }
       break;
@@ -571,10 +575,14 @@ int usb_device_c::handle_packet(USBPacket *p)
               BX_ERROR(("DATA OUT EP%d: Packet Toggle indicator doesn't match Device Toggle indicator. %d != %d", p->devep, p->toggle, get_toggle(p->devep)));
               goto fail;
             }
-            set_toggle(p->devep, get_toggle(p->devep) ^ 1);  // toggle the bit
           }
 #endif
           ret = handle_data(p);
+#if HANDLE_TOGGLE_CONTROL
+          // the toggle bit only advances with a successful (or deferred) transaction, not on a NAK or STALL
+          if ((p->toggle > -1) && ((ret >= 0) || (ret == USB_RET_ASYNC)))
+            set_toggle(p->devep, get_toggle(p->devep) ^ 1); // toggle the bit
+#endif
           break;
       }
       break;

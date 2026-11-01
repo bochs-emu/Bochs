@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2025  Benjamin D Lunt (fys [at] fysnet [dot] net)
+//  Copyright (C) 2009-2026  Benjamin D Lunt (fys [at] fysnet [dot] net)
 //                2009-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
@@ -1093,8 +1093,7 @@ bool bx_ohci_core_c::process_ed(struct OHCI_ED *ed, const Bit32u ed_address)
           DEV_MEM_WRITE_PHYSICAL(temp +  4, 4, (Bit8u*) &cur_td.dword1);
           DEV_MEM_WRITE_PHYSICAL(temp +  8, 4, (Bit8u*) &cur_td.dword2);
         } else {
-          // Processed TD with error, advance the toggle anyway
-          ED_SET_C(ed, toggle ^ 1);
+          // Processed TD with error (or NAK), the toggle is not advanced
           break;
         }
       }
