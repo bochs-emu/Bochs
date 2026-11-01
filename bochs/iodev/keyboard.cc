@@ -121,8 +121,9 @@ void bx_keyb_c::init(void)
   DEV_register_iowrite_handler(this, write_handler,
                                       0x0064, "8042 Keyboard controller", 1);
   BX_KEY_THIS timer_handle = DEV_register_timer(this, timer_handler,
-                                 SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->get(), 1, 1,
+                                 SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->get(), 1, 0,
                                  "8042 Keyboard controller");
+  BX_KEY_THIS timer_active = 0;
 
   resetinternals(1);
 
@@ -259,6 +260,15 @@ void bx_keyb_c::register_state(void)
 
 void bx_keyb_c::after_restore_state(void)
 {
+  // re-sync the controller timer with the restored state
+  bx_pc_system.deactivate_timer(BX_KEY_THIS timer_handle);
+  BX_KEY_THIS timer_active = 0;
+  if (BX_KEY_THIS s.kbd_controller.timer_pending ||
+      BX_KEY_THIS s.kbd_controller.irq1_requested ||
+      BX_KEY_THIS s.kbd_controller.irq12_requested) {
+    start_timer();
+  }
+
   Bit8u value = BX_KEY_THIS s.kbd_internal_buffer.led_status;
   if (value != 0) {
     DEV_kbd_set_indicator(0, BX_KBD_LED_NUM, value & 0x02);
@@ -394,6 +404,8 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
               BX_KEY_THIS s.kbd_controller.irq12_requested = 1;
             else if (BX_KEY_THIS s.kbd_controller.allow_irq1  && BX_KEY_THIS s.kbd_controller.outb)
               BX_KEY_THIS s.kbd_controller.irq1_requested = 1;
+            if (BX_KEY_THIS s.kbd_controller.irq1_requested || BX_KEY_THIS s.kbd_controller.irq12_requested)
+              start_timer();
 
             BX_DEBUG((" allow_irq12 set to %u", (unsigned) BX_KEY_THIS s.kbd_controller.allow_irq12));
             if (!scan_convert)
@@ -771,6 +783,8 @@ void bx_keyb_c::controller_enQ(Bit8u data, unsigned source)
     if (BX_KEY_THIS s.kbd_controller.allow_irq12)
       BX_KEY_THIS s.kbd_controller.irq12_requested = 1;
   }
+  // the IRQ is raised from the timer handler
+  start_timer();
 }
 
 // move the oldest queued controller byte into the output buffer it was queued for
@@ -812,6 +826,8 @@ void bx_keyb_c::kbd_enQ_imm(Bit8u val)
 
   if (BX_KEY_THIS s.kbd_controller.allow_irq1)
     BX_KEY_THIS s.kbd_controller.irq1_requested = 1;
+  // the IRQ is raised from the timer handler
+  start_timer();
 }
 
 void bx_keyb_c::kbd_enQ(Bit8u scancode)
@@ -1051,6 +1067,14 @@ void bx_keyb_c::timer_handler(void *this_ptr)
     DEV_pic_raise_irq(1);
   if (retval & 0x02)
     DEV_pic_raise_irq(12);
+
+  // stop the timer when there is nothing left to do
+  if ((class_ptr->s.kbd_controller.timer_pending == 0) &&
+      !class_ptr->s.kbd_controller.irq1_requested &&
+      !class_ptr->s.kbd_controller.irq12_requested) {
+    bx_pc_system.deactivate_timer(class_ptr->timer_handle);
+    class_ptr->timer_active = 0;
+  }
 }
 
 unsigned bx_keyb_c::periodic(Bit32u usec_delta)
@@ -1117,6 +1141,16 @@ void bx_keyb_c::activate_timer(void)
 {
   if (BX_KEY_THIS s.kbd_controller.timer_pending == 0) {
     BX_KEY_THIS s.kbd_controller.timer_pending = 1;
+  }
+  start_timer();
+}
+
+// arm the controller timer if it is idle, an already running timer is not restarted
+void bx_keyb_c::start_timer(void)
+{
+  if (!BX_KEY_THIS timer_active) {
+    bx_pc_system.activate_timer(BX_KEY_THIS timer_handle, 0, 1);
+    BX_KEY_THIS timer_active = 1;
   }
 }
 

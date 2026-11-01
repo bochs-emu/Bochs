@@ -183,6 +183,7 @@ private:
   BX_KEY_SMF void kbd_enQ(Bit8u scancode);
   BX_KEY_SMF void kbd_enQ_imm(Bit8u val);
   BX_KEY_SMF void activate_timer(void);
+  BX_KEY_SMF void start_timer(void);
   BX_KEY_SMF void controller_enQ(Bit8u data, unsigned source);
   BX_KEY_SMF void controller_deQ(void);
   BX_KEY_SMF bool mouse_enQ_packet(Bit8u b1, Bit8u b2, Bit8u b3, Bit8u b4);
@@ -195,6 +196,7 @@ private:
 
   static void timer_handler(void *);
   int    timer_handle;
+  bool   timer_active; // timer runs only while there is pending work
 };
 
 #endif  // #ifndef _PCKEY_H
