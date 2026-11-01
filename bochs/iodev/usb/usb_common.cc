@@ -339,11 +339,15 @@ int usb_device_c::handle_packet(USBPacket *p)
     case USB_MSG_RESET:
       d.remote_wakeup = 0;
       d.addr = 0;
+      d.config = 0;
       d.state = USB_STATE_DEFAULT;
+      d.stall = 0;
+      for (int i=0; i<USB_MAX_ENDPOINTS; i++) {
 #if HANDLE_TOGGLE_CONTROL
-      for (int i=0; i<USB_MAX_ENDPOINTS; i++)
         d.endpoint_info[i].toggle = 0;
 #endif
+        d.endpoint_info[i].halted = 0;
+      }
       d.setup_state = SETUP_STATE_IDLE;
       handle_reset();
       break;
@@ -493,6 +497,11 @@ int usb_device_c::handle_packet(USBPacket *p)
           
         // a non-control endpoint found
         default:
+          // a halted endpoint returns a STALL until the halt feature is cleared
+          if (get_halted(p->devep)) {
+            BX_DEBUG(("DATA IN EP%d: endpoint is halted", p->devep));
+            return USB_RET_STALL;
+          }
 #if HANDLE_TOGGLE_CONTROL
           // manage our toggle bit
           if (p->toggle > -1) {
@@ -508,6 +517,9 @@ int usb_device_c::handle_packet(USBPacket *p)
           if ((p->toggle > -1) && ((ret >= 0) || (ret == USB_RET_ASYNC)))
             set_toggle(p->devep, get_toggle(p->devep) ^ 1); // toggle the bit
 #endif
+          // a STALL from the device halts the endpoint
+          if (ret == USB_RET_STALL)
+            set_halted(p->devep, 1);
           break;
       }
       break;
@@ -568,6 +580,11 @@ int usb_device_c::handle_packet(USBPacket *p)
           }
           break;
         default:
+          // a halted endpoint returns a STALL until the halt feature is cleared
+          if (get_halted(p->devep)) {
+            BX_DEBUG(("DATA OUT EP%d: endpoint is halted", p->devep));
+            return USB_RET_STALL;
+          }
 #if HANDLE_TOGGLE_CONTROL
           // manage our toggle bit
           if (p->toggle > -1) {
@@ -583,6 +600,9 @@ int usb_device_c::handle_packet(USBPacket *p)
           if ((p->toggle > -1) && ((ret >= 0) || (ret == USB_RET_ASYNC)))
             set_toggle(p->devep, get_toggle(p->devep) ^ 1); // toggle the bit
 #endif
+          // a STALL from the device halts the endpoint
+          if (ret == USB_RET_STALL)
+            set_halted(p->devep, 1);
           break;
       }
       break;
@@ -711,7 +731,8 @@ int usb_device_c::handle_control_common(int request, int value, int index, int l
         BX_ERROR(("USB_REQ_SET_CONFIGURATION: Trying to set configuration value to non-existing configuration: %d", value));
       }
       d.config = value;
-      d.state = USB_STATE_CONFIGURED;
+      // a value of zero returns the device to the address state
+      d.state = (value > 0) ? USB_STATE_CONFIGURED : USB_STATE_ADDRESS;
 #if HANDLE_TOGGLE_CONTROL
       // we must also clear all of the EP toggle bits
       for (int i=0; i<USB_MAX_ENDPOINTS; i++)
