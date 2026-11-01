@@ -3057,7 +3057,7 @@ void bx_usb_xhci_c::process_command_ring(void)
             comp_code = TRB_ERROR;
             BX_ERROR(("Get Secondary Port Bandwidth not implemented yet."));
 #else
-            write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(TRB_ERROR), TRB_SET_SLOT(0) | TRB_SET_TYPE(COMMAND_COMPLETION), 1);
+            comp_code = TRB_ERROR;
 #endif
           }
 
