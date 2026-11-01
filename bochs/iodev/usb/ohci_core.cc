@@ -1016,7 +1016,9 @@ void bx_ohci_core_c::process_lists(void)
       DEV_MEM_READ_PHYSICAL(hub.op_regs.HcControlCurrentED +  4, 4, (Bit8u*) &cur_ed.dword1);
       DEV_MEM_READ_PHYSICAL(hub.op_regs.HcControlCurrentED +  8, 4, (Bit8u*) &cur_ed.dword2);
       DEV_MEM_READ_PHYSICAL(hub.op_regs.HcControlCurrentED + 12, 4, (Bit8u*) &cur_ed.dword3);
-      process_ed(&cur_ed, hub.op_regs.HcControlCurrentED);
+      if (process_ed(&cur_ed, hub.op_regs.HcControlCurrentED)) {
+        hub.op_regs.HcCommandStatus.clf = 1;
+      }
       hub.op_regs.HcControlCurrentED = ED_GET_NEXTED(&cur_ed);
       if (get_frame_remaining() < 8000)
         break;
