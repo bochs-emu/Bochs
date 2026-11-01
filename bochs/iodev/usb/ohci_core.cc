@@ -1107,6 +1107,10 @@ bool bx_ohci_core_c::process_ed(struct OHCI_ED *ed, const Bit32u ed_address)
             if (TD_GET_DI(&cur_td) < hub.ohci_done_count)
               hub.ohci_done_count = TD_GET_DI(&cur_td);
           }
+          // if the TD holds its own data toggle, update it too
+          //  (a TD may take more than one packet. i.e.: a control OUT larger than the MPS)
+          if (TD_GET_T(&cur_td) & 2)
+            TD_SET_T(&cur_td, 2 | (toggle ^ 1));
           ED_SET_C(ed, toggle ^ 1);
           DEV_MEM_WRITE_PHYSICAL(temp,      4, (Bit8u*) &cur_td.dword0);
           DEV_MEM_WRITE_PHYSICAL(temp +  4, 4, (Bit8u*) &cur_td.dword1);
