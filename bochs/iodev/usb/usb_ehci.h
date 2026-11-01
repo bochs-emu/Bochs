@@ -404,7 +404,7 @@ private:
   usb_device_c *find_device(Bit8u addr);
   void flush_qh(EHCIQueue *q);
   int qh_do_overlay(EHCIQueue *q);
-  int transfer(EHCIPacket *p);
+  int transfer(EHCIPacket *p, Bit32u bytes);
   void finish_transfer(EHCIQueue *q, int status);
   void execute_complete(EHCIQueue *q);
   int execute(EHCIPacket *p);

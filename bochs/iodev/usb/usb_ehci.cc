@@ -1421,13 +1421,13 @@ int bx_usb_ehci_c::qh_do_overlay(EHCIQueue *q)
 }
 
 // Bochs specific code (no async and scatter/gather support yet)
-int bx_usb_ehci_c::transfer(EHCIPacket *p)
+// 'bytes' is the count of bytes to move (the actual count received for an IN packet)
+int bx_usb_ehci_c::transfer(EHCIPacket *p, Bit32u bytes)
 {
-  Bit32u cpage, offset, bytes, plen, blen = 0;
+  Bit32u cpage, offset, plen, blen = 0;
   Bit64u page;
 
   cpage  = get_field(p->qtd.token, QTD_TOKEN_CPAGE);
-  bytes  = get_field(p->qtd.token, QTD_TOKEN_TBYTES);
   offset = p->qtd.bufptr[0] & ~QTD_BUFPTR_MASK;
 
   while (bytes > 0) {
@@ -1494,8 +1494,8 @@ int bx_usb_ehci_c::event_handler(int event, void *ptr, int port)
     case USB_EVENT_ASYNC:
       BX_DEBUG(("Experimental async packet completion"));
       p = ehci_container_of_usb_packet(ptr);
-      if (p->pid == USB_TOKEN_IN) {
-        BX_EHCI_THIS transfer(p);
+      if ((p->pid == USB_TOKEN_IN) && (packet->len > 0)) {
+        BX_EHCI_THIS transfer(p, packet->len);
       }
       BX_ASSERT(p->async == EHCI_ASYNC_INFLIGHT);
       p->async = EHCI_ASYNC_FINISHED;
@@ -1639,7 +1639,7 @@ int bx_usb_ehci_c::execute(EHCIPacket *p)
   if (p->async == EHCI_ASYNC_NONE) {
     p->packet.len = p->tbytes;
     if (p->pid != USB_TOKEN_IN) {
-      if (BX_EHCI_THIS transfer(p) != 0) {
+      if (BX_EHCI_THIS transfer(p, p->tbytes) != 0) {
         return USB_RET_PROCERR;
       }
     }
@@ -1688,7 +1688,7 @@ int bx_usb_ehci_c::execute(EHCIPacket *p)
       //  it received, not the amount it anticipates on receiving/sending in the next packet.
       ret = 8;
     } else if (p->pid == USB_TOKEN_IN) {
-      if (BX_EHCI_THIS transfer(p) != 0) {
+      if (BX_EHCI_THIS transfer(p, ret) != 0) {
         return USB_RET_PROCERR;
       }
     }
