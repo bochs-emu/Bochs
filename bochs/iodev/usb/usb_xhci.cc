@@ -1513,7 +1513,7 @@ bool bx_usb_xhci_c::mem_read(bx_phy_address addr, unsigned len, void *data)
     }
   }
   // Doorbell Registers (return zero when read)
-  else if ((offset >= DOORBELL_OFFSET) && (offset < (DOORBELL_OFFSET + 4 + (INTERRUPTERS * 4)))) {
+  else if ((offset >= DOORBELL_OFFSET) && (offset < (DOORBELL_OFFSET + (MAX_SLOTS * 4)))) {
     val = 0;
   } else {
 #if BX_PHY_ADDRESS_LONG
@@ -2082,7 +2082,7 @@ bool bx_usb_xhci_c::mem_write(bx_phy_address addr, unsigned len, void *data)
   }
 
   // Doorbell Registers
-  else if ((offset >= DOORBELL_OFFSET) && (offset < (DOORBELL_OFFSET + 4 + (INTERRUPTERS * 4)))) {
+  else if ((offset >= DOORBELL_OFFSET) && (offset < (DOORBELL_OFFSET + (MAX_SLOTS * 4)))) {
     if (value & (0xFF << 8))
       BX_ERROR(("RsvdZ field of Doorbell written as non zero."));
     unsigned doorbell = ((offset - DOORBELL_OFFSET) >> 2);
