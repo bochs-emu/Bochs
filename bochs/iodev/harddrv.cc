@@ -1509,8 +1509,12 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                 {
                   Bit16u alloc_length = read_16bit(controller->buffer + 8);
 
-                  if (alloc_length == 0)
-                    BX_PANIC(("Zero allocation length to MECHANISM STATUS not impl."));
+                  if (alloc_length == 0) {
+                    // no data to transfer, the command completes without data phase
+                    atapi_cmd_nop(controller);
+                    raise_interrupt(channel);
+                    break;
+                  }
 
                   init_send_atapi_command(channel, atapi_command, 8, alloc_length);
 
@@ -2307,13 +2311,9 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           break;
 
         default:
-          if (controller->current_command == 0xa0) {
-            BX_PANIC(("IO read(0x%04x): current command is a0h/%02xh",
-              address, (unsigned) BX_SELECTED_DRIVE(channel).atapi.command));
-          } else {
-            BX_PANIC(("IO write(0x%04x): current command is %02xh", 
-              address, (unsigned) controller->current_command));
-          }
+          // no data out transfer in progress, the data is dropped
+          BX_ERROR(("IO write(0x%04x): current command is %02xh, data ignored",
+            address, (unsigned) controller->current_command));
       }
       break;
 
@@ -2812,7 +2812,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
         case 0xa2: // SERVICE (atapi), optional
           if (BX_SELECTED_IS_CD(channel)) {
-            BX_PANIC(("ATAPI SERVICE not implemented"));
+            BX_ERROR(("ATAPI SERVICE not implemented"));
             command_aborted(channel, 0xa2);
           } else {
             command_aborted(channel, 0xa2);
@@ -3588,8 +3588,11 @@ void bx_hard_drive_c::init_send_atapi_command(Bit8u channel, Bit8u command, int 
   }
 
   if (!controller->packet_dma) {
-    if (controller->byte_count == 0)
-      BX_PANIC(("ATAPI command 0x%02x with zero byte count", command));
+    if (controller->byte_count == 0) {
+      // invalid byte count limit, use the largest even value
+      BX_ERROR(("ATAPI command 0x%02x with zero byte count", command));
+      controller->byte_count = 0xfffe;
+    }
   }
 
   if (alloc_length < 0)

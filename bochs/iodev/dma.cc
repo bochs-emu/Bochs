@@ -613,7 +613,7 @@ void bx_dma_c::set_DRQ(unsigned channel, bool val)
       (BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type != DMA_MODE_DEMAND) &&
       (BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type != DMA_MODE_CASCADE))
   {
-    BX_PANIC(("set_DRQ: mode_type(%02x) not handled",
+    BX_ERROR(("set_DRQ: mode_type(%02x) not handled",
       BX_DMA_THIS s[ma_sl].chan[channel].mode.mode_type));
   }
 
@@ -628,7 +628,8 @@ void bx_dma_c::set_DRQ(unsigned channel, bool val)
     BX_INFO(("dma_base = 0x%08x", dma_base));
     BX_INFO(("dma_base_count = 0x%08x", BX_DMA_THIS s[ma_sl].chan[channel].base_count));
     BX_INFO(("dma_roof = 0x%08x", dma_roof));
-    BX_PANIC(("request outside %dk boundary", 64 << ma_sl));
+    // the address counter wraps inside the page like on the 8237
+    BX_ERROR(("request outside %dk boundary", 64 << ma_sl));
   }
 
   control_HRQ(ma_sl);
@@ -719,19 +720,27 @@ void bx_dma_c::raise_HLDA(void)
     // DMA controlled xfer of bytes from I/O to Memory
 
     if (!ma_sl) {
-      if (BX_DMA_THIS h[channel].dmaWrite8)
+      if (BX_DMA_THIS h[channel].dmaWrite8) {
         len = BX_DMA_THIS h[channel].dmaWrite8(BX_DMA_THIS h[channel].this_ptr8, buffer, maxlen);
-      else
-        BX_PANIC(("no dmaWrite handler for channel %u.", channel));
+      } else {
+        // e.g. software DMA request without a device: floating bus
+        BX_ERROR(("no dmaWrite handler for channel %u.", channel));
+        memset(buffer, 0xff, maxlen);
+        len = maxlen;
+      }
 
       DEV_MEM_WRITE_PHYSICAL_DMA(phy_addr, len, buffer);
 
       BX_DBG_DMA_REPORT(phy_addr, len, BX_WRITE, buffer[0]); // FIXME
     } else {
-      if (BX_DMA_THIS h[channel].dmaWrite16)
+      if (BX_DMA_THIS h[channel].dmaWrite16) {
         len = BX_DMA_THIS h[channel].dmaWrite16(BX_DMA_THIS h[channel].this_ptr16, (Bit16u*)buffer, maxlen / 2);
-      else
-        BX_PANIC(("no dmaWrite handler for channel %u.", channel));
+      } else {
+        // e.g. software DMA request without a device: floating bus
+        BX_ERROR(("no dmaWrite handler for channel %u.", channel));
+        memset(buffer, 0xff, maxlen);
+        len = maxlen / 2;
+      }
 
       DEV_MEM_WRITE_PHYSICAL_DMA(phy_addr, len * 2, buffer);
 
@@ -762,15 +771,16 @@ void bx_dma_c::raise_HLDA(void)
       if (BX_DMA_THIS h[channel].dmaWrite8)
         len = BX_DMA_THIS h[channel].dmaWrite8(BX_DMA_THIS h[channel].this_ptr8, buffer, 1);
       else
-        BX_PANIC(("no dmaWrite handler for channel %u.", channel));
+        BX_ERROR(("no dmaWrite handler for channel %u.", channel));
     } else {
       if (BX_DMA_THIS h[channel].dmaWrite16)
         len = BX_DMA_THIS h[channel].dmaWrite16(BX_DMA_THIS h[channel].this_ptr16, (Bit16u*)buffer, 1);
       else
-        BX_PANIC(("no dmaWrite handler for channel %u.", channel));
+        BX_ERROR(("no dmaWrite handler for channel %u.", channel));
     }
   } else {
-    BX_PANIC(("hlda: transfer_type 3 is undefined"));
+    // no data is moved, the counters advance like for a verify transfer
+    BX_ERROR(("hlda: transfer_type 3 is undefined"));
   }
 
   BX_DMA_THIS s[ma_sl].DACK[channel] = 1;

@@ -274,12 +274,13 @@ void bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
       BX_DEBUG(("%s ICW1 found", pic->master ? "master:":"slave: "));
       BX_DEBUG(("        requires 4 = %u", (value & 0x01)));
       if (value & 0x02) {
-        BX_PANIC(("%s single mode not supported", pic->master ? "master:":"slave: "));
+        BX_ERROR(("%s single mode not supported", pic->master ? "master:":"slave: "));
       } else {
         BX_DEBUG(("        cascade mode selected"));
       }
       if (value & 0x08) {
-        BX_PANIC(("%s level sensitive mode not supported", pic->master ? "master:":"slave: "));
+        // PIIX ignores LTIM, the trigger mode is selected by ELCR
+        BX_ERROR(("%s level sensitive mode not supported", pic->master ? "master:":"slave: "));
       } else {
         BX_DEBUG(("        edge triggered mode selected"));
       }
@@ -328,6 +329,9 @@ void bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
     }
 
     /* OCW2 */
+    // the level bits L2..L0 are only used by the specific (SL=1) commands
+    if ((value & 0x40) == 0)
+      value &= 0xe0;
     switch (value) {
       case 0x00: // Rotate in auto eoi mode clear
       case 0x80: // Rotate in auto eoi mode set
@@ -348,6 +352,13 @@ void bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         break;
 
       case 0x40: // Intel PIC spec-sheet seems to indicate this should be ignored
+      case 0x41:
+      case 0x42:
+      case 0x43:
+      case 0x44:
+      case 0x45:
+      case 0x46:
+      case 0x47:
         BX_INFO(("IRQ no-op"));
         break;
 
@@ -389,12 +400,9 @@ void bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         pic_service(pic);
         break;
 
-      case 0x02: // single mode bit: 1 = single, 0 = cascade
-        // ignore. 386BSD writes this value but works with it ignored.
-        break;
-
+      // note: 0x02 (written by 386BSD) is handled as 0x00 by the L bits masking above
       default:
-        BX_PANIC(("write to port 0x%02x = 0x%02x", (Bit8u)address, (Bit8u)value));
+        BX_ERROR(("write to port 0x%02x = 0x%02x ignored", (Bit8u)address, (Bit8u)value));
     } /* switch (value) */
   } else {
     /* initialization mode operation */
@@ -412,13 +420,13 @@ void bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
             if (value == 0x04) {
               BX_DEBUG(("        slave PIC on IRQ line #2"));
             } else {
-              BX_PANIC(("master: slave PIC IRQ line not supported"));
+              BX_ERROR(("master: slave PIC IRQ line not supported"));
             }
           } else {
             if ((value & 0x07) == 0x02) {
               BX_DEBUG(("        PIC ID = 2"));
             } else {
-              BX_PANIC(("slave:  PIC ID = %d not supported", value & 0x07));
+              BX_ERROR(("slave:  PIC ID = %d not supported", value & 0x07));
             }
           }
           if (pic->init.requires_4) {
@@ -439,12 +447,13 @@ void bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
           if (value & 0x01) {
             BX_DEBUG(("        80x86 mode"));
           } else {
-            BX_PANIC(("%s not 80x86 mode", pic->master ? "master:":"slave: "));
+            BX_ERROR(("%s not 80x86 mode", pic->master ? "master:":"slave: "));
           }
           pic->init.in_init = 0;
           break;
         default:
-          BX_PANIC(("%s expecting bad init command", pic->master ? "master":"slave"));
+          BX_ERROR(("%s expecting bad init command", pic->master ? "master":"slave"));
+          pic->init.in_init = 0;
       }
       return;
     }

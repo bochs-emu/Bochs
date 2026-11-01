@@ -433,7 +433,7 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
             break;
 
           default:
-            BX_PANIC(("=== unsupported write to port 60h(lastcomm=%02x): %02x",
+            BX_ERROR(("=== unsupported write to port 60h(lastcomm=%02x): %02x",
               (unsigned) BX_KEY_THIS s.kbd_controller.last_comm, (Bit8u) value));
           }
       } else {
@@ -499,8 +499,8 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0xa9: // Test Mouse Port
           // controller output buffer must be empty
           if (BX_KEY_THIS s.kbd_controller.outb) {
-            BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
-            break;
+            // the response is queued behind the pending output byte
+            BX_ERROR(("kbd: OUTB set and command 0x%02x encountered", value));
           }
           controller_enQ(0x00, 0); // no errors detected
           break;
@@ -523,8 +523,8 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0xab: // Interface Test
           // controller output buffer must be empty
           if (BX_KEY_THIS s.kbd_controller.outb) {
-            BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
-            break;
+            // the response is queued behind the pending output byte
+            BX_ERROR(("kbd: OUTB set and command 0x%02x encountered", value));
           }
           controller_enQ(0x00, 0);
           break;
@@ -542,8 +542,8 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0xc0: // read input port
           // controller output buffer must be empty
           if (BX_KEY_THIS s.kbd_controller.outb) {
-            BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
-            break;
+            // the response is queued behind the pending output byte
+            BX_ERROR(("kbd: OUTB set and command 0x%02x encountered", value));
           }
           // keyboard not inhibited
           controller_enQ(0x80, 0);
@@ -560,8 +560,8 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
           BX_DEBUG(("io write to port 64h, command d0h (partial)"));
           // controller output buffer must be empty
           if (BX_KEY_THIS s.kbd_controller.outb) {
-            BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
-            break;
+            // the response is queued behind the pending output byte
+            BX_ERROR(("kbd: OUTB set and command 0x%02x encountered", value));
           }
           controller_enQ(
               (BX_KEY_THIS s.kbd_controller.irq12_requested << 5) |
@@ -602,7 +602,7 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0xc1: // Continuous Input Port Poll, Low
         case 0xc2: // Continuous Input Port Poll, High
         case 0xe0: // Read Test Inputs
-          BX_PANIC(("io write 0x64: command = 0x%02x", (Bit8u) value));
+          BX_ERROR(("io write 0x64: unsupported command = 0x%02x", (Bit8u) value));
           break;
 
         case 0xfe: // System (cpu?) Reset, transition to real mode
@@ -747,7 +747,7 @@ void bx_keyb_c::controller_enQ(Bit8u data, unsigned source)
   // remember this includes mouse bytes.
   if (BX_KEY_THIS s.kbd_controller.outb) {
     if (BX_KEY_THIS s.controller_Qsize >= BX_KBD_CONTROLLER_QSIZE) {
-      BX_PANIC(("controller_enq(): controller_Q full!"));
+      BX_ERROR(("controller_enq(): controller_Q full, byte 0x%02x lost", data));
       return;
     }
     BX_KEY_THIS s.controller_Qsource[BX_KEY_THIS s.controller_Qsize] = source;
@@ -1010,7 +1010,8 @@ void bx_keyb_c::kbd_ctrl_to_kbd(Bit8u value)
       break;
 
     case 0xfe:  // resend. aiiee.
-      BX_PANIC(("got 0xFE (resend)"));
+      // the last byte is not kept, nothing to resend
+      BX_ERROR(("got 0xFE (resend) - ignored"));
       break;
 
     case 0xff:  // reset: internal keyboard reset and afterwards the BAT
@@ -1175,8 +1176,9 @@ void bx_keyb_c::kbd_ctrl_to_mouse(Bit8u value)
             BX_KEY_THIS s.mouse.resolution_cpmm = 8;
             break;
           default:
-            BX_PANIC(("mouse: unknown resolution %d", value));
-            break;
+            BX_ERROR(("mouse: unknown resolution %d", value));
+            controller_enQ(0xFC, 1); // error
+            return;
         }
         BX_DEBUG(("mouse: resolution set to %d counts per mm",
           BX_KEY_THIS s.mouse.resolution_cpmm));

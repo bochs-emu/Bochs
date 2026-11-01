@@ -1544,17 +1544,20 @@ bool bx_devices_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_
   Bit32u oldbase = *addr, newbase = 0;
   Bit32u mask = ~(size - 1);
   Bit8u pci_flags = pci_conf[0x00] & 0x0f;
+  bool above_4g = 0;
   if ((pci_flags & 0x06) == 0x04) {
     Bit32u tmpaddr = ReadHostDWordFromLittleEndian((Bit32u*)&pci_conf[4]);
     if (tmpaddr != 0) {
-      BX_PANIC(("64-bit PCI BAR not supported yet (high = 0x%08x)", tmpaddr));
+      // not supported: the BAR is not mapped while the high dword is set
+      BX_ERROR(("64-bit PCI BAR above 4 GB not supported yet (high = 0x%08x)", tmpaddr));
+      above_4g = 1;
     }
   }
   pci_conf[0x00] &= (mask & 0xf0);
   pci_conf[0x01] &= (mask >> 8) & 0xff;
   pci_conf[0x02] &= (mask >> 16) & 0xff;
   pci_conf[0x03] &= (mask >> 24) & 0xff;
-  if (mae) {
+  if (mae && !above_4g) {
     newbase = ReadHostDWordFromLittleEndian((Bit32u*)pci_conf);
   }
   pci_conf[0x00] |= pci_flags;

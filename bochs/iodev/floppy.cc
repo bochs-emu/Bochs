@@ -802,9 +802,12 @@ void bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
       } else if (BX_FD_THIS s.command_complete) {
         if (BX_FD_THIS s.pending_command == FD_RESET) {
           return; // Don't respond during reset
-        } else if (BX_FD_THIS s.pending_command != FD_CMD_NOP)
-          BX_PANIC(("write 0x03f5: receiving new command 0x%02x, old one (0x%02x) pending",
+        } else if (BX_FD_THIS s.pending_command != FD_CMD_NOP) {
+          // controller is not ready for a new command (RQM=0 / result phase)
+          BX_ERROR(("write 0x03f5: receiving new command 0x%02x, old one (0x%02x) pending - ignored",
             value, BX_FD_THIS s.pending_command));
+          return;
+        }
         BX_FD_THIS s.command[0] = value;
         BX_FD_THIS s.command_complete = 0;
         BX_FD_THIS s.command_index = 1;
@@ -1277,17 +1280,30 @@ void bx_floppy_ctrl_c::floppy_command(void)
       BX_FD_THIS s.DOR |= drive;
 
       motor_on = (BX_FD_THIS s.DOR>>(drive+4)) & 0x01;
-      if (motor_on == 0)
-        BX_PANIC(("floppy_command(): format track: motor not on"));
+      if (motor_on == 0) {
+        BX_ERROR(("floppy_command(): format track: motor not on"));
+        BX_FD_THIS s.main_status_reg &= FD_MS_NDMA;
+        BX_FD_THIS s.main_status_reg |= FD_MS_BUSY;
+        return; // Hang controller
+      }
       BX_FD_THIS s.head[drive] = (BX_FD_THIS s.command[1] >> 2) & 0x01;
       sector_size = BX_FD_THIS s.command[2];
       BX_FD_THIS s.sector_count = BX_FD_THIS s.command[3];
       BX_FD_THIS s.format_fillbyte = BX_FD_THIS s.command[5];
-      if (BX_FD_THIS s.device_type[drive] == FDRIVE_NONE)
-        BX_PANIC(("floppy_command(): format track: bad drive #%d", drive));
+      if (BX_FD_THIS s.device_type[drive] == FDRIVE_NONE) {
+        BX_ERROR(("floppy_command(): format track: bad drive #%d", drive));
+        BX_FD_THIS s.main_status_reg &= FD_MS_NDMA;
+        BX_FD_THIS s.main_status_reg |= FD_MS_BUSY;
+        return; // Hang controller
+      }
 
       if (sector_size != 0x02) { // 512 bytes
-        BX_PANIC(("format track: sector size %d not supported", 128<<sector_size));
+        BX_ERROR(("format track: sector size %d not supported", 128<<sector_size));
+        BX_FD_THIS s.status_reg0 = 0x40 | (BX_FD_THIS s.head[drive]<<2) | drive; // abnormal termination
+        BX_FD_THIS s.status_reg1 = 0x04; // no data
+        BX_FD_THIS s.status_reg2 = 0x00;
+        enter_result_phase();
+        return;
       }
       if (BX_FD_THIS s.sector_count > BX_FD_THIS s.media[drive].sectors_per_track) {
         BX_ERROR(("format track: %d sectors/track requested (%d expected)",
@@ -1363,14 +1379,18 @@ void bx_floppy_ctrl_c::floppy_command(void)
     case FD_CMD_SCAN_HIGH_EQUAL | FD_CMD_MFM:
       BX_FD_THIS s.multi_track = (BX_FD_THIS s.command[0] & 0x80) > 0;
       if ((BX_FD_THIS s.DOR & 0x08) == 0)
-        BX_PANIC(("read/write/verify/scan command with DMA and int disabled"));
+        BX_ERROR(("read/write/verify/scan command with DMA and int disabled"));
       drive = BX_FD_THIS s.command[1] & FDC_DRV_MASK;
       BX_FD_THIS s.DOR &= ~FDC_DRV_MASK;
       BX_FD_THIS s.DOR |= drive;
 
       motor_on = (BX_FD_THIS s.DOR>>(drive+4)) & 0x01;
-      if (motor_on == 0)
-        BX_PANIC(("floppy_command(): read/write: motor not on"));
+      if (motor_on == 0) {
+        BX_ERROR(("floppy_command(): read/write: motor not on"));
+        BX_FD_THIS s.main_status_reg &= FD_MS_NDMA;
+        BX_FD_THIS s.main_status_reg |= FD_MS_BUSY;
+        return; // Hang controller
+      }
       head = BX_FD_THIS s.command[3] & 0x01;
       cylinder = BX_FD_THIS s.command[2]; /* 0..79 depending */
       sector = ((BX_FD_THIS s.command[0] & 0x5f) == (FD_CMD_MFM | FD_CMD_READ_TRACK)) ?
@@ -1389,8 +1409,12 @@ void bx_floppy_ctrl_c::floppy_command(void)
 #if (FDC_CURRENT_TYPE & FDC_TYPE_DP8473)
       BX_DEBUG(("DP8473: IPS = %i", (BX_FD_THIS s.command[2] & 0x80) > 0));
 #endif
-      if (BX_FD_THIS s.device_type[drive] == FDRIVE_NONE)
-        BX_PANIC(("floppy_command(): read/write/scan: bad drive #%d", drive));
+      if (BX_FD_THIS s.device_type[drive] == FDRIVE_NONE) {
+        BX_ERROR(("floppy_command(): read/write/scan: bad drive #%d", drive));
+        BX_FD_THIS s.main_status_reg &= FD_MS_NDMA;
+        BX_FD_THIS s.main_status_reg |= FD_MS_BUSY;
+        return; // Hang controller
+      }
 
       // check that head number in command[1] bit two matches the head
       // reported in the head number field.  Real floppy drives are
@@ -1411,7 +1435,12 @@ void bx_floppy_ctrl_c::floppy_command(void)
       }
 
       if (sector_size != 0x02) { // 512 bytes
-        BX_PANIC(("read/write/verify/scan command: sector size %d not supported", 128<<sector_size));
+        BX_ERROR(("read/write/verify/scan command: sector size %d not supported", 128<<sector_size));
+        BX_FD_THIS s.status_reg0 = 0x40 | (head<<2) | drive; // abnormal termination
+        BX_FD_THIS s.status_reg1 = 0x04; // no data
+        BX_FD_THIS s.status_reg2 = 0x00;
+        enter_result_phase();
+        return;
       }
 
       if ((cylinder >= BX_FD_THIS s.media[drive].tracks) ||
