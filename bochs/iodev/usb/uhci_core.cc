@@ -795,6 +795,15 @@ void bx_uhci_core_c::uhci_timer(void)
             SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_COMMAND, 0, address, USB_LPARAM_FLAG_AFTER);
           }
 #endif
+          // if the TD is still active, the device NAKed it. Leave the queue's
+          //  element pointer on this TD (so it is tried again in a later frame)
+          //  and move on to the next queue (or the next item if not in a queue)
+          if (td.dword1 & (1<<23)) {
+            item = (queue_addr != 0) ? queue.horz : td.dword0;
+            queue_addr = 0;
+            continue;
+          }
+
           // we processed another td within this queue line
           td_count++;
           bytes_processed += r_actlen;
