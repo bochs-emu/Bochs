@@ -445,9 +445,9 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_DEBUG(("Schedule bit clear in Command register"));
       }
 
-      // If Debug mode set, panic.  Not implemented
+      // Debug mode is not implemented (the bit is ignored)
       if (hub.usb_command.debug)
-        BX_PANIC(("Software set DEBUG bit in Command register. Not implemented"));
+        BX_ERROR(("Software set DEBUG bit in Command register. Not implemented"));
 
       break;
 

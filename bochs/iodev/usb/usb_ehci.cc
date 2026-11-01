@@ -1704,8 +1704,8 @@ int bx_usb_ehci_c::execute(EHCIPacket *p)
 
 int bx_usb_ehci_c::process_itd(EHCIitd *itd, Bit32u addr)
 {
-  // TODO
-  BX_PANIC(("process_itd() not implemented yet"));
+  // TODO: isochronous transfers are not implemented yet, the iTD is skipped
+  BX_ERROR(("process_itd(): isochronous transfers not implemented yet (iTD at 0x%08X ignored)", addr));
   return 0;
 }
 
