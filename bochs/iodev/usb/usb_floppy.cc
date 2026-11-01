@@ -964,9 +964,31 @@ int usb_floppy_device_c::handle_data(USBPacket *p)
           if (len > (int) s.data_len)
             goto fail;
           if (len > 0) {
-            memcpy(s.usb_buf+s.usb_len, data, len);
-            s.usb_len += len;
-            s.data_len -= len;
+            int pos = 0;
+            bool write_error = 0;
+            while (pos < len) {
+              // copy as much as fits in our buffer
+              len1 = len - pos;
+              if (len1 > (int) ((USB_FLOPPY_MAX_SECTORS * 512) - s.usb_len))
+                len1 = (USB_FLOPPY_MAX_SECTORS * 512) - s.usb_len;
+              memcpy(s.usb_buf+s.usb_len, data+pos, len1);
+              s.usb_len += len1;
+              s.data_len -= len1;
+              pos += len1;
+              // a large packet: write all but the last full sector now (it is written below)
+              while (s.usb_len >= 1024) {
+                if (floppy_write_sector() < 0) {
+                  write_error = 1;
+                  break;
+                }
+              }
+              if (write_error)
+                break;
+            }
+            if (write_error) {
+              ret = 0;
+              break;
+            }
           }
           ret = len;
           if ((s.data_len == 0) || (s.usb_len >= 512)) {
@@ -1038,14 +1060,18 @@ int usb_floppy_device_c::handle_data(USBPacket *p)
           case UFI_READ_12:
             if (len > (int) s.data_len)
               len = s.data_len;
+            // we can't return more than our buffer holds in one packet
+            if (len > (USB_FLOPPY_MAX_SECTORS * 512))
+              len = (USB_FLOPPY_MAX_SECTORS * 512);
             if (d.async_mode) {
               if (len > (int) s.usb_len) {
                 BX_DEBUG(("deferring packet %p", p));
+                p->len = len;  // the amount of data we will return on completion
                 usb_defer_packet(p, this);
                 s.packet = p;
                 ret = USB_RET_ASYNC;
               } else {
-                copy_data(p);
+                copy_data(p, len);
                 ret = len;
               }
             } else {
@@ -1234,7 +1260,7 @@ int usb_floppy_device_c::floppy_read_sector()
     }
     if (s.packet != NULL) {
       if (p->len <= (int)s.usb_len) {
-        copy_data(p);
+        copy_data(p, p->len);
       } else {
         return 0;
       }
@@ -1264,10 +1290,8 @@ int usb_floppy_device_c::floppy_write_sector()
   }
 }
 
-void usb_floppy_device_c::copy_data(USBPacket *p)
+void usb_floppy_device_c::copy_data(USBPacket *p, int len)
 {
-  int len = p->len;
-
   memcpy(p->data, s.dev_buffer, len);
   s.data_len -= len;
   if (s.data_len > 0) {
