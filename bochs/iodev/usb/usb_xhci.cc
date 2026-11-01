@@ -2355,9 +2355,15 @@ Bit64u bx_usb_xhci_c::process_transfer_ring(int slot, int ep, Bit64u ring_addr, 
        (spd_occurred && ((TRB_GET_TYPE(trb.command) == LINK) || (TRB_GET_TYPE(trb.command) == EVENT_DATA)))) {
       // is the data in trb.parameter? (Immediate data?)
       is_immed_data = TRB_IS_IMMED_DATA(trb.command);
-      if (is_immed_data)
+      if (is_immed_data) {
         DEV_MEM_READ_PHYSICAL((bx_phy_address) org_addr, 8, immed_data); // No byte-swapping here
-      else
+        // immediate data is limited to the 8 bytes of the parameter field
+        if (transfer_length > 8) {
+          BX_ERROR(("0x" FORMATADDRESS ": Transfer Ring (slot = %d) (ep = %d): Immediate Data with a length of %d",
+            (bx_phy_address) org_addr, slot, ep, transfer_length));
+          transfer_length = 8;
+        }
+      } else
         address = trb.parameter;
 
       switch (TRB_GET_TYPE(trb.command)) {
