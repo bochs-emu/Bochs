@@ -40,6 +40,9 @@
 
 #define LOG_THIS 
 
+// the most EDs we process in one list walk (protects against a circular list built by the guest)
+#define OHCI_MAX_ED_COUNT  1024
+
 const char *usb_ohci_port_name[] = {
   "HCRevision        ",
   "HCControl         ",
@@ -930,6 +933,7 @@ void bx_ohci_core_c::ohci_timer(void)
   struct OHCI_ED cur_ed;
   Bit32u address, ed_address;
   Bit16u zero = 0;
+  int ed_count = 0;
 
   if (hub.op_regs.HcControl.hcfs == OHCI_USB_OPERATIONAL) {
     // set remaining to the interval amount.
@@ -985,6 +989,10 @@ void bx_ohci_core_c::ohci_timer(void)
         DEV_MEM_READ_PHYSICAL(ed_address + 12, 4, (Bit8u*) &cur_ed.dword3);
         process_ed(&cur_ed, ed_address);
         ed_address = ED_GET_NEXTED(&cur_ed);
+        if (++ed_count >= OHCI_MAX_ED_COUNT) {
+          BX_ERROR(("Interrupt ED list has more than %d entries (circular list?)", OHCI_MAX_ED_COUNT));
+          break;
+        }
       }
     }
 
@@ -994,6 +1002,7 @@ void bx_ohci_core_c::ohci_timer(void)
 void bx_ohci_core_c::process_lists(void)
 {
   struct OHCI_ED cur_ed;
+  int ed_count;
 
   // TODO:  Rather than just comparing .fr to < 8000 here, and < 4000 below, see the statement on 
   //   page 45 of the OHCI specs:
@@ -1011,6 +1020,7 @@ void bx_ohci_core_c::process_lists(void)
       hub.op_regs.HcControlCurrentED = hub.op_regs.HcControlHeadED;
       hub.op_regs.HcCommandStatus.clf = 0;
     }
+    ed_count = 0;
     while (hub.op_regs.HcControlCurrentED) {
       DEV_MEM_READ_PHYSICAL(hub.op_regs.HcControlCurrentED,      4, (Bit8u*) &cur_ed.dword0);
       DEV_MEM_READ_PHYSICAL(hub.op_regs.HcControlCurrentED +  4, 4, (Bit8u*) &cur_ed.dword1);
@@ -1021,6 +1031,9 @@ void bx_ohci_core_c::process_lists(void)
       }
       hub.op_regs.HcControlCurrentED = ED_GET_NEXTED(&cur_ed);
       if (get_frame_remaining() < 8000)
+        break;
+      // continue with the current ED in the next frame
+      if (++ed_count >= OHCI_MAX_ED_COUNT)
         break;
     }
   }
@@ -1035,6 +1048,7 @@ void bx_ohci_core_c::process_lists(void)
       hub.op_regs.HcBulkCurrentED = hub.op_regs.HcBulkHeadED;
       hub.op_regs.HcCommandStatus.blf = 0;
     }
+    ed_count = 0;
     while (hub.op_regs.HcBulkCurrentED) {
       DEV_MEM_READ_PHYSICAL(hub.op_regs.HcBulkCurrentED,      4, (Bit8u*) &cur_ed.dword0);
       DEV_MEM_READ_PHYSICAL(hub.op_regs.HcBulkCurrentED +  4, 4, (Bit8u*) &cur_ed.dword1);
@@ -1045,6 +1059,9 @@ void bx_ohci_core_c::process_lists(void)
       }
       hub.op_regs.HcBulkCurrentED = ED_GET_NEXTED(&cur_ed);
       if (get_frame_remaining() < 4000)
+        break;
+      // continue with the current ED in the next frame
+      if (++ed_count >= OHCI_MAX_ED_COUNT)
         break;
     }
   }

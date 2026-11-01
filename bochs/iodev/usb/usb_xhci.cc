@@ -75,6 +75,9 @@
 
 #define LOG_THIS theUSB_XHCI->
 
+// the most LINK TRBs in a row we follow (protects against a ring of LINK TRBs built by the guest)
+#define XHCI_MAX_LINK_TRBS  32
+
 bx_usb_xhci_c *theUSB_XHCI = NULL;
 
 #define PROTOCOL_UBS3_OFFSET  (0x510 - 0x500)  // offset to the USB3 protocol struct
@@ -2297,6 +2300,7 @@ Bit64u bx_usb_xhci_c::process_transfer_ring(int slot, int ep, Bit64u ring_addr, 
   bool is_transfer_trb, is_immed_data, ioc, spd_occurred = 0;
   bool first_event_trb_encountered = 0;
   Bit32u bytes_not_transferred = 0;
+  int link_count = 0;
   int comp_code = 0;
   Bit8u immed_data[8];
 
@@ -2386,6 +2390,10 @@ Bit64u bx_usb_xhci_c::process_transfer_ring(int slot, int ep, Bit64u ring_addr, 
           if (!TRB_CHAIN(trb.command))
             BX_DEBUG(("Chain Bit in Link TRB not set."));
 #endif
+          if (++link_count > XHCI_MAX_LINK_TRBS) {
+            BX_ERROR(("Transfer Ring (slot = %d) (ep = %d): more than %d LINK TRBs in a row. Stopping.", slot, ep, XHCI_MAX_LINK_TRBS));
+            return ring_addr;
+          }
           read_TRB((bx_phy_address) ring_addr, &trb);
           continue;
 
@@ -2581,6 +2589,8 @@ Bit64u bx_usb_xhci_c::process_transfer_ring(int slot, int ep, Bit64u ring_addr, 
       }
     }
 
+    link_count = 0;
+
     // if the Chain bit is clear, then end of TD
     if ((trb.command & (1<<4)) == 0) {
       spd_occurred = 0;
@@ -2616,6 +2626,7 @@ void bx_usb_xhci_c::process_command_ring(void)
   Bit8u buffer[CONTEXT_SIZE + (32 * CONTEXT_SIZE)];
   struct SLOT_CONTEXT slot_context;
   struct EP_CONTEXT   ep_context;
+  int link_count = 0;
 
 #if BX_USB_DEBUGGER
   SIM->usb_debug_trigger(USB_DEBUG_XHCI, USB_DEBUG_COMMAND, 0, 0, 0);
@@ -2654,6 +2665,10 @@ void bx_usb_xhci_c::process_command_ring(void)
         BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: Found LINK TRB:  New dq_pointer = 0x" FORMATADDRESS " (%d)",
           (bx_phy_address) org_addr, (bx_phy_address) BX_XHCI_THIS hub.ring_members.command_ring.dq_pointer,
           BX_XHCI_THIS hub.ring_members.command_ring.rcs));
+        if (++link_count > XHCI_MAX_LINK_TRBS) {
+          BX_ERROR(("Command Ring: more than %d LINK TRBs in a row. Stopping.", XHCI_MAX_LINK_TRBS));
+          return;
+        }
         read_TRB((bx_phy_address) BX_XHCI_THIS hub.ring_members.command_ring.dq_pointer, &trb);
         continue;
 
@@ -3107,6 +3122,8 @@ void bx_usb_xhci_c::process_command_ring(void)
         slot = TRB_GET_SLOT(trb.command);  // slots are 1 based
         write_event_TRB(0, 0x0, TRB_SET_COMP_CODE(TRB_ERROR), TRB_SET_SLOT(slot) | TRB_SET_TYPE(COMMAND_COMPLETION), 1);
     }
+
+    link_count = 0;
 
     // advance the Dequeue pointer and continue;
     BX_XHCI_THIS hub.ring_members.command_ring.dq_pointer += 16;
