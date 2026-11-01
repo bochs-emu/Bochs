@@ -2922,8 +2922,7 @@ void bx_sb16_c::write(Bit32u address, Bit32u value, unsigned io_len)
   }
 
   // if we arrive here, the port is unsupported
-  writelog(3, "Write access to 0x%04x (value = 0x%02x): unsupported port!",
-          address, value);
+  writelog(3, "Write access to 0x%04x (value = 0x%02x): unsupported port!", address, value);
 }
 
 void bx_sb16_c::create_logfile(void)
@@ -3144,13 +3143,6 @@ bool bx_sb16_buffer::empty(void)
   return 0;       // buffer contains data
 }
 
-// Flushes the buffer
-void bx_sb16_buffer::flush(void)
-{
-  tail = head;
-  return;
-}
-
 // Peeks ahead in the buffer
 // Warning: No checking if result is valid. Must call bytes() to check that!
 Bit8u bx_sb16_buffer::peek(int offset)
@@ -3164,12 +3156,6 @@ void bx_sb16_buffer::newcommand(Bit8u newcmd, int bytes)
   command = newcmd;
   havecommand = 1;
   bytesneeded = bytes;
-}
-
-// Return the currently active command
-Bit8u bx_sb16_buffer::currentcommand(void)
-{
-  return command;
 }
 
 // Clear the active command
@@ -3190,17 +3176,6 @@ bool bx_sb16_buffer::commanddone(void)
     return 1;  // yes, it's done
 
   return 0;    // no, it's not
-}
-
-// return if there is a command pending
-bool bx_sb16_buffer::hascommand(void)
-{
-  return havecommand;
-}
-
-int bx_sb16_buffer::commandbytes(void)
-{
-  return bytesneeded;
 }
 
 // runtime parameter handlers

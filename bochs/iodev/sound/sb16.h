@@ -99,17 +99,17 @@ public:
   BX_SB16_BUFINL bool full(void);         // is the buffer full?
   BX_SB16_BUFINL bool empty(void);        // is it empty?
 
-  BX_SB16_BUFINL void flush(void);        // empty the buffer
-  BX_SB16_BUFINL int bytes(void);         // return number of bytes in the buffer
-  BX_SB16_BUFINL Bit8u peek(int ahead);   // peek ahead number of bytes
+  BX_SB16_BUFINL void flush(void) { tail = head; }  // empty the buffer
+  BX_SB16_BUFINL int bytes(void);                   // return number of bytes in the buffer
+  BX_SB16_BUFINL Bit8u peek(int ahead);             // peek ahead number of bytes
 
       /* These are for caching the command number */
-  BX_SB16_BUFINL void newcommand(Bit8u newcmd, int bytes);   // start a new command with length bytes
-  BX_SB16_BUFINL Bit8u currentcommand(void); // return the current command
-  BX_SB16_BUFINL void clearcommand(void);    // clear the command
+  BX_SB16_BUFINL void newcommand(Bit8u newcmd, int bytes);      // start a new command with length bytes
+  BX_SB16_BUFINL void clearcommand(void); // clear the command
   BX_SB16_BUFINL bool commanddone(void);  // return if all bytes have arrived
-  BX_SB16_BUFINL bool hascommand(void);   // return if there is a pending command
-  BX_SB16_BUFINL int commandbytes(void);     // return the length of the command
+  BX_SB16_BUFINL Bit8u currentcommand(void) { return command; } // return the current command
+  BX_SB16_BUFINL bool hascommand(void) { return havecommand; }  // return if there is a pending command
+  BX_SB16_BUFINL int commandbytes(void) { return bytesneeded; } // return the length of the command
 
 
 private:
