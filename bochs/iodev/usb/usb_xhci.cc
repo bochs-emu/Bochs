@@ -3130,6 +3130,12 @@ void bx_usb_xhci_c::init_event_ring(unsigned interrupter)
 
 void bx_usb_xhci_c::write_event_TRB(unsigned interrupter, Bit64u parameter, Bit32u status, Bit32u command, bool fire_int)
 {
+  // the Interrupter Target field of a TRB is 10 bits wide, but we only have INTERRUPTERS interrupters
+  if (interrupter >= INTERRUPTERS) {
+    BX_ERROR(("Write Event TRB: Interrupter Target out of range (%d). Using interrupter 0.", interrupter));
+    interrupter = 0;
+  }
+
   // write the TRB
   write_TRB((bx_phy_address) BX_XHCI_THIS hub.ring_members.event_rings[interrupter].cur_trb, parameter, status,
     command | (Bit32u) BX_XHCI_THIS hub.ring_members.event_rings[interrupter].rcs); // set the cycle bit
@@ -3426,7 +3432,7 @@ int bx_usb_xhci_c::validate_slot_context(const struct SLOT_CONTEXT *slot_context
     case EVALUATE_CONTEXT:
       // valid values for the Interrupt Target are 0 to MaxIntrs-1, inclusive.
       MaxIntrs = (BX_XHCI_THIS hub.cap_regs.HcSParams1 & (0x7FF << 8)) >> 8;
-      if (slot_context->int_target > MaxIntrs)
+      if (slot_context->int_target >= MaxIntrs)
         ret = PARAMETER_ERROR;
 
       // xHCI v1.0, section 4.6.5, page 92: the slot state should be zero
