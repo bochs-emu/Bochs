@@ -372,6 +372,16 @@ void bx_es1370_c::reset(unsigned type)
       BX_ES1370_THIS pci_conf[reset_vals[i].addr] = reset_vals[i].val;
   }
 
+  // stop all channels
+  bx_virt_timer.deactivate_timer(BX_ES1370_THIS s.dac1_timer_index);
+  bx_virt_timer.deactivate_timer(BX_ES1370_THIS s.dac2_timer_index);
+  if (BX_ES1370_THIS s.adc_inputinit) {
+    BX_ES1370_WAVEIN->stopwaverecord();
+  }
+  BX_ES1370_THIS s.dac_nr_active = -1;
+  BX_ES1370_THIS s.midi_command = 0x00;
+  BX_ES1370_THIS s.midicmd_index = 0;
+
   BX_ES1370_THIS s.ctl = 1;
   BX_ES1370_THIS s.status = 0x60;
   BX_ES1370_THIS s.mempage = 0;
