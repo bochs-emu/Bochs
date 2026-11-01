@@ -5,7 +5,7 @@
 //  Experimental USB Attached SCSI Protocol support (UASP)
 //
 //  Copyright (C) 2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//  Copyright (C) 2023  The Bochs Project
+//  Copyright (C) 2023-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -350,11 +350,25 @@ int usb_msd_device_c::uasp_do_stall(UASPRequest *req)
 int usb_msd_device_c::uasp_do_command(USBPacket *p)
 {
   const struct S_UASP_INPUT *input;
-  const Bit8u lun = p->data[15];  // the lun is in the same place for a IU_CMD and IU_TMF
   struct S_UASP_HDR *hdr = (struct S_UASP_HDR *) p->data;
-  const int index = (get_speed() == USB_SPEED_HIGH) ? 0 : bx_bswap16(hdr->tag);
-  UASPRequest *req = &s.uasp_request[index];
   Bit8u cmd_len = 0;
+
+  // a Task Management IU is 16 bytes and a Command IU is 32 bytes
+  if ((p->len < 16) || ((hdr->id == IU_CMD) && (p->len < (int) sizeof(struct S_UASP_COMMAND)))) {
+    BX_ERROR(("uasp: command pipe IU too short (%d bytes)", p->len));
+    d.stall = 1;
+    return USB_RET_STALL;
+  }
+
+  const Bit8u lun = p->data[15];  // the lun is in the same place for a IU_CMD and IU_TMF
+  const int index = (get_speed() == USB_SPEED_HIGH) ? 0 : bx_bswap16(hdr->tag);
+  // the tag is used as the stream id (the last request entry is for internal use)
+  if (index >= UASP_MAX_STREAMS_N) {
+    BX_ERROR(("uasp: command pipe IU tag out of range (%d)", index));
+    d.stall = 1;
+    return USB_RET_STALL;
+  }
+  UASPRequest *req = &s.uasp_request[index];
   
   usb_dump_packet(p->data, p->len, 0, p->devaddr, USB_DIR_OUT | p->devep, USB_TRANS_TYPE_BULK, false, true);
   if (hdr->id == IU_CMD) {
