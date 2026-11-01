@@ -1,6 +1,6 @@
 Changes after Bochs 3.1 release:
 
-(up to date with commits done till 31 Oct 2026)
+(up to date with commits done till 1 Nov 2026)
 
 - CPU emulation and instrumentation
   ! CPUDB: Added AMD Zen3 (Vermeer) CPUID model (features X2APIC, CLWB, UMIP, PKU, CET, VAES, RDPID + introduces CPUID 0x80000021: AMD Extended Feature Identification 2)
@@ -60,11 +60,7 @@ Changes after Bochs 3.1 release:
   - IDT view selects the gate size by CPU mode: 4-byte IVT in real mode, 8-byte gates in protected/V8086 mode,
     16-byte gates in long mode (including compatibility mode)
   - GDT view in long mode shows 16-byte LDT/TSS/call gate descriptors as one entry with 64-bit base and long mode type names
-  - DR0-DR3 are shown as 64-bit values in 64-bit mode
-  - IP is shown masked to 16 bits in 16-bit mode
   - Stack view in 16-bit mode shows 16-bit entries and uses SP for 16-bit stack segment (SS.B=0)
-  - Memory dump search could select rows by comparing past the end of the 4K dump
-  - Register list supports all register groups shown at once in 64-bit mode
   - Fixed buffer overflows (Find search string, ask dialog reply, font name, bx_enh_dbg.ini parsing)
   - bx_enh_dbg.ini is sanitized on load: invalid values are reported and ignored
   - Allow copy text from the output window (^c copies the selected text, ^c without selection still breaks the simulation)
@@ -96,7 +92,6 @@ Changes after Bochs 3.1 release:
   - Voodoo
     - Fixed crash when the screen is redrawn (e.g. by the debugger) before a display mode is set (#666)
   - Banshee
-    - Two small fixes in blt_polygon_fill
     - Fixed clip window for bottom-to-top 2D BLTs
     - Y direction bit is applied only to screen-to-screen and host-to-screen BLTs (was applied also to stretch BLTs, fills, lines and polygons)
   - Cirrus
@@ -142,9 +137,8 @@ Changes after Bochs 3.1 release:
     - PIIX3: restore the default I/O APIC base on reset
     - Fixed loading of PCI option ROM images (partial reads, uninitialized ROM padding)
     - ACPI: unmap the PM/SMBus I/O windows when reset clears their BARs
+    - ACPI: fixed SMBus register decoding, written SMBus register values are kept
     - Fixed spurious rejection of read-only memory handlers (e.g. PCI option ROM) after other memory handlers were unregistered (#932)
-    - PCI IDE: ignore the reserved PRD address bit 0, zero-fill the rest of the PRD area for short ATAPI DMA data
-    - PCI IDE: PCI status register is read only / write-1-to-clear
   - Interrupt controllers and timers
     - IOAPIC: implemented Remote IRR for level triggered interrupts
     - IOAPIC: a level triggered entry programmed while its input line is already asserted now delivers the interrupt
@@ -175,11 +169,21 @@ Changes after Bochs 3.1 release:
   - Keyboard / mouse
     - PS/2 mouse "Set Scaling 1:1" command selected 2:1 scaling
     - Bytes queued while the 8042 output buffer was full are delivered to the right (keyboard or AUX) output buffer
-    - Range check key codes received from the GUI
     - Busmouse: motion is no longer lost while the counters are held
+    - 8042 keyboard controller timer runs only while there is pending work (performance)
   - USB
     - Fixed USB SCSI disk seek truncated to int (USB disks larger than 2GB failed past 2GB)
     - USB HID: deactivate the idle timer before unregistering it (PANIC on exit after guest set HID idle rate)
+    - Data toggle is not advanced on NAK (the retried transfer was STALLed), UHCI retries a NAKed TD
+      instead of skipping it (lost HID keyboard input)
+    - OHCI: fixed control OUT transfers longer than MaxPacketSize (STALL) and retry of NAKed control transfers
+    - xHCI: devices in slot 9 and above never got any transfer (doorbell not decoded)
+    - xHCI: report errors of OUT and SETUP transfers, fixed the completion code of the Configure Endpoint command
+    - EHCI: a short IN packet no longer writes stale data to guest memory past the received data
+    - Fixed device state handling of SET_CONFIGURATION(0), bus reset and endpoint halt
+    - Fixed several guest-triggerable host memory corruptions (xHCI, USB MSD UASP, USB floppy, control transfers
+      longer than 1024 bytes); a circular OHCI/xHCI schedule built by the guest no longer hangs the simulation;
+      unimplemented UHCI/EHCI features used by the guest are reported as errors instead of PANIC
   - fw_cfg
     - Fail DMA write requests instead of leaving them pending (matches QEMU)
     - Fixed host heap out-of-bounds read by DMA READ after DMA SKIP past the end of the item
@@ -190,8 +194,9 @@ Changes after Bochs 3.1 release:
       on the PIIX4 GPSTS/GPEN registers, FIRMWARE_CTRL is zero when the 64-bit X_FIRMWARE_CTRL pointer to the FACS
       is used (both were set, the ACPI spec requires FIRMWARE_CTRL to be zero when X_FIRMWARE_CTRL is used)
   - Serial / Parallel port
-    - Raw serial mode (Win32): the 1 stop bit setting was ignored
-    - Serial: LSR read clears the parity error bit
+    - Raw serial mode (Win32): the 1 stop bit setting was ignored, transmit no longer waits synchronously for each byte
+    - Serial: fixed THRE interrupt clearing on IIR read, IRQ update on MCR OUT2 change, receive FIFO reset
+      and character time (parity and stop bits are included now)
     - Parallel: the IRQ is registered once at init (enabling the IRQ by the guest could PANIC with an IRQ conflict)
   - Sound
     - SB16: Added parameter 'dsp_realtime' to use realtime mode for the DSP
@@ -199,6 +204,10 @@ Changes after Bochs 3.1 release:
     - ALSA sound driver: Added support to specify PCM device
     - Implement sound buffering
       - With this change, mixer thread adds short delay before starting sound playback. It allows to get rid of crackling noise during playback.
+    - SB16: 16-bit port writes (e.g. OUTW to the mixer index/data ports) were processed twice
+    - SB16: DSP / MPU-401 FIFOs and pending commands are saved / restored
+    - SB16, ES1370: fixed host crash (division by zero) and out of bounds reads triggered by the guest
+    - ES1370: DMA channels are stopped on reset (no sound after reboot when the guest used the other DAC)
   - Networking
     - VDE: fix networking on FreeBSD
   - CMOS
@@ -206,12 +215,9 @@ Changes after Bochs 3.1 release:
     - Report an error instead of PANIC when the CMOS image file cannot be written on exit
   - General
     - Set Windows system timer resolution to 1ms. This help to reduce artefacts (clicking noises) during sound playback
-    - PC speaker: fixed use of uninitialized output mode when the speaker is disabled, atomic lock for the Win32 beep thread
     - Save/restore: failures while saving the simulation state are reported instead of being ignored
 
 - GUI and display libraries
-  - General
-    - Allocate the tile buffer for the generic graphics update code once at init (performance)
   - win32 gui
     - Fixed crash on paste when the clipboard has no text
     - Faster text mode character drawing
@@ -224,8 +230,10 @@ Changes after Bochs 3.1 release:
     - Config file read / write errors are reported in the start menu
     - Simulation is not started if restoring the saved state failed
     - Numeric input is validated, bytestring parameters are handled in the string dialog (invalid raw byte input reported)
-    - Folder browser starts at the current value
     - Fixed parameter dialog list cleanup and scrolling
+    - Parameter dialogs: canceling the file dialog keeps the old file name, 64-bit hex values are shown completely,
+      enum choices and spin control ranges are handled correctly
+    - Floppy dialog: fixed "Create Image", media status is set to "inserted" after selecting an image
   - sdl2 gui
     - Faster screen update: only the modified area is copied to the window
     - Fixed paste (an extra NUL byte was sent to the guest)
