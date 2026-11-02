@@ -404,6 +404,7 @@ void bx_geforce_c::reset(unsigned type)
   BX_GEFORCE_THIS bx_vgacore_c::reset(type);
   // reset SVGA stuffs.
   BX_GEFORCE_THIS svga_init_members();
+  BX_GEFORCE_THIS update_irq_level();
   BX_GEFORCE_THIS ddc.init();
   // Disable ROM shadowing to allow clearing of VRAM
   BX_GEFORCE_THIS pci_conf[0x50] = 0x00;
