@@ -630,11 +630,7 @@ void bx_sb16_c::dsp_dmatimer(void)
   if (!DSP.nondma_mode) {
     if ((DSP.dma.chunkindex + 1 < BX_SOUNDLOW_WAVEPACKETSIZE) && (DSP.dma.count > 0)) {
       if (((DSP.dma.output == 0) && (DSP.dma.chunkcount > 0)) || (DSP.dma.output == 1)) {
-        if ((DSP.dma.param.bits == 8) || (BX_SB16_DMAH == 0)) {
-          DEV_dma_set_drq(BX_SB16_DMAL, 1);
-        } else {
-          DEV_dma_set_drq(BX_SB16_DMAH, 1);
-        }
+        dsp_set_drq(1);
       }
     }
   } else {
@@ -1337,8 +1333,13 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
   } else {
     DSP.dma.count = ((DSP.dma.blocklength + 1) << 1) - 1;
   }
-  size = (DSP.dma.count < BX_DMA_BUFFER_SIZE) ? DSP.dma.count : BX_DMA_BUFFER_SIZE;
-  DSP.dma.timer = BX_SB16_THIS dmatimer * size / sampledatarate;
+  // the timer period is based on the size of the first DMA burst in bytes
+  size = DSP.dma.count + 1;
+  if ((DSP.dma.param.bits == 16) && (BX_SB16_DMAH != 0))
+    size <<= 1;
+  if (size > BX_DMA_BUFFER_SIZE)
+    size = BX_DMA_BUFFER_SIZE;
+  DSP.dma.timer = (int)((Bit64u) BX_SB16_THIS dmatimer * size / sampledatarate);
 
   writelog(WAVELOG(5), "DMA is %db, %dHz, %s, %s, mode %d, %s, %s, %d bps, %d usec/DMA",
            DSP.dma.param.bits, DSP.dma.param.samplerate,
@@ -1430,6 +1431,31 @@ void bx_sb16_c::dsp_enabledma()
 void bx_sb16_c::dsp_disabledma()
 {
   bx_virt_timer.deactivate_timer(DSP.timer_handle);
+  dsp_set_drq(0);
+}
+
+// dsp_set_drq(): set the DRQ line of the DMA channel used by the transfer
+void bx_sb16_c::dsp_set_drq(bool val)
+{
+  if ((DSP.dma.param.bits == 8) || (BX_SB16_DMAH == 0)) {
+    DEV_dma_set_drq(BX_SB16_DMAL, val);
+  } else {
+    DEV_dma_set_drq(BX_SB16_DMAH, val);
+  }
+}
+
+// dsp_dma_rearm_timer(): The DMA timer period must match the number of bytes
+// moved by the last DMA burst. The last burst of a block is usually shorter.
+void bx_sb16_c::dsp_dma_rearm_timer(Bit32u bytes)
+{
+  if (DSP.dma.mode == 0)
+    return; // transfer finished or aborted
+
+  Bit32u sampledatarate = (Bit32u) DSP.dma.param.samplerate * (Bit32u) DSP.dma.bps;
+  Bit32u timer_val = (Bit32u)((Bit64u) BX_SB16_THIS dmatimer * bytes / sampledatarate);
+  if (timer_val == 0)
+    timer_val = 1;
+  bx_virt_timer.activate_timer(DSP.timer_handle, timer_val, 1);
 }
 
 void bx_sb16_c::dsp_disable_nondma()
@@ -1614,6 +1640,8 @@ Bit16u bx_sb16_c::dma_read8(Bit8u *buffer, Bit16u maxlen)
   if (DSP.dma.count == 0xffff) // last byte received
     dsp_dmadone(1);
 
+  dsp_dma_rearm_timer(len);
+
   return len;
 }
 
@@ -1641,6 +1669,8 @@ Bit16u bx_sb16_c::dma_write8(Bit8u *buffer, Bit16u maxlen)
 
   if (DSP.dma.count == 0xffff) // last byte sent
     dsp_dmadone(1);
+
+  dsp_dma_rearm_timer(len);
 
   return len;
 }
@@ -1674,6 +1704,8 @@ Bit16u bx_sb16_c::dma_read16(Bit16u *buffer, Bit16u maxlen)
   if (DSP.dma.count == 0xffff) // last word received
     dsp_dmadone(1);
 
+  dsp_dma_rearm_timer(len << 1);
+
   return len;
 }
 
@@ -1705,6 +1737,8 @@ Bit16u bx_sb16_c::dma_write16(Bit16u *buffer, Bit16u maxlen)
 
   if (DSP.dma.count == 0xffff) // last word sent
     dsp_dmadone(1);
+
+  dsp_dma_rearm_timer(len << 1);
 
   return len;
 }

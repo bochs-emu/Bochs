@@ -286,6 +286,8 @@ private:
   BX_SB16_SMF void   dsp_enabledma();		     // enable the transfer
   BX_SB16_SMF void   dsp_disabledma();		     // temporarily disable DMA
   BX_SB16_SMF void   dsp_disable_nondma();	     // disable DSP direct mode
+  BX_SB16_SMF void   dsp_set_drq(bool val);         // set DRQ of the active DMA channel
+  BX_SB16_SMF void   dsp_dma_rearm_timer(Bit32u bytes); // set timer period for next burst
   static void dsp_dmatimer_handler(void *);
   void dsp_dmatimer(void);
   static Bit32u sb16_adc_handler(void *, Bit32u len);
