@@ -602,8 +602,10 @@ void smp_probe(void)
         /* enable VMX for CPU #0 in IA32_FEATURE_CONTROL */
         if ((cpuid_ext_features & CPUID_EXT_VMX) > 0) {
             val64 = rdmsr(MSR_FEATURE_CTRL);
-            val64 |= (FEATURE_CTRL_LOCK | FEATURE_CTRL_VMX);
-            wrmsr(MSR_FEATURE_CTRL, val64);
+            if (!(val64 & FEATURE_CTRL_LOCK)) {
+                val64 |= (FEATURE_CTRL_LOCK | FEATURE_CTRL_VMX);
+                wrmsr(MSR_FEATURE_CTRL, val64);
+            }
         }
     }
     BX_INFO("Found %d cpu(s)\n", readw(&smp_cpus));
