@@ -193,7 +193,13 @@ Bit64u bx_virt_timer_c::time_usec(bool mode)
   //If we're in a timer handler we're up-to-date, and otherwise
   // this prevents call stack loops.
   if (!in_timer_handler) {
-    timer_handler(mode);
+    //Nothing to update if the system time did not advance since the last update.
+    // The timer_handler() call from the system timer callback is not skipped,
+    // it re-arms the one-shot system timer.
+    Bit64u system_usec = bx_pc_system.time_usec();
+    if (system_usec != (mode ? last_usec : s[0].current_virtual_time)) {
+      timer_handler(mode);
+    }
   }
   return s[mode].current_timers_time;
 }
