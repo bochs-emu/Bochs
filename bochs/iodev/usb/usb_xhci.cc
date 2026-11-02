@@ -720,6 +720,9 @@ void bx_usb_xhci_c::reset_hc()
     usb_cancel_packet(&BX_XHCI_THIS packets->packet);
     remove_async_packet(&BX_XHCI_THIS packets, BX_XHCI_THIS packets);
   }
+
+  // INTE, IE and IP are cleared, deassert a still asserted INTx line
+  update_irq(0);
 }
 
 void bx_usb_xhci_c::reset_port(int p)
@@ -1176,15 +1179,25 @@ void bx_usb_xhci_c::remove_device(Bit8u port)
   }
 }
 
-void bx_usb_xhci_c::update_irq(unsigned interrupter)
+void bx_usb_xhci_c::update_irq(bool check)
 {
   bool level = 0;
 
-  if ((BX_XHCI_THIS hub.op_regs.HcCommand.inte) &&
-      (BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].iman.ie)) {
-    level = 1;
-    BX_DEBUG(("Interrupt Fired."));
+  if (check) {
+    // INTx is asserted while USBCMD.INTE is set and any interrupter has
+    // IMAN.IE and IMAN.IP set (a level, not only the event which set IP)
+    if (BX_XHCI_THIS hub.op_regs.HcCommand.inte) {
+      for (unsigned i=0; i<INTERRUPTERS; i++) {
+        if (BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.ie &&
+            BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.ip) {
+          level = 1;
+          BX_DEBUG(("Interrupt Fired."));
+          break;
+        }
+      }
+    }
   }
+
   DEV_pci_set_irq(BX_XHCI_THIS devfunc, BX_XHCI_THIS pci_conf[0x3d], level);
 }
 
@@ -1671,6 +1684,7 @@ bool bx_usb_xhci_c::mem_write(bx_phy_address addr, unsigned len, void *data)
           BX_ERROR(("bits 6:4 in Command Register were not preserved"));
         BX_XHCI_THIS hub.op_regs.HcCommand.hsee   = (value & (1 <<  3)) ? 1 : 0;
         BX_XHCI_THIS hub.op_regs.HcCommand.inte   = (value & (1 <<  2)) ? 1 : 0;
+        update_irq(0);
         BX_XHCI_THIS hub.op_regs.HcCommand.hcrst  = (value & (1 <<  1)) ? 1 : 0;
         if (BX_XHCI_THIS hub.op_regs.HcCommand.hcrst) {
           BX_XHCI_THIS reset_hc();
@@ -2021,6 +2035,8 @@ bool bx_usb_xhci_c::mem_write(bx_phy_address addr, unsigned len, void *data)
           BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.ie    = ((value & (1 << 1)) == (1 << 1));
           if (value & (1 << 0))
             BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.ip  = 0;
+          // clearing IP or IE deasserts the INTx line (if no other interrupter is pending)
+          update_irq(1);
           break;
         case 0x04:
           BX_XHCI_THIS hub.runtime_regs.interrupter[i].imod.imodc = (value >> 16);
@@ -3231,7 +3247,7 @@ void bx_usb_xhci_c::write_event_TRB(unsigned interrupter, Bit64u parameter, Bit3
     BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].iman.ip = 1;
     BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erdp.ehb = 1; // set event handler busy
     BX_XHCI_THIS hub.op_regs.HcStatus.eint = 1;
-    update_irq(interrupter);
+    update_irq(1);
   }
 }
 
