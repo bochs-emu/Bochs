@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2011-2024  The Bochs Project
+//  Copyright (C) 2011-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -198,22 +198,18 @@ Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len)
 
 // resampler & mixer thread support
 
-BX_MUTEX(resampler_mutex);
-BX_MUTEX(mixer_mutex);
-int mixer_mutex_usage = 0;
-
 BX_THREAD_FUNC(resampler_thread, indata)
 {
   bx_soundlow_waveout_c *waveout = (bx_soundlow_waveout_c*)indata;
   while (waveout->resampler_running()) {
-    BX_LOCK(resampler_mutex);
+    waveout->lock_resampler();
     audio_buffer_t *curbuffer = waveout->get_audio_buffer(0)->get_buffer();
-    BX_UNLOCK(resampler_mutex);
+    waveout->unlock_resampler();
     if (curbuffer != NULL) {
       waveout->resampler(curbuffer, NULL);
-      BX_LOCK(resampler_mutex);
+      waveout->lock_resampler();
       waveout->get_audio_buffer(0)->delete_buffer();
-      BX_UNLOCK(resampler_mutex);
+      waveout->unlock_resampler();
     } else {
       BX_MSLEEP(20);
     }
@@ -263,6 +259,8 @@ bx_soundlow_waveout_c::bx_soundlow_waveout_c()
   pcm_callback_id = -1;
   res_thread_start = 0;
   mix_thread_start = 0;
+  BX_INIT_MUTEX(resampler_mutex);
+  BX_INIT_MUTEX(mixer_mutex);
 #if BX_HAVE_LIBSAMPLERATE || BX_HAVE_SOXR_LSR
   int ret = 0;
   src_state = src_new(SRC_SINC_MEDIUM_QUALITY, 2, &ret);
@@ -279,16 +277,10 @@ bx_soundlow_waveout_c::~bx_soundlow_waveout_c()
     if (res_thread_start) {
       res_thread_start = 0;
       BX_MSLEEP(20);
-      BX_FINI_MUTEX(resampler_mutex);
     }
     if (mix_thread_start) {
       mix_thread_start = 0;
       BX_MSLEEP(30);
-      if (mixer_mutex_usage > 0) {
-        if (--mixer_mutex_usage == 0) {
-          BX_FINI_MUTEX(mixer_mutex);
-        }
-      }
     }
     if (audio_buffers[0] != NULL) {
       delete audio_buffers[0];
@@ -296,6 +288,8 @@ bx_soundlow_waveout_c::~bx_soundlow_waveout_c()
       audio_buffers[0] = NULL;
     }
   }
+  BX_FINI_MUTEX(resampler_mutex);
+  BX_FINI_MUTEX(mixer_mutex);
 }
 
 int bx_soundlow_waveout_c::openwaveoutput(const char *wavedev)
@@ -507,15 +501,12 @@ Bit32u bx_soundlow_waveout_c::resampler_common(audio_buffer_t *inbuffer, float *
 
 void bx_soundlow_waveout_c::start_resampler_thread()
 {
-  BX_INIT_MUTEX(resampler_mutex);
   res_thread_start = 1;
   BX_THREAD_CREATE(resampler_thread, this, res_thread_var);
 }
 
 void bx_soundlow_waveout_c::start_mixer_thread()
 {
-  BX_INIT_MUTEX(mixer_mutex);
-  mixer_mutex_usage++;
   mix_thread_start = 1;
   BX_THREAD_CREATE(mixer_thread, this, mix_thread_var);
 }
