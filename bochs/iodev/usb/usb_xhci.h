@@ -300,7 +300,7 @@ private:
   BX_XHCI_SMF bool save_hc_state(void);
   BX_XHCI_SMF bool restore_hc_state(void);
 
-  BX_XHCI_SMF void update_irq(bool check);
+  BX_XHCI_SMF void update_irq(void);
 
   BX_XHCI_SMF void init_device(Bit8u port, bx_list_c *portconf);
   BX_XHCI_SMF void remove_device(Bit8u port);
