@@ -5911,10 +5911,26 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
                   d3d_sample_texture(ch, tex, rv[fi], lod, rc_regs[fi][8 + t]);
                 break;
               }
+              case 0x09:   // DOT_ST
               case 0x11: { // DOTPRODUCT
                 for (Bit32u fi = 0; fi < 4; fi++) {
                   float* input_tex = rc_regs[fi][8 + ch->d3d_tex_shader_previous[t]];
                   uv[fi][t == 1 ? 0 : 1] = dot3(ps_in[fi][4 + t], input_tex, ch->d3d_tex_shader_dotmapping[t]);
+                }
+                if (tex_shader_op == 0x09) { // DOT_ST
+                  float coords[4][3];
+                  for (Bit32u fi = 0; fi < 4; fi++) {
+                    coords[fi][0] = uv[fi][0];
+                    coords[fi][1] = uv[fi][1];
+                    coords[fi][2] = 0.0f;
+                  }
+                  gf_texture* tex = &ch->d3d_texture[t];
+                  float ddx[3];
+                  float ddy[3];
+                  compute_partials(coords[0], coords[1], coords[2], ddx, ddy);
+                  float lod = compute_lod(tex, coords[0], ddx, ddy);
+                  for (Bit32u fi = 0; fi < 4; fi++)
+                    d3d_sample_texture(ch, tex, coords[fi], lod, rc_regs[fi][8 + t]);
                 }
                 break;
               }
@@ -8333,7 +8349,7 @@ void bx_geforce_c::init_method_handlers()
   set_d3d_method_handler(0, 0, 1, 1, 0x28c, 0x28f, &bx_geforce_c::d3d_mh_viewport_scale);
   set_d3d_method_handler(0, 1, 0, 0, 0x2c0, 0x2c3, &bx_geforce_c::d3d_mh_transform_program);
   set_d3d_method_handler(0, 0, 1, 1, 0x2e0, 0x2e3, &bx_geforce_c::d3d_mh_transform_program);
-  set_d3d_method_handler(0, 1, 0, 0, 0x2e0, 0x2e3, &bx_geforce_c::d3d_mh_transform_constant);
+  set_d3d_method_handler(0, 1, 0, 0, 0x2e0, 0x2ef, &bx_geforce_c::d3d_mh_transform_constant);
   set_d3d_method_handler(0, 0, 1, 1, 0x7c0, 0x7cf, &bx_geforce_c::d3d_mh_transform_constant);
   set_d3d_method_handler(1, 0, 0, 0, 0x200, 0x2ff, &bx_geforce_c::d3d_mh_light);
   set_d3d_method_handler(0, 1, 1, 1, 0x400, 0x4ff, &bx_geforce_c::d3d_mh_light);
