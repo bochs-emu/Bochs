@@ -474,11 +474,10 @@ void bx_ne2k_c::reset(unsigned type)
     BX_NE2K_THIS s.CR.stop      = 1;
     BX_NE2K_THIS s.CR.rdma_cmd  = 4;
     BX_NE2K_THIS s.DCR.longaddr = 1;
-
-    set_irq_level(0);
   }
   memset(&BX_NE2K_THIS s.ISR, 0, sizeof(BX_NE2K_THIS s.ISR));
   BX_NE2K_THIS s.ISR.reset = 1;
+  set_irq_level(0);
 }
 
 void bx_ne2k_c::ne2k_register_state(bx_list_c *parent, Bit8u card)
