@@ -265,6 +265,8 @@ void bx_ohci_core_c::reset_hc()
     usb_cancel_packet(&packets->packet);
     remove_async_packet(&packets, packets);
   }
+
+  update_irq();
 }
 
 void bx_ohci_core_c::reset_port(int p)

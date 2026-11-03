@@ -181,6 +181,8 @@ void bx_uhci_core_c::reset_uhci(unsigned type)
     usb_cancel_packet(&packets->packet);
     remove_async_packet(&packets, packets);
   }
+
+  update_irq();
 }
 
 void bx_uhci_core_c::uhci_register_state(const char *pname, bx_list_c *parent)

@@ -1017,6 +1017,7 @@ bool bx_usb_ehci_c::mem_write(bx_phy_address addr, unsigned len, void *data)
           break;
         case 0x08:
           BX_EHCI_THIS hub.op_regs.UsbIntr = (Bit8u)(value & USBINTR_MASK);
+          BX_EHCI_THIS update_irq();
           break;
         case 0x0c:
           if (!BX_EHCI_THIS hub.op_regs.UsbCmd.rs) {
