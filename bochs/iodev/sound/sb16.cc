@@ -634,10 +634,12 @@ void bx_sb16_c::dsp_dmatimer(void)
       }
     }
   } else {
+    // convert the unsigned 8-bit sample to signed 16-bit stereo
+    Bit8u sample = DSP.samplebyte ^ 0x80;
     dsp_getsamplebyte(0);
-    dsp_getsamplebyte(DSP.samplebyte);
+    dsp_getsamplebyte(sample);
     dsp_getsamplebyte(0);
-    dsp_getsamplebyte(DSP.samplebyte);
+    dsp_getsamplebyte(sample);
   }
 }
 
