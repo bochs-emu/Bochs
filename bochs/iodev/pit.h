@@ -71,7 +71,8 @@ private:
   bool is_realtime;
 
   static void timer_handler(void *this_ptr);
-  BX_PIT_SMF void handle_timer();
+  BX_PIT_SMF void handle_timer(bool force_rearm);
+  BX_PIT_SMF void rearm_timer(bool force);
   BX_PIT_SMF bool periodic(Bit32u usec_delta);
 
   static void  irq_handler(void *this_ptr, bool value);
