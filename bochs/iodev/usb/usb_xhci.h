@@ -318,7 +318,7 @@ private:
   BX_XHCI_SMF void put_stream_info(struct STREAM_CONTEXT *context, Bit64u address, int index);
   BX_XHCI_SMF void write_event_TRB(unsigned interrupter, Bit64u parameter, Bit32u status,
                               Bit32u command, bool fire_int);
-  BX_XHCI_SMF Bit32u NEC_verification(Bit64u parameter);
+  BX_XHCI_SMF Bit32u NEC_verification(Bit64u signature);
   BX_XHCI_SMF void init_event_ring(unsigned interrupter);
   BX_XHCI_SMF void read_TRB(bx_phy_address addr, struct TRB *trb);
   BX_XHCI_SMF void write_TRB(bx_phy_address addr, Bit64u parameter, Bit32u status, Bit32u command);

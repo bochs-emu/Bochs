@@ -2626,6 +2626,38 @@ Bit64u bx_usb_xhci_c::process_transfer_ring(int slot, int ep, Bit64u ring_addr, 
   return ring_addr;
 }
 
+static BX_CPP_INLINE Bit32u nec_ror(Bit32u value, unsigned count)
+{
+  return (count == 0) ? value : ((value >> count) | (value << (32 - count)));
+}
+
+static BX_CPP_INLINE Bit32u nec_rol(Bit32u value, unsigned count)
+{
+  return (count == 0) ? value : ((value << count) | (value >> (32 - count)));
+}
+
+// The magic value used to calculate the NEC Verification answer.
+// It is simply "xHCI" in little-endian ASCII.
+#define NEC_VERIFICATION_MAGIC  0x49434878
+
+// Calculate the answer to the NEC/Renesas Get Verification command.
+// The idea of how to calculate this value comes from xhci_nec_challenge() in QEMU,
+//  hw/usb/hcd-xhci.c, Copyright (c) 2011 Securiforest, Author: Hector Martin
+//  <hector@marcansoft.com>, licensed under the LGPL v2.1 or later.
+//   signature = the 64-bit value sent by the driver in TRB.Param
+Bit32u bx_usb_xhci_c::NEC_verification(Bit64u signature)
+{
+  const Bit32u sig_lo = (Bit32u) signature;
+  const Bit32u sig_hi = (Bit32u) (signature >> 32);
+
+  // each rotate count is a 5-bit field of the signature
+  const Bit32u term0 = nec_ror(sig_lo - NEC_VERIFICATION_MAGIC, (unsigned) (signature >> 40) & 0x1F);
+  const Bit32u term1 = nec_rol(sig_lo + NEC_VERIFICATION_MAGIC, (unsigned) (signature >> 32) & 0x1F);
+  const Bit32u term2 = nec_rol(sig_hi ^ NEC_VERIFICATION_MAGIC, (unsigned) (signature >> 16) & 0x1F);
+
+  return ~(term0 + term1 - term2);
+}
+
 // This function call starts at the current position in the Command Ring,
 //  processes that command, then moves to the next one, until CCS != SCS;
 //    BX_XHCI_THIS hub.ring_members.command_ring.dq_pointer = current position in ring
@@ -2700,13 +2732,18 @@ void bx_usb_xhci_c::process_command_ring(void)
        * A 64-bit value is sent in the TRB.Param field and a 32-bit value is returned.
        *  (A 16-bit value in the high-order of TRB.Command and a 16-bit value in
        *   the low-order of TRB.Status)
-       * I do not have permission from NEC/Renesas to show the code that calculates and
-       *  returns the correct verification values.  Therefore, this simply returns.
-       * As long as you are not using a compatible NEC/Renesas driver, everything
-       *  should be fine.
+       * See NEC_verification() for how this value is calculated.
        */
       case NEC_TRB_TYPE_GET_UN:
         BX_DEBUG(("NEC GET Verification TRB found."));
+        {
+          const Bit32u verification = NEC_verification(trb.parameter);
+          const Bit32u status = TRB_SET_COMP_CODE(TRB_SUCCESS) | (verification & 0x0000FFFF);
+          const Bit32u command = (verification & 0xFFFF0000) | TRB_SET_SLOT(0) | TRB_SET_TYPE(NEC_TRB_TYPE_CMD_COMP);
+
+          write_event_TRB(0, org_addr, status, command, 1);
+          BX_DEBUG((" Returning status = 0x%08X, command = 0x%08X", status, command));
+        }
         break;
 
       /* Bochs Dump Controller command:
