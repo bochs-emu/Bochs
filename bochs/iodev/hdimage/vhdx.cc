@@ -6,7 +6,7 @@
 // Based on VHDX Format Specification v1.00 and QEMU implementation
 //
 // Copyright (c) 2013 Red Hat, Inc. (original QEMU code)
-// Copyright (C) 2025 The Bochs Project
+// Copyright (C) 2025-2026 The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -200,6 +200,14 @@ int vhdx_image_t::parse_header()
 
   BX_DEBUG(("VHDX: using header with sequence %llu",
             (unsigned long long)le64_to_cpu(active_header->sequence_number)));
+
+  // A non-zero log GUID means the log has entries that must be replayed
+  // before the image can be used (image was not closed cleanly)
+  static const Bit8u zero_guid[16] = {0};
+  if (!guid_eq(active_header->log_guid, zero_guid)) {
+    BX_ERROR(("VHDX: image log is not empty (not closed cleanly), log replay is not supported"));
+    return -1;
+  }
 
   return 0;
 }

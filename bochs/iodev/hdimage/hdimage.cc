@@ -554,19 +554,26 @@ bool hdimage_copy_file(const char *src, const char *dst)
 #ifdef WIN32
   return (bool)CopyFile(src, dst, FALSE);
 #elif defined(linux)
-  pid_t pid, ws;
+  pid_t pid;
+  int ws;
 
   if ((src == NULL) || (dst == NULL)) {
     return 0;
   }
 
-  if (!(pid = fork())) {
-    execl("/bin/cp", "/bin/cp", src, dst, (char *)0);
+  pid = fork();
+  if (pid < 0) {
     return 0;
   }
-  wait(&ws);
+  if (pid == 0) {
+    execl("/bin/cp", "/bin/cp", src, dst, (char *)0);
+    _exit(127);
+  }
+  if (waitpid(pid, &ws, 0) != pid) {
+    return 0;
+  }
   if (!WIFEXITED(ws)) {
-    return -1;
+    return 0;
   }
   return (WEXITSTATUS(ws) == 0);
 #else
@@ -1176,7 +1183,12 @@ inline Bit64s sparse_image_t::get_physical_offset()
 void sparse_image_t::set_virtual_page(Bit32u new_virtual_page)
 {
   position_virtual_page = new_virtual_page;
-  position_physical_page = dtoh32(pagetable[position_virtual_page]);
+  if (position_virtual_page < dtoh32(header.numpages)) {
+    position_physical_page = dtoh32(pagetable[position_virtual_page]);
+  } else {
+    // end of disk reached
+    position_physical_page = SPARSE_PAGE_NOT_ALLOCATED;
+  }
 }
 
 ssize_t sparse_image_t::read_page_fragment(Bit32u read_virtual_page, Bit32u read_page_offset, size_t read_size, void * buf)
@@ -1291,6 +1303,11 @@ ssize_t sparse_image_t::write(const void* buf, size_t count)
 
   while (count != 0)
   {
+    if (position_virtual_page >= dtoh32(header.numpages)) {
+      panic("write beyond end of sparse disk");
+      break;
+    }
+
     size_t can_write = pagesize - position_page_offset;
     if (count < can_write) can_write = count;
 
@@ -1642,22 +1659,34 @@ Bit64s dll_image_t::lseek(Bit64s offset, int whence)
 
 ssize_t dll_image_t::read(void* buf, size_t count)
 {
+  char *cbuf = (char*)buf;
+  size_t n = 0;
+
   if ((vunit >= 0) && (hlib_vdisk != NULL)) {
-    if (vdisk_read(vunit, vblk, buf)) {
+    while (n < count) {
+      if (!vdisk_read(vunit, vblk, cbuf + n))
+        return -1;
       vblk++;
-      return count;
+      n += 512;
     }
+    return count;
   }
   return -1;
 }
 
 ssize_t dll_image_t::write(const void* buf, size_t count)
 {
+  const char *cbuf = (const char*)buf;
+  size_t n = 0;
+
   if ((vunit >= 0) && (hlib_vdisk != 0)) {
-    if (vdisk_write(vunit, vblk, buf)) {
+    while (n < count) {
+      if (!vdisk_write(vunit, vblk, cbuf + n))
+        return -1;
       vblk++;
-      return count;
+      n += 512;
     }
+    return count;
   }
   return -1;
 }
