@@ -1433,11 +1433,12 @@ static void FillIDT()
 
 
 // insert one entry into the Paging data list (a linear and a physical addy)
-static void AddPagingLine(int LC, const char *pa_lin, const char *pa_phy)
+static void AddPagingLine(int LC, Bit64u start_lin, Bit64u end_lin, Bit64u start_phy)
 {
     DumpRow r;
-    strcpy(r.txt[0], pa_lin);
-    strcpy(r.txt[DUMP_INFO_COL], pa_phy);
+    sprintf (r.txt[0],"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64, start_lin, end_lin);
+    sprintf (r.txt[DUMP_INFO_COL],"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64,
+        start_phy, start_phy + (end_lin - start_lin));
     InsertListRow(r.cols, DUMP_COLS, DUMP_WND, LC, LGRP_NONE);
 }
 
@@ -1457,18 +1458,12 @@ static void FillPAGE()
     start_lin = 1;      // force a mismatch on the first line
     start_phy = 2;
 
-    char pa_lin[50];
-    char pa_phy[50];
-
     while(LineCount < 10000) {
         bool valid = BX_CPU(CurrentCPU)->dbg_xlate_linear2phy(lin, &phy, &lpf_mask);
         if(valid) {
             if((lin - start_lin) != (phy - start_phy)) {
                 if(start_lin != 1) {
-                    sprintf (pa_lin,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64, start_lin, lin - 1);
-                    sprintf (pa_phy,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64,
-                        start_phy, start_phy + (lin-1-start_lin));
-                    AddPagingLine (LineCount,pa_lin,pa_phy);
+                    AddPagingLine (LineCount, start_lin, lin - 1, start_phy);
                     ++LineCount;
                 }
                 start_lin = lin;
@@ -1476,10 +1471,7 @@ static void FillPAGE()
             }
         } else {
             if(start_lin != 1) {
-                sprintf (pa_lin,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64, start_lin, lin - 1);
-                sprintf (pa_phy,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64,
-                    start_phy, start_phy + (lin-1-start_lin));
-                AddPagingLine (LineCount,pa_lin,pa_phy);
+                AddPagingLine (LineCount, start_lin, lin - 1, start_phy);
                 ++LineCount;
             }
             start_lin = 1;
@@ -1496,11 +1488,9 @@ static void FillPAGE()
         }
         lin++;
     }
-    if(start_lin != 1) {
-        sprintf (pa_lin,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64, start_lin, (Bit64u)-1);
-        sprintf (pa_phy,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64, start_phy, start_phy + (lin-1-start_lin));
-        AddPagingLine (LineCount,pa_lin,pa_phy);
-    }
+    // the loop breaks with lin at the last byte of the final page
+    if(start_lin != 1 && LineCount < 10000)
+        AddPagingLine (LineCount, start_lin, lin, start_phy);
     RedrawColumns(DUMP_WND);
     EndListUpdate(DUMP_WND);
 }
