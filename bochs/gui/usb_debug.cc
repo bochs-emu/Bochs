@@ -538,8 +538,9 @@ bx_param_enum_c* get_hc_port_device(Bit8u port)
       device = SIM->get_param_enum(pname);
     } else {
       ehci_port = ((usb_debug_devid << 1) | (port - 1)) + 1;
-      sprintf(pname, "usb_ehci.hub.port%d.portsc.po", ehci_port);
-      if (SIM->get_param_bool(pname, SIM->get_bochs_root())->get()) {
+      sprintf(pname, "usb_ehci.hub.port%d.portsc", ehci_port);
+      // PORTSC bit 13: Port Owner
+      if (SIM->get_param_num(pname, SIM->get_bochs_root())->get() & (1 << 13)) {
         sprintf(pname, "%s.port%d.device", hc_param_str[USB_DEBUG_EHCI], ehci_port);
         device = SIM->get_param_enum(pname);
       }

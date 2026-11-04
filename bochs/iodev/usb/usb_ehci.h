@@ -255,22 +255,9 @@ typedef struct {
   } cap_regs;
 
   struct {
-    struct {
-      Bit8u itc;
-      bool  iaad;
-      bool  ase;
-      bool  pse;
-      bool  hcreset;
-      bool  rs;
-    } UsbCmd;
-    struct {
-      bool  ass;
-      bool  pss;
-      bool  recl;
-      bool  hchalted;
-      Bit8u inti;
-    } UsbSts;
-    Bit8u  UsbIntr;
+    Bit32u UsbCmd;
+    Bit32u UsbSts;
+    Bit32u UsbIntr;
     Bit32u FrIndex;
     Bit32u CtrlDsSegment;
     Bit32u PeriodicListBase;
@@ -282,25 +269,7 @@ typedef struct {
     // our data
     usb_device_c *device;   // device connected to this port
     bool owner_change;
-    struct {
-      bool  woe;
-      bool  wde;
-      bool  wce;
-      Bit8u ptc;
-      Bit8u pic;
-      bool  po;
-      bool  pp;
-      Bit8u ls;
-      bool  pr;
-      bool  sus;
-      bool  fpr;
-      bool  occ;
-      bool  oca;
-      bool  pec;
-      bool  ped;
-      bool  csc;
-      bool  ccs;
-    } portsc;
+    Bit32u portsc;
   } usb_port[USB_EHCI_PORTS];
 
 } bx_usb_ehci_t;
