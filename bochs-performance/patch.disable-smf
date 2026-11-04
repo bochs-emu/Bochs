@@ -1,7 +1,3 @@
-? buildbochs/config.log
-? buildbochs/confdefs.h
-? buildbochs/config.cache
-? buildbochs/conftestdir
 Index: buildbochs/config.h.in
 ===================================================================
 RCS file: /cvsroot/bochs/bochs/config.h.in,v
