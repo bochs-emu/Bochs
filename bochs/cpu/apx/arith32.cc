@@ -42,6 +42,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_BdGdEdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// ADD Ed, Gd with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_ADD_EdGdM(bxInstruction_c *i)
+{
+  Bit32u op1_32, op2_32, sum_32;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+  op2_32 = BX_READ_32BIT_REG(i->src());
+  sum_32 = op1_32 + op2_32;
+  write_RMW_linear_dword(sum_32);
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_BdGdEdR(bxInstruction_c *i)
 {
   Bit32u op1_32 = BX_READ_32BIT_REG(i->src1());
@@ -122,6 +137,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_BdGdEdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// SUB Ed, Gd with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SUB_EdGdM(bxInstruction_c *i)
+{
+  Bit32u op1_32, op2_32, diff_32;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+  op2_32 = BX_READ_32BIT_REG(i->src());
+  diff_32 = op1_32 - op2_32;
+  write_RMW_linear_dword(diff_32);
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_BdEdIdR(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, sum_32;
@@ -134,6 +164,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_BdEdIdR(bxInstruction_c *i)
 
   if (! i->getApxEvexNF())
     SET_FLAGS_OSZAPC_ADD_32(op1_32, op2_32, sum_32);
+
+  BX_NEXT_INSTR(i);
+}
+
+// ADD Ed, Id with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_ADD_EdIdM(bxInstruction_c *i)
+{
+  Bit32u op1_32, op2_32, sum_32;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+  op2_32 = i->Id();
+  sum_32 = op1_32 + op2_32;
+  write_RMW_linear_dword(sum_32);
 
   BX_NEXT_INSTR(i);
 }
@@ -165,6 +210,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_BdEdIdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// SUB Ed, Id with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SUB_EdIdM(bxInstruction_c *i)
+{
+  Bit32u op1_32, op2_32 = i->Id(), diff_32;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+  diff_32 = op1_32 - op2_32;
+  write_RMW_linear_dword(diff_32);
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_BdEdR(bxInstruction_c *i)
 {
   Bit32u erx = BX_READ_32BIT_REG(i->src());
@@ -173,6 +232,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_BdEdR(bxInstruction_c *i)
 
   if (! i->getApxEvexNF())
     SET_FLAGS_OSZAP_ADD_32(erx - 1, 0, erx);
+
+  BX_NEXT_INSTR(i);
+}
+
+// INC Ed with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_INC_EdM(bxInstruction_c *i)
+{
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+  op1_32++;
+  write_RMW_linear_dword(op1_32);
 
   BX_NEXT_INSTR(i);
 }
@@ -190,6 +261,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_BdEdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// DEC Ed with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_DEC_EdM(bxInstruction_c *i)
+{
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+  op1_32--;
+  write_RMW_linear_dword(op1_32);
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_BdEdR(bxInstruction_c *i)
 {
   Bit32u op1_32 = BX_READ_32BIT_REG(i->src());
@@ -198,6 +281,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_BdEdR(bxInstruction_c *i)
 
   if (! i->getApxEvexNF())
     SET_FLAGS_OSZAPC_SUB_32(0, 0 - op1_32, op1_32);
+
+  BX_NEXT_INSTR(i);
+}
+
+// NEG Ed with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_NEG_EdM(bxInstruction_c *i)
+{
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+  op1_32 = -op1_32;
+  write_RMW_linear_dword(op1_32);
 
   BX_NEXT_INSTR(i);
 }

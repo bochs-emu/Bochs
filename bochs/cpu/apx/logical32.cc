@@ -41,6 +41,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_BdGdEdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// XOR Ed, Gd with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_XOR_EdGdM(bxInstruction_c *i)
+{
+  Bit32u op1_32, op2_32;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+  op2_32 = BX_READ_32BIT_REG(i->src());
+  op1_32 ^= op2_32;
+  write_RMW_linear_dword(op1_32);
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_BdEdIdR(bxInstruction_c *i)
 {
   Bit32u op1_32 = BX_READ_32BIT_REG(i->src());
@@ -53,6 +68,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_BdEdIdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// XOR Ed, Id with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_XOR_EdIdM(bxInstruction_c *i)
+{
+  Bit32u op1_32;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+  op1_32 ^= i->Id();
+  write_RMW_linear_dword(op1_32);
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_BdEdIdR(bxInstruction_c *i)
 {
   Bit32u op1_32 = BX_READ_32BIT_REG(i->src());
@@ -61,6 +90,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_BdEdIdR(bxInstruction_c *i)
 
   if (! i->getApxEvexNF())
     SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
+
+  BX_NEXT_INSTR(i);
+}
+
+// OR Ed, Id with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_OR_EdIdM(bxInstruction_c *i)
+{
+  Bit32u op1_32;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+  op1_32 |= i->Id();
+  write_RMW_linear_dword(op1_32);
 
   BX_NEXT_INSTR(i);
 }
@@ -89,6 +132,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_BdGdEdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// OR Ed, Gd with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_OR_EdGdM(bxInstruction_c *i)
+{
+  Bit32u op1_32, op2_32;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+  op2_32 = BX_READ_32BIT_REG(i->src());
+  op1_32 |= op2_32;
+  write_RMW_linear_dword(op1_32);
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_BdGdEdR(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32;
@@ -104,6 +162,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_BdGdEdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// AND Ed, Gd with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_AND_EdGdM(bxInstruction_c *i)
+{
+  Bit32u op1_32, op2_32;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+  op2_32 = BX_READ_32BIT_REG(i->src());
+  op1_32 &= op2_32;
+  write_RMW_linear_dword(op1_32);
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_BdEdIdR(bxInstruction_c *i)
 {
   Bit32u op1_32 = BX_READ_32BIT_REG(i->src());
@@ -112,6 +185,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_BdEdIdR(bxInstruction_c *i)
 
   if (! i->getApxEvexNF())
     SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
+
+  BX_NEXT_INSTR(i);
+}
+
+// AND Ed, Id with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_AND_EdIdM(bxInstruction_c *i)
+{
+  Bit32u op1_32;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+  op1_32 &= i->Id();
+  write_RMW_linear_dword(op1_32);
 
   BX_NEXT_INSTR(i);
 }

@@ -4256,6 +4256,62 @@ public: // for now...
   BX_SMF void APX_NF_DEC_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void APX_NF_DEC_EwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
+  BX_SMF void APX_NF_ADD_EbGbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SUB_EbGbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ADD_EbIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SUB_EbIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_NEG_EbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_INC_EbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_DEC_EbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_XOR_EbGbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_XOR_EbIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_OR_EbIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_OR_EbGbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_AND_EbGbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_AND_EbIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void APX_NF_ADD_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SUB_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ADD_EwIwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SUB_EwIwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_NEG_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_INC_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_DEC_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_XOR_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_XOR_EwIwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_OR_EwIwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_OR_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_AND_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_AND_EwIwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void APX_NF_ADD_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SUB_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ADD_EdIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SUB_EdIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_NEG_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_INC_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_DEC_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_XOR_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_XOR_EdIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_OR_EdIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_OR_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_AND_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_AND_EdIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void APX_NF_ADD_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SUB_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ADD_EqIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SUB_EqIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_NEG_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_INC_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_DEC_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_XOR_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_XOR_EqIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_OR_EqIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_OR_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_AND_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_AND_EqIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   BX_SMF void APX_NF_MUL_ALEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void APX_NF_MUL_AXEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void APX_NF_MUL_EAXEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -4843,6 +4899,36 @@ public: // for now...
   BX_SMF void APX_NF_SHLD_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void SHRD_BwEwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void APX_NF_SHRD_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void APX_NF_ROL_EbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ROR_EbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHL_EbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHR_EbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SAR_EbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void APX_NF_SHLD_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHRD_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ROL_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ROR_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHL_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHR_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SAR_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void APX_NF_SHLD_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHRD_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ROL_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ROR_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHL_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHR_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SAR_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void APX_NF_SHLD_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHRD_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ROL_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ROR_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHL_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHR_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SAR_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void SHLD_BdEdGdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void SHRD_BdEdGdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

@@ -33,6 +33,7 @@
 //   <op>_BbEbR      : ND=1, dst = vvvv, src = rm (or TMP after LOAD_Eb), flags updated unless NF=1,
 //                     the upper part of the destination register is always cleared
 //   APX_NF_<op>_EbR : ND=0 NF=1 register form, dst = rm, flags are not updated
+//   APX_NF_<op>_EbM : ND=0 NF=1 memory form, flags are not updated
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_BbEbR(bxInstruction_c *i)
 {
@@ -82,6 +83,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_ROL_EbR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// ROL Eb with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_ROL_EbM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_ROL_Eb)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0x7; // only the rotate count matters, flags are not updated
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit8u op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
+
+  if (count) {
+    Bit8u result_8 = rol8(op1_8, count);
+
+    write_RMW_linear_byte(result_8);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_BbEbR(bxInstruction_c *i)
 {
   unsigned count;
@@ -125,6 +151,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_ROR_EbR(bxInstruction_c *i)
     Bit8u op1_8 = BX_READ_8BIT_REGx(i->dst(), i->extend8bitL());
     Bit8u result_8 = ror8(op1_8, count);
     BX_WRITE_8BIT_REGx(i->dst(), i->extend8bitL(), result_8);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+// ROR Eb with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_ROR_EbM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_ROR_Eb)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0x7; // only the rotate count matters, flags are not updated
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit8u op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
+
+  if (count) {
+    Bit8u result_8 = ror8(op1_8, count);
+
+    write_RMW_linear_byte(result_8);
   }
 
   BX_NEXT_INSTR(i);
@@ -254,6 +305,33 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHL_EbR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// SHL Eb with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHL_EbM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_SHL_Eb)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0x1f;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit8u op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
+
+  if (count) {
+    Bit8u result_8 = 0;
+    if (count <= 8)
+      result_8 = (op1_8 << count);
+
+    write_RMW_linear_byte(result_8);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_BbEbR(bxInstruction_c *i)
 {
   unsigned count;
@@ -307,6 +385,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHR_EbR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// SHR Eb with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHR_EbM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_SHR_Eb)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0x1f;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit8u op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
+
+  if (count) {
+    Bit8u result_8 = (op1_8 >> count);
+
+    write_RMW_linear_byte(result_8);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_BbEbR(bxInstruction_c *i)
 {
   unsigned count;
@@ -353,6 +456,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SAR_EbR(bxInstruction_c *i)
     Bit8u op1_8 = BX_READ_8BIT_REGx(i->dst(), i->extend8bitL());
     Bit8u result_8 = ((Bit8s) op1_8) >> count;
     BX_WRITE_8BIT_REGx(i->dst(), i->extend8bitL(), result_8);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+// SAR Eb with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SAR_EbM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_SAR_Eb)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0x1f;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit8u op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
+
+  if (count) {
+    Bit8u result_8 = ((Bit8s) op1_8) >> count;
+
+    write_RMW_linear_byte(result_8);
   }
 
   BX_NEXT_INSTR(i);

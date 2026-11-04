@@ -53,6 +53,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_ADD_EwGwR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// ADD Ew, Gw with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_ADD_EwGwM(bxInstruction_c *i)
+{
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit32u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  Bit32u op2_16 = BX_READ_16BIT_REG(i->src());
+  Bit32u sum_16 = op1_16 + op2_16;
+  write_RMW_linear_word(sum_16);
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_BwGwEwR(bxInstruction_c *i)
 {
   Bit32u op1_16 = BX_READ_16BIT_REG(i->src1());
@@ -122,6 +135,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SUB_EwGwR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// SUB Ew, Gw with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SUB_EwGwM(bxInstruction_c *i)
+{
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit32u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  Bit32u op2_16 = BX_READ_16BIT_REG(i->src());
+  Bit32u diff_16 = op1_16 - op2_16;
+  write_RMW_linear_word(diff_16);
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_BwEwIwR(bxInstruction_c *i)
 {
   Bit32u op1_16 = BX_READ_16BIT_REG(i->src());
@@ -143,6 +169,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_ADD_EwIwR(bxInstruction_c *i)
   Bit32u op2_16 = i->Iw();
   Bit32u sum_16 = op1_16 + op2_16;
   BX_WRITE_16BIT_REG(i->dst(), sum_16);
+
+  BX_NEXT_INSTR(i);
+}
+
+// ADD Ew, Iw with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_ADD_EwIwM(bxInstruction_c *i)
+{
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit32u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  Bit32u op2_16 = i->Iw();
+  Bit32u sum_16 = op1_16 + op2_16;
+  write_RMW_linear_word(sum_16);
 
   BX_NEXT_INSTR(i);
 }
@@ -188,6 +227,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SUB_EwIwR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// SUB Ew, Iw with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SUB_EwIwM(bxInstruction_c *i)
+{
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit32u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  Bit32u op2_16 = i->Iw();
+  Bit32u diff_16 = op1_16 - op2_16;
+  write_RMW_linear_word(diff_16);
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_BwEwR(bxInstruction_c *i)
 {
   Bit16u rx = BX_READ_16BIT_REG(i->src());
@@ -207,6 +259,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_INC_EwR(bxInstruction_c *i)
   Bit16u op1_16 = BX_READ_16BIT_REG(i->dst());
   op1_16++;
   BX_WRITE_16BIT_REG(i->dst(), op1_16);
+
+  BX_NEXT_INSTR(i);
+}
+
+// INC Ew with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_INC_EwM(bxInstruction_c *i)
+{
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit32u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  op1_16++;
+  write_RMW_linear_word(op1_16);
 
   BX_NEXT_INSTR(i);
 }
@@ -234,6 +298,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_DEC_EwR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// DEC Ew with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_DEC_EwM(bxInstruction_c *i)
+{
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit32u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  op1_16--;
+  write_RMW_linear_word(op1_16);
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_BwEwR(bxInstruction_c *i)
 {
   Bit32u op1_16 = BX_READ_16BIT_REG(i->src());
@@ -253,6 +329,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_NEG_EwR(bxInstruction_c *i)
   Bit16u op1_16 = BX_READ_16BIT_REG(i->dst());
   op1_16 = -op1_16;
   BX_WRITE_16BIT_REG(i->dst(), op1_16);
+
+  BX_NEXT_INSTR(i);
+}
+
+// NEG Ew with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_NEG_EwM(bxInstruction_c *i)
+{
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit32u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+  op1_16 = -op1_16;
+  write_RMW_linear_word(op1_16);
 
   BX_NEXT_INSTR(i);
 }

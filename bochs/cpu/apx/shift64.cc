@@ -36,6 +36,8 @@
 //   <op>_BqEqR      : ND=1, dst = vvvv, src = rm (or TMP after LOAD_Eq), flags updated unless NF=1,
 //                     the upper part of the destination register is always cleared
 //                     also ND=0 NF=1 register form (def duplicates rm as dst and src)
+//   APX_NF_SHxD_EqGqM : ND=0 NF=1 memory form, src = reg, flags are not updated
+//   APX_NF_<op>_EqM : ND=0 NF=1 memory form, flags are not updated
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_BqEqGqR(bxInstruction_c *i)
 {
@@ -65,6 +67,33 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_BqEqGqR(bxInstruction_c *i)
   }
 
   BX_WRITE_64BIT_REG(i->dst(), result_64);
+
+  BX_NEXT_INSTR(i);
+}
+
+// SHLD Eq, Gq with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHLD_EqGqM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_NF_SHLD_EqGq)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0x3f; // use only 6 LSB's
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
+
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
+
+  if (count) {
+    Bit64u op2_64 = BX_READ_64BIT_REG(i->src());
+
+    Bit64u result_64 = (op1_64 << count) | (op2_64 >> (64 - count));
+
+    write_RMW_linear_qword(result_64);
+  }
 
   BX_NEXT_INSTR(i);
 }
@@ -101,6 +130,33 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_BqEqGqR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// SHRD Eq, Gq with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHRD_EqGqM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_NF_SHRD_EqGq)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0x3f; // use only 6 LSB's
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
+
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
+
+  if (count) {
+    Bit64u op2_64 = BX_READ_64BIT_REG(i->src());
+
+    Bit64u result_64 = (op2_64 << (64 - count)) | (op1_64 >> count);
+
+    write_RMW_linear_qword(result_64);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_BqEqR(bxInstruction_c *i)
 {
   unsigned count;
@@ -132,6 +188,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_BqEqR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// ROL Eq with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_ROL_EqM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_NF_ROL_Eq)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0x3f; // only the rotate count matters, flags are not updated
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
+
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
+
+  if (count) {
+    Bit64u result_64 = rol64(op1_64, count);
+
+    write_RMW_linear_qword(result_64);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_BqEqR(bxInstruction_c *i)
 {
   unsigned count;
@@ -159,6 +240,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_BqEqR(bxInstruction_c *i)
   }
 
   BX_WRITE_64BIT_REG(i->dst(), result_64);
+
+  BX_NEXT_INSTR(i);
+}
+
+// ROR Eq with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_ROR_EqM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_NF_ROR_Eq)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0x3f; // only the rotate count matters, flags are not updated
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
+
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
+
+  if (count) {
+    Bit64u result_64 = ror64(op1_64, count);
+
+    write_RMW_linear_qword(result_64);
+  }
 
   BX_NEXT_INSTR(i);
 }
@@ -266,6 +372,32 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_BqEqR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// SHL Eq with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHL_EqM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_NF_SHL_Eq)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0x3f;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
+
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
+
+  if (count) {
+    /* count < 64, since only lower 6 bits used */
+    Bit64u result_64 = (op1_64 << count);
+
+    write_RMW_linear_qword(result_64);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_BqEqR(bxInstruction_c *i)
 {
   unsigned count;
@@ -300,6 +432,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_BqEqR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// SHR Eq with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHR_EqM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_NF_SHR_Eq)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0x3f;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
+
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
+
+  if (count) {
+    Bit64u result_64 = (op1_64 >> count);
+
+    write_RMW_linear_qword(result_64);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_BqEqR(bxInstruction_c *i)
 {
   unsigned count;
@@ -328,6 +485,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_BqEqR(bxInstruction_c *i)
   }
 
   BX_WRITE_64BIT_REG(i->dst(), result_64);
+
+  BX_NEXT_INSTR(i);
+}
+
+// SAR Eq with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SAR_EqM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_NF_SAR_Eq)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0x3f;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
+
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
+
+  if (count) {
+    Bit64u result_64 = ((Bit64s) op1_64) >> count;
+
+    write_RMW_linear_qword(result_64);
+  }
 
   BX_NEXT_INSTR(i);
 }
