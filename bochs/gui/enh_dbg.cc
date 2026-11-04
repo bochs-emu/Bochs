@@ -305,8 +305,6 @@ int BreakCount = 0;
 unsigned short BrkpIDMap[256];
 unsigned short WWP_BaseEntry;
 unsigned short RWP_BaseEntry;
-unsigned short EndLinEntry;
-unsigned short EndPhyEntry;
 unsigned short WWPSnapCount;
 unsigned short RWPSnapCount;
 bx_phy_address WWP_Snapshot[16];
@@ -1751,7 +1749,6 @@ static void FillBrkp()
                     InsertListRow(r.cols, DUMP_COLS, DUMP_WND, LineCount++, LGRP_NONE);
                 }
 #endif
-                EndLinEntry = LineCount;
             }
             else if (brktype == 1)
             {
@@ -1767,7 +1764,6 @@ static void FillBrkp()
                     InsertListRow(r.cols, DUMP_COLS, DUMP_WND, LineCount++, LGRP_NONE);
                 }
 #endif
-                EndPhyEntry = LineCount;
             }
             else
             {
@@ -2494,7 +2490,7 @@ void SetBreak(int OneEntry)
         if (iExist >= 0)
         {
             // existing, remove
-            bx_dbg_del_lbreak(BrkIdx[iExist]);
+            bx_dbg_del_breakpoint_command(BrkIdx[iExist]);
             i = iExist;     // also compress it out of the local list
             while (++i < BreakCount)
             {

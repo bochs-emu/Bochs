@@ -1588,15 +1588,9 @@ void Mem_DblClick (GtkTreeView *treeview, GtkTreePath *path, GtkTreeViewColumn *
 //L HIHI pre-test DumpSelRow < 256
         if (DumpSelRow < WWP_BaseEntry)
         {
-            if (BrkpIDMap[DumpSelRow] == 0)
-                ;   // dblclick was on an invalid row
-            else if (DumpSelRow > EndPhyEntry)
-                bx_dbg_del_vbreak(BrkpIDMap[DumpSelRow]);   // delete Virtual Brk
-            else if (DumpSelRow > EndLinEntry)
-                bx_dbg_del_pbreak(BrkpIDMap[DumpSelRow]);   // delete Phy Brkpt
-            else
+            if (BrkpIDMap[DumpSelRow] != 0)     // 0 = dblclick was on an invalid row
             {
-                bx_dbg_del_lbreak(BrkpIDMap[DumpSelRow]);   // delete Lin Brkpt
+                bx_dbg_del_breakpoint_command(BrkpIDMap[DumpSelRow]);
                 ParseBkpt();        // get a new set of linear breakpoints
                 Invalidate (1);     // breakpoint colors may have changed
             }

@@ -556,12 +556,7 @@ LRESULT CALLBACK LVProc(HWND hh, UINT mm, WPARAM ww, LPARAM ll)
                             // SelectedBID is the breakpoint ID, if a breakpoint was clicked
                             if (SelectedEntry < WWP_BaseEntry && SelectedEntry < 256)
                             {
-                                i = 0;
-                                if (SelectedEntry > EndPhyEntry)
-                                    i = 0x10000;                    // bit flag for Virtual Brk
-                                else if (SelectedEntry > EndLinEntry)
-                                    i = 0x20000;                    // bit flag for Phy Brkpt
-                                SelectedBID = BrkpIDMap[SelectedEntry] | i;
+                                SelectedBID = BrkpIDMap[SelectedEntry];
                             }
                             else if (SelectedEntry >= WWP_BaseEntry && SelectedEntry < WWP_BaseEntry +  WWPSnapCount)
                             {
@@ -1740,16 +1735,8 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
                             bx_dbg_unwatch_wr(WWP_Snapshot[i]);
                         else
                         {
-                            i = SelectedBID & 0xffff;
-                            if (i != 0) // determine the breakpoint TYPE
-                            {
-                                if (SelectedBID > 0x20000)
-                                    bx_dbg_del_pbreak(i);
-                                else if (SelectedBID > 0x10000)
-                                    bx_dbg_del_vbreak(i);
-                                else    // linear brkpt
-                                    bx_dbg_del_lbreak(SelectedBID);
-                            }
+                            if (SelectedBID != 0)
+                                bx_dbg_del_breakpoint_command(SelectedBID);
                             ParseBkpt();
                             InvalidateRect(hL[ASM_WND],0,TRUE); // breakpoint colors may have changed
                         }

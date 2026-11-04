@@ -447,8 +447,6 @@ extern int BreakCount;
 extern unsigned short BrkpIDMap[256];
 extern unsigned short WWP_BaseEntry;
 extern unsigned short RWP_BaseEntry;
-extern unsigned short EndLinEntry;
-extern unsigned short EndPhyEntry;
 extern unsigned short WWPSnapCount;
 extern unsigned short RWPSnapCount;
 extern bx_phy_address WWP_Snapshot[16];
