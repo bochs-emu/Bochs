@@ -3374,21 +3374,21 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
   Bit32u filter = lodf < 0.0f ? tex->filter_mag : tex->filter_min;
   bool linear_coord = filter == 2 || filter == 4 || filter == 6;
   Bit32u lod_samples = 1;
-  Bit32u lodi[2] = { 0 };
+  Bit32s lodi[2] = { 0 };
   float lodf_frac = 0.0f;
   if (filter > 2) {
     if (filter == 3 || filter == 4) {
-      lodi[0] = (Bit32u)(lodf + 0.5f);
+      lodi[0] = (Bit32s)(lodf + 0.5f);
     } else if (filter == 5 || filter == 6) {
       lod_samples = 2;
-      lodi[0] = (Bit32u)lodf;
-      lodi[1] = (Bit32u)(lodf + 1.0f);
+      lodi[0] = (Bit32s)lodf;
+      lodi[1] = (Bit32s)(lodf + 1.0f);
       lodf_frac = lodf - lodi[0];
     }
     for (Bit32u li = 0; li < lod_samples; li++) {
       if (lodi[li] < 0)
         lodi[li] = 0;
-      if (lodi[li] >= tex->levels)
+      if (lodi[li] >= (Bit32s)tex->levels)
         lodi[li] = tex->levels - 1;
     }
     if (lod_samples == 2 && lodi[0] == lodi[1])
@@ -7977,14 +7977,16 @@ void bx_geforce_c::d3d_mh_texture(gf_channel* ch, Bit32u cls, Bit32u method, Bit
     }
   } else if ((texture_method == 6 && cls == 0x0096) ||
              (texture_method == 5 && cls != 0x0096)) {
-    tex->filter_min = (param >> 16) & 7;
-    tex->filter_mag = (param >> 24) & 7;
     if (cls != 0x0096) {
+      tex->filter_min = (param >> 16) & 7;
+      tex->filter_mag = (param >> 24) & 7;
       Bit32u signed_argb = param >> 28;
       tex->signed_any = signed_argb != 0;
       for (Bit32u i = 0; i < 4; i++)
         tex->signed_comp[i] = (signed_argb & (1 << i)) != 0;
     } else {
+      tex->filter_min = (param >> 24) & 7;
+      tex->filter_mag = (param >> 28) & 7;
       tex->signed_any = false;
     }
   } else if ((texture_method == 5 && cls == 0x0096) ||
