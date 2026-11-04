@@ -366,15 +366,11 @@ int usb_device_c::handle_packet(USBPacket *p)
         BX_ERROR(("SETUP: Packet Speed indicator doesn't match Device Speed indicator. %d != %d", p->speed, d.speed));
         goto fail;
       }
+      if (!toggle_ok(p, USB_CONTROL_EP, 0, "SETUP"))
+        goto fail;
 #if HANDLE_TOGGLE_CONTROL
-      // manage our toggle bit
-      if (p->toggle > -1) {
-        if (p->toggle != 0) {
-          BX_ERROR(("SETUP: Packet Toggle indicator doesn't match Device Toggle indicator. %d != 0", p->toggle));
-          goto fail;
-        }
+      if (p->toggle > -1)
         set_toggle(USB_CONTROL_EP, 1); // after a SETUP packet, the toggle bit is set for the next packet
-      }
 #endif
       d.stall = 0;
       usb_dump_packet(data, 8, 0, p->devaddr, USB_DIR_OUT | p->devep, USB_TRANS_TYPE_CONTROL, true, false);
@@ -450,16 +446,9 @@ int usb_device_c::handle_packet(USBPacket *p)
               if (ret > get_mps(USB_CONTROL_EP)) {
                 BX_ERROR(("EP%d transfer length (%d) is greater than Max Packet Size (%d).", p->devep, p->len, get_mps(USB_CONTROL_EP)));
               }
-#if HANDLE_TOGGLE_CONTROL
-              // manage our toggle bit
-              if (p->toggle > -1) {
-                if (p->toggle != get_toggle(USB_CONTROL_EP)) {
-                  BX_ERROR(("CONTROL IN: Packet Toggle indicator doesn't match Device Toggle indicator. %d != %d", p->toggle, get_toggle(USB_CONTROL_EP)));
-                  goto fail;
-                }
-                set_toggle(USB_CONTROL_EP, get_toggle(USB_CONTROL_EP) ^ 1); // toggle the bit
-              }
-#endif
+              if (!toggle_ok(p, USB_CONTROL_EP, -1, "CONTROL IN"))
+                goto fail;
+              toggle_advance(p, USB_CONTROL_EP, ret);
               if (ret > 0) {
                 memcpy(data, d.data_buf + d.setup_index, ret);
                 d.setup_index += ret;
@@ -469,13 +458,8 @@ int usb_device_c::handle_packet(USBPacket *p)
               
             // we were doing data out packets, now we are expecting an IN STATUS packet
             case SETUP_STATE_DATA_OUT:
-#if HANDLE_TOGGLE_CONTROL
-              // manage our toggle bit
-              if ((p->toggle > -1) && (p->toggle != 1)) {
-                BX_ERROR(("STATUS: Packet Toggle indicator doesn't match Device Toggle indicator. %d != 1", p->toggle));
+              if (!toggle_ok(p, USB_CONTROL_EP, 1, "STATUS"))
                 goto fail;
-              }
-#endif
               d.setup_state = SETUP_STATE_IDLE;
               // found status packet from a Control OUT transfer, so process the transfer
               ret = handle_control((d.setup_buf[0] << 8) | d.setup_buf[1],
@@ -502,21 +486,10 @@ int usb_device_c::handle_packet(USBPacket *p)
             BX_DEBUG(("DATA IN EP%d: endpoint is halted", p->devep));
             return USB_RET_STALL;
           }
-#if HANDLE_TOGGLE_CONTROL
-          // manage our toggle bit
-          if (p->toggle > -1) {
-            if (p->toggle != get_toggle(p->devep)) {
-              BX_ERROR(("DATA IN EP%d: Packet Toggle indicator doesn't match Device Toggle indicator. %d != %d", p->devep, p->toggle, get_toggle(p->devep)));
-              goto fail;
-            }
-          }
-#endif
+          if (!toggle_ok(p, p->devep, -1, "DATA IN"))
+            goto fail;
           ret = handle_data(p);
-#if HANDLE_TOGGLE_CONTROL
-          // the toggle bit only advances with a successful (or deferred) transaction, not on a NAK or STALL
-          if ((p->toggle > -1) && ((ret >= 0) || (ret == USB_RET_ASYNC)))
-            set_toggle(p->devep, get_toggle(p->devep) ^ 1); // toggle the bit
-#endif
+          toggle_advance(p, p->devep, ret);
           // a STALL from the device halts the endpoint
           if (ret == USB_RET_STALL)
             set_halted(p->devep, 1);
@@ -544,16 +517,9 @@ int usb_device_c::handle_packet(USBPacket *p)
               if (ret > get_mps(USB_CONTROL_EP)) {
                 BX_ERROR(("EP%d transfer length (%d) is greater than Max Packet Size (%d).", p->devep, p->len, get_mps(USB_CONTROL_EP)));
               }
-#if HANDLE_TOGGLE_CONTROL
-              // manage our toggle bit
-              if (p->toggle > -1) {
-                if (p->toggle != get_toggle(USB_CONTROL_EP)) {
-                  BX_ERROR(("CONTROL OUT: Packet Toggle indicator doesn't match Device Toggle indicator. %d != %d", p->toggle, get_toggle(USB_CONTROL_EP)));
-                  goto fail;
-                }
-                set_toggle(USB_CONTROL_EP, get_toggle(USB_CONTROL_EP) ^ 1); // toggle the bit
-              }
-#endif
+              if (!toggle_ok(p, USB_CONTROL_EP, -1, "CONTROL OUT"))
+                goto fail;
+              toggle_advance(p, USB_CONTROL_EP, ret);
               if (ret > 0) {
                 memcpy(d.data_buf + d.setup_index, data, ret);
                 d.setup_index += ret;
@@ -563,13 +529,8 @@ int usb_device_c::handle_packet(USBPacket *p)
 
             // we were doing data in packets, now we are expecting an OUT STATUS packet
             case SETUP_STATE_DATA_IN:
-#if HANDLE_TOGGLE_CONTROL
-              // manage our toggle bit
-              if ((p->toggle > -1) && (p->toggle != 1)) {
-                BX_ERROR(("STATUS: Packet Toggle indicator doesn't match Device Toggle indicator. %d != 1", p->toggle));
+              if (!toggle_ok(p, USB_CONTROL_EP, 1, "STATUS"))
                 goto fail;
-              }
-#endif
               d.setup_state = SETUP_STATE_IDLE;
               ret = 0;
               break;
@@ -585,21 +546,10 @@ int usb_device_c::handle_packet(USBPacket *p)
             BX_DEBUG(("DATA OUT EP%d: endpoint is halted", p->devep));
             return USB_RET_STALL;
           }
-#if HANDLE_TOGGLE_CONTROL
-          // manage our toggle bit
-          if (p->toggle > -1) {
-            if (p->toggle != get_toggle(p->devep)) {
-              BX_ERROR(("DATA OUT EP%d: Packet Toggle indicator doesn't match Device Toggle indicator. %d != %d", p->devep, p->toggle, get_toggle(p->devep)));
-              goto fail;
-            }
-          }
-#endif
+          if (!toggle_ok(p, p->devep, -1, "DATA OUT"))
+            goto fail;
           ret = handle_data(p);
-#if HANDLE_TOGGLE_CONTROL
-          // the toggle bit only advances with a successful (or deferred) transaction, not on a NAK or STALL
-          if ((p->toggle > -1) && ((ret >= 0) || (ret == USB_RET_ASYNC)))
-            set_toggle(p->devep, get_toggle(p->devep) ^ 1); // toggle the bit
-#endif
+          toggle_advance(p, p->devep, ret);
           // a STALL from the device halts the endpoint
           if (ret == USB_RET_STALL)
             set_halted(p->devep, 1);
@@ -613,6 +563,33 @@ int usb_device_c::handle_packet(USBPacket *p)
       break;
   }
   return ret;
+}
+
+// check the packet's data toggle against the expected toggle
+//  (expected = -1 means the current toggle of the endpoint).
+// a packet toggle of -1 means the HC handles the data toggle itself (xHCI)
+bool usb_device_c::toggle_ok(USBPacket *p, int ep, int expected, const char *stage)
+{
+#if HANDLE_TOGGLE_CONTROL
+  if (p->toggle > -1) {
+    if (expected < 0)
+      expected = get_toggle(ep);
+    if (p->toggle != expected) {
+      BX_ERROR(("%s EP%d: Packet Toggle indicator doesn't match Device Toggle indicator. %d != %d", stage, ep, p->toggle, expected));
+      return 0;
+    }
+  }
+#endif
+  return 1;
+}
+
+// the toggle bit only advances with a successful (or deferred) transaction, not on a NAK or STALL
+void usb_device_c::toggle_advance(USBPacket *p, int ep, int ret)
+{
+#if HANDLE_TOGGLE_CONTROL
+  if ((p->toggle > -1) && ((ret >= 0) || (ret == USB_RET_ASYNC)))
+    set_toggle(ep, get_toggle(ep) ^ 1);
+#endif
 }
 
 int usb_device_c::handle_control_common(int request, int value, int index, int length, Bit8u *data)
