@@ -1761,10 +1761,10 @@ void bx_dbg_unwatch_all()
   dbg_printf("All watchpoints removed\n");
 }
 
-void bx_dbg_unwatch(bx_phy_address address)
+// returns true if a read watchpoint was removed
+bool bx_dbg_unwatch_rd(bx_phy_address address)
 {
-  unsigned i;
-  for (i=0; i<num_read_watchpoints; i++) {
+  for (unsigned i=0; i<num_read_watchpoints; i++) {
     if (read_watchpoint[i].addr == address) {
       dbg_printf("read watchpoint at 0x" FMT_PHY_ADDRX " removed\n", address);
       // found watchpoint, delete it by shifting remaining entries left
@@ -1772,11 +1772,17 @@ void bx_dbg_unwatch(bx_phy_address address)
         read_watchpoint[j] = read_watchpoint[j+1];
       }
       num_read_watchpoints--;
-      break;
+      return true;
     }
   }
 
-  for (i=0; i<num_write_watchpoints; i++) {
+  return false;
+}
+
+// returns true if a write watchpoint was removed
+bool bx_dbg_unwatch_wr(bx_phy_address address)
+{
+  for (unsigned i=0; i<num_write_watchpoints; i++) {
     if (write_watchpoint[i].addr == address) {
       dbg_printf("write watchpoint at 0x" FMT_PHY_ADDRX " removed\n", address);
       // found watchpoint, delete it by shifting remaining entries left
@@ -1784,9 +1790,17 @@ void bx_dbg_unwatch(bx_phy_address address)
         write_watchpoint[j] = write_watchpoint[j+1];
       }
       num_write_watchpoints--;
-      break;
+      return true;
     }
   }
+
+  return false;
+}
+
+void bx_dbg_unwatch(bx_phy_address address)
+{
+  bx_dbg_unwatch_rd(address);
+  bx_dbg_unwatch_wr(address);
 }
 
 void bx_dbg_continue_command(bool expression)

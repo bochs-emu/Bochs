@@ -1574,10 +1574,10 @@ void Mem_DblClick (GtkTreeView *treeview, GtkTreePath *path, GtkTreeViewColumn *
     if (DViewMode == VIEW_MEMDUMP)
     {
         if (KeyStateShft != 0 && LinearDump == FALSE)
-            SetWatchpoint(&num_write_watchpoints,write_watchpoint);
+            SetWatchpointWr();
 
         else if (KeyStateAlt != 0 && LinearDump == FALSE)
-            SetWatchpoint(&num_read_watchpoints,read_watchpoint);
+            SetWatchpointRd();
 
         else
 //L HIHI Fix how this works in the Windoze version to match GTK?
@@ -1602,18 +1602,9 @@ void Mem_DblClick (GtkTreeView *treeview, GtkTreePath *path, GtkTreeViewColumn *
             }
         }
         else if (DumpSelRow >= WWP_BaseEntry && DumpSelRow < WWP_BaseEntry + WWPSnapCount)
-        {
-            // if a watchpoint was clicked, get its index (0 to 15)
-            int i = DumpSelRow - WWP_BaseEntry;
-            if (WWP_Snapshot[i] == write_watchpoint[i].addr)
-                DelWatchpoint(write_watchpoint, &num_write_watchpoints, i);
-        }
+            bx_dbg_unwatch_wr(WWP_Snapshot[DumpSelRow - WWP_BaseEntry]);
         else if (DumpSelRow >= RWP_BaseEntry && DumpSelRow < RWP_BaseEntry + RWPSnapCount)
-        {
-            int i = DumpSelRow - RWP_BaseEntry;
-            if (RWP_Snapshot[i] == read_watchpoint[i].addr)
-                DelWatchpoint(read_watchpoint, &num_read_watchpoints, i);
-        }
+            bx_dbg_unwatch_rd(RWP_Snapshot[DumpSelRow - RWP_BaseEntry]);
         RefreshDataWin();       // show the NEW set of break/watchpoints
     }
 }

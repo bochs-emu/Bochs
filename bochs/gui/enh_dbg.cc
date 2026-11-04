@@ -2532,45 +2532,23 @@ void SetBreak(int OneEntry)
     Invalidate(ASM_WND);    // redraw the ASM window -- colors may have changed
 }
 
-void DelWatchpoint(bx_watchpoint *wp_array, unsigned *TotEntries, int i)
+// toggle a read watchpoint at the last clicked address
+void SetWatchpointRd()
 {
-    while (++i < (int) *TotEntries)
-        wp_array[i-1] = wp_array[i];
-    -- *TotEntries;
-}
-
-void SetWatchpoint(unsigned *num_watchpoints, bx_watchpoint *watchpoint)
-{
-    int iExist1 = -1;
-    int i = (int) *num_watchpoints;
     if (! AtBreak || ! SA_valid)
         return;
-    // the list is unsorted -- test all of them
-    while (--i >= 0)
-    {
-        if (watchpoint[i].addr == SelectedDataAddress)
-        {
-            iExist1 = i;
-            i = 0;
-        }
-    }
-    if (iExist1 >= 0)
-    {
-        // existing watchpoint, remove by copying the list down
-        DelWatchpoint(watchpoint, num_watchpoints, iExist1);
-    }
-    else
-    {
-        // Set a watchpoint to last clicked address -- the list is not sorted
-        if (*num_watchpoints >= BX_DBG_MAX_WATCHPONTS) {
-            DispMessage("Too many of that type of watchpoint. Max: 16", "Table Overflow");
-        }
-        else {
-            watchpoint[*num_watchpoints].len  = 1;
-            watchpoint[*num_watchpoints].addr = (bx_phy_address) SelectedDataAddress;
-            ++(*num_watchpoints);
-        }
-    }
+    if (! bx_dbg_unwatch_rd((bx_phy_address) SelectedDataAddress))
+        bx_dbg_watch(BX_READ, (bx_phy_address) SelectedDataAddress, 1);
+    Invalidate(DUMP_WND);   // redraw the MemDump window -- colors may have changed
+}
+
+// toggle a write watchpoint at the last clicked address
+void SetWatchpointWr()
+{
+    if (! AtBreak || ! SA_valid)
+        return;
+    if (! bx_dbg_unwatch_wr((bx_phy_address) SelectedDataAddress))
+        bx_dbg_watch(BX_WRITE, (bx_phy_address) SelectedDataAddress, 1);
     Invalidate(DUMP_WND);   // redraw the MemDump window -- colors may have changed
 }
 
@@ -2901,11 +2879,11 @@ void ActivateMenuItem (int cmd)
             break;
 
         case CMD_WPTWR: // set or delete a data write watchpoint
-            SetWatchpoint(&num_write_watchpoints,write_watchpoint);
+            SetWatchpointWr();
             break;
 
         case CMD_WPTRD: // set or delete a data read watchpoint
-            SetWatchpoint(&num_read_watchpoints,read_watchpoint);
+            SetWatchpointRd();
             break;
 
         case CMD_FIND: // find -- Control-F

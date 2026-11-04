@@ -1717,10 +1717,10 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
                     if (DViewMode == VIEW_MEMDUMP)  // Change values in memory locations
                     {
                         if (GetKeyState(VK_SHIFT) < 0)
-                            SetWatchpoint(&num_write_watchpoints,write_watchpoint);
+                            SetWatchpointWr();
 
                         else if (GetKeyState(VK_MENU) < 0)  // ALT keys
-                            SetWatchpoint(&num_read_watchpoints,read_watchpoint);
+                            SetWatchpointRd();
 
                         else
                         {
@@ -1735,15 +1735,9 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
                         // HIHI -- the BID variable is not making my life easier
                         i = SelectedBID & 0xf;
                         if (SelectedBID >= 0x80000)         // read watchpoint
-                        {
-                            if (RWP_Snapshot[i] == read_watchpoint[i].addr)
-                                DelWatchpoint(read_watchpoint, &num_read_watchpoints, i);
-                        }
+                            bx_dbg_unwatch_rd(RWP_Snapshot[i]);
                         else if (SelectedBID >= 0x40000)    // write watchpoint
-                        {
-                            if (WWP_Snapshot[i] == write_watchpoint[i].addr)
-                                DelWatchpoint(write_watchpoint, &num_write_watchpoints, i);
-                        }
+                            bx_dbg_unwatch_wr(WWP_Snapshot[i]);
                         else
                         {
                             i = SelectedBID & 0xffff;

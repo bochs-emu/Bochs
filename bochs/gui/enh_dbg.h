@@ -51,8 +51,8 @@ void SetOutWinTxt();
 void ShowFW();
 void GetInputEntry(char *buf);
 void SelectHistory(int UpDown);
-void DelWatchpoint(bx_watchpoint *wp_array, unsigned *TotEntries, int i);
-void SetWatchpoint(unsigned *num_watchpoints, bx_watchpoint *watchpoint);
+void SetWatchpointRd();
+void SetWatchpointWr();
 
 void HideTree();
 void FillPTree();
