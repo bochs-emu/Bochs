@@ -3091,14 +3091,16 @@ static BxEvent *enh_dbg_notify_callback(void *unused, BxEvent *event)
       }
     case BX_ASYNC_EVT_DBG_MSG:
       {
-        ParseIDText(event->u.logmsg.msg);
-        return event;
+        ParseIDText(event->u.logmsg.msg);   // the text is on the stack of dbg_printf
+        delete event;       // async events are owned by the receiver
+        return NULL;
       }
     case BX_ASYNC_EVT_LOG_MSG:
       if (LogView) {
         ParseIDText(event->u.logmsg.msg);
         delete [] event->u.logmsg.msg;
-        return event;
+        delete event;       // async events are owned by the receiver
+        return NULL;
       }
     default:
       return (*old_callback)(old_callback_arg, event);
