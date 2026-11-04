@@ -229,27 +229,48 @@ const char* cpu_state_string(unsigned state)
      "halted",
      "in shutdown",
      "waiting for SIPI",
-     "executing mwait",
-     "executing mwait inhibit interrupts",
+     "wait for x87",
+     "mwait",
+     "mwait inhibit interrupts",
      "unknown state"
   };
 
-  if(state >= 6) state = 6;
+  if(state >= 7) state = 7;
   return cpu_state_name[state];
+}
+
+// prints CPU mode and state: "mode", "mode (state)", "mode (vmx guest)" or "mode (state, vmx guest)"
+// s must have room for at least 80 chars
+const char* BX_CPU_C::cpu_status_string(char *s)
+{
+  const char *mode = cpu_mode_string(BX_CPU_THIS_PTR get_cpu_mode());
+  const char *state = NULL;
+  const char *guest = NULL;
+
+  if (BX_CPU_THIS_PTR activity_state != BX_ACTIVITY_STATE_ACTIVE)
+    state = cpu_state_string(BX_CPU_THIS_PTR activity_state);
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest) guest = "vmx guest";
+#endif
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) guest = "svm guest";
+#endif
+
+  if (state && guest)
+    sprintf(s, "%s (%s, %s)", mode, state, guest);
+  else if (state || guest)
+    sprintf(s, "%s (%s)", mode, state ? state : guest);
+  else
+    sprintf(s, "%s", mode);
+
+  return s;
 }
 
 void BX_CPU_C::debug(bx_address offset)
 {
   char s[256];
 
-#if BX_SUPPORT_VMX
-  BX_INFO(("CPU is in %s (%s%s)", cpu_mode_string(BX_CPU_THIS_PTR get_cpu_mode()),
-    cpu_state_string(BX_CPU_THIS_PTR activity_state),
-    BX_CPU_THIS_PTR in_vmx_guest ? ", vmx guest" : ""));
-#else
-  BX_INFO(("CPU is in %s (%s)", cpu_mode_string(BX_CPU_THIS_PTR get_cpu_mode()),
-    cpu_state_string(BX_CPU_THIS_PTR activity_state)));
-#endif
+  BX_INFO(("CPU is in %s", cpu_status_string(s)));
   BX_INFO(("CS.mode = %u bit",
     long64_mode() ? 64 : (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b ? 32 : 16)));
   BX_INFO(("SS.mode = %u bit",

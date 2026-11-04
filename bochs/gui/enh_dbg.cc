@@ -522,43 +522,11 @@ void UpdateStatus()
         stringify_EFLAGS((Bit32u) rV[EFL_Rnum], eflags_buf);     // prints out eflags
         SetStatusText(3, eflags_buf);   // display eflags
 
-        if (CpuModeChange)     // Did CR0 bits or EFER bits change value?
-        {
-            CpuModeChange = FALSE;
-            char mode[32];
-            switch (CpuMode) {
-                case BX_MODE_IA32_REAL:
-                    if (! In32Mode)
-                        strcpy (mode, "CPU: Real Mode 16");
-                    else
-                        strcpy (mode, "CPU: Real Mode 32");
-                    break;
-                case BX_MODE_IA32_V8086:
-                    strcpy (mode, "CPU: V8086 Mode");
-                    break;
-                case BX_MODE_IA32_PROTECTED:
-                    if (! In32Mode) {
-                        if (InPaging)
-                            strcpy (mode, "CPU: Protected Mode 16 (PG)");
-                        else
-                            strcpy (mode, "CPU: Protected Mode 16");
-                    }
-                    else {
-                        if (InPaging)
-                            strcpy (mode, "CPU: Protected Mode 32 (PG)");
-                        else
-                            strcpy (mode, "CPU: Protected Mode 32");
-                    }
-                    break;
-                case BX_MODE_LONG_COMPAT:
-                    strcpy (mode, "CPU: Compatibility Mode");
-                    break;
-                case BX_MODE_LONG_64:
-                    strcpy (mode, "CPU: Long Mode");
-                    break;
-            }
-            SetStatusText(1, mode);    // display CPU mode in status col#1
-        }
+        CpuModeChange = FALSE;
+        char mode[96];
+        int len = sprintf(mode, "CPU%u: ", CurrentCPU);
+        BX_CPU(CurrentCPU)->cpu_status_string(mode + len);
+        SetStatusText(1, mode);    // display CPU mode in status col#1
     }
 
     if (AtBreak != PrevAtBreak)
@@ -2017,6 +1985,7 @@ void SelectCPU(unsigned newCPU)
         SetCPUButton(CurrentCPU, newCPU);
     CurrentCPU = newCPU;
     dbg_cpu = newCPU;
+    StatusChange = TRUE;    // the new CPU may be in a different state
     BottomAsmLA = ~0;       // force an ASM autoload, to repaint
 }
 

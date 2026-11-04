@@ -5948,8 +5948,11 @@ public: // for now...
   BX_SMF void    deliver_UINTR();
   BX_SMF void    Process_UINTR_Notification();
 #endif
+
   BX_SMF void    debug(bx_address offset);
   BX_SMF void    debug_disasm_instruction(bx_address offset);
+
+  BX_SMF const char* cpu_status_string(char *s);
 
 #if BX_X86_DEBUGGER
   // x86 hardware debug support

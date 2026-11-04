@@ -700,13 +700,13 @@ void SetSizeIOS(int WinSizeX, int WinSizeY)
     GetTextMetrics (hdc, &tm);
     ReleaseDC (hS_S, hdc);
     OneCharWide = tm.tmAveCharWidth;
-    j= tm.tmAveCharWidth * 72;  // status bar contains about 72 char positions (without eflags)
-    if (j > WinSizeX/2)         // leave half the status bar for the eflags
-        j = WinSizeX/2;
-    i = j*5 / 12;           // predefined proportions of Status "subwindows" = 2:5:5
-    int modepos = j/6;
-    int ptimepos = modepos + i;
-    int eflpos = ptimepos + i;
+    j= tm.tmAveCharWidth * 86;  // status bar contains about 86 char positions (without eflags)
+    if (j > (WinSizeX*2)/3)     // leave a third of the status bar for the eflags
+        j = (WinSizeX*2)/3;
+    // predefined proportions of Status "subwindows" = 12:50:24 chars
+    int modepos = (j*12) / 86;
+    int ptimepos = modepos + (j*50) / 86;
+    int eflpos = ptimepos + (j*24) / 86;
     int p[4] = {modepos,ptimepos,eflpos,-1};
 
     // then set the dimensions of the I, O, and S child windows

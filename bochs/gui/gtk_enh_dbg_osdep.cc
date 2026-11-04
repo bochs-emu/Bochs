@@ -2265,7 +2265,7 @@ bool OSInit()
     Stat[0] = gtk_label_new("Break");
     gtk_label_set_width_chars (GTK_LABEL(Stat[0]), 7);
     Stat[1] = gtk_label_new("CPU:");
-    gtk_label_set_width_chars (GTK_LABEL(Stat[1]), 23);
+    gtk_label_set_width_chars (GTK_LABEL(Stat[1]), 50);
     Stat[2] = gtk_label_new("t=0");
     gtk_label_set_width_chars (GTK_LABEL(Stat[2]), 19);
     Stat[3] = gtk_label_new("IOPL");
