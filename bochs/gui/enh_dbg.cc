@@ -2794,6 +2794,10 @@ int HotKey (int ww, int Alt, int Shift, int Control)
                         strcpy (CmdHistory[CmdHInsert], tmpcb);
                         CmdHInsert = (CmdHInsert + 1) & 63;     // circular buffer, 0 to 63
                     }
+                    // show the typed command in the Output window, before its output
+                    ParseIDText("> ");
+                    ParseIDText(tmpcb);
+                    ParseIDText("\n");
                     SendDebugCmd(tmpcb);        // send the command into the bochs internal debugger
                     ClearInputWindow();         // prepare for the next command
                     CommandHistoryIdx = 0;      // and reset the history queue to the new end
