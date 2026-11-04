@@ -751,8 +751,10 @@ static int FillSSE(int LineCount)
 
     // format: XMM[#] 0x00000000:00000000 (each 16 hex digits)
     // the hex value goes into the decimal column -- more room there!
-    for (int i = 0; i < /*BX_XMM_REGISTERS*/ 16; i++)
+    for (int i = 0; i < 16; i++)
     {
+        if (RegObject[CurrentCPU][XMM0_Rnum + i] == NULL)
+            break;      // no XMM8-XMM15 without long mode support
         sprintf(name, "XMM[%d]", i);
         FmtHex(hi, sizeof(hi), GetRegObjValue(XMM0_hi + i), 16);   // "SSE.xmm[i]_hi"
         FmtHex(lo, sizeof(lo), GetRegObjValue(XMM0_Rnum + i), 16); // "SSE.xmm[i]_lo"
@@ -1181,10 +1183,10 @@ static void InitRegObjects()
         CpuSupportSSE = SIM->get_param("SSE", cpu_list) != NULL;
 
         if (CpuSupportSSE) {
-#if BX_SUPPORT_X86_64
-            int nxmm = 16;
-#else
             int nxmm = 8;
+#if BX_SUPPORT_X86_64
+            if (BX_CPU(cpu)->is_cpu_extension_supported(BX_ISA_LONG_MODE))
+                nxmm = 16;
 #endif
             for (i = 0; i < nxmm; i++)
             {
