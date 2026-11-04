@@ -40,6 +40,70 @@
 #define OHCI_INTR_OC          (1<<30) // Ownership change
 #define OHCI_INTR_MIE         (1<<31) // Master Interrupt Enable
 
+// HcControl
+#define OHCI_CTL_CBSR         (3<<0)  // ControlBulkServiceRatio
+#define OHCI_CTL_PLE          (1<<2)  // PeriodicListEnable
+#define OHCI_CTL_IE           (1<<3)  // IsochronousEnable
+#define OHCI_CTL_CLE          (1<<4)  // ControlListEnable
+#define OHCI_CTL_BLE          (1<<5)  // BulkListEnable
+#define OHCI_CTL_HCFS_SH      6       // HostControllerFunctionalState
+#define OHCI_CTL_HCFS         (3<<OHCI_CTL_HCFS_SH)
+#define OHCI_CTL_IR           (1<<8)  // InterruptRouting
+#define OHCI_CTL_RWC          (1<<9)  // RemoteWakeupConnected
+#define OHCI_CTL_RWE          (1<<10) // RemoteWakeupEnable
+#define OHCI_CTL_RW_MASK      0x000007FF
+#define OHCI_GET_HCFS(x)      (((x) & OHCI_CTL_HCFS) >> OHCI_CTL_HCFS_SH)
+#define OHCI_SET_HCFS(x,y)    ((x) = ((x) & ~OHCI_CTL_HCFS) | ((y) << OHCI_CTL_HCFS_SH))
+
+// HcCommandStatus
+#define OHCI_CS_HCR           (1<<0)  // HostControllerReset
+#define OHCI_CS_CLF           (1<<1)  // ControlListFilled
+#define OHCI_CS_BLF           (1<<2)  // BulkListFilled
+#define OHCI_CS_OCR           (1<<3)  // OwnershipChangeRequest
+#define OHCI_CS_SOC           (3<<16) // SchedulingOverrunCount
+
+// HcFmInterval
+#define OHCI_FMI_FI           0x00003FFF  // FrameInterval
+#define OHCI_FMI_FSMPS        0x7FFF0000  // FSLargestDataPacket
+#define OHCI_FMI_FIT          0x80000000  // FrameIntervalToggle
+#define OHCI_FMI_RW_MASK      (OHCI_FMI_FIT | OHCI_FMI_FSMPS | OHCI_FMI_FI)
+
+// HcRhDescriptorA
+#define OHCI_RHA_NDP          0x000000FF  // NumberDownstreamPorts
+#define OHCI_RHA_PSM          (1<<8)  // PowerSwitchingMode
+#define OHCI_RHA_NPS          (1<<9)  // NoPowerSwitching
+#define OHCI_RHA_DT           (1<<10) // DeviceType
+#define OHCI_RHA_OCPM         (1<<11) // OverCurrentProtectionMode
+#define OHCI_RHA_NOCP         (1<<12) // NoOverCurrentProtection
+#define OHCI_RHA_POTPGT_SH    24      // PowerOnToPowerGoodTime
+#define OHCI_RHA_POTPGT       (0xFFU<<OHCI_RHA_POTPGT_SH)
+#define OHCI_RHA_RW_MASK      (OHCI_RHA_POTPGT | OHCI_RHA_NOCP | OHCI_RHA_OCPM | OHCI_RHA_NPS | OHCI_RHA_PSM)
+
+// HcRhDescriptorB
+#define OHCI_RHB_PPCM_SH      16      // PortPowerControlMask (DeviceRemovable in bits 15:0)
+
+// HcRhStatus
+#define OHCI_RHS_LPS          (1<<0)  // LocalPowerStatus
+#define OHCI_RHS_OCI          (1<<1)  // OverCurrentIndicator
+#define OHCI_RHS_DRWE         (1<<15) // DeviceRemoteWakeupEnable
+#define OHCI_RHS_LPSC         (1<<16) // LocalPowerStatusChange
+#define OHCI_RHS_OCIC         (1<<17) // OverCurrentIndicatorChange
+#define OHCI_RHS_CRWE         (1U<<31) // ClearRemoteWakeupEnable
+
+// HcRhPortStatus
+#define OHCI_PS_CCS           (1<<0)  // CurrentConnectStatus
+#define OHCI_PS_PES           (1<<1)  // PortEnableStatus
+#define OHCI_PS_PSS           (1<<2)  // PortSuspendStatus
+#define OHCI_PS_POCI          (1<<3)  // PortOverCurrentIndicator
+#define OHCI_PS_PRS           (1<<4)  // PortResetStatus
+#define OHCI_PS_PPS           (1<<8)  // PortPowerStatus
+#define OHCI_PS_LSDA          (1<<9)  // LowSpeedDeviceAttached
+#define OHCI_PS_CSC           (1<<16) // ConnectStatusChange
+#define OHCI_PS_PESC          (1<<17) // PortEnableStatusChange
+#define OHCI_PS_PSSC          (1<<18) // PortSuspendStatusChange
+#define OHCI_PS_OCIC          (1<<19) // OverCurrentIndicatorChange
+#define OHCI_PS_PRSC          (1<<20) // PortResetStatusChange
+
 // Completion Codes
 enum {
   NoError = 0,
@@ -138,27 +202,8 @@ typedef struct {
 
   struct OHCI_OP_REGS {
     Bit16u HcRevision;
-    struct {
-      Bit32u reserved;          // 21 bit reserved                    = 0x000000       R   R
-      bool   rwe;               //  1 bit RemoteWakeupEnable          = 0b             RW  R
-      bool   rwc;               //  1 bit RemoteWakeupConnected       = 0b             RW  RW
-      bool   ir;                //  1 bit InterruptRouting            = 0b             RW  R
-      Bit8u  hcfs;              //  2 bit HostControllerFuncState     = 00b            RW  RW
-      bool   ble;               //  1 bit BulkListEnable              = 0b             RW  R
-      bool   cle;               //  1 bit ControlListEnable           = 0b             RW  R
-      bool   ie;                //  1 bit IsochronousEnable           = 0b             RW  R
-      bool   ple;               //  1 bit PeriodicListEnable          = 0b             RW  R
-      Bit8u  cbsr;              //  2 bit ControlBulkService Ratio    = 00b            RW  R
-    } HcControl;                //                                    = 0x00000000
-    struct {
-      Bit16u reserved0;         // 14 bit reserved                    = 0x000000       R   R
-      Bit8u  soc;               //  2 bit SchedulingOverrunCount      = 00b            R   RW
-      Bit16u reserved1;         // 12 bit reserved                    = 0x000000       R   R
-      bool   ocr;               //  1 bit OwnershipChangeRequest      = 0b             RW  RW
-      bool   blf;               //  1 bit BulkListFilled              = 0b             RW  RW
-      bool   clf;               //  1 bit ControlListFilled           = 0b             RW  RW
-      bool   hcr;               //  1 bit HostControllerReset         = 0b             RW  RW
-    } HcCommandStatus;          //                                    = 0x00000000
+    Bit32u HcControl;
+    Bit32u HcCommandStatus;
     Bit32u HcInterruptStatus;
     Bit32u HcInterruptEnable;
     Bit32u HcHCCA;
@@ -168,63 +213,20 @@ typedef struct {
     Bit32u HcBulkHeadED;
     Bit32u HcBulkCurrentED;
     Bit32u HcDoneHead;
-    struct {
-      bool   fit;               //  1 bit FrameIntervalToggle         = 0b             RW  R
-      Bit16u fsmps;             // 15 bit FSLargestDataPacket         = TBD (0)        RW  R
-      Bit8u  reserved;          //  2 bit reserved                    = 00b            R   R
-      Bit16u fi;                // 14 bit FrameInterval               = 0x2EDF         RW  R
-    } HcFmInterval;             //                                    = 0x00002EDF
+    Bit32u HcFmInterval;
     bool   HcFmRemainingToggle; //  1 bit FrameRemainingToggle        = 0b             R   RW
     Bit32u HcFmNumber;
     Bit32u HcPeriodicStart;
     Bit16u HcLSThreshold;
-    struct {
-      Bit8u  potpgt;            //  8 bit PowerOnToPowerGoodTime      = 0x10           RW  R
-      Bit16u reserved;          // 11 bit reserved                    = 0x000          R   R
-      bool   nocp;              //  1 bit NoOverCurrentProtection     = 0b             RW  R
-      bool   ocpm;              //  1 bit OverCurrentProtectionMode   = 1b             RW  R
-      bool   dt;                //  1 bit DeviceType                  = 0b             R   R
-      bool   nps;               //  1 bit NoPowerSwitching            = 0b             RW  R
-      bool   psm;               //  1 bit PowerSwitchingMode          = 1b             RW  R
-      Bit8u  ndp;               //  8 bit NumberDownstreamPorts       = NUMPORTS       RW  R
-    } HcRhDescriptorA;          //                                    = 0x100009xx
-    struct {
-      Bit16u ppcm;              // 16 bit PortPowerControlMask        = 0x0002         RW  R
-      Bit16u dr;                // 16 bit DeviceRemovable             = 0x0000         RW  R
-    } HcRhDescriptorB;          //                                    = 0x00020000
-    struct {
-      bool   crwe;              //  1 bit ClearRemoteWakeupEnable     = 0b             WC  R
-      Bit16u reserved0;         // 13 bit reserved                    = 0x000000       R   R
-      bool   ocic;              //  1 bit OverCurrentIndicatorChange  = 0b             RW  RW
-      bool   lpsc;              //  1 bit LocalPowerStatusChange(r)   = 0b             RW  R
-      bool   drwe;              //  1 bit DeviceRemoteWakeupEnable(r) = 0b             RW  R
-      Bit16u reserved1;         // 13 bit reserved                    = 0x000000       R   R
-      bool   oci;               //  1 bit OverCurrentIndicator        = 0b             R   RW
-      bool   lps;               //  1 bit LocalPowerStatus(r)         = 0b             RW  R
-    } HcRhStatus;               //                                    = 0x00000000
+    Bit32u HcRhDescriptorA;
+    Bit32u HcRhDescriptorB;
+    Bit32u HcRhStatus;
   } op_regs;
 
   struct {
     // our data
     usb_device_c *device;   // device connected to this port
-
-    struct {
-      Bit16u reserved0;         // 11 bit reserved                    = 0x000000       R   R
-      bool   prsc;              //  1 bit PortResetStatusChange       = 0b             RW  RW
-      bool   ocic;              //  1 bit OverCurrentIndicatorChange  = 0b             RW  RW
-      bool   pssc;              //  1 bit PortSuspendStatusChange     = 0b             RW  RW
-      bool   pesc;              //  1 bit PortEnableStatusChange      = 0b             RW  RW
-      bool   csc;               //  1 bit ConnectStatusChange         = 0b             RW  RW
-      Bit8u  reserved1;         //  6 bit reserved                    = 0x00           R   R
-      bool   lsda;              //  1 bit LowSpeedDeviceAttached      = 0b             RW  RW
-      bool   pps;               //  1 bit PortPowerStatus             = 0b             RW  RW
-      Bit8u  reserved2;         //  3 bit reserved                    = 0x0            R   R
-      bool   prs;               //  1 bit PortResetStatus             = 0b             RW  RW
-      bool   poci;              //  1 bit PortOverCurrentIndicator    = 0b             RW  RW
-      bool   pss;               //  1 bit PortSuspendStatus           = 0b             RW  RW
-      bool   pes;               //  1 bit PortEnableStatus            = 0b             RW  RW
-      bool   ccs;               //  1 bit CurrentConnectStatus        = 0b             RW  RW
-    } HcRhPortStatus;
+    Bit32u HcRhPortStatus;
   } usb_port[USB_OHCI_PORTS];
 
   Bit8u devfunc;

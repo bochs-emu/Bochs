@@ -167,8 +167,7 @@ void bx_usb_ohci_c::init(void)
     over_current = (bx_param_bool_c*)port->get_by_name("over_current");
     over_current->set_handler(usb_param_oc_handler);
     BX_OHCI_THIS hub.usb_port[i].device = NULL;
-    BX_OHCI_THIS hub.usb_port[i].HcRhPortStatus.ccs = 0;
-    BX_OHCI_THIS hub.usb_port[i].HcRhPortStatus.csc = 0;
+    BX_OHCI_THIS hub.usb_port[i].HcRhPortStatus = 0;
   }
 
   // register handler for correct device connect handling after runtime config
@@ -256,7 +255,7 @@ void bx_usb_ohci_c::runtime_config(void)
   for (int i = 0; i < USB_OHCI_PORTS; i++) {
     // device change support
     if ((BX_OHCI_THIS device_change & (1 << i)) != 0) {
-      if (!BX_OHCI_THIS hub.usb_port[i].HcRhPortStatus.ccs) {
+      if (!(BX_OHCI_THIS hub.usb_port[i].HcRhPortStatus & OHCI_PS_CCS)) {
         sprintf(pname, "port%d", i + 1);
         init_device(i, (bx_list_c*)SIM->get_param(pname, SIM->get_param(BXPN_USB_OHCI)));
       } else {
@@ -279,9 +278,9 @@ Bit64s bx_usb_ohci_c::usb_param_handler(bx_param_c *param, bool set, Bit64s val)
     int portnum = atoi((param->get_parent())->get_name()+4) - 1;
     bool empty = (val == 0);
     if ((portnum >= 0) && (portnum < USB_OHCI_PORTS)) {
-      if (empty && theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus.ccs) {
+      if (empty && (theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus & OHCI_PS_CCS)) {
         theUSB_OHCI->device_change |= (1 << portnum);
-      } else if (!empty && !theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus.ccs) {
+      } else if (!empty && !(theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus & OHCI_PS_CCS)) {
         theUSB_OHCI->device_change |= (1 << portnum);
       } else if (val != ((bx_param_enum_c *) param)->get()) {
         BX_ERROR(("usb_param_handler(): port #%d already in use", portnum+1));
@@ -298,21 +297,21 @@ Bit64s bx_usb_ohci_c::usb_param_handler(bx_param_c *param, bool set, Bit64s val)
 Bit64s bx_usb_ohci_c::usb_param_oc_handler(bx_param_c *param, bool set, Bit64s val)
 {
   if (set && val) {
-    if (theUSB_OHCI->hub.op_regs.HcRhDescriptorA.nocp == 0) {
+    if (!(theUSB_OHCI->hub.op_regs.HcRhDescriptorA & OHCI_RHA_NOCP)) {
       int portnum = atoi((param->get_parent())->get_name()+4) - 1;
       if ((portnum >= 0) && (portnum < USB_OHCI_PORTS)) {
-        if (theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus.ccs) {
+        if (theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus & OHCI_PS_CCS) {
           // is over current reported on a per-port basis?
-          if (theUSB_OHCI->hub.op_regs.HcRhDescriptorA.ocpm == 1) {
-            theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus.ocic = 1;
-            theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus.poci = 1;
-            theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus.pes = 0;
-            theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus.pesc = 1;
-            theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus.pps = 0;
+          if (theUSB_OHCI->hub.op_regs.HcRhDescriptorA & OHCI_RHA_OCPM) {
+            theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus |= OHCI_PS_OCIC;
+            theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus |= OHCI_PS_POCI;
+            theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus &= ~OHCI_PS_PES;
+            theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus |= OHCI_PS_PESC;
+            theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus &= ~OHCI_PS_PPS;
             BX_DEBUG(("Over-current signaled on port #%d.", portnum + 1));
           // else over current is reported globally
           } else {
-            theUSB_OHCI->hub.op_regs.HcRhStatus.oci = 1;
+            theUSB_OHCI->hub.op_regs.HcRhStatus |= OHCI_RHS_OCI;
             BX_DEBUG(("Global over-current signaled."));
           }
           theUSB_OHCI->set_interrupt(OHCI_INTR_RHSC);
