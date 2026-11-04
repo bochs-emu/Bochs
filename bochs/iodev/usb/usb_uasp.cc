@@ -4,7 +4,7 @@
 //
 //  Experimental USB Attached SCSI Protocol support (UASP)
 //
-//  Copyright (C) 2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
+//  Copyright (C) 2023-2026  Benjamin D Lunt (fys [at] fysnet [dot] net)
 //  Copyright (C) 2023-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
