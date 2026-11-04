@@ -289,19 +289,6 @@ static const char* GDTt2[8] = {
    "Unused"
 };
 
-static const char* GDTsT[] = { "","Available 16bit TSS","LDT","Busy 16bit TSS","16bit Call Gate",
-                "Task Gate","16bit Interrupt Gate","16bit Trap Gate","Reserved",
-                "Available 32bit TSS","Reserved","Busy 32bit TSS","32bit Call Gate",
-                "Reserved","32bit Interrupt Gate","32bit Trap Gate"
-};
-
-// system segment types in long mode (IA-32e mode), LDT, TSS and call gate descriptors are 16 bytes
-static const char* GDTsT64[] = { "Reserved","Reserved","LDT","Reserved","Reserved",
-                "Reserved","Reserved","Reserved","Reserved",
-                "Available 64bit TSS","Reserved","Busy 64bit TSS","64bit Call Gate",
-                "Reserved","64bit Interrupt Gate","64bit Trap Gate"
-};
-
 static const char *BrkName[5] = {
    "Linear Breakpt",
    "Physical Breakpt",
@@ -1314,9 +1301,7 @@ static void FillGDT()
     Bit64u laddr = rV[GDTRnum];
     StartListUpdate(DUMP_WND);
 
-#if BX_SUPPORT_X86_64
     bool LongMode = (CpuMode == BX_MODE_LONG_64 || CpuMode == BX_MODE_LONG_COMPAT);
-#endif
 
     for(i = 0; i < k; i++)
     {
@@ -1362,12 +1347,8 @@ static void FillGDT()
             if (limit == 0 && (gdtbuf[5] & 0x80) == 0)      // 'P' (present) bit
                 GroupId = 0;
             // the approprate info string for the GDT system segment type
-#if BX_SUPPORT_X86_64
-            if (LongMode)
-                strcpy(r.txt[DUMP_INFO_COL], GDTsT64[(int) (gdtbuf[5] & 0xf)]);
-            else
-#endif
-                strcpy(r.txt[DUMP_INFO_COL], GDTsT[(int) (gdtbuf[5] & 0xf)]);
+            const char *type_str = get_descriptor_type_name(gdtbuf[5] & 0xf, LongMode);
+            strcpy(r.txt[DUMP_INFO_COL], type_str ? type_str : "???");
         }
         else        // it's an 'executable' code or data segment
         {

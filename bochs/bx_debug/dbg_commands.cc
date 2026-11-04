@@ -2884,29 +2884,10 @@ void bx_dbg_print_descriptor(Bit32u lo, Bit32u hi)
         IS_SEGMENT_ACCESSED(type)? ", Accessed" : "");
     }
   } else {
-    // types from IA32-devel-guide-3, page 3-15.
-    static const char *undef = "???";
-    static const char *type_names[16] = {
-        undef,
-        "16-Bit TSS (available)",
-        "LDT",
-        "16-Bit TSS (Busy)",
-        "16-Bit Call Gate",
-        "Task Gate",
-        "16-Bit Interrupt Gate",
-        "16-Bit Trap Gate",
-        undef,
-        "32-Bit TSS (Available)",
-        undef,
-        "32-Bit TSS (Busy)",
-        "32-Bit Call Gate",
-        undef,
-        "32-Bit Interrupt Gate",
-        "32-Bit Trap Gate"
-    };
-    dbg_printf("%s ", type_names[type]);
+    const char *type_str = get_descriptor_type_name32(type);
+    dbg_printf("%s ", type_str ? type_str : "???");
     // only print more if type is valid
-    if (type_names[type] == undef)  {
+    if (NULL == type_str)  {
       dbg_printf("descriptor hi=0x%08x, lo=0x%08x", hi, lo);
     } else {
       // for call gates, print segment:offset and parameter count p.4-15
@@ -2940,35 +2921,6 @@ void bx_dbg_print_descriptor(Bit32u lo, Bit32u hi)
 }
 
 #if BX_SUPPORT_X86_64
-const char* bx_dbx_get_descriptor64_type_name(unsigned type)
-{
-    static const char *type_names[16] = {
-        NULL,
-        NULL,
-        "LDT",
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        "64-Bit TSS (Available)",
-        NULL,
-        "64-Bit TSS (Busy)",
-        "64-Bit Call Gate",
-        NULL,
-        "64-Bit Interrupt Gate",
-        "64-Bit Trap Gate"
-    };
-
-    if (type >= sizeof(type_names) / sizeof(*type_names))
-    {
-      return NULL;
-    }
-
-    return type_names[type];
-}
-
 void bx_dbg_print_descriptor64(Bit32u lo1, Bit32u hi1, Bit32u lo2, Bit32u hi2)
 {
   Bit32u segment = (lo1 >> 16) & 0xffff;
@@ -2981,7 +2933,7 @@ void bx_dbg_print_descriptor64(Bit32u lo1, Bit32u hi1, Bit32u lo2, Bit32u hi2)
     dbg_printf("bx_dbg_print_descriptor64: only system entries displayed in 64bit mode\n");
   }
   else {
-    const char *type_str = bx_dbx_get_descriptor64_type_name(type);
+    const char *type_str = get_descriptor_type_name64(type);
     dbg_printf("%s ", type_str ? type_str : "???");
     // only print more if type is valid
     if (NULL == type_str)  {
@@ -3140,7 +3092,7 @@ void bx_dbg_info_lgdt_command(unsigned from, unsigned to, bool gdt)
 #if BX_SUPPORT_X86_64
       const Bit32u sys_descriptor = (1 << 12);
       const unsigned type = (hi >> 8) & 0xf;
-      if (BX_CPU(dbg_cpu)->long_mode() && (hi & sys_descriptor) == 0 && bx_dbx_get_descriptor64_type_name(type)) {
+      if (BX_CPU(dbg_cpu)->long_mode() && (hi & sys_descriptor) == 0 && get_descriptor_type_name64(type)) {
           n++;
           if (8*n + 7 > limit) break;
           if (bx_dbg_read_linear(dbg_cpu, base + 8*n, 8, entry + 8)) {

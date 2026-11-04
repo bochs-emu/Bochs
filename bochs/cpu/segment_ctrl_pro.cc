@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -502,6 +502,62 @@ void parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
         break;
     }
   }
+}
+
+// name of a long mode system descriptor type, NULL for a reserved type
+const char* get_descriptor_type_name64(unsigned type)
+{
+  static const char *type_names[16] = {
+    NULL,
+    NULL,
+    "LDT",
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    "64-Bit TSS (Available)",
+    NULL,
+    "64-Bit TSS (Busy)",
+    "64-Bit Call Gate",
+    NULL,
+    "64-Bit Interrupt Gate",
+    "64-Bit Trap Gate"
+  };
+
+  return (type < 16) ? type_names[type] : NULL;
+}
+
+// name of a legacy mode system descriptor type, NULL for a reserved type
+const char* get_descriptor_type_name32(unsigned type)
+{
+  static const char *type_names[16] = {
+    NULL,
+    "16-Bit TSS (available)",
+    "LDT",
+    "16-Bit TSS (Busy)",
+    "16-Bit Call Gate",
+    "Task Gate",
+    "16-Bit Interrupt Gate",
+    "16-Bit Trap Gate",
+    NULL,
+    "32-Bit TSS (Available)",
+    NULL,
+    "32-Bit TSS (Busy)",
+    "32-Bit Call Gate",
+    NULL,
+    "32-Bit Interrupt Gate",
+    "32-Bit Trap Gate"
+  };
+
+  return (type < 16) ? type_names[type] : NULL;
+}
+
+// name of a system descriptor type, NULL for a reserved type
+const char* get_descriptor_type_name(unsigned type, bool long_mode)
+{
+  return long_mode ? get_descriptor_type_name64(type) : get_descriptor_type_name32(type);
 }
 
   void BX_CPP_AttrRegparmN(2)
