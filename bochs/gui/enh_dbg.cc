@@ -2538,6 +2538,19 @@ void ChangeReg()
             DispMessage ("Cannot evaluate the register value expression","Input Error");
             return;
         }
+        if (i == RIP_Rnum || i == EIP_Rnum)
+        {
+            bx_dbg_set_rip_value((bx_address) val);     // dbg_cpu is always CurrentCPU here
+            doUpdate();     // the current instruction moved, refresh the ASM window too
+            Invalidate(ASM_WND);
+            return;
+        }
+        // bit 1 is not part of EFlagsValidMask, but it is always set in EFLAGS
+        if (i == EFL_Rnum && (val & ~(Bit64u) (EFlagsValidMask | 0x2)) != 0)
+        {
+            DispMessage ("EFLAGS value has reserved bits set","Input Error");
+            return;
+        }
 #if BX_SUPPORT_X86_64
         if (i >= EAX_Rnum && i <= EIP_Rnum) // must use RAX-RIP when setting 32b registers
             i -= EAX_Rnum - RAX_Rnum;
