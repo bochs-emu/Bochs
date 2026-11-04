@@ -2926,7 +2926,7 @@ void ActivateMenuItem (int cmd)
         {
             // toggle mode_break on cpu0, use that value to reset all CPUs
             bool nmb = BX_CPU(0)->mode_break ^ TRUE;
-            i = TotCPUs;
+            i = BX_SMP_PROCESSORS;  // not TotCPUs, it is 1 with "Show CPU0 only"
             while (--i >= 0)
                 BX_CPU(i)->mode_break = nmb;
             SetMenuCheckmark ((int) nmb, CHK_CMD_MODEB);
