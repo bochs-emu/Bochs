@@ -1829,8 +1829,8 @@ fetch_b1:
 
   if (lock) {
     i->setLock();
-    // lock prefix not allowed or destination operand is not memory
-    if (i->modC0() || !(op_flags & BX_LOCKABLE)) {
+    // lock prefix not allowed, destination operand is not memory or EVEX encoded instruction
+    if (i->modC0() || !(op_flags & BX_LOCKABLE) || b1 == 0x62) {
       if ((op_flags & BX_LOCKABLE) != 0) {
         if (ia_opcode == BX_IA_MOV_CR0Rq)
           i->setSrcReg(0, 8); // extend CR0 -> CR8
