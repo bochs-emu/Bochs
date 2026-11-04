@@ -66,60 +66,10 @@ typedef struct {
   } cap_regs;
 
   struct XHCI_OP_REGS {
-    struct {
-      Bit32u RsvdP1;         // 18/20 bit reserved and preserved   = 0x000000       RW
-#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
-      bool   cme;            //  1 bit Max Exit Latecy to Large    = 0b             RW
-      bool   spe;            //  1 bit Generate Short Packet Comp  = 0b             RW
-#endif
-      bool   eu3s;           //  1 bit Enable U3 MFINDEX Stop      = 0b             RW
-      bool   ewe;            //  1 bit Enable Wrap Event           = 0b             RW
-      bool   crs;            //  1 bit Controller Restore State    = 0b             RW
-      bool   css;            //  1 bit Controller Save State       = 0b             RW
-      bool   lhcrst;         //  1 bit Light HC Reset              = 0b             RW or RO (HCCPARAMS:LHRC)
-      Bit8u  RsvdP0;         //  1 bit reserved and preserved      = 000b           RW
-      bool   hsee;           //  1 bit Host System Error Enable    = 0b             RW
-      bool   inte;           //  1 bit Interrupter Enable          = 0b             RW
-      bool   hcrst;          //  1 bit HC Reset                    = 0b             RW
-      bool   rs;             //  1 bit Run Stop                    = 0b             RW
-    } HcCommand;             //                                    = 0x00000000
-    struct {
-      Bit32u RsvdZ1;         // 19 bit reserved and zero'd         = 0x000000       RW
-      bool   hce;            //  1 bit Host Controller Error       = 0b             RO
-      bool   cnr;            //  1 bit Controller Not Ready        = 0b             R0
-      bool   sre;            //  1 bit Save/Restore Error          = 0b             RW1C
-      bool   rss;            //  1 bit Restore State Status        = 0b             RO
-      bool   sss;            //  1 bit Save State Status           = 0b             RO
-      Bit8u  RsvdZ0;         //  3 bit reserved and zero'd         = 0x0            RW
-      bool   pcd;            //  1 bit Port Change Detect          = 0b             RW1C
-      bool   eint;           //  1 bit Event Interrupt             = 0b             RW1C
-      bool   hse;            //  1 bit Host System Error           = 0b             RW1C
-      bool   RsvdZ2;         //  1 bit reserved and zero'd         = 0b             RW
-      bool   hch;            //  1 bit HCHalted                    = 1b             RO
-    } HcStatus;              //                                    = 0x00000001
-    struct {
-      Bit16u  Rsvd;          // 16 bit reserved                    = 0x0000         RO
-      Bit16u  pagesize;      // 16 bit reserved                    = 0x0001         RO
-    } HcPageSize;            //                                    = 0x00000001
-    struct {
-      Bit16u  RsvdP;         // 16 bit reserved and presserved     = 0x0000         RW
-      bool n15;              //  1 bit N15                         = 0              RW
-      bool n14;              //  1 bit N14                         = 0              RW
-      bool n13;              //  1 bit N13                         = 0              RW
-      bool n12;              //  1 bit N12                         = 0              RW
-      bool n11;              //  1 bit N11                         = 0              RW
-      bool n10;              //  1 bit N10                         = 0              RW
-      bool n9;               //  1 bit N9                          = 0              RW
-      bool n8;               //  1 bit N8                          = 0              RW
-      bool n7;               //  1 bit N7                          = 0              RW
-      bool n6;               //  1 bit N6                          = 0              RW
-      bool n5;               //  1 bit N5                          = 0              RW
-      bool n4;               //  1 bit N4                          = 0              RW
-      bool n3;               //  1 bit N3                          = 0              RW
-      bool n2;               //  1 bit N2                          = 0              RW
-      bool n1;               //  1 bit N1                          = 0              RW
-      bool n0;               //  1 bit N0                          = 0              RW
-    } HcNotification;        //                                    = 0x00000000
+    Bit32u HcCommand;        // USBCMD  (HC_CMD_*)
+    Bit32u HcStatus;         // USBSTS  (HC_STS_*)
+    Bit32u HcPageSize;       // PAGESIZE
+    Bit32u HcNotification;   // DNCTRL
     struct {
       Bit64u crc;            // 64 bit hi order address            = 0x00000000     RW
       Bit8u  RsvdP;          //  2 bit reserved and preserved      = 00b            RW
@@ -133,14 +83,7 @@ typedef struct {
       Bit64u dcbaap;         // 64 bit hi order address            = 0x00000000     RW
       Bit8u  RsvdZ;          //  6 bit reserved and zero'd         = 000000b        RW
     } HcDCBAAP;
-    struct {
-      Bit32u RsvdP;          // 22/24 bit reserved and preserved   = 0x000000       RW
-#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
-      bool   u3e;            //  1 bit U3 Entry Enable             = 0              RW
-      bool   cie;            //  1 bit Config Info Enable          = 0              RW
-#endif
-      Bit8u   MaxSlotsEn;    //  8 bit Max Device Slots Enabled    = 0x00           RW
-    } HcConfig;
+    Bit32u HcConfig;         // CONFIG  (HC_CONFIG_*)
   } op_regs;
 
   struct {
@@ -150,92 +93,21 @@ typedef struct {
     bool has_been_reset;  // set if the port has been reset aftet powered up.
     Bit8u psceg;          // current port status change event
 
-    struct {
-      bool  wpr;               //  1 bit Warm Port Reset             = 0b             RW or RsvdZ
-      bool  dr;                //  1 bit Device Removable            = 0b             RO
-      Bit8u RsvdZ1;            //  2 bit Reserved and Zero'd         = 00b            RW
-      bool  woe;               //  1 bit Wake on Over Current Enable = 0b             RW
-      bool  wde;               //  1 bit Wake on Disconnect Enable   = 0b             RW
-      bool  wce;               //  1 bit Wake on Connect Enable      = 0b             RW
-      bool  cas;               //  1 bit Cold Attach Status          = 0b             RO
-      bool  cec;               //  1 bit Port Config Error Change    = 0b             RW1C or RsvdZ
-      bool  plc;               //  1 bit Port Link State Change      = 0b             RW1C
-      bool  prc;               //  1 bit Port Reset Change           = 0b             RW1C
-      bool  occ;               //  1 bit Over Current Change         = 0b             RW1C
-      bool  wrc;               //  1 bit Warm Port Reset Change      = 0b             RW1C or RsvdZ
-      bool  pec;               //  1 bit Port Enabled/Disabled Change= 0b             RW1C
-      bool  csc;               //  1 bit Connect Status Change       = 0b             RW1C
-      bool  lws;               //  1 bit Port Link State Write Strobe= 0b             RW
-      Bit8u pic;               //  2 bit Port Indicator Control      = 00b            RW
-      Bit8u speed;             //  4 bit Port Speed                  = 0000b          RO
-      bool  pp;                //  1 bit Port Power                  = 0b             RW
-      Bit8u pls;               //  4 bit Port Link State             = 0x00           RW
-      bool  pr;                //  1 bit Port Reset                  = 0b             RW
-      bool  oca;               //  1 bit Over Current Active         = 0b             RO
-      bool  RsvdZ0;            //  1 bit Reserved and Zero'd         = 0b             RW
-      bool  ped;               //  1 bit Port Enabled/Disabled       = 0b             RW1C
-      bool  ccs;               //  1 bit Current Connect Status      = 0b             RO
-    } portsc;
-    union {
-      // if usb3 port
-      struct {
-        struct {
-          Bit16u  RsvdP;         // 15 bit Reserved and Preserved      = 0x0000         RW
-          bool    fla;           //  1 bit Force Link PM Accept        = 0x0000         RW
-          Bit8u   u2timeout;     //  8 bit U2 Timeout                  = 0x0000         RW
-          Bit8u   u1timeout;     //  8 bit U1 Timeout                  = 0x0000         RW
-        } portpmsc;
-        struct {
-          Bit16u  RsvdP;         // 16 bit Reserved and Preserved      = 0x0000         RW
-          Bit16u  lec;           // 16 bit Link Error Count            = 0x0000         RO
-        } portli;
-      } usb3;
-      // if usb2 port
-      struct {
-        struct {
-          Bit8u   tmode;         //  4 bit Test Mode                   = 0x0            RO
-          Bit16u  RsvdP;         // 11 bit reserved and preseved       = 0x000          RW
-          bool    hle;           //  1 bit hardware LPM enable         = 0b             RW
-          Bit8u   l1dslot;       //  8 bit L1 Device Slot              = 0x00           RW
-          Bit8u   hird;          //  4 bit Host Initiated Resume Durat = 0x0            RW
-          bool    rwe;           //  1 bit Remote Wakeup Enable        = 0b             RW
-          Bit8u   l1s;           //  3 bit L1 Status                   = 000b           RO
-        } portpmsc;
-        struct {
-          Bit32u  RsvdP;         // 32 bit reserved and preseved       = 0x00000000     RW
-        } portli;
-      } usb2;
-    };
-    struct {
-      Bit8u   hirdm;             //  2 bit host initiated resume duration mode
-      Bit8u   l1timeout;         //  8 bit L1 timeout
-      Bit8u   hirdd;             //  4 bit host initiated resume duration deep
-      Bit32u  RsvdP;             // 18 bit reserved and preseved       = 0x00000000     RW
-    } porthlpmc;
+    Bit32u portsc;        // PORTSC  (PORTSC_*)
+    Bit32u portpmsc;      // PORTPMSC (USB3 or USB2 layout)
+    Bit32u portli;        // PORTLI   (USB3 or USB2 layout)
+    Bit32u porthlpmc;     // PORTHLPMC
   } usb_port[USB_XHCI_PORTS_MAX];
 
   // Extended Caps Registers
   Bit8u extended_caps[EXT_CAPS_SIZE];
 
   struct XHCI_RUNTIME_REGS {
+    Bit32u mfindex;              // MFINDEX
     struct {
-      Bit32u RsvdP;              // 18 bit reserved and preseved       = 0x00000        RW
-      Bit16u index;              // 14 bit index                       = 0x0000         RO
-    } mfindex;
-    struct {
-      struct {
-        Bit32u  RsvdP;           // 30 bit reserved and preseved       = 0x00000000     RW
-        bool    ie;              //  1 bit Interrupt Enable            = 0b             RW
-        bool    ip;              //  1 bit Interrupt Pending           = 0b             RW1C
-      } iman;
-      struct {
-        Bit16u  imodc;           // 16 bit Interrupter Mod Counter     = 0x0000         RW
-        Bit16u  imodi;           // 16 bit Interrupter Mod Interval    = 0x0000         RW
-      } imod;
-      struct {
-        Bit16u  RsvdP;           // 16 bit reserved and preseved       = 0x0000         RW
-        Bit16u  erstabsize;      // 16 bit Event Ring Seg Table Size   = 0x0000         RW
-      } erstsz;
+      Bit32u  iman;              // IMAN   (IMAN_*)
+      Bit32u  imod;              // IMOD   (counter in 31:16, interval in 15:0)
+      Bit32u  erstsz;            // ERSTSZ (ERSTSZ_*)
       Bit32u  RsvdP;             // 32 bit reserved and preseved       = 0x00000000     RW
       struct {
         Bit64u  erstabadd;       // 64 bit Event Ring Seg Tab Addy     = 0x00000000     RW  (See #define below)

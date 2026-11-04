@@ -372,8 +372,7 @@ void bx_usb_xhci_c::init(void)
     bx_param_bool_c *over_current = (bx_param_bool_c*)port->get_by_name("over_current");
     over_current->set_handler(usb_param_oc_handler);
     BX_XHCI_THIS hub.usb_port[i].device = NULL;
-    BX_XHCI_THIS hub.usb_port[i].portsc.ccs = 0;
-    BX_XHCI_THIS hub.usb_port[i].portsc.csc = 0;
+    BX_XHCI_THIS hub.usb_port[i].portsc = 0;
   }
 
   // register handler for correct device connect handling after runtime config
@@ -606,57 +605,16 @@ void bx_usb_xhci_c::reset_hc()
   unsigned int i;
 
   // Command
-  BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP1 = 0;
-#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
-  BX_XHCI_THIS hub.op_regs.HcCommand.cme    = 0;
-  BX_XHCI_THIS hub.op_regs.HcCommand.spe   = 0;
-#endif
-  BX_XHCI_THIS hub.op_regs.HcCommand.eu3s   = 0;
-  BX_XHCI_THIS hub.op_regs.HcCommand.ewe    = 0;
-  BX_XHCI_THIS hub.op_regs.HcCommand.crs    = 0;
-  BX_XHCI_THIS hub.op_regs.HcCommand.css    = 0;
-  BX_XHCI_THIS hub.op_regs.HcCommand.lhcrst = 0;
-  BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP0 = 0;
-  BX_XHCI_THIS hub.op_regs.HcCommand.hsee   = 0;
-  BX_XHCI_THIS hub.op_regs.HcCommand.inte   = 0;
-  BX_XHCI_THIS hub.op_regs.HcCommand.hcrst  = 0;
-  BX_XHCI_THIS hub.op_regs.HcCommand.rs     = 0;
+  BX_XHCI_THIS hub.op_regs.HcCommand = 0;
 
   // Status
-  BX_XHCI_THIS hub.op_regs.HcStatus.RsvdZ1  = 0;
-  BX_XHCI_THIS hub.op_regs.HcStatus.hce     = 0;
-  BX_XHCI_THIS hub.op_regs.HcStatus.cnr     = 0;
-  BX_XHCI_THIS hub.op_regs.HcStatus.sre     = 0;
-  BX_XHCI_THIS hub.op_regs.HcStatus.rss     = 0;
-  BX_XHCI_THIS hub.op_regs.HcStatus.sss     = 0;
-  BX_XHCI_THIS hub.op_regs.HcStatus.RsvdZ0  = 0;
-  BX_XHCI_THIS hub.op_regs.HcStatus.pcd     = 0;
-  BX_XHCI_THIS hub.op_regs.HcStatus.eint    = 0;
-  BX_XHCI_THIS hub.op_regs.HcStatus.hse     = 0;
-  BX_XHCI_THIS hub.op_regs.HcStatus.RsvdZ2  = 0;
-  BX_XHCI_THIS hub.op_regs.HcStatus.hch     = 1;
+  BX_XHCI_THIS hub.op_regs.HcStatus = HC_STS_HCH;
 
   // Page Size
-  BX_XHCI_THIS hub.op_regs.HcPageSize.pagesize = XHCI_PAGE_SIZE;
+  BX_XHCI_THIS hub.op_regs.HcPageSize = XHCI_PAGE_SIZE;
 
   // Device Notification Control Register
-  BX_XHCI_THIS hub.op_regs.HcNotification.RsvdP = 0;
-  BX_XHCI_THIS hub.op_regs.HcNotification.n15   = 0;
-  BX_XHCI_THIS hub.op_regs.HcNotification.n14   = 0;
-  BX_XHCI_THIS hub.op_regs.HcNotification.n13   = 0;
-  BX_XHCI_THIS hub.op_regs.HcNotification.n12   = 0;
-  BX_XHCI_THIS hub.op_regs.HcNotification.n11   = 0;
-  BX_XHCI_THIS hub.op_regs.HcNotification.n10   = 0;
-  BX_XHCI_THIS hub.op_regs.HcNotification.n9    = 0;
-  BX_XHCI_THIS hub.op_regs.HcNotification.n8    = 0;
-  BX_XHCI_THIS hub.op_regs.HcNotification.n7    = 0;
-  BX_XHCI_THIS hub.op_regs.HcNotification.n6    = 0;
-  BX_XHCI_THIS hub.op_regs.HcNotification.n5    = 0;
-  BX_XHCI_THIS hub.op_regs.HcNotification.n4    = 0;
-  BX_XHCI_THIS hub.op_regs.HcNotification.n3    = 0;
-  BX_XHCI_THIS hub.op_regs.HcNotification.n2    = 0;
-  BX_XHCI_THIS hub.op_regs.HcNotification.n1    = 0;
-  BX_XHCI_THIS hub.op_regs.HcNotification.n0    = 0;
+  BX_XHCI_THIS hub.op_regs.HcNotification = 0;
 
   // Command Ring Control Register
   BX_XHCI_THIS hub.op_regs.HcCrcr.crc     = 0;
@@ -670,12 +628,7 @@ void bx_usb_xhci_c::reset_hc()
   BX_XHCI_THIS hub.op_regs.HcDCBAAP.dcbaap = 0;
 
   // Config
-  BX_XHCI_THIS hub.op_regs.HcConfig.RsvdP      = 0;
-#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
-  BX_XHCI_THIS hub.op_regs.HcConfig.u3e = 0;
-  BX_XHCI_THIS hub.op_regs.HcConfig.cie = 0;
-#endif
-  BX_XHCI_THIS hub.op_regs.HcConfig.MaxSlotsEn = 0;
+  BX_XHCI_THIS hub.op_regs.HcConfig = 0;
 
   // Ports[x]
   for (i=0; i<BX_XHCI_THIS hub.n_ports; i++) {
@@ -694,16 +647,11 @@ void bx_usb_xhci_c::reset_hc()
     BX_XHCI_THIS hub.extended_caps[i] = ext_caps[i];
 
   // interrupters[x]
-  BX_XHCI_THIS hub.runtime_regs.mfindex.RsvdP = 0;
-  BX_XHCI_THIS hub.runtime_regs.mfindex.index = 0;
+  BX_XHCI_THIS hub.runtime_regs.mfindex = 0;
   for (i=0; i<INTERRUPTERS; i++) {
-    BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.RsvdP = 0;
-    BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.ie = 0;
-    BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.ip = 0;
-    BX_XHCI_THIS hub.runtime_regs.interrupter[i].imod.imodc = 0;
-    BX_XHCI_THIS hub.runtime_regs.interrupter[i].imod.imodi = 4000;
-    BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstsz.RsvdP = 0;
-    BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstsz.erstabsize = 0;
+    BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman = 0;
+    BX_XHCI_THIS hub.runtime_regs.interrupter[i].imod = 4000;
+    BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstsz = 0;
     BX_XHCI_THIS hub.runtime_regs.interrupter[i].RsvdP = 0;
     BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstba.erstabadd = 0;
     BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstba.RsvdP = 0;
@@ -727,47 +675,18 @@ void bx_usb_xhci_c::reset_hc()
 
 void bx_usb_xhci_c::reset_port(int p)
 {
-  BX_XHCI_THIS hub.usb_port[p].portsc.wpr = 0;
-  BX_XHCI_THIS hub.usb_port[p].portsc.dr  = 0;
-  BX_XHCI_THIS hub.usb_port[p].portsc.woe = 0;
-  BX_XHCI_THIS hub.usb_port[p].portsc.wde = 0;
-  BX_XHCI_THIS hub.usb_port[p].portsc.wce = 0;
-  BX_XHCI_THIS hub.usb_port[p].portsc.cas = 0;
-  BX_XHCI_THIS hub.usb_port[p].portsc.cec = 0;
-  BX_XHCI_THIS hub.usb_port[p].portsc.plc = 0;
-  BX_XHCI_THIS hub.usb_port[p].portsc.prc = 0;
-  BX_XHCI_THIS hub.usb_port[p].portsc.occ = 0;
-  BX_XHCI_THIS hub.usb_port[p].portsc.wrc = 0;
-  BX_XHCI_THIS hub.usb_port[p].portsc.pec = 0;
-  BX_XHCI_THIS hub.usb_port[p].portsc.csc = 0;
-  BX_XHCI_THIS hub.usb_port[p].portsc.lws = 0;
-  BX_XHCI_THIS hub.usb_port[p].portsc.pic = 0;
-  BX_XHCI_THIS hub.usb_port[p].portsc.speed = 0;
-#if PORT_POWER_CTRL
-  BX_XHCI_THIS hub.usb_port[p].portsc.pp  = 0;
-#else
-  BX_XHCI_THIS hub.usb_port[p].portsc.pp  = 1;
+  // only the Current Connect Status survives a port reset
+  BX_XHCI_THIS hub.usb_port[p].portsc &= PORTSC_CCS;
+#if !PORT_POWER_CTRL
+  BX_XHCI_THIS hub.usb_port[p].portsc |= PORTSC_PP;
 #endif  // PORT_POWER_CTRL
-  BX_XHCI_THIS hub.usb_port[p].portsc.pls = PLS_U0;  // always ready to go (for our sake anyway)
-  BX_XHCI_THIS hub.usb_port[p].portsc.pr  = 0;
-  BX_XHCI_THIS hub.usb_port[p].portsc.oca = 0;
-  BX_XHCI_THIS hub.usb_port[p].portsc.ped = 0;
+  PORTSC_SET_PLS(BX_XHCI_THIS hub.usb_port[p].portsc, PLS_U0);  // always ready to go (for our sake anyway)
 
+  BX_XHCI_THIS hub.usb_port[p].portpmsc = 0;
   if (BX_XHCI_THIS hub.usb_port[p].is_usb3) {
-    BX_XHCI_THIS hub.usb_port[p].usb3.portpmsc.RsvdP = 0;
-    BX_XHCI_THIS hub.usb_port[p].usb3.portpmsc.fla = 0;
-    BX_XHCI_THIS hub.usb_port[p].usb3.portpmsc.u2timeout = 0;
-    BX_XHCI_THIS hub.usb_port[p].usb3.portpmsc.u1timeout = 0;
-    BX_XHCI_THIS hub.usb_port[p].usb3.portli.lec = 0;
+    BX_XHCI_THIS hub.usb_port[p].portli &= ~PORTLI_USB3_LEC;
   } else {
-    BX_XHCI_THIS hub.usb_port[p].usb2.portpmsc.tmode = 0;
-    BX_XHCI_THIS hub.usb_port[p].usb2.portpmsc.RsvdP = 0;
-    BX_XHCI_THIS hub.usb_port[p].usb2.portpmsc.hle = 0;
-    BX_XHCI_THIS hub.usb_port[p].usb2.portpmsc.l1dslot = 0;
-    BX_XHCI_THIS hub.usb_port[p].usb2.portpmsc.hird = 0;
-    BX_XHCI_THIS hub.usb_port[p].usb2.portpmsc.rwe = 0;
-    BX_XHCI_THIS hub.usb_port[p].usb2.portpmsc.l1s = 0;
-    BX_XHCI_THIS hub.usb_port[p].usb2.portli.RsvdP = 0;
+    BX_XHCI_THIS hub.usb_port[p].portli = 0;
   }
 
   BX_XHCI_THIS hub.usb_port[p].has_been_reset = 0;
@@ -780,18 +699,18 @@ void bx_usb_xhci_c::reset_port(int p)
 void bx_usb_xhci_c::reset_port_usb3(int port, int reset_type)
 {
   BX_INFO(("Reset port #%d, type=%d", port + 1, reset_type));
-  BX_XHCI_THIS hub.usb_port[port].portsc.pr = 0;
+  BX_XHCI_THIS hub.usb_port[port].portsc &= ~PORTSC_PR;
   BX_XHCI_THIS hub.usb_port[port].has_been_reset = 1;
-  if (BX_XHCI_THIS hub.usb_port[port].portsc.ccs) {
-    BX_XHCI_THIS hub.usb_port[port].portsc.pls = PLS_U0;
-    BX_XHCI_THIS hub.usb_port[port].portsc.ped = 1;
+  if (BX_XHCI_THIS hub.usb_port[port].portsc & PORTSC_CCS) {
+    PORTSC_SET_PLS(BX_XHCI_THIS hub.usb_port[port].portsc, PLS_U0);
+    BX_XHCI_THIS hub.usb_port[port].portsc |= PORTSC_PED;
     if (BX_XHCI_THIS hub.usb_port[port].device != NULL) {
       BX_XHCI_THIS hub.usb_port[port].device->usb_send_msg(USB_MSG_RESET);
     }
   } else {
-    BX_XHCI_THIS hub.usb_port[port].portsc.pls = PLS_RXDETECT;
-    BX_XHCI_THIS hub.usb_port[port].portsc.ped = 0;
-    BX_XHCI_THIS hub.usb_port[port].portsc.speed = 0;
+    PORTSC_SET_PLS(BX_XHCI_THIS hub.usb_port[port].portsc, PLS_RXDETECT);
+    BX_XHCI_THIS hub.usb_port[port].portsc &= ~PORTSC_PED;
+    PORTSC_SET_SPEED(BX_XHCI_THIS hub.usb_port[port].portsc, 0);
   }
 
   // The following tests were done on real hardware (NEC/Renesas):
@@ -805,12 +724,14 @@ void bx_usb_xhci_c::reset_port_usb3(int port, int reset_type)
   //   bit 21 = 1 if CCS = 1, bit 19 always 1
   //   bit 21 = 1 if CCS = 0, bit 19 always 1
   if (reset_type == HOT_RESET) {
-    BX_XHCI_THIS hub.usb_port[port].portsc.prc =
-      BX_XHCI_THIS hub.usb_port[port].portsc.ccs;
-    BX_XHCI_THIS hub.usb_port[port].portsc.wrc = 0;
+    if (BX_XHCI_THIS hub.usb_port[port].portsc & PORTSC_CCS)
+      BX_XHCI_THIS hub.usb_port[port].portsc |= PORTSC_PRC;
+    else
+      BX_XHCI_THIS hub.usb_port[port].portsc &= ~PORTSC_PRC;
+    BX_XHCI_THIS hub.usb_port[port].portsc &= ~PORTSC_WRC;
   } else {
-    BX_XHCI_THIS hub.usb_port[port].portsc.prc = 1;
-    BX_XHCI_THIS hub.usb_port[port].portsc.wrc = 1;
+    BX_XHCI_THIS hub.usb_port[port].portsc |= PORTSC_PRC;
+    BX_XHCI_THIS hub.usb_port[port].portsc |= PORTSC_WRC;
   }
 }
 
@@ -933,48 +854,10 @@ void bx_usb_xhci_c::register_state(void)
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "usb_xhci", "USB xHCI State");
   hub = new bx_list_c(list, "hub");
   reg_grp = new bx_list_c(hub, "op_regs");
-  reg = new bx_list_c(reg_grp, "HcCommand");
-#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
-  BXRS_PARAM_BOOL(reg, cme, BX_XHCI_THIS hub.op_regs.HcCommand.cme);
-  BXRS_PARAM_BOOL(reg, spe, BX_XHCI_THIS hub.op_regs.HcCommand.spe);
-#endif
-  BXRS_PARAM_BOOL(reg, eu3s, BX_XHCI_THIS hub.op_regs.HcCommand.eu3s);
-  BXRS_PARAM_BOOL(reg, ewe, BX_XHCI_THIS hub.op_regs.HcCommand.ewe);
-  BXRS_PARAM_BOOL(reg, crs, BX_XHCI_THIS hub.op_regs.HcCommand.crs);
-  BXRS_PARAM_BOOL(reg, css, BX_XHCI_THIS hub.op_regs.HcCommand.css);
-  BXRS_PARAM_BOOL(reg, lhcrst, BX_XHCI_THIS hub.op_regs.HcCommand.lhcrst);
-  BXRS_PARAM_BOOL(reg, hsee, BX_XHCI_THIS hub.op_regs.HcCommand.hsee);
-  BXRS_PARAM_BOOL(reg, inte, BX_XHCI_THIS hub.op_regs.HcCommand.inte);
-  BXRS_PARAM_BOOL(reg, hcrst, BX_XHCI_THIS hub.op_regs.HcCommand.hcrst);
-  BXRS_PARAM_BOOL(reg, rs, BX_XHCI_THIS hub.op_regs.HcCommand.rs);
-  reg = new bx_list_c(reg_grp, "HcStatus");
-  BXRS_PARAM_BOOL(reg, hce, BX_XHCI_THIS hub.op_regs.HcStatus.hce);
-  BXRS_PARAM_BOOL(reg, cnr, BX_XHCI_THIS hub.op_regs.HcStatus.cnr);
-  BXRS_PARAM_BOOL(reg, sre, BX_XHCI_THIS hub.op_regs.HcStatus.sre);
-  BXRS_PARAM_BOOL(reg, rss, BX_XHCI_THIS hub.op_regs.HcStatus.rss);
-  BXRS_PARAM_BOOL(reg, sss, BX_XHCI_THIS hub.op_regs.HcStatus.sss);
-  BXRS_PARAM_BOOL(reg, pcd, BX_XHCI_THIS hub.op_regs.HcStatus.pcd);
-  BXRS_PARAM_BOOL(reg, eint, BX_XHCI_THIS hub.op_regs.HcStatus.eint);
-  BXRS_PARAM_BOOL(reg, hse, BX_XHCI_THIS hub.op_regs.HcStatus.hse);
-  BXRS_PARAM_BOOL(reg, hch, BX_XHCI_THIS hub.op_regs.HcStatus.hch);
-  BXRS_HEX_PARAM_FIELD(reg_grp, HcPageSize, BX_XHCI_THIS hub.op_regs.HcPageSize.pagesize);
-  reg = new bx_list_c(reg_grp, "HcNotification");
-  BXRS_PARAM_BOOL(reg, n15, BX_XHCI_THIS hub.op_regs.HcNotification.n15);
-  BXRS_PARAM_BOOL(reg, n14, BX_XHCI_THIS hub.op_regs.HcNotification.n14);
-  BXRS_PARAM_BOOL(reg, n13, BX_XHCI_THIS hub.op_regs.HcNotification.n13);
-  BXRS_PARAM_BOOL(reg, n12, BX_XHCI_THIS hub.op_regs.HcNotification.n12);
-  BXRS_PARAM_BOOL(reg, n11, BX_XHCI_THIS hub.op_regs.HcNotification.n11);
-  BXRS_PARAM_BOOL(reg, n10, BX_XHCI_THIS hub.op_regs.HcNotification.n10);
-  BXRS_PARAM_BOOL(reg, n9, BX_XHCI_THIS hub.op_regs.HcNotification.n9);
-  BXRS_PARAM_BOOL(reg, n8, BX_XHCI_THIS hub.op_regs.HcNotification.n8);
-  BXRS_PARAM_BOOL(reg, n7, BX_XHCI_THIS hub.op_regs.HcNotification.n7);
-  BXRS_PARAM_BOOL(reg, n6, BX_XHCI_THIS hub.op_regs.HcNotification.n6);
-  BXRS_PARAM_BOOL(reg, n5, BX_XHCI_THIS hub.op_regs.HcNotification.n5);
-  BXRS_PARAM_BOOL(reg, n4, BX_XHCI_THIS hub.op_regs.HcNotification.n4);
-  BXRS_PARAM_BOOL(reg, n3, BX_XHCI_THIS hub.op_regs.HcNotification.n3);
-  BXRS_PARAM_BOOL(reg, n2, BX_XHCI_THIS hub.op_regs.HcNotification.n2);
-  BXRS_PARAM_BOOL(reg, n1, BX_XHCI_THIS hub.op_regs.HcNotification.n1);
-  BXRS_PARAM_BOOL(reg, n0, BX_XHCI_THIS hub.op_regs.HcNotification.n0);
+  BXRS_HEX_PARAM_FIELD(reg_grp, HcCommand, BX_XHCI_THIS hub.op_regs.HcCommand);
+  BXRS_HEX_PARAM_FIELD(reg_grp, HcStatus, BX_XHCI_THIS hub.op_regs.HcStatus);
+  BXRS_HEX_PARAM_FIELD(reg_grp, HcPageSize, BX_XHCI_THIS hub.op_regs.HcPageSize);
+  BXRS_HEX_PARAM_FIELD(reg_grp, HcNotification, BX_XHCI_THIS hub.op_regs.HcNotification);
   reg = new bx_list_c(reg_grp, "HcCrcr");
   BXRS_HEX_PARAM_FIELD(reg, crc, BX_XHCI_THIS hub.op_regs.HcCrcr.crc);
   BXRS_PARAM_BOOL(reg, crr, BX_XHCI_THIS hub.op_regs.HcCrcr.crr);
@@ -983,60 +866,17 @@ void bx_usb_xhci_c::register_state(void)
   BXRS_PARAM_BOOL(reg, rcs, BX_XHCI_THIS hub.op_regs.HcCrcr.rcs);
   BXRS_HEX_PARAM_FIELD(reg, actual, BX_XHCI_THIS hub.op_regs.HcCrcr.actual);
   BXRS_HEX_PARAM_FIELD(reg_grp, HcDCBAAP, BX_XHCI_THIS hub.op_regs.HcDCBAAP.dcbaap);
-  BXRS_HEX_PARAM_FIELD(reg_grp, HcConfig_MaxSlotsEn, BX_XHCI_THIS hub.op_regs.HcConfig.MaxSlotsEn);
-#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
-  BXRS_PARAM_BOOL(reg_grp, HcConfig_u3e, BX_XHCI_THIS hub.op_regs.HcConfig.u3e);
-  BXRS_PARAM_BOOL(reg_grp, HcConfig_cie, BX_XHCI_THIS hub.op_regs.HcConfig.cie);
-#endif
+  BXRS_HEX_PARAM_FIELD(reg_grp, HcConfig, BX_XHCI_THIS hub.op_regs.HcConfig);
 
   for (i = 0; i < BX_XHCI_THIS hub.n_ports; i++) {
     sprintf(tmpname, "port%d", i+1);
     port = new bx_list_c(hub, tmpname);
     BXRS_PARAM_BOOL(port, has_been_reset, BX_XHCI_THIS hub.usb_port[i].has_been_reset);
     BXRS_HEX_PARAM_FIELD(port, psceg, BX_XHCI_THIS hub.usb_port[i].psceg);
-    reg = new bx_list_c(port, "portsc");
-    BXRS_PARAM_BOOL(reg, wpr, BX_XHCI_THIS hub.usb_port[i].portsc.wpr);
-    BXRS_PARAM_BOOL(reg, dr, BX_XHCI_THIS hub.usb_port[i].portsc.dr);
-    BXRS_PARAM_BOOL(reg, woe, BX_XHCI_THIS hub.usb_port[i].portsc.woe);
-    BXRS_PARAM_BOOL(reg, wde, BX_XHCI_THIS hub.usb_port[i].portsc.wde);
-    BXRS_PARAM_BOOL(reg, wce, BX_XHCI_THIS hub.usb_port[i].portsc.wce);
-    BXRS_PARAM_BOOL(reg, cas, BX_XHCI_THIS hub.usb_port[i].portsc.cas);
-    BXRS_PARAM_BOOL(reg, cec, BX_XHCI_THIS hub.usb_port[i].portsc.cec);
-    BXRS_PARAM_BOOL(reg, plc, BX_XHCI_THIS hub.usb_port[i].portsc.plc);
-    BXRS_PARAM_BOOL(reg, prc, BX_XHCI_THIS hub.usb_port[i].portsc.prc);
-    BXRS_PARAM_BOOL(reg, occ, BX_XHCI_THIS hub.usb_port[i].portsc.occ);
-    BXRS_PARAM_BOOL(reg, wrc, BX_XHCI_THIS hub.usb_port[i].portsc.wrc);
-    BXRS_PARAM_BOOL(reg, pec, BX_XHCI_THIS hub.usb_port[i].portsc.pec);
-    BXRS_PARAM_BOOL(reg, csc, BX_XHCI_THIS hub.usb_port[i].portsc.csc);
-    BXRS_PARAM_BOOL(reg, lws, BX_XHCI_THIS hub.usb_port[i].portsc.lws);
-    BXRS_HEX_PARAM_FIELD(reg, pic, BX_XHCI_THIS hub.usb_port[i].portsc.pic);
-    BXRS_DEC_PARAM_FIELD(reg, speed, BX_XHCI_THIS hub.usb_port[i].portsc.speed);
-    BXRS_PARAM_BOOL(reg, pp, BX_XHCI_THIS hub.usb_port[i].portsc.pp);
-    BXRS_HEX_PARAM_FIELD(reg, pls, BX_XHCI_THIS hub.usb_port[i].portsc.pls);
-    BXRS_PARAM_BOOL(reg, pr, BX_XHCI_THIS hub.usb_port[i].portsc.pr);
-    BXRS_PARAM_BOOL(reg, oca, BX_XHCI_THIS hub.usb_port[i].portsc.oca);
-    BXRS_PARAM_BOOL(reg, ped, BX_XHCI_THIS hub.usb_port[i].portsc.ped);
-    BXRS_PARAM_BOOL(reg, ccs, BX_XHCI_THIS hub.usb_port[i].portsc.ccs);
-
-    reg = new bx_list_c(port, "portpmsc");
-    if (BX_XHCI_THIS hub.usb_port[i].is_usb3) {
-      BXRS_PARAM_BOOL(reg, fla, BX_XHCI_THIS hub.usb_port[i].usb3.portpmsc.fla);
-      BXRS_HEX_PARAM_FIELD(reg, u2timeout, BX_XHCI_THIS hub.usb_port[i].usb3.portpmsc.u2timeout);
-      BXRS_HEX_PARAM_FIELD(reg, u1timeout, BX_XHCI_THIS hub.usb_port[i].usb3.portpmsc.u1timeout);
-      BXRS_HEX_PARAM_FIELD(port, portli_lec, BX_XHCI_THIS hub.usb_port[i].usb3.portli.lec);
-    } else {
-      BXRS_HEX_PARAM_FIELD(reg, tmode, BX_XHCI_THIS hub.usb_port[i].usb2.portpmsc.tmode);
-      BXRS_PARAM_BOOL(reg, hle, BX_XHCI_THIS hub.usb_port[i].usb2.portpmsc.hle);
-      BXRS_HEX_PARAM_FIELD(reg, l1dslot, BX_XHCI_THIS hub.usb_port[i].usb2.portpmsc.l1dslot);
-      BXRS_HEX_PARAM_FIELD(reg, hird, BX_XHCI_THIS hub.usb_port[i].usb2.portpmsc.hird);
-      BXRS_PARAM_BOOL(reg, rwe, BX_XHCI_THIS hub.usb_port[i].usb2.portpmsc.rwe);
-      BXRS_HEX_PARAM_FIELD(reg, l1s, BX_XHCI_THIS hub.usb_port[i].usb2.portpmsc.l1s);
-    }
-
-    reg = new bx_list_c(port, "porthlpmc");
-    BXRS_HEX_PARAM_FIELD(reg, hirdm, BX_XHCI_THIS hub.usb_port[i].porthlpmc.hirdm);
-    BXRS_HEX_PARAM_FIELD(reg, l1timeout, BX_XHCI_THIS hub.usb_port[i].porthlpmc.l1timeout);
-    BXRS_HEX_PARAM_FIELD(reg, hirdd, BX_XHCI_THIS hub.usb_port[i].porthlpmc.hirdd);
+    BXRS_HEX_PARAM_FIELD(port, portsc, BX_XHCI_THIS hub.usb_port[i].portsc);
+    BXRS_HEX_PARAM_FIELD(port, portpmsc, BX_XHCI_THIS hub.usb_port[i].portpmsc);
+    BXRS_HEX_PARAM_FIELD(port, portli, BX_XHCI_THIS hub.usb_port[i].portli);
+    BXRS_HEX_PARAM_FIELD(port, porthlpmc, BX_XHCI_THIS hub.usb_port[i].porthlpmc);
     // empty list for USB device state
     new bx_list_c(port, "device");
   }
@@ -1044,17 +884,13 @@ void bx_usb_xhci_c::register_state(void)
   new bx_shadow_data_c(hub, "extended_caps", BX_XHCI_THIS hub.extended_caps, EXT_CAPS_SIZE, 1);
 
   reg_grp = new bx_list_c(hub, "runtime_regs");
-  BXRS_HEX_PARAM_FIELD(reg_grp, mfindex, BX_XHCI_THIS hub.runtime_regs.mfindex.index);
+  BXRS_HEX_PARAM_FIELD(reg_grp, mfindex, BX_XHCI_THIS hub.runtime_regs.mfindex);
   for (i = 0; i < INTERRUPTERS; i++) {
     sprintf(tmpname, "interrupter%d", i+1);
     reg_grp1 = new bx_list_c(reg_grp, tmpname);
-    reg = new bx_list_c(reg_grp1, "iman");
-    BXRS_PARAM_BOOL(reg, ie, BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.ie);
-    BXRS_PARAM_BOOL(reg, ip, BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.ip);
-    reg = new bx_list_c(reg_grp1, "imod");
-    BXRS_HEX_PARAM_FIELD(reg, imodc, BX_XHCI_THIS hub.runtime_regs.interrupter[i].imod.imodc);
-    BXRS_HEX_PARAM_FIELD(reg, imodi, BX_XHCI_THIS hub.runtime_regs.interrupter[i].imod.imodi);
-    BXRS_HEX_PARAM_FIELD(reg_grp1, erstabsize, BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstsz.erstabsize);
+    BXRS_HEX_PARAM_FIELD(reg_grp1, iman, BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman);
+    BXRS_HEX_PARAM_FIELD(reg_grp1, imod, BX_XHCI_THIS hub.runtime_regs.interrupter[i].imod);
+    BXRS_HEX_PARAM_FIELD(reg_grp1, erstsz, BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstsz);
     BXRS_HEX_PARAM_FIELD(reg_grp1, erstabadd, BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstba.erstabadd);
     reg = new bx_list_c(reg_grp1, "erdp");
     BXRS_HEX_PARAM_FIELD(reg, eventadd, BX_XHCI_THIS hub.runtime_regs.interrupter[i].erdp.eventadd);
@@ -1185,10 +1021,10 @@ void bx_usb_xhci_c::update_irq()
 
   // INTx is asserted while USBCMD.INTE is set and any interrupter has
   // IMAN.IE and IMAN.IP set (a level, not only the event which set IP)
-  if (BX_XHCI_THIS hub.op_regs.HcCommand.inte) {
+  if (BX_XHCI_THIS hub.op_regs.HcCommand & HC_CMD_INTE) {
     for (unsigned i=0; i<INTERRUPTERS; i++) {
-      if (BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.ie &&
-          BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.ip) {
+      if ((BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman & IMAN_IE) &&
+          (BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman & IMAN_IP)) {
         level = 1;
         BX_DEBUG(("Interrupt Fired."));
         break;
@@ -1263,61 +1099,21 @@ bool bx_usb_xhci_c::mem_read(bx_phy_address addr, unsigned len, void *data)
   // Operational Registers
   else if ((offset >= OPS_REGS_OFFSET) && (offset < (OPS_REGS_OFFSET + 0x40))) {
     switch (offset - OPS_REGS_OFFSET) {
-      case 0x00: // Command
-#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
-        val =   (BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP1       << 14)
-              | (BX_XHCI_THIS hub.op_regs.HcCommand.cme      ? 1 << 13 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcCommand.spe      ? 1 << 12 : 0)
-#else
-        val =   (BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP1       << 12)
-#endif
-              | (BX_XHCI_THIS hub.op_regs.HcCommand.eu3s     ? 1 << 11 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcCommand.ewe      ? 1 << 10 : 0)
-              | 0   // controller restore state always read as zero
-              | 0   // controller save state always read as zero
-              | (BX_XHCI_THIS hub.op_regs.HcCommand.lhcrst   ? 1 <<  7 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP0       <<  4)
-              | (BX_XHCI_THIS hub.op_regs.HcCommand.hsee     ? 1 <<  3 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcCommand.inte     ? 1 <<  2 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcCommand.hcrst    ? 1 <<  1 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcCommand.rs       ? 1 <<  0 : 0);
+      case 0x00: // Command (controller save/restore state always read as zero)
+        val = BX_XHCI_THIS hub.op_regs.HcCommand;
         break;
       case 0x04: // Status
-        val =   (BX_XHCI_THIS hub.op_regs.HcStatus.hce       ? 1 << 12 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcStatus.cnr       ? 1 << 11 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcStatus.sre       ? 1 << 10 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcStatus.rss       ? 1 <<  9 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcStatus.sss       ? 1 <<  8 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcStatus.pcd       ? 1 <<  4 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcStatus.eint      ? 1 <<  3 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcStatus.hse       ? 1 <<  2 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcStatus.hch       ? 1 <<  0 : 0);
+        val = BX_XHCI_THIS hub.op_regs.HcStatus;
         break;
       case 0x08: // Page Size
-        val =    BX_XHCI_THIS hub.op_regs.HcPageSize.pagesize;
+        val = BX_XHCI_THIS hub.op_regs.HcPageSize;
         break;
       case 0x0C: // Reserved and Zero'd
       case 0x10: // Reserved and Zero'd
         val = 0;
         break;
       case 0x14: // Device Notification Control Register
-        val =   (BX_XHCI_THIS hub.op_regs.HcNotification.RsvdP   << 16)
-              | (BX_XHCI_THIS hub.op_regs.HcNotification.n15 ? 1 << 15 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcNotification.n14 ? 1 << 14 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcNotification.n13 ? 1 << 13 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcNotification.n12 ? 1 << 12 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcNotification.n11 ? 1 << 11 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcNotification.n10 ? 1 << 10 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcNotification.n9  ? 1 <<  9 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcNotification.n8  ? 1 <<  8 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcNotification.n7  ? 1 <<  7 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcNotification.n6  ? 1 <<  6 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcNotification.n5  ? 1 <<  5 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcNotification.n4  ? 1 <<  4 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcNotification.n3  ? 1 <<  3 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcNotification.n2  ? 1 <<  2 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcNotification.n1  ? 1 <<  1 : 0)
-              | (BX_XHCI_THIS hub.op_regs.HcNotification.n0  ? 1 <<  0 : 0);
+        val = BX_XHCI_THIS hub.op_regs.HcNotification;
         break;
       case 0x18: // Command Ring Control Register (Lo) (* most fields always returns zero when read *)
         val =   (BX_XHCI_THIS hub.op_regs.HcCrcr.RsvdP           <<  4)
@@ -1349,14 +1145,7 @@ bool bx_usb_xhci_c::mem_read(bx_phy_address addr, unsigned len, void *data)
 #endif  // ADDR_CAP_64
         break;
       case 0x38: // Config
-#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
-        val =   (BX_XHCI_THIS hub.op_regs.HcConfig.RsvdP         << 10)
-              | (BX_XHCI_THIS hub.op_regs.HcConfig.cie           <<  8)
-              | (BX_XHCI_THIS hub.op_regs.HcConfig.u3e           <<  9)
-#else
-        val =   (BX_XHCI_THIS hub.op_regs.HcConfig.RsvdP         <<  8)
-#endif
-              | (BX_XHCI_THIS hub.op_regs.HcConfig.MaxSlotsEn    <<  0);
+        val = BX_XHCI_THIS hub.op_regs.HcConfig;
         break;
     }
   }
@@ -1364,68 +1153,29 @@ bool bx_usb_xhci_c::mem_read(bx_phy_address addr, unsigned len, void *data)
   // Register Port Sets
   else if ((offset >= XHCI_PORT_SET_OFFSET) && (offset < (XHCI_PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16)))) {
     unsigned port = (((offset - XHCI_PORT_SET_OFFSET) >> 4) & 0x3F); // calculate port number
-    if (BX_XHCI_THIS hub.usb_port[port].portsc.pp) {
+    if (BX_XHCI_THIS hub.usb_port[port].portsc & PORTSC_PP) {
       // the speed field is only valid for USB3 before a port reset.  If a reset has not
       //  taken place after the port is powered, the USB2 ports don't show a valid speed field.
-      if (BX_XHCI_THIS hub.usb_port[port].portsc.ccs &&
+      if ((BX_XHCI_THIS hub.usb_port[port].portsc & PORTSC_CCS) &&
          (BX_XHCI_THIS hub.usb_port[port].is_usb3 || BX_XHCI_THIS hub.usb_port[port].has_been_reset))
-           speed = BX_XHCI_THIS hub.usb_port[port].portsc.speed;
+           speed = PORTSC_GET_SPEED(BX_XHCI_THIS hub.usb_port[port].portsc);
       switch (offset & 0x0000000F) {
         case 0x00:
-          val =  0 /* BX_XHCI_THIS hub.usb_port[port].portsc.wpr == 0 when read */
-                | (BX_XHCI_THIS hub.usb_port[port].portsc.dr      ? 1 <<  30 : 0)
-                | (BX_XHCI_THIS hub.usb_port[port].portsc.woe     ? 1 <<  27 : 0)
-                | (BX_XHCI_THIS hub.usb_port[port].portsc.wde     ? 1 <<  26 : 0)
-                | (BX_XHCI_THIS hub.usb_port[port].portsc.wce     ? 1 <<  25 : 0)
-                | (BX_XHCI_THIS hub.usb_port[port].portsc.cas     ? 1 <<  24 : 0)
-                | (BX_XHCI_THIS hub.usb_port[port].portsc.cec     ? 1 <<  23 : 0)
-                | (BX_XHCI_THIS hub.usb_port[port].portsc.plc     ? 1 <<  22 : 0)
-                | (BX_XHCI_THIS hub.usb_port[port].portsc.prc     ? 1 <<  21 : 0)
-                | (BX_XHCI_THIS hub.usb_port[port].portsc.occ     ? 1 <<  20 : 0)
-                | (BX_XHCI_THIS hub.usb_port[port].portsc.wrc     ? 1 <<  19 : 0)
-                | (BX_XHCI_THIS hub.usb_port[port].portsc.pec     ? 1 <<  18 : 0)
-                | (BX_XHCI_THIS hub.usb_port[port].portsc.csc     ? 1 <<  17 : 0)
-                | (BX_XHCI_THIS hub.usb_port[port].portsc.pic         <<  14)
-                | (                                       speed       <<  10)
-                | (BX_XHCI_THIS hub.usb_port[port].portsc.pp      ? 1 <<   9 : 0)
-                | (BX_XHCI_THIS hub.usb_port[port].portsc.pls         <<   5)
-                | (BX_XHCI_THIS hub.usb_port[port].portsc.pr      ? 1 <<   4 : 0)
-                | (BX_XHCI_THIS hub.usb_port[port].portsc.oca     ? 1 <<   3 : 0)
-                | (BX_XHCI_THIS hub.usb_port[port].portsc.ped     ? 1 <<   1 : 0)
-                | (BX_XHCI_THIS hub.usb_port[port].portsc.ccs     ? 1 <<   0 : 0);
+          // Warm Port Reset and Link State Write Strobe are always read as zero
+          val = (BX_XHCI_THIS hub.usb_port[port].portsc & ~(PORTSC_WPR | PORTSC_LWS | PORTSC_SPEED))
+                | (speed << PORTSC_SPEED_SH);
           break;
         case 0x04:
-          if (BX_XHCI_THIS hub.usb_port[port].is_usb3) {
-            val =    (BX_XHCI_THIS hub.usb_port[port].usb3.portpmsc.RsvdP         << 17)
-                   | (BX_XHCI_THIS hub.usb_port[port].usb3.portpmsc.fla       ? 1 << 16 : 0)
-                   | (BX_XHCI_THIS hub.usb_port[port].usb3.portpmsc.u2timeout     <<  8)
-                   | (BX_XHCI_THIS hub.usb_port[port].usb3.portpmsc.u1timeout     <<  0);
-          } else {
-            val =    (BX_XHCI_THIS hub.usb_port[port].usb2.portpmsc.tmode         << 28)
-                   | (BX_XHCI_THIS hub.usb_port[port].usb2.portpmsc.RsvdP         << 17)
-                   | (BX_XHCI_THIS hub.usb_port[port].usb2.portpmsc.hle       ? 1 << 16 : 0)
-                   | (BX_XHCI_THIS hub.usb_port[port].usb2.portpmsc.l1dslot       <<  8)
-                   | (BX_XHCI_THIS hub.usb_port[port].usb2.portpmsc.hird          <<  4)
-                   | (BX_XHCI_THIS hub.usb_port[port].usb2.portpmsc.rwe       ? 1 <<  3 : 0)
-                   | (BX_XHCI_THIS hub.usb_port[port].usb2.portpmsc.l1s           <<  0);
-          }
+          val = BX_XHCI_THIS hub.usb_port[port].portpmsc;
           break;
         case 0x08:
-          if (BX_XHCI_THIS hub.usb_port[port].is_usb3) {
-            val =    (BX_XHCI_THIS hub.usb_port[port].usb3.portli.RsvdP           << 16)
-                   | (BX_XHCI_THIS hub.usb_port[port].usb3.portli.lec             <<  0);
-          } else {
-            val =     BX_XHCI_THIS hub.usb_port[port].usb2.portli.RsvdP;
-          }
+          val = BX_XHCI_THIS hub.usb_port[port].portli;
           break;
         case 0x0C:
 #if ((VERSION_MAJOR < 1) || ((VERSION_MAJOR == 1) && (VERSION_MINOR == 0)))
           BX_ERROR(("Read from Reserved Register in Port Register Set %d", port));
 #else
-          val =    (BX_XHCI_THIS hub.usb_port[port].porthlpmc.RsvdP             << 14)
-                 | (BX_XHCI_THIS hub.usb_port[port].porthlpmc.hirdd             << 10)
-                 | (BX_XHCI_THIS hub.usb_port[port].porthlpmc.l1timeout         <<  2)
-                 | (BX_XHCI_THIS hub.usb_port[port].porthlpmc.hirdm             <<  0);
+          val = BX_XHCI_THIS hub.usb_port[port].porthlpmc;
 #endif
           break;
       }
@@ -1464,8 +1214,7 @@ bool bx_usb_xhci_c::mem_read(bx_phy_address addr, unsigned len, void *data)
   // Host Controller Runtime Registers
   else if ((offset >= RUNTIME_OFFSET) && (offset < (RUNTIME_OFFSET + 32 + (INTERRUPTERS * 32)))) {
     if (offset == RUNTIME_OFFSET) {
-      val =   (BX_XHCI_THIS hub.runtime_regs.mfindex.RsvdP << 14)
-            | (BX_XHCI_THIS hub.runtime_regs.mfindex.index <<  0);
+      val = BX_XHCI_THIS hub.runtime_regs.mfindex;
     } else if (offset < (RUNTIME_OFFSET + 32)) {
       val = 0;
     } else {
@@ -1473,17 +1222,13 @@ bool bx_usb_xhci_c::mem_read(bx_phy_address addr, unsigned len, void *data)
       i = (rt_offset >> 5);  // interrupter offset
       switch (rt_offset & 0x1F) {
         case 0x00:
-          val =   (BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.RsvdP      << 2)
-            | (BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.ie     ? 1 << 1 : 0)
-            | (BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.ip     ? 1 << 0 : 0);
+          val = BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman;
           break;
         case 0x04:
-          val =   (BX_XHCI_THIS hub.runtime_regs.interrupter[i].imod.imodc << 16)
-                | (BX_XHCI_THIS hub.runtime_regs.interrupter[i].imod.imodi << 0);
+          val = BX_XHCI_THIS hub.runtime_regs.interrupter[i].imod;
           break;
         case 0x08:
-          val =   (BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstsz.RsvdP << 16)
-                | (BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstsz.erstabsize << 0);
+          val = BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstsz;
           break;
         case 0x0C:
           val = BX_XHCI_THIS hub.runtime_regs.interrupter[i].RsvdP;
@@ -1636,57 +1381,50 @@ bool bx_usb_xhci_c::mem_write(bx_phy_address addr, unsigned len, void *data)
   else if ((offset >= OPS_REGS_OFFSET) && (offset < (OPS_REGS_OFFSET + 0x40))) {
     switch (offset - OPS_REGS_OFFSET) {
       case 0x00: // Command
-        temp = BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP1;
-#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
-        BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP1 = (value >> 14);
-        if (temp != BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP1)
-          BX_ERROR(("bits 31:14 in command register were not preserved"));
-        BX_XHCI_THIS hub.op_regs.HcCommand.cme    = (value & (1 << 13)) ? 1 : 0;
-        BX_XHCI_THIS hub.op_regs.HcCommand.spe    = (value & (1 << 12)) ? 1 : 0;
+        temp = BX_XHCI_THIS hub.op_regs.HcCommand;
+        if ((temp ^ value) & HC_CMD_RSVDP_HI)
+          BX_ERROR(("upper RsvdP bits in command register were not preserved"));
+        if ((temp ^ value) & HC_CMD_RSVDP_LO)
+          BX_ERROR(("bits 6:4 in Command Register were not preserved"));
+        // controller save/restore state always read as zero
+#if LIGHT_HC_RESET
+        BX_XHCI_THIS hub.op_regs.HcCommand = value & ~(HC_CMD_CSS | HC_CMD_CRS);
+        // TODO: Do light reset
 #else
-        BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP1 = (value >> 12);
-        if (temp != BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP1)
-          BX_ERROR(("bits 31:12 in command register were not preserved"));
-#endif
-        BX_XHCI_THIS hub.op_regs.HcCommand.eu3s   = (value & (1 << 11)) ? 1 : 0;
-        BX_XHCI_THIS hub.op_regs.HcCommand.ewe    = (value & (1 << 10)) ? 1 : 0;
-        if (value & (1 <<  9)) {
-          if (BX_XHCI_THIS hub.op_regs.HcStatus.hch == 1) {
+        BX_XHCI_THIS hub.op_regs.HcCommand = value & ~(HC_CMD_CSS | HC_CMD_CRS | HC_CMD_LHCRST);
+#endif // LIGHT_HC_RESET
+        if (value & HC_CMD_CRS) {
+          if (BX_XHCI_THIS hub.op_regs.HcStatus & HC_STS_HCH) {
             // show that we are restoring the state
             //  (redundant since emulated host can't see it set until we are done here)
-            BX_XHCI_THIS hub.op_regs.HcStatus.rss = 1;
-            BX_XHCI_THIS hub.op_regs.HcStatus.sre = BX_XHCI_THIS restore_hc_state();
+            BX_XHCI_THIS hub.op_regs.HcStatus |= HC_STS_RSS;
+            if (BX_XHCI_THIS restore_hc_state())
+              BX_XHCI_THIS hub.op_regs.HcStatus |= HC_STS_SRE;
+            else
+              BX_XHCI_THIS hub.op_regs.HcStatus &= ~HC_STS_SRE;
             // show that the restoring is done. (again, redundant, but we do it anyway)
-            BX_XHCI_THIS hub.op_regs.HcStatus.rss = 0;
+            BX_XHCI_THIS hub.op_regs.HcStatus &= ~HC_STS_RSS;
           } else
             BX_ERROR(("Restore State when controller not in Halted state."));
         }
-        if (value & (1 <<  8)) {
-          if (BX_XHCI_THIS hub.op_regs.HcStatus.hch == 1) {
+        if (value & HC_CMD_CSS) {
+          if (BX_XHCI_THIS hub.op_regs.HcStatus & HC_STS_HCH) {
             // show that we are saving the state
             //  (redundant since emulated host can't see it set until we are done here)
-            BX_XHCI_THIS hub.op_regs.HcStatus.sss = 1;
-            BX_XHCI_THIS hub.op_regs.HcStatus.sre = BX_XHCI_THIS save_hc_state();
+            BX_XHCI_THIS hub.op_regs.HcStatus |= HC_STS_SSS;
+            if (BX_XHCI_THIS save_hc_state())
+              BX_XHCI_THIS hub.op_regs.HcStatus |= HC_STS_SRE;
+            else
+              BX_XHCI_THIS hub.op_regs.HcStatus &= ~HC_STS_SRE;
             // show that the saving is done. (again, redundant, but we do it anyway)
-            BX_XHCI_THIS hub.op_regs.HcStatus.sss = 0;
+            BX_XHCI_THIS hub.op_regs.HcStatus &= ~HC_STS_SSS;
           } else
             BX_ERROR(("Save State when controller not in Halted state."));
         }
-#if LIGHT_HC_RESET
-        BX_XHCI_THIS hub.op_regs.HcCommand.lhcrst = (value & (1 <<  7)) ? 1 : 0;
-        // TODO: Do light reset
-#endif // LIGHT_HC_RESET
-        temp = BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP0;
-        BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP0 = (value & (7 <<  4)) >> 4;
-        if (temp != BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP0)
-          BX_ERROR(("bits 6:4 in Command Register were not preserved"));
-        BX_XHCI_THIS hub.op_regs.HcCommand.hsee   = (value & (1 <<  3)) ? 1 : 0;
-        BX_XHCI_THIS hub.op_regs.HcCommand.inte   = (value & (1 <<  2)) ? 1 : 0;
         update_irq();
-        BX_XHCI_THIS hub.op_regs.HcCommand.hcrst  = (value & (1 <<  1)) ? 1 : 0;
-        if (BX_XHCI_THIS hub.op_regs.HcCommand.hcrst) {
+        if (BX_XHCI_THIS hub.op_regs.HcCommand & HC_CMD_HCRST) {
           BX_XHCI_THIS reset_hc();
-          BX_XHCI_THIS hub.op_regs.HcCommand.hcrst = 0;
+          BX_XHCI_THIS hub.op_regs.HcCommand &= ~HC_CMD_HCRST;
           // the controller will send a reset to all USB 3.0 ports,
           //  enabling the port if a device is attached.
           for (unsigned int port=0; port<BX_XHCI_THIS hub.n_ports; port++) {
@@ -1697,12 +1435,12 @@ bool bx_usb_xhci_c::mem_write(bx_phy_address addr, unsigned len, void *data)
         }
 
         // if run/stop bit cleared, stop command ring
-        BX_XHCI_THIS hub.op_regs.HcCommand.rs     = (value & (1 <<  0)) ? 1 : 0;
-        if (BX_XHCI_THIS hub.op_regs.HcCommand.rs == 0) {
+        BX_XHCI_THIS hub.op_regs.HcCommand = (BX_XHCI_THIS hub.op_regs.HcCommand & ~HC_CMD_RS) | (value & HC_CMD_RS);
+        if (!(BX_XHCI_THIS hub.op_regs.HcCommand & HC_CMD_RS)) {
           BX_XHCI_THIS hub.op_regs.HcCrcr.crr = 0;
-          BX_XHCI_THIS hub.op_regs.HcStatus.hch = 1;  // set the Halted Bit
+          BX_XHCI_THIS hub.op_regs.HcStatus |= HC_STS_HCH;  // set the Halted Bit
         } else {
-          BX_XHCI_THIS hub.op_regs.HcStatus.hch = 0;  // clear the Halted Bit
+          BX_XHCI_THIS hub.op_regs.HcStatus &= ~HC_STS_HCH;  // clear the Halted Bit
 #if MAX_SCRATCH_PADS > 0
           // if the scratchpad area is required, the quest must allocate and
           //  place that address at DCBAAP[0] before setting the Run Bit.
@@ -1719,11 +1457,8 @@ bool bx_usb_xhci_c::mem_write(bx_phy_address addr, unsigned len, void *data)
           BX_ERROR(("RsvdZ bits in HcStatus not written as zeros"));
         if (value & ((1<<12) | (1<<11) | (1<<9) | (1<<8) | (1<<0)))
           BX_ERROR(("Write to one or more Read-only bits in Status Register"));
-        BX_XHCI_THIS hub.op_regs.HcStatus.sre     = (value & (1 << 10)) ? 0 : BX_XHCI_THIS hub.op_regs.HcStatus.sre;
-        BX_XHCI_THIS hub.op_regs.HcStatus.pcd     = (value & (1 <<  4)) ? 0 : BX_XHCI_THIS hub.op_regs.HcStatus.pcd;
-        BX_XHCI_THIS hub.op_regs.HcStatus.eint    = (value & (1 <<  3)) ? 0 : BX_XHCI_THIS hub.op_regs.HcStatus.eint;
-        BX_XHCI_THIS hub.op_regs.HcStatus.hse     = (value & (1 <<  2)) ? 0 : BX_XHCI_THIS hub.op_regs.HcStatus.hse;
-        if (value & (1 << 3))  // acknowledging the interrupt
+        BX_XHCI_THIS hub.op_regs.HcStatus &= ~(value & HC_STS_RW1C_MASK);
+        if (value & HC_STS_EINT)  // acknowledging the interrupt
           DEV_pci_set_irq(BX_XHCI_THIS devfunc, BX_XHCI_THIS pci_conf[0x3d], 0);
         break;
 
@@ -1738,26 +1473,9 @@ bool bx_usb_xhci_c::mem_write(bx_phy_address addr, unsigned len, void *data)
         break;
 
       case 0x14: // Device Notification Control Register
-        temp = BX_XHCI_THIS hub.op_regs.HcNotification.RsvdP;
-        BX_XHCI_THIS hub.op_regs.HcNotification.RsvdP = value >> 16;
-        if (temp != BX_XHCI_THIS hub.op_regs.HcNotification.RsvdP)
+        if ((BX_XHCI_THIS hub.op_regs.HcNotification ^ value) & 0xFFFF0000)
           BX_ERROR(("bits 31:16 in DNCTRL Register were not preserved"));
-        BX_XHCI_THIS hub.op_regs.HcNotification.n15 = (value & (1 << 15)) ? 1 : 0;
-        BX_XHCI_THIS hub.op_regs.HcNotification.n14 = (value & (1 << 14)) ? 1 : 0;
-        BX_XHCI_THIS hub.op_regs.HcNotification.n13 = (value & (1 << 13)) ? 1 : 0;
-        BX_XHCI_THIS hub.op_regs.HcNotification.n12 = (value & (1 << 12)) ? 1 : 0;
-        BX_XHCI_THIS hub.op_regs.HcNotification.n11 = (value & (1 << 11)) ? 1 : 0;
-        BX_XHCI_THIS hub.op_regs.HcNotification.n10 = (value & (1 << 10)) ? 1 : 0;
-        BX_XHCI_THIS hub.op_regs.HcNotification.n9  = (value & (1 <<  9)) ? 1 : 0;
-        BX_XHCI_THIS hub.op_regs.HcNotification.n8  = (value & (1 <<  8)) ? 1 : 0;
-        BX_XHCI_THIS hub.op_regs.HcNotification.n7  = (value & (1 <<  7)) ? 1 : 0;
-        BX_XHCI_THIS hub.op_regs.HcNotification.n6  = (value & (1 <<  6)) ? 1 : 0;
-        BX_XHCI_THIS hub.op_regs.HcNotification.n5  = (value & (1 <<  5)) ? 1 : 0;
-        BX_XHCI_THIS hub.op_regs.HcNotification.n4  = (value & (1 <<  4)) ? 1 : 0;
-        BX_XHCI_THIS hub.op_regs.HcNotification.n3  = (value & (1 <<  3)) ? 1 : 0;
-        BX_XHCI_THIS hub.op_regs.HcNotification.n2  = (value & (1 <<  2)) ? 1 : 0;
-        BX_XHCI_THIS hub.op_regs.HcNotification.n1  = (value & (1 <<  1)) ? 1 : 0;
-        BX_XHCI_THIS hub.op_regs.HcNotification.n0  = (value & (1 <<  0)) ? 1 : 0;
+        BX_XHCI_THIS hub.op_regs.HcNotification = value;
         break;
 
       case 0x18: // Command Ring Control Register (Lo)
@@ -1837,19 +1555,9 @@ bool bx_usb_xhci_c::mem_write(bx_phy_address addr, unsigned len, void *data)
         break;
 
       case 0x38: // Config
-        temp = BX_XHCI_THIS hub.op_regs.HcConfig.RsvdP;
-#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
-        BX_XHCI_THIS hub.op_regs.HcConfig.RsvdP = (value >> 10);
-        if (temp != BX_XHCI_THIS hub.op_regs.HcConfig.RsvdP)
-          BX_ERROR(("bits 31:10 in Config Register were not preserved"));
-        BX_XHCI_THIS hub.op_regs.HcConfig.cie =  (value & (1 << 9)) ? 1 : 0;
-        BX_XHCI_THIS hub.op_regs.HcConfig.u3e =  (value & (1 << 8)) ? 1 : 0;
-#else
-        BX_XHCI_THIS hub.op_regs.HcConfig.RsvdP = (value >> 8);
-        if (temp != BX_XHCI_THIS hub.op_regs.HcConfig.RsvdP)
-          BX_ERROR(("bits 31:8 in Config Register were not preserved"));
-#endif
-        BX_XHCI_THIS hub.op_regs.HcConfig.MaxSlotsEn = (value & 0xFF);
+        if ((BX_XHCI_THIS hub.op_regs.HcConfig ^ value) & HC_CONFIG_RSVDP)
+          BX_ERROR(("RsvdP bits in Config Register were not preserved"));
+        BX_XHCI_THIS hub.op_regs.HcConfig = value;
         break;
     }
   }
@@ -1865,52 +1573,45 @@ bool bx_usb_xhci_c::mem_write(bx_phy_address addr, unsigned len, void *data)
           if (value & ((3<<28) | (1<<2)))
             BX_ERROR(("Write non-zero to a RsvdZ member of PORTSC[%d] Register", port));
           if (BX_XHCI_THIS hub.usb_port[port].is_usb3) {
-            BX_XHCI_THIS hub.usb_port[port].portsc.wpr = (value & (1 << 31)) ? 1 : 0;
-            BX_XHCI_THIS hub.usb_port[port].portsc.cec = (value & (1 << 23)) ? 1 : 0;
-            BX_XHCI_THIS hub.usb_port[port].portsc.wrc = (value & (1 << 19)) ? 0 : BX_XHCI_THIS hub.usb_port[port].portsc.wrc;
-            if (value & (1<<18))  // For a USB3 protocol port, this bit shall never be set to 1, however doesn't hurt to write to it anyway
+            BX_XHCI_THIS hub.usb_port[port].portsc &= ~(PORTSC_WPR | PORTSC_CEC | (value & PORTSC_WRC));
+            BX_XHCI_THIS hub.usb_port[port].portsc |= (value & (PORTSC_WPR | PORTSC_CEC));
+            if (value & PORTSC_PEC)  // For a USB3 protocol port, this bit shall never be set to 1, however doesn't hurt to write to it anyway
               BX_DEBUG(("Write to USB3 port: bit 18"));
           } else {
-            BX_XHCI_THIS hub.usb_port[port].portsc.pec = (value & (1 << 18)) ? 0 : BX_XHCI_THIS hub.usb_port[port].portsc.pec;
-            if (value & ((1<<31) | (1<<23) | (1<<19)))
+            BX_XHCI_THIS hub.usb_port[port].portsc &= ~(value & PORTSC_PEC);
+            if (value & (PORTSC_WPR | PORTSC_CEC | PORTSC_WRC))
               BX_ERROR(("Write to USB2 port: RsvdZ bit"));
           }
           // The WC1 bits must be before anything that will change these bits below.
-          if (value & (1 << 22)) BX_XHCI_THIS hub.usb_port[port].portsc.plc = 0;
-          if (value & (1 << 21)) BX_XHCI_THIS hub.usb_port[port].portsc.prc = 0;
-          if (value & (1 << 20)) BX_XHCI_THIS hub.usb_port[port].portsc.occ = 0;
-          if (value & (1 << 17)) BX_XHCI_THIS hub.usb_port[port].portsc.csc = 0;
-          if (value & (1 <<  1)) BX_XHCI_THIS hub.usb_port[port].portsc.ped = 0;
-          BX_XHCI_THIS hub.usb_port[port].portsc.woe   = (value & (1 << 27)) ? 1 : 0;
-          BX_XHCI_THIS hub.usb_port[port].portsc.wde   = (value & (1 << 26)) ? 1 : 0;
-          BX_XHCI_THIS hub.usb_port[port].portsc.wce   = (value & (1 << 25)) ? 1 : 0;
-          BX_XHCI_THIS hub.usb_port[port].portsc.pic   = (value & (0x3 << 14)) >> 14;
+          BX_XHCI_THIS hub.usb_port[port].portsc &= ~(value & (PORTSC_PLC | PORTSC_PRC | PORTSC_OCC | PORTSC_CSC | PORTSC_PED));
+          BX_XHCI_THIS hub.usb_port[port].portsc &= ~(PORTSC_WOE | PORTSC_WDE | PORTSC_WCE | PORTSC_PIC);
+          BX_XHCI_THIS hub.usb_port[port].portsc |= (value & (PORTSC_WOE | PORTSC_WDE | PORTSC_WCE | PORTSC_PIC));
           // if transition from non-powered to powered
-          if (BX_XHCI_THIS hub.usb_port[port].portsc.pp == 0) {
+          if (!(BX_XHCI_THIS hub.usb_port[port].portsc & PORTSC_PP)) {
             // a "has been reset" is false.
             BX_XHCI_THIS hub.usb_port[port].has_been_reset = 0;
           }
-          BX_XHCI_THIS hub.usb_port[port].portsc.pp = 1;
+          BX_XHCI_THIS hub.usb_port[port].portsc |= PORTSC_PP;
           if (value & (1<<16)) {  // LWS
             switch ((value & (0xF << 5)) >> 5) {
               case 0:
-                BX_XHCI_THIS hub.usb_port[port].portsc.pls = PLS_U0;
+                PORTSC_SET_PLS(BX_XHCI_THIS hub.usb_port[port].portsc, PLS_U0);
                 break;
               case 2:  // USB2 only
-                BX_XHCI_THIS hub.usb_port[port].portsc.pls = PLS_U2;
+                PORTSC_SET_PLS(BX_XHCI_THIS hub.usb_port[port].portsc, PLS_U2);
                 break;
               case 3:
-                BX_XHCI_THIS hub.usb_port[port].portsc.pls = PLS_U3_SUSPENDED;
+                PORTSC_SET_PLS(BX_XHCI_THIS hub.usb_port[port].portsc, PLS_U3_SUSPENDED);
                 break;
               case 5:  // USB3 only
-                if (BX_XHCI_THIS hub.usb_port[port].portsc.pls == PLS_DISABLED) {
-                  BX_XHCI_THIS hub.usb_port[port].portsc.pls = PLS_RXDETECT;
-                  BX_XHCI_THIS hub.usb_port[port].portsc.ped = 0;
-                  BX_XHCI_THIS hub.usb_port[port].portsc.pec = 1;
+                if (PORTSC_GET_PLS(BX_XHCI_THIS hub.usb_port[port].portsc) == PLS_DISABLED) {
+                  PORTSC_SET_PLS(BX_XHCI_THIS hub.usb_port[port].portsc, PLS_RXDETECT);
+                  BX_XHCI_THIS hub.usb_port[port].portsc &= ~PORTSC_PED;
+                  BX_XHCI_THIS hub.usb_port[port].portsc |= PORTSC_PEC;
                 }
                 break;
               case 15:  // USB2 only
-                if (BX_XHCI_THIS hub.usb_port[port].portsc.pls == PLS_U3_SUSPENDED) {
+                if (PORTSC_GET_PLS(BX_XHCI_THIS hub.usb_port[port].portsc) == PLS_U3_SUSPENDED) {
                   // port should transition to the U3Exit state...
                 }
                 break;
@@ -1927,48 +1628,38 @@ bool bx_usb_xhci_c::mem_write(bx_phy_address addr, unsigned len, void *data)
         }
 #if PORT_POWER_CTRL
         else
-          BX_XHCI_THIS hub.usb_port[port].portsc.pp = 0;
+          BX_XHCI_THIS hub.usb_port[port].portsc &= ~PORTSC_PP;
 #endif  // PORT_POWER_CTRL
         break;
       case 0x04:
-        if (BX_XHCI_THIS hub.usb_port[port].portsc.pp) {
+        if (BX_XHCI_THIS hub.usb_port[port].portsc & PORTSC_PP) {
+          temp = BX_XHCI_THIS hub.usb_port[port].portpmsc;
           if (BX_XHCI_THIS hub.usb_port[port].is_usb3) {
-            temp = BX_XHCI_THIS hub.usb_port[port].usb3.portpmsc.RsvdP;
-            BX_XHCI_THIS hub.usb_port[port].usb3.portpmsc.RsvdP = value >> 17;
-            if (temp != BX_XHCI_THIS hub.usb_port[port].usb3.portpmsc.RsvdP)
+            if ((temp ^ value) & PORTPMSC_USB3_RSVDP)
               BX_ERROR(("bits 31:17 in PORTPMSC[%d] Register were not preserved", port));
-            BX_XHCI_THIS hub.usb_port[port].usb3.portpmsc.fla   = (value & (1 << 16)) ? 1 : 0;
-            BX_XHCI_THIS hub.usb_port[port].usb3.portpmsc.u2timeout = (value & (0xFF << 8)) >> 8;
-            BX_XHCI_THIS hub.usb_port[port].usb3.portpmsc.u1timeout = (value & (0xFF << 0)) >> 0;
+            BX_XHCI_THIS hub.usb_port[port].portpmsc = value;
           } else {
-            if (value & (7<<0))
+            if (value & PORTPMSC_USB2_L1S)
               BX_ERROR(("Write to one or more Read-only bits in PORTPMSC[%d] Register", port));
-            BX_XHCI_THIS hub.usb_port[port].usb2.portpmsc.tmode     = (value & (0xF << 28)) >> 28;
-            temp = BX_XHCI_THIS hub.usb_port[port].usb2.portpmsc.RsvdP;
-            BX_XHCI_THIS hub.usb_port[port].usb2.portpmsc.RsvdP     = (value & (0x1FFF << 15)) >> 15;
-            if (temp != BX_XHCI_THIS hub.usb_port[port].usb2.portpmsc.RsvdP)
-              BX_ERROR(("bits 27:15 in PORTPMSC[%d] Register were not preserved", port));
-            BX_XHCI_THIS hub.usb_port[port].usb2.portpmsc.hle       = (value & (1 << 16)) ? 1 : 0;
-            BX_XHCI_THIS hub.usb_port[port].usb2.portpmsc.l1dslot   = (value & (0xFF <<  8)) >> 8;
-            BX_XHCI_THIS hub.usb_port[port].usb2.portpmsc.hird      = (value & (0xF  <<  4)) >> 4;
-            BX_XHCI_THIS hub.usb_port[port].usb2.portpmsc.rwe       = (value & (1 <<  3)) ? 1 : 0;
+            if ((temp ^ value) & PORTPMSC_USB2_RSVDP)
+              BX_ERROR(("bits 27:17 in PORTPMSC[%d] Register were not preserved", port));
+            BX_XHCI_THIS hub.usb_port[port].portpmsc = (temp & PORTPMSC_USB2_L1S) | (value & ~PORTPMSC_USB2_L1S);
           }
         }
         break;
       case 0x08:
-        if (BX_XHCI_THIS hub.usb_port[port].portsc.pp) {
+        if (BX_XHCI_THIS hub.usb_port[port].portsc & PORTSC_PP) {
+          temp = BX_XHCI_THIS hub.usb_port[port].portli;
           if (BX_XHCI_THIS hub.usb_port[port].is_usb3) {
-            if (value & (0xFFFF<<0))
+            if (value & PORTLI_USB3_LEC)
               BX_ERROR(("Write to one or more Read-only bits in PORTLI[%d] Register", port));
-            temp = BX_XHCI_THIS hub.usb_port[port].usb3.portli.RsvdP;
-            BX_XHCI_THIS hub.usb_port[port].usb3.portli.RsvdP = value >> 16;
-            if (temp != BX_XHCI_THIS hub.usb_port[port].usb3.portli.RsvdP)
+            if ((temp ^ value) & ~PORTLI_USB3_LEC)
               BX_ERROR(("bits 31:16 in PORTLI[%d] Register were not preserved", port));
+            BX_XHCI_THIS hub.usb_port[port].portli = (temp & PORTLI_USB3_LEC) | (value & ~PORTLI_USB3_LEC);
           } else {
-            temp = BX_XHCI_THIS hub.usb_port[port].usb2.portli.RsvdP;
-            BX_XHCI_THIS hub.usb_port[port].usb2.portli.RsvdP = value;
-            if (temp != BX_XHCI_THIS hub.usb_port[port].usb2.portli.RsvdP)
+            if (temp != value)
               BX_ERROR(("bits 31:0 in PORTLI[%d] Register were not preserved", port));
+            BX_XHCI_THIS hub.usb_port[port].portli = value;
           }
         }
         break;
@@ -1976,13 +1667,9 @@ bool bx_usb_xhci_c::mem_write(bx_phy_address addr, unsigned len, void *data)
 #if ((VERSION_MAJOR < 1) || ((VERSION_MAJOR == 1) && (VERSION_MINOR == 0)))
         BX_ERROR(("Write to Reserved Register in Port Register Set %d", port));
 #else
-        temp = BX_XHCI_THIS hub.usb_port[port].porthlpmc.RsvdP;
-        BX_XHCI_THIS hub.usb_port[port].porthlpmc.RsvdP = (value >> 14);
-        if (temp != BX_XHCI_THIS hub.usb_port[port].porthlpmc.RsvdP)
+        if ((BX_XHCI_THIS hub.usb_port[port].porthlpmc ^ value) & PORTHLPMC_RSVDP)
           BX_ERROR(("bits 31:14 in PORTHLPMC[%d] Register were not preserved", port));
-        BX_XHCI_THIS hub.usb_port[port].porthlpmc.hirdd = ((value & (0x0F << 10)) >> 10);
-        BX_XHCI_THIS hub.usb_port[port].porthlpmc.l1timeout = ((value & (0xFF << 2)) >> 2);
-        BX_XHCI_THIS hub.usb_port[port].porthlpmc.hirdm = ((value & (0x0F << 0)) >> 0);
+        BX_XHCI_THIS hub.usb_port[port].porthlpmc = value;
 #endif
         break;
     }
@@ -2026,26 +1713,21 @@ bool bx_usb_xhci_c::mem_write(bx_phy_address addr, unsigned len, void *data)
       i = (rt_offset >> 5);  // interrupter offset
       switch (rt_offset & 0x1F) {
         case 0x00:
-          temp = BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.RsvdP;
-          BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.RsvdP = (value >> 2);
-          if (temp != BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.RsvdP)
+          temp = BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman;
+          if ((temp ^ value) & IMAN_RSVDP)
             BX_ERROR(("bits 31:2 in IMAN Register were not preserved"));
-          BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.ie    = ((value & (1 << 1)) == (1 << 1));
-          if (value & (1 << 0))
-            BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.ip  = 0;
+          // Interrupt Pending is write 1 to clear
+          BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman = (value & ~IMAN_IP) | (temp & IMAN_IP & ~value);
           // clearing IP or IE deasserts the INTx line (if no other interrupter is pending)
           update_irq();
           break;
         case 0x04:
-          BX_XHCI_THIS hub.runtime_regs.interrupter[i].imod.imodc = (value >> 16);
-          BX_XHCI_THIS hub.runtime_regs.interrupter[i].imod.imodi = (value & 0xFFFF);
+          BX_XHCI_THIS hub.runtime_regs.interrupter[i].imod = value;
           break;
         case 0x08:
-          temp = BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstsz.RsvdP;
-          BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstsz.RsvdP = (value >> 16);
-          if (temp != BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstsz.RsvdP)
+          if ((BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstsz ^ value) & ERSTSZ_RSVDP)
             BX_ERROR(("bits 31:16 in ERSTSZ Register were not preserved"));
-          BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstsz.erstabsize = (value & 0xFFFF);
+          BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstsz = value;
           break;
         case 0x0C:
           temp = BX_XHCI_THIS hub.runtime_regs.interrupter[i].RsvdP;
@@ -2115,7 +1797,7 @@ bool bx_usb_xhci_c::mem_write(bx_phy_address addr, unsigned len, void *data)
       if ((value & 0xFF) != 0)
         BX_ERROR(("Command Doorbell rang with non zero value: 0x%02X", (value & 0xFF)));
       // if the run/stop bit is set, the command ring is running
-      if (BX_XHCI_THIS hub.op_regs.HcCommand.rs)
+      if (BX_XHCI_THIS hub.op_regs.HcCommand & HC_CMD_RS)
         BX_XHCI_THIS hub.op_regs.HcCrcr.crr = 1;
       process_command_ring();
     } else {
@@ -2251,13 +1933,13 @@ int bx_usb_xhci_c::event_handler(int event, void *ptr, int port)
       }
       break;
     case USB_EVENT_WAKEUP:
-      if (BX_XHCI_THIS hub.usb_port[port].portsc.pls != PLS_U3_SUSPENDED) {
+      if (PORTSC_GET_PLS(BX_XHCI_THIS hub.usb_port[port].portsc) != PLS_U3_SUSPENDED) {
         break;
       }
-      BX_XHCI_THIS hub.usb_port[port].portsc.pls = PLS_RESUME;
-      if (!BX_XHCI_THIS hub.usb_port[port].portsc.plc) {
-        BX_XHCI_THIS hub.usb_port[port].portsc.plc = 1;
-        if (BX_XHCI_THIS hub.op_regs.HcStatus.hch) {
+      PORTSC_SET_PLS(BX_XHCI_THIS hub.usb_port[port].portsc, PLS_RESUME);
+      if (!(BX_XHCI_THIS hub.usb_port[port].portsc & PORTSC_PLC)) {
+        BX_XHCI_THIS hub.usb_port[port].portsc |= PORTSC_PLC;
+        if (BX_XHCI_THIS hub.op_regs.HcStatus & HC_STS_HCH) {
           break;
         }
         write_event_TRB(0, ((port + 1) << 24), TRB_SET_COMP_CODE(1), TRB_SET_TYPE(PORT_STATUS_CHANGE), 1);
@@ -3210,7 +2892,7 @@ void bx_usb_xhci_c::init_event_ring(unsigned interrupter)
     BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[i].size &= 0xFFFF;
     if ((BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[i].size < 16) ||
         (BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[i].size > 4096)) {
-      if (i < (int) erst_size(BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erstsz.erstabsize)) {
+      if (i < (int) erst_size(BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erstsz & ERSTSZ_ERSTABSIZE)) {
         BX_ERROR(("Event Ring Segment %d has a size of %d which is invalid.", i,
           BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[i].size));
       }
@@ -3228,8 +2910,8 @@ void bx_usb_xhci_c::init_event_ring(unsigned interrupter)
 
   // dump the event segment table
   BX_DEBUG(("Interrupter %02i: Event Ring Table (at 0x" FMT_ADDRX64 ") has %d entries:", interrupter,
-    addr, BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erstsz.erstabsize));
-  for (int i=0; i<BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erstsz.erstabsize; i++) {
+    addr, BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erstsz & ERSTSZ_ERSTABSIZE));
+  for (int i=0; i<(int) (BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erstsz & ERSTSZ_ERSTABSIZE); i++) {
     DEV_MEM_READ_PHYSICAL((bx_phy_address) addr + (i * 16),     8, (Bit8u*)&val64);
     DEV_MEM_READ_PHYSICAL((bx_phy_address) addr + (i * 16) + 8, 4, (Bit8u*)&val32);
     BX_DEBUG((" %02i:  address = 0x" FMT_ADDRX64 "  Count = %d", i, val64, val32 & 0x0000FFFF));
@@ -3267,7 +2949,7 @@ void bx_usb_xhci_c::write_event_TRB(unsigned interrupter, Bit64u parameter, Bit3
   if (BX_XHCI_THIS hub.ring_members.event_rings[interrupter].trb_count == 0) {
     BX_XHCI_THIS hub.ring_members.event_rings[interrupter].count++;
     if (BX_XHCI_THIS hub.ring_members.event_rings[interrupter].count >=
-        erst_size(BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erstsz.erstabsize)) {
+        erst_size(BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erstsz & ERSTSZ_ERSTABSIZE)) {
       BX_XHCI_THIS hub.ring_members.event_rings[interrupter].rcs ^= 1;
       BX_XHCI_THIS hub.ring_members.event_rings[interrupter].count = 0;
     }
@@ -3279,9 +2961,9 @@ void bx_usb_xhci_c::write_event_TRB(unsigned interrupter, Bit64u parameter, Bit3
 
   // if caller wants us to fire an interrupt, do so
   if (fire_int) {
-    BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].iman.ip = 1;
+    BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].iman |= IMAN_IP;
     BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erdp.ehb = 1; // set event handler busy
-    BX_XHCI_THIS hub.op_regs.HcStatus.eint = 1;
+    BX_XHCI_THIS hub.op_regs.HcStatus |= HC_STS_EINT;
     update_irq();
   }
 }
@@ -3818,20 +3500,20 @@ Bit8u bx_usb_xhci_c::get_psceg(int port)
 {
   Bit8u ret;
 
-  ret  = (BX_XHCI_THIS hub.usb_port[port].portsc.csc) ? PSCEG_CSC : 0;
-  ret |= (BX_XHCI_THIS hub.usb_port[port].portsc.pec) ? PSCEG_PEC : 0;
-  ret |= (BX_XHCI_THIS hub.usb_port[port].portsc.wrc) ? PSCEG_WRC : 0;
-  ret |= (BX_XHCI_THIS hub.usb_port[port].portsc.occ) ? PSCEG_OCC : 0;
-  ret |= (BX_XHCI_THIS hub.usb_port[port].portsc.prc) ? PSCEG_PRC : 0;
-  ret |= (BX_XHCI_THIS hub.usb_port[port].portsc.plc) ? PSCEG_PLC : 0;
-  ret |= (BX_XHCI_THIS hub.usb_port[port].portsc.cec) ? PSCEG_CEC : 0;
+  ret  = (BX_XHCI_THIS hub.usb_port[port].portsc & PORTSC_CSC) ? PSCEG_CSC : 0;
+  ret |= (BX_XHCI_THIS hub.usb_port[port].portsc & PORTSC_PEC) ? PSCEG_PEC : 0;
+  ret |= (BX_XHCI_THIS hub.usb_port[port].portsc & PORTSC_WRC) ? PSCEG_WRC : 0;
+  ret |= (BX_XHCI_THIS hub.usb_port[port].portsc & PORTSC_OCC) ? PSCEG_OCC : 0;
+  ret |= (BX_XHCI_THIS hub.usb_port[port].portsc & PORTSC_PRC) ? PSCEG_PRC : 0;
+  ret |= (BX_XHCI_THIS hub.usb_port[port].portsc & PORTSC_PLC) ? PSCEG_PLC : 0;
+  ret |= (BX_XHCI_THIS hub.usb_port[port].portsc & PORTSC_CEC) ? PSCEG_CEC : 0;
 
   return ret;
 }
 
 void bx_usb_xhci_c::xhci_timer(void)
 {
-  if (BX_XHCI_THIS hub.op_regs.HcStatus.hch)
+  if (BX_XHCI_THIS hub.op_regs.HcStatus & HC_STS_HCH)
     return;
 
 #if BX_USB_DEBUGGER
@@ -3849,7 +3531,7 @@ void bx_usb_xhci_c::xhci_timer(void)
     // if any bit has transitioned from 0 to 1 (in any port),
     //  set the pcd bit in the host status register.
     if ((new_psceg & BX_XHCI_THIS hub.usb_port[port].psceg) > 0)
-      BX_XHCI_THIS hub.op_regs.HcStatus.pcd = 1;
+      BX_XHCI_THIS hub.op_regs.HcStatus |= HC_STS_PCD;
     // clear any bits that have been cleared by the guest,
     //  if we are now zero *and* there are any new bits set, send a Change Event.
     BX_XHCI_THIS hub.usb_port[port].psceg &= new_psceg;
@@ -3896,7 +3578,7 @@ void bx_usb_xhci_c::runtime_config(void)
   for (unsigned i = 0; i < BX_XHCI_THIS hub.n_ports; i++) {
     // device change support
     if ((BX_XHCI_THIS device_change & (1 << i)) != 0) {
-      if (!BX_XHCI_THIS hub.usb_port[i].portsc.ccs) {
+      if (!(BX_XHCI_THIS hub.usb_port[i].portsc & PORTSC_CCS)) {
         sprintf(pname, "port%d", i + 1);
         init_device(i, (bx_list_c *) SIM->get_param(pname, SIM->get_param(BXPN_USB_XHCI)));
       } else {
@@ -3934,7 +3616,7 @@ void bx_usb_xhci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_l
         break;
       case 0x54:
         if ((((value8 & 0x03) == 0x03) && ((BX_XHCI_THIS pci_conf[address+i] & 0x03) == 0x00)) &&
-          (BX_XHCI_THIS hub.op_regs.HcCommand.rs || !BX_XHCI_THIS hub.op_regs.HcStatus.hch))
+          ((BX_XHCI_THIS hub.op_regs.HcCommand & HC_CMD_RS) || !(BX_XHCI_THIS hub.op_regs.HcStatus & HC_STS_HCH)))
             BX_ERROR(("Power Transition from D0 to D3 with Run bit set and/or Halt bit clear"));
         BX_XHCI_THIS pci_conf[address+i] = value8;
         break;
@@ -3951,8 +3633,7 @@ void bx_usb_xhci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_l
 
 bool bx_usb_xhci_c::set_connect_status(Bit8u port, bool connected)
 {
-  const bool ccs_org = BX_XHCI_THIS hub.usb_port[port].portsc.ccs;
-  const bool ped_org = BX_XHCI_THIS hub.usb_port[port].portsc.ped;
+  const Bit32u portsc_org = BX_XHCI_THIS hub.usb_port[port].portsc;
   int otherportnum = BX_XHCI_THIS hub.paired_portnum[port];
 
   usb_device_c *device = BX_XHCI_THIS hub.usb_port[port].device;
@@ -3960,7 +3641,7 @@ bool bx_usb_xhci_c::set_connect_status(Bit8u port, bool connected)
     if (connected) {
       // make sure the user has not tried to put a device on a paired port number
       // (this is invalid in all but external USB3 hubs)
-      if (BX_XHCI_THIS hub.usb_port[otherportnum].portsc.ccs) {
+      if (BX_XHCI_THIS hub.usb_port[otherportnum].portsc & PORTSC_CCS) {
         BX_PANIC(("Port #%d: Paired port number #%d already in use.", port + 1, otherportnum + 1));
         return 0;
       }
@@ -3982,22 +3663,22 @@ bool bx_usb_xhci_c::set_connect_status(Bit8u port, bool connected)
       }
       switch (device->get_speed()) {
         case USB_SPEED_LOW:
-          BX_XHCI_THIS hub.usb_port[port].portsc.speed = 2;
+          PORTSC_SET_SPEED(BX_XHCI_THIS hub.usb_port[port].portsc, 2);
           break;
         case USB_SPEED_FULL:
-          BX_XHCI_THIS hub.usb_port[port].portsc.speed = 1;
+          PORTSC_SET_SPEED(BX_XHCI_THIS hub.usb_port[port].portsc, 1);
           break;
         case USB_SPEED_HIGH:
-          BX_XHCI_THIS hub.usb_port[port].portsc.speed = 3;
+          PORTSC_SET_SPEED(BX_XHCI_THIS hub.usb_port[port].portsc, 3);
           break;
         case USB_SPEED_SUPER:
-          BX_XHCI_THIS hub.usb_port[port].portsc.speed = 4;
+          PORTSC_SET_SPEED(BX_XHCI_THIS hub.usb_port[port].portsc, 4);
           break;
         default:
           BX_PANIC(("USB device returned invalid speed value"));
           return 0;
       }
-      BX_XHCI_THIS hub.usb_port[port].portsc.ccs = 1;
+      BX_XHCI_THIS hub.usb_port[port].portsc |= PORTSC_CCS;
       if (!device->get_connected()) {
         if (!device->init()) {
           BX_ERROR(("port #%d: connect failed", port+1));
@@ -4008,16 +3689,16 @@ bool bx_usb_xhci_c::set_connect_status(Bit8u port, bool connected)
       }
     } else { // not connected
         BX_INFO(("port #%d: device disconnect", port+1));
-        BX_XHCI_THIS hub.usb_port[port].portsc.ccs = 0;
-        BX_XHCI_THIS hub.usb_port[port].portsc.ped = 0;
-        BX_XHCI_THIS hub.usb_port[port].portsc.speed = 0;
+        BX_XHCI_THIS hub.usb_port[port].portsc &= ~PORTSC_CCS;
+        BX_XHCI_THIS hub.usb_port[port].portsc &= ~PORTSC_PED;
+        PORTSC_SET_SPEED(BX_XHCI_THIS hub.usb_port[port].portsc, 0);
         remove_device(port);
     }
     // did we change?
-    if (ccs_org != BX_XHCI_THIS hub.usb_port[port].portsc.ccs)
-      BX_XHCI_THIS hub.usb_port[port].portsc.csc = 1;
-    if (ped_org != BX_XHCI_THIS hub.usb_port[port].portsc.ped) {
-      BX_XHCI_THIS hub.usb_port[port].portsc.pec = 1;
+    if ((portsc_org ^ BX_XHCI_THIS hub.usb_port[port].portsc) & PORTSC_CCS)
+      BX_XHCI_THIS hub.usb_port[port].portsc |= PORTSC_CSC;
+    if ((portsc_org ^ BX_XHCI_THIS hub.usb_port[port].portsc) & PORTSC_PED) {
+      BX_XHCI_THIS hub.usb_port[port].portsc |= PORTSC_PEC;
 #if BX_USB_DEBUGGER
       SIM->usb_debug_trigger(USB_DEBUG_XHCI, USB_DEBUG_ENABLE, 0, 0, 0);
 #endif
@@ -4033,9 +3714,9 @@ Bit64s bx_usb_xhci_c::usb_param_handler(bx_param_c *param, bool set, Bit64s val)
     int portnum = atoi((param->get_parent())->get_name()+4) - 1;
     bool empty = (val == 0);
     if ((portnum >= 0) && (portnum < (int) theUSB_XHCI->hub.n_ports)) {
-      if (empty && theUSB_XHCI->hub.usb_port[portnum].portsc.ccs) {
+      if (empty && (theUSB_XHCI->hub.usb_port[portnum].portsc & PORTSC_CCS)) {
         theUSB_XHCI->device_change |= (1 << portnum);
-      } else if (!empty && !theUSB_XHCI->hub.usb_port[portnum].portsc.ccs) {
+      } else if (!empty && !(theUSB_XHCI->hub.usb_port[portnum].portsc & PORTSC_CCS)) {
         theUSB_XHCI->device_change |= (1 << portnum);
       } else if (val != ((bx_param_enum_c*)param)->get()) {
         BX_ERROR(("usb_param_handler(): port #%d already in use", portnum+1));
@@ -4055,9 +3736,9 @@ Bit64s bx_usb_xhci_c::usb_param_oc_handler(bx_param_c *param, bool set, Bit64s v
     int portnum = atoi((param->get_parent())->get_name()+4) - 1;
     if ((portnum >= 0) && (portnum < (int) theUSB_XHCI->hub.n_ports)) {
       if (val) {
-        if (theUSB_XHCI->hub.usb_port[portnum].portsc.ccs) {
-          theUSB_XHCI->hub.usb_port[portnum].portsc.occ = 1;
-          theUSB_XHCI->hub.usb_port[portnum].portsc.oca = 1;
+        if (theUSB_XHCI->hub.usb_port[portnum].portsc & PORTSC_CCS) {
+          theUSB_XHCI->hub.usb_port[portnum].portsc |= PORTSC_OCC;
+          theUSB_XHCI->hub.usb_port[portnum].portsc |= PORTSC_OCA;
           BX_DEBUG(("Over-current signaled on port #%d.", portnum + 1));
           theUSB_XHCI->write_event_TRB(0, ((portnum + 1) << 24), TRB_SET_COMP_CODE(1), TRB_SET_TYPE(PORT_STATUS_CHANGE), 1);
         }

@@ -161,6 +161,93 @@
 #define PSCEG_PLC  (1<<5)
 #define PSCEG_CEC  (1<<6)
 
+// USBCMD (Command) Register
+#define HC_CMD_RS        (1<<0)   // Run/Stop
+#define HC_CMD_HCRST     (1<<1)   // Host Controller Reset
+#define HC_CMD_INTE      (1<<2)   // Interrupter Enable
+#define HC_CMD_HSEE      (1<<3)   // Host System Error Enable
+#define HC_CMD_LHCRST    (1<<7)   // Light Host Controller Reset
+#define HC_CMD_CSS       (1<<8)   // Controller Save State
+#define HC_CMD_CRS       (1<<9)   // Controller Restore State
+#define HC_CMD_EWE       (1<<10)  // Enable Wrap Event
+#define HC_CMD_EU3S      (1<<11)  // Enable U3 MFINDEX Stop
+#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
+#define HC_CMD_SPE       (1<<12)  // Generate Short Packet Completion
+#define HC_CMD_CME       (1<<13)  // CEM Enable
+#define HC_CMD_RSVDP_HI  0xFFFFC000
+#else
+#define HC_CMD_RSVDP_HI  0xFFFFF000
+#endif
+#define HC_CMD_RSVDP_LO  0x00000070
+
+// USBSTS (Status) Register
+#define HC_STS_HCH       (1<<0)   // HC Halted
+#define HC_STS_HSE       (1<<2)   // Host System Error
+#define HC_STS_EINT      (1<<3)   // Event Interrupt
+#define HC_STS_PCD       (1<<4)   // Port Change Detect
+#define HC_STS_SSS       (1<<8)   // Save State Status
+#define HC_STS_RSS       (1<<9)   // Restore State Status
+#define HC_STS_SRE       (1<<10)  // Save/Restore Error
+#define HC_STS_CNR       (1<<11)  // Controller Not Ready
+#define HC_STS_HCE       (1<<12)  // Host Controller Error
+#define HC_STS_RW1C_MASK (HC_STS_SRE | HC_STS_PCD | HC_STS_EINT | HC_STS_HSE)
+
+// CONFIG Register
+#define HC_CONFIG_MAXSLOTSEN  0x000000FF  // Max Device Slots Enabled
+#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
+#define HC_CONFIG_U3E    (1<<8)   // U3 Entry Enable
+#define HC_CONFIG_CIE    (1<<9)   // Configuration Information Enable
+#define HC_CONFIG_RSVDP  0xFFFFFC00
+#else
+#define HC_CONFIG_RSVDP  0xFFFFFF00
+#endif
+
+// PORTSC Register
+#define PORTSC_CCS       (1<<0)   // Current Connect Status
+#define PORTSC_PED       (1<<1)   // Port Enabled/Disabled
+#define PORTSC_OCA       (1<<3)   // Over-current Active
+#define PORTSC_PR        (1<<4)   // Port Reset
+#define PORTSC_PLS_SH    5        // Port Link State
+#define PORTSC_PLS       (0xF<<PORTSC_PLS_SH)
+#define PORTSC_PP        (1<<9)   // Port Power
+#define PORTSC_SPEED_SH  10       // Port Speed
+#define PORTSC_SPEED     (0xF<<PORTSC_SPEED_SH)
+#define PORTSC_PIC       (3<<14)  // Port Indicator Control
+#define PORTSC_LWS       (1<<16)  // Port Link State Write Strobe
+#define PORTSC_CSC       (1<<17)  // Connect Status Change
+#define PORTSC_PEC       (1<<18)  // Port Enabled/Disabled Change
+#define PORTSC_WRC       (1<<19)  // Warm Port Reset Change
+#define PORTSC_OCC       (1<<20)  // Over-current Change
+#define PORTSC_PRC       (1<<21)  // Port Reset Change
+#define PORTSC_PLC       (1<<22)  // Port Link State Change
+#define PORTSC_CEC       (1<<23)  // Port Config Error Change
+#define PORTSC_CAS       (1<<24)  // Cold Attach Status
+#define PORTSC_WCE       (1<<25)  // Wake on Connect Enable
+#define PORTSC_WDE       (1<<26)  // Wake on Disconnect Enable
+#define PORTSC_WOE       (1<<27)  // Wake on Over-current Enable
+#define PORTSC_DR        (1<<30)  // Device Removable
+#define PORTSC_WPR       (1U<<31) // Warm Port Reset
+#define PORTSC_GET_PLS(x)      (((x) & PORTSC_PLS) >> PORTSC_PLS_SH)
+#define PORTSC_SET_PLS(x,y)    ((x) = ((x) & ~PORTSC_PLS) | ((y) << PORTSC_PLS_SH))
+#define PORTSC_GET_SPEED(x)    (((x) & PORTSC_SPEED) >> PORTSC_SPEED_SH)
+#define PORTSC_SET_SPEED(x,y)  ((x) = ((x) & ~PORTSC_SPEED) | ((y) << PORTSC_SPEED_SH))
+
+// PORTPMSC / PORTLI / PORTHLPMC Registers
+#define PORTPMSC_USB3_RSVDP    0xFFFE0000
+#define PORTPMSC_USB2_RSVDP    0x0FFE0000
+#define PORTPMSC_USB2_L1S      0x00000007  // L1 Status (RO)
+#define PORTLI_USB3_LEC        0x0000FFFF  // Link Error Count (RO)
+#define PORTHLPMC_RSVDP        0xFFFFC000
+
+// IMAN Register
+#define IMAN_IP          (1<<0)   // Interrupt Pending
+#define IMAN_IE          (1<<1)   // Interrupt Enable
+#define IMAN_RSVDP       0xFFFFFFFC
+
+// ERSTSZ Register
+#define ERSTSZ_ERSTABSIZE  0x0000FFFF  // Event Ring Segment Table Size
+#define ERSTSZ_RSVDP       0xFFFF0000
+
 // Extended Capabilities: Protocol
 struct XHCI_PROTOCOL {
   Bit8u  id;
