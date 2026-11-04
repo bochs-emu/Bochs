@@ -1508,6 +1508,7 @@ static void FillStack()
 {
     // sometimes need to specially invalidate the stack window
     static bool StkInvOnce = FALSE;
+    static unsigned int PrevWordSize = 0;
     Bit64u StackLA, EndLA;
     unsigned int len, i, wordsize, overlap;
     int j;
@@ -1515,20 +1516,20 @@ static void FillStack()
     char *cp, *cpp;
     DumpRow r;          // cols: 0 = address, 1 = hex value, 17 = decimal value
     doDumpRefresh = FALSE;
+
+    // the stack entry size comes from SS.B, it does not depend on CS.D
+    wordsize = 8;
+    if (! In64Mode)
+        wordsize = BX_CPU(CurrentCPU)->sregs[BX_SEG_REG_SS].cache.u.segment.d_b ? 4 : 2;
+    len = STACK_ENTRIES * wordsize;
+
     bx_address StackPtr = (bx_address) rV[RSP_Rnum];
-    if (! In64Mode && BX_CPU(CurrentCPU)->sregs[BX_SEG_REG_SS].cache.u.segment.d_b == 0)
+    if (wordsize == 2)
         StackPtr &= 0xffff;     // 16-bit stack segment (SS.B=0) uses SP only
     StackLA = (Bit64u) BX_CPU(CurrentCPU)->get_laddr(BX_SEG_REG_SS, StackPtr);
 
     if (PStackLA == 1)               // illegal value requests a full refresh
         PStackLA = StackLA ^ 0x4000; // force a non-match below (kludge)
-
-    wordsize = 4;       // assume Pmode
-    if (! In32Mode)
-        wordsize = 2;
-    else if (In64Mode)
-        wordsize = 8;
-    len = STACK_ENTRIES * wordsize;
 
     // TODO: enforce that cp is wordsize aligned
     // also -- enforce that StackLA is wordsize aligned
@@ -1543,7 +1544,10 @@ static void FillStack()
         return;
     }
 
-    UpdateDisp = CpuModeChange;     // calculate which stack entries have changed
+    // calculate which stack entries have changed
+    // SS.B can change without a CPU mode change, the rows must be rebuilt then
+    UpdateDisp = CpuModeChange || wordsize != PrevWordSize;
+    PrevWordSize = wordsize;
     cp = CurStack;
     cpp = PrevStack;
     j = overlap = len / wordsize;
@@ -1632,7 +1636,7 @@ static void FillStack()
             int tmp;
             FmtHex(r.txt[0], DUMP_COL_LEN, StackLA, 8);
             upr(r.txt[0]);      // 32-bit stack addresses are always shown in upper case
-            if (! In32Mode)
+            if (wordsize == 2)
             {
                 tmp = *((Bit16s *) cp);
                 FmtHex(r.txt[1], DUMP_COL_LEN, (Bit16u) tmp, 4);  // 16-bit stack entry, no sign extension
