@@ -195,7 +195,7 @@ BX_CPP_INLINE void BX_CPU_C::svm_segment_read(bx_segment_reg_t *seg, unsigned of
   Bit16u selector = vmcb_read16(offset);
   Bit16u attr = vmcb_read16(offset + 2);
   Bit32u limit = vmcb_read32(offset + 4);
-  bx_address base = CanonicalizeAddress(vmcb_read64(offset + 8));
+  bx_address base = CpuidCanonicalizeAddress(vmcb_read64(offset + 8));
   bool valid = (attr >> 7) & 1;
 
   set_segment_ar_data(seg, valid, selector, base, limit,
@@ -601,14 +601,14 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
 #if BX_SUPPORT_CET
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
     guest.msr_ia32_s_cet = vmcb_read64(SVM_GUEST_S_CET);
-    if (! IsCanonical(guest.msr_ia32_s_cet) || ! is_valid_cet_control(guest.msr_ia32_s_cet)) {
+    if (! IsCpuidCanonical(guest.msr_ia32_s_cet) || ! is_valid_cet_control(guest.msr_ia32_s_cet)) {
       BX_ERROR(("VMRUN: Guest S_CET reserved bits set"));
       return false;
     }
 
     // SSP and ISST_ADDR are canonicalized (not checked) by VMRUN
-    guest.ssp = CanonicalizeAddress(vmcb_read64(SVM_GUEST_SSP));
-    guest.interrupt_ssp_table_address = CanonicalizeAddress(vmcb_read64(SVM_GUEST_ISST_ADDR));
+    guest.ssp = CpuidCanonicalizeAddress(vmcb_read64(SVM_GUEST_SSP));
+    guest.interrupt_ssp_table_address = CpuidCanonicalizeAddress(vmcb_read64(SVM_GUEST_ISST_ADDR));
 
     if (guest.cr4.get_CET()) {
       if (! guest.cr0.get_WP()) {
@@ -667,10 +667,10 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   // SS: only B, P, E, W, and Code/Data are observed
   guest.sregs[BX_SEG_REG_SS].cache.dpl = guest.cpl;
 
-  guest.gdtr.base = CanonicalizeAddress(vmcb_read64(SVM_GUEST_GDTR_BASE));
+  guest.gdtr.base = CpuidCanonicalizeAddress(vmcb_read64(SVM_GUEST_GDTR_BASE));
   guest.gdtr.limit = vmcb_read16(SVM_GUEST_GDTR_LIMIT);
 
-  guest.idtr.base = CanonicalizeAddress(vmcb_read64(SVM_GUEST_IDTR_BASE));
+  guest.idtr.base = CpuidCanonicalizeAddress(vmcb_read64(SVM_GUEST_IDTR_BASE));
   guest.idtr.limit = vmcb_read16(SVM_GUEST_IDTR_LIMIT);
 
   guest.inhibit_interrupts = vmcb_read8(SVM_CONTROL_INTERRUPT_SHADOW) & 0x1;
@@ -1487,15 +1487,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLOAD(bxInstruction_c *i)
   BX_CPU_THIS_PTR tr = guest_tr;
   BX_CPU_THIS_PTR ldtr = guest_ldtr;
 
-  BX_CPU_THIS_PTR msr.kernelgsbase = CanonicalizeAddress(vmcb_read64(SVM_GUEST_KERNEL_GSBASE_MSR));
+  BX_CPU_THIS_PTR msr.kernelgsbase = CpuidCanonicalizeAddress(vmcb_read64(SVM_GUEST_KERNEL_GSBASE_MSR));
   BX_CPU_THIS_PTR msr.star = vmcb_read64(SVM_GUEST_STAR_MSR);
-  BX_CPU_THIS_PTR msr.lstar = CanonicalizeAddress(vmcb_read64(SVM_GUEST_LSTAR_MSR));
-  BX_CPU_THIS_PTR msr.cstar = CanonicalizeAddress(vmcb_read64(SVM_GUEST_CSTAR_MSR));
+  BX_CPU_THIS_PTR msr.lstar = CpuidCanonicalizeAddress(vmcb_read64(SVM_GUEST_LSTAR_MSR));
+  BX_CPU_THIS_PTR msr.cstar = CpuidCanonicalizeAddress(vmcb_read64(SVM_GUEST_CSTAR_MSR));
   BX_CPU_THIS_PTR msr.fmask = (Bit32u) vmcb_read64(SVM_GUEST_FMASK_MSR); // bits [63:32] are ignored
 
   BX_CPU_THIS_PTR msr.sysenter_cs_msr = (Bit32u) vmcb_read64(SVM_GUEST_SYSENTER_CS_MSR); // bits [63:32] are ignored
-  BX_CPU_THIS_PTR msr.sysenter_eip_msr = CanonicalizeAddress(vmcb_read64(SVM_GUEST_SYSENTER_EIP_MSR));
-  BX_CPU_THIS_PTR msr.sysenter_esp_msr = CanonicalizeAddress(vmcb_read64(SVM_GUEST_SYSENTER_ESP_MSR));
+  BX_CPU_THIS_PTR msr.sysenter_eip_msr = CpuidCanonicalizeAddress(vmcb_read64(SVM_GUEST_SYSENTER_EIP_MSR));
+  BX_CPU_THIS_PTR msr.sysenter_esp_msr = CpuidCanonicalizeAddress(vmcb_read64(SVM_GUEST_SYSENTER_ESP_MSR));
 
   set_VMCBPTR(vmcbPtr);
 

@@ -147,6 +147,7 @@ Changes after Bochs 3.1:
 - TSC: IA32_TSC_ADJUST must be zero after hardware reset (read as minus the number of ticks passed before the reset)
 - LA57: LGDT, LIDT, LLDT and LTR must check base address canonical to the max supported linear address width (57-bit with LA57) regardless of current paging mode
 - LA57/VMX: VM entry must check host and guest linear address fields (segment and descriptor table bases, SYSENTER, CET and FRED) canonical to the max supported linear address width regardless of current paging mode
+- LA57/SVM: VMRUN and VMLOAD must canonicalize and check linear address fields to the max supported linear address width regardless of current paging mode
 - SYSENTER: check SYSENTER_EIP/SYSENTER_ESP canonicality before modifying any state
 - SYSENTER/SYSEXIT: SYSENTER/SYSEXIT are not allowed in long mode on AMD
 - SYSCALL/SYSRET: SYSRET must clear RFLAGS.RF and RFLAGS.VM instead of loading them from R11
