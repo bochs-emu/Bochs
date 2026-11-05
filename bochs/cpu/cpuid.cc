@@ -1806,6 +1806,10 @@ void bx_cpuid_t::sanity_checks() const
       BX_FATAL(("PANIC: CLWB enabled when CLFLUSH is not supported !"));
   }
 
+  // RDPID -> RDTSCP, RDPID reads MSR_TSC_AUX which is enabled by RDTSCP
+  if (is_cpu_extension_supported(BX_ISA_RDPID) && !is_cpu_extension_supported(BX_ISA_RDTSCP))
+    BX_FATAL(("PANIC: RDPID is enabled when RDTSCP is not supported !"));
+
   // TBM -> XOP -> AVX
   if (is_cpu_extension_supported(BX_ISA_TBM) && !is_cpu_extension_supported(BX_ISA_XOP))
     BX_FATAL(("PANIC: TBM is enabled when XOP is not supported !"));
