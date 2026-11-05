@@ -57,7 +57,7 @@ x86_feature(BX_ISA_LONG_MODE_AMD, "longmode_amd")                          /* Lo
 x86_feature(BX_ISA_LM_LAHF_SAHF, "lm_lahf_sahf")                           /* Long Mode LAHF/SAHF instruction */
 x86_feature(BX_ISA_NX, "nx")                                               /* No-Execute Pages support */
 x86_feature(BX_ISA_1G_PAGES, "1g_pages")                                   /* 1Gb pages support */
-x86_feature(BX_ISA_CMPXCHG16B, "cmpxhg16b")                                /* CMPXCHG16B instruction */
+x86_feature(BX_ISA_CMPXCHG16B, "cmpxchg16b")                               /* CMPXCHG16B instruction */
 x86_feature(BX_ISA_RDTSCP, "rdtscp")                                       /* RDTSCP instruction */
 x86_feature(BX_ISA_FFXSR, "ffxsr")                                         /* EFER.FFXSR support (AMD) */
 x86_feature(BX_ISA_XSAVE, "xsave")                                         /* XSAVE/XRSTOR extensions instruction */

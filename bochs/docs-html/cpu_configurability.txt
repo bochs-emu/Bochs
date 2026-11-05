@@ -319,7 +319,7 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
  Dependency: longmode
 
-- CPU Feature: cmpxhg16b
+- CPU Feature: cmpxchg16b
 
  Enables CPUID[0x00000001].ECX[13] flag.
  Enables CMPXCHG16B instruction (will #UD otherwise).
