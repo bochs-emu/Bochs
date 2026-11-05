@@ -267,6 +267,7 @@ Changes after Bochs 3.1:
 - INVPCID/INVEPT/INVVPID: the type register operand is always 64-bit in 64-bit mode (was read as 32-bit without REX.W)
 - LAPIC_EXT: AMD IER masked in-service vectors as well, EOI/PPR ignored in-service vectors disabled in IER (IER only applies to pending interrupts)
 - LAPIC_EXT/X2APIC: extended xAPIC registers (AMD) must be accessible through MSRs 840h, 841h, 842h and 848h-84Fh in x2APIC mode
+- X2APIC: WRMSR must #GP on attempt to set reserved bits in SELF IPI, ICR, LVT and Divide Configuration registers
 - LAPIC: Self and All-including-self IPI shorthands must only send Fixed interrupts, other delivery modes are invalid and ignored
 - LAPIC: x2APIC physical IPI destination with low byte 0xFF (e.g. 0x1FF) was treated as broadcast, only 0xFFFFFFFF is x2APIC broadcast
 - LAPIC: LVT delivery status and LINT0/LINT1 remote IRR bits are read only, guest writes to them were stored and read back

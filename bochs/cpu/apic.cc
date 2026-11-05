@@ -1459,11 +1459,17 @@ bool bx_local_apic_c::write_x2apic(unsigned index, Bit32u val32_hi, Bit32u val32
     return false;
   // send self ipi
   case BX_LAPIC_SELF_IPI:
+    // handle reserved bits, only bits 0-7 are writeable
+    if ((val32_lo & 0xffffff00) != 0)
+      return false;
     if ((val32_lo & 0xff) < BX_LAPIC_FIRST_VECTOR)
       signal_error(APIC_ERR_TX_ILLEGAL_VEC);
     trigger_irq(val32_lo & 0xff, APIC_EDGE_TRIGGERED);
     return true;
   case BX_LAPIC_ICR_LO:
+    // handle reserved bits
+    if ((val32_lo & 0xfff32000) != 0)
+      return false;
     // handle full 64-bit write
     icr_lo = val32_lo;
     icr_hi = val32_hi;
@@ -1484,15 +1490,32 @@ bool bx_local_apic_c::write_x2apic(unsigned index, Bit32u val32_hi, Bit32u val32
   case BX_LAPIC_ESR:
     if (val32_lo != 0) return false;
     break; // use legacy write
+  // handle reserved bits, read-only bits may be written and are ignored
   case BX_LAPIC_LVT_TIMER:
+    if ((val32_lo & 0xfff8ef00) != 0)
+      return false;
+    break; // use legacy write
   case BX_LAPIC_LVT_THERMAL:
   case BX_LAPIC_LVT_PERFMON:
+  case BX_LAPIC_LVT_CMCI:
+    if ((val32_lo & 0xfffee800) != 0)
+      return false;
+    break; // use legacy write
   case BX_LAPIC_LVT_LINT0:
   case BX_LAPIC_LVT_LINT1:
+    if ((val32_lo & 0xfffe0800) != 0)
+      return false;
+    break; // use legacy write
   case BX_LAPIC_LVT_ERROR:
-  case BX_LAPIC_LVT_CMCI:
+    if ((val32_lo & 0xfffeef00) != 0)
+      return false;
+    break; // use legacy write
   case BX_LAPIC_TIMER_INITIAL_COUNT:
+    break; // use legacy write
   case BX_LAPIC_TIMER_DIVIDE_CFG:
+    // handle reserved bits, only bits 0, 1 and 3 are writeable
+    if ((val32_lo & 0xfffffff4) != 0)
+      return false;
     break; // use legacy write
   // extended xAPIC registers (AMD)
   case BX_LAPIC_EXT_APIC_FEATURE: // read only
