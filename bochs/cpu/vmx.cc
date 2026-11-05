@@ -1230,7 +1230,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
 
   host_state->tr_base = (bx_address) VMread_natural(VMCS_HOST_TR_BASE);
 #if BX_SUPPORT_X86_64
-  if (! IsCanonical(host_state->tr_base)) {
+  if (! IsCpuidCanonical(host_state->tr_base)) {
      BX_ERROR(("VMFAIL: VMCS host TR BASE non canonical"));
      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
   }
@@ -1239,11 +1239,11 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
   host_state->fs_base = (bx_address) VMread_natural(VMCS_HOST_FS_BASE);
   host_state->gs_base = (bx_address) VMread_natural(VMCS_HOST_GS_BASE);
 #if BX_SUPPORT_X86_64
-  if (! IsCanonical(host_state->fs_base)) {
+  if (! IsCpuidCanonical(host_state->fs_base)) {
      BX_ERROR(("VMFAIL: VMCS host FS BASE non canonical"));
      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
   }
-  if (! IsCanonical(host_state->gs_base)) {
+  if (! IsCpuidCanonical(host_state->gs_base)) {
      BX_ERROR(("VMFAIL: VMCS host GS BASE non canonical"));
      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
   }
@@ -1252,11 +1252,11 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
   host_state->gdtr_base = (bx_address) VMread_natural(VMCS_HOST_GDTR_BASE);
   host_state->idtr_base = (bx_address) VMread_natural(VMCS_HOST_IDTR_BASE);
 #if BX_SUPPORT_X86_64
-  if (! IsCanonical(host_state->gdtr_base)) {
+  if (! IsCpuidCanonical(host_state->gdtr_base)) {
      BX_ERROR(("VMFAIL: VMCS host GDTR BASE non canonical"));
      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
   }
-  if (! IsCanonical(host_state->idtr_base)) {
+  if (! IsCpuidCanonical(host_state->idtr_base)) {
      BX_ERROR(("VMFAIL: VMCS host IDTR BASE non canonical"));
      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
   }
@@ -1267,12 +1267,12 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
   host_state->sysenter_cs_msr = (Bit16u) VMread32(VMCS_32BIT_HOST_IA32_SYSENTER_CS_MSR);
 
 #if BX_SUPPORT_X86_64
-  if (! IsCanonical(host_state->sysenter_esp_msr)) {
+  if (! IsCpuidCanonical(host_state->sysenter_esp_msr)) {
      BX_ERROR(("VMFAIL: VMCS host SYSENTER_ESP_MSR non canonical"));
      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
   }
 
-  if (! IsCanonical(host_state->sysenter_eip_msr)) {
+  if (! IsCpuidCanonical(host_state->sysenter_eip_msr)) {
      BX_ERROR(("VMFAIL: VMCS host SYSENTER_EIP_MSR non canonical"));
      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
   }
@@ -1302,7 +1302,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
 #if BX_SUPPORT_CET
   if (vm->vmexit_ctrls1.LOAD_HOST_CET_STATE()) {
     host_state->msr_ia32_s_cet = VMread_natural(VMCS_HOST_IA32_S_CET);
-    if (!IsCanonical(host_state->msr_ia32_s_cet) || (!x86_64_host && GET32H(host_state->msr_ia32_s_cet))) {
+    if (!IsCpuidCanonical(host_state->msr_ia32_s_cet) || (!x86_64_host && GET32H(host_state->msr_ia32_s_cet))) {
        BX_ERROR(("VMFAIL: VMCS host IA32_S_CET/ENDBR_LEGACY_BITMAP_BASE non canonical or invalid"));
        return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
     }
@@ -1313,7 +1313,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
     }
 
     host_state->ssp = VMread_natural(VMCS_HOST_SSP);
-    if (!IsCanonical(host_state->ssp) || (!x86_64_host && GET32H(host_state->ssp))) {
+    if (!IsCpuidCanonical(host_state->ssp) || (!x86_64_host && GET32H(host_state->ssp))) {
        BX_ERROR(("VMFAIL: VMCS host SSP non canonical or invalid"));
        return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
     }
@@ -1323,7 +1323,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
     }
 
     host_state->interrupt_ssp_table_address = VMread_natural(VMCS_HOST_INTERRUPT_SSP_TABLE_ADDR);
-    if (!IsCanonical(host_state->interrupt_ssp_table_address)) {
+    if (!IsCpuidCanonical(host_state->interrupt_ssp_table_address)) {
        BX_ERROR(("VMFAIL: VMCS host INTERRUPT_SSP_TABLE_ADDR non canonical or invalid"));
        return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
     }
@@ -1351,7 +1351,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
 #if BX_SUPPORT_FRED
   if (vm->vmexit_ctrls2.LOAD_HOST_FRED()) {
     host_state->msr_ia32_fred_config = VMread_natural(VMCS_64BIT_HOST_IA32_FRED_CONFIG);
-    if (!IsCanonical(host_state->msr_ia32_fred_config) || (host_state->msr_ia32_fred_config & 0x834) != 0) {
+    if (!IsCpuidCanonical(host_state->msr_ia32_fred_config) || (host_state->msr_ia32_fred_config & 0x834) != 0) {
       BX_ERROR(("VMFAIL: VMCS host IA32_FRED_CONFIG is not canonical or reserved bits set!"));
       return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
     }
@@ -1360,13 +1360,13 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
 
     for (unsigned i=1; i<4; i++) {
       host_state->msr_ia32_fred_rsp[i] = VMread_natural(VMCS_64BIT_HOST_IA32_FRED_RSP1 + (i-1)*2);
-      if (!IsCanonical(host_state->msr_ia32_fred_rsp[i]) || (host_state->msr_ia32_fred_rsp[i] & 0x3f) != 0) {
+      if (!IsCpuidCanonical(host_state->msr_ia32_fred_rsp[i]) || (host_state->msr_ia32_fred_rsp[i] & 0x3f) != 0) {
         BX_ERROR(("VMFAIL: VMCS host IA32_FRED_RSP%d is not canonical or reserved bits set!", i));
         return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
       }
 #if BX_SUPPORT_CET
       host_state->msr_ia32_fred_ssp[i] = VMread_natural(VMCS_64BIT_HOST_IA32_FRED_SSP1 + (i-1)*2);
-      if (!IsCanonical(host_state->msr_ia32_fred_ssp[i]) || (host_state->msr_ia32_fred_ssp[i] & 0x7) != 0) {
+      if (!IsCpuidCanonical(host_state->msr_ia32_fred_ssp[i]) || (host_state->msr_ia32_fred_ssp[i] & 0x7) != 0) {
         BX_ERROR(("VMFAIL: VMCS host IA32_FRED_SSP%d is not canonical or reserved bits set!", i));
         return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
       }
@@ -1585,7 +1585,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
   if (vm->vmentry_ctrls.LOAD_GUEST_CET_STATE()) {
     guest.msr_ia32_s_cet = VMread_natural(VMCS_GUEST_IA32_S_CET);
-    if (!IsCanonical(guest.msr_ia32_s_cet)) {
+    if (!IsCpuidCanonical(guest.msr_ia32_s_cet)) {
        BX_ERROR(("VMFAIL: VMCS guest IA32_S_CET/ENDBR_LEGACY_BITMAP_BASE non canonical"));
        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
@@ -1612,7 +1612,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     }
 
     guest.interrupt_ssp_table_address = VMread_natural(VMCS_GUEST_INTERRUPT_SSP_TABLE_ADDR);
-    if (!IsCanonical(guest.interrupt_ssp_table_address)) {
+    if (!IsCpuidCanonical(guest.interrupt_ssp_table_address)) {
        BX_ERROR(("VMFAIL: VMCS guest INTERRUPT_SSP_TABLE_ADDR non canonical or invalid"));
        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
@@ -1633,7 +1633,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 #if BX_SUPPORT_FRED
   if (vm->vmentry_ctrls.LOAD_GUEST_FRED()) {
     guest.msr_ia32_fred_config = VMread_natural(VMCS_64BIT_GUEST_IA32_FRED_CONFIG);
-    if (!IsCanonical(guest.msr_ia32_fred_config) || (guest.msr_ia32_fred_config & 0x834) != 0) {
+    if (!IsCpuidCanonical(guest.msr_ia32_fred_config) || (guest.msr_ia32_fred_config & 0x834) != 0) {
       BX_ERROR(("VMFAIL: VMCS guest IA32_FRED_CONFIG is not canonical or reserved bits set!"));
       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
@@ -1642,13 +1642,13 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
     for (unsigned i=1; i<4; i++) {
       guest.msr_ia32_fred_rsp[i] = VMread_natural(VMCS_64BIT_GUEST_IA32_FRED_RSP1 + (i-1)*2);
-      if (!IsCanonical(guest.msr_ia32_fred_rsp[i]) || (guest.msr_ia32_fred_rsp[i] & 0x3f) != 0) {
+      if (!IsCpuidCanonical(guest.msr_ia32_fred_rsp[i]) || (guest.msr_ia32_fred_rsp[i] & 0x3f) != 0) {
         BX_ERROR(("VMFAIL: VMCS guest IA32_FRED_RSP%d is not canonical or reserved bits set!", i));
         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
       }
 #if BX_SUPPORT_CET
       guest.msr_ia32_fred_ssp[i] = VMread_natural(VMCS_64BIT_GUEST_IA32_FRED_SSP1 + (i-1)*2);
-      if (!IsCanonical(guest.msr_ia32_fred_ssp[i]) || (guest.msr_ia32_fred_ssp[i] & 0x7) != 0) {
+      if (!IsCpuidCanonical(guest.msr_ia32_fred_ssp[i]) || (guest.msr_ia32_fred_ssp[i] & 0x7) != 0) {
         BX_ERROR(("VMFAIL: VMCS guest IA32_FRED_SSP%d is not canonical or reserved bits set!", i));
         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
       }
@@ -1693,7 +1693,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
 #if BX_SUPPORT_X86_64
      if (n >= BX_SEG_REG_FS) {
-        if (! IsCanonical(base)) {
+        if (! IsCpuidCanonical(base)) {
           BX_ERROR(("VMENTER FAIL: VMCS guest %s.BASE non canonical", segname[n]));
           return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
         }
@@ -1874,7 +1874,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   Bit32u idtr_limit = VMread32(VMCS_32BIT_GUEST_IDTR_LIMIT);
 
 #if BX_SUPPORT_X86_64
-  if (! IsCanonical(gdtr_base) || ! IsCanonical(idtr_base)) {
+  if (! IsCpuidCanonical(gdtr_base) || ! IsCpuidCanonical(idtr_base)) {
     BX_ERROR(("VMENTER FAIL: VMCS guest IDTR/IDTR.BASE non canonical"));
     return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
   }
@@ -1919,7 +1919,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
      }
 #if BX_SUPPORT_X86_64
-     if (! IsCanonical(ldtr_base)) {
+     if (! IsCpuidCanonical(ldtr_base)) {
         BX_ERROR(("VMENTER FAIL: VMCS guest LDTR.BASE non canonical"));
         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
      }
@@ -1938,7 +1938,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   bool tr_invalid = (tr_ar >> 16) & 1;
 
 #if BX_SUPPORT_X86_64
-  if (! IsCanonical(tr_base)) {
+  if (! IsCpuidCanonical(tr_base)) {
     BX_ERROR(("VMENTER FAIL: VMCS guest TR.BASE non canonical"));
     return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
   }
@@ -1991,11 +1991,11 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   guest.sysenter_cs_msr = VMread32(VMCS_32BIT_GUEST_IA32_SYSENTER_CS_MSR);
 
 #if BX_SUPPORT_X86_64
-  if (! IsCanonical(guest.sysenter_esp_msr)) {
+  if (! IsCpuidCanonical(guest.sysenter_esp_msr)) {
     BX_ERROR(("VMENTER FAIL: VMCS guest SYSENTER_ESP_MSR non canonical"));
     return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
   }
-  if (! IsCanonical(guest.sysenter_eip_msr)) {
+  if (! IsCpuidCanonical(guest.sysenter_eip_msr)) {
     BX_ERROR(("VMENTER FAIL: VMCS guest SYSENTER_EIP_MSR non canonical"));
     return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
   }
@@ -2165,7 +2165,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 #if BX_SUPPORT_MPX
   if (vm->vmentry_ctrls.LOAD_BNDCFGS()) {
     guest.bndcfgs = VMread64(VMCS_64BIT_GUEST_IA32_BNDCFGS);
-    if (! IsCanonical(guest.bndcfgs) || (guest.bndcfgs & 0xffc) != 0) {
+    if (! IsCpuidCanonical(guest.bndcfgs) || (guest.bndcfgs & 0xffc) != 0) {
       BX_ERROR(("VMENTER FAIL: VMCS guest BNDCFGS is not canonical or has reserved bits set"));
       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
