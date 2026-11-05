@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2002-2025 Stanislav Shwartsman
+//   Copyright (c) 2002-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -118,11 +118,15 @@ BX_CPP_INLINE static float32 f32_mul_3dnow(float32 a, float32 b)
 
 BX_CPP_INLINE static float32 f32_min_3dnow(float32 a, float32 b)
 {
+  a = f32_denormal_to_zero(a);
+  b = f32_denormal_to_zero(b);
+
   if (a == 0x80000000) a = 0; // remove sign of zero
   if (b == 0x80000000) b = 0; // remove sign of zero
 
   // both arguments zero: return +0
-  // negative value and zero: return +0
+  // positive value and zero: return +0
+  // negative value and zero: return the negative value
 
   static softfloat_status_t status = prepare_softfloat_status_word_3dnow();
 
@@ -134,6 +138,9 @@ BX_CPP_INLINE static float32 f32_min_3dnow(float32 a, float32 b)
 
 BX_CPP_INLINE static float32 f32_max_3dnow(float32 a, float32 b)
 {
+  a = f32_denormal_to_zero(a);
+  b = f32_denormal_to_zero(b);
+
   if (a == 0x80000000) a = 0; // remove sign of zero
   if (b == 0x80000000) b = 0; // remove sign of zero
 
