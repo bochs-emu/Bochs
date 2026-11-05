@@ -884,54 +884,54 @@ Bit64s concat_image_t::lseek(Bit64s offset, int whence)
 ssize_t concat_image_t::read(void* buf, size_t count)
 {
   size_t readmax, count1 = count;
-  ssize_t ret = -1;
+  ssize_t ret = 0;
   char *buf1 = (char*)buf;
 
   BX_DEBUG(("concat_image_t.read %ld bytes", (long)count));
-  do {
+  while (count1 > 0) {
+    if (total_offset > curr_max) {
+      // continue with the next image
+      ret = lseek(total_offset, SEEK_SET);
+      if (ret < 0) break;
+    }
     readmax = (size_t)(curr_max - total_offset + 1);
-    if (count1 > readmax) {
-      ret = ::read(curr_fd, buf1, readmax);
-      if (ret >= 0) {
-        buf1 += readmax;
-        count1 -= readmax;
-        ret = lseek(curr_max + 1, SEEK_SET);
-      }
-    } else {
-      ret = ::read(curr_fd, buf1, count1);
-      if (ret >= 0) {
-        ret = lseek(count1, SEEK_CUR);
-      }
+    if (readmax > count1) readmax = count1;
+    ret = ::read(curr_fd, buf1, readmax);
+    if (ret != (ssize_t)readmax) {
+      ret = -1;
       break;
     }
-  } while (ret > 0);
+    buf1 += readmax;
+    count1 -= readmax;
+    total_offset += readmax;
+  }
   return (ret < 0) ? ret : count;
 }
 
 ssize_t concat_image_t::write(const void* buf, size_t count)
 {
   size_t writemax, count1 = count;
-  ssize_t ret = -1;
+  ssize_t ret = 0;
   char *buf1 = (char*)buf;
 
   BX_DEBUG(("concat_image_t.write %ld bytes", (long)count));
-  do {
+  while (count1 > 0) {
+    if (total_offset > curr_max) {
+      // continue with the next image
+      ret = lseek(total_offset, SEEK_SET);
+      if (ret < 0) break;
+    }
     writemax = (size_t)(curr_max - total_offset + 1);
-    if (count1 > writemax) {
-      ret = ::write(curr_fd, buf1, writemax);
-      if (ret >= 0) {
-        buf1 += writemax;
-        count1 -= writemax;
-        ret = lseek(curr_max + 1, SEEK_SET);
-      }
-    } else {
-      ret = ::write(curr_fd, buf1, count1);
-      if (ret >= 0) {
-        ret = lseek(count1, SEEK_CUR);
-      }
+    if (writemax > count1) writemax = count1;
+    ret = ::write(curr_fd, buf1, writemax);
+    if (ret != (ssize_t)writemax) {
+      ret = -1;
       break;
     }
-  } while (ret > 0);
+    buf1 += writemax;
+    count1 -= writemax;
+    total_offset += writemax;
+  }
   return (ret < 0) ? ret : count;
 }
 

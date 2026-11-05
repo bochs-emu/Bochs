@@ -239,7 +239,8 @@ char* vmware3_image_t::generate_cow_name(const char * filename, unsigned chain)
 vmware3_image_t::~vmware3_image_t()
 {
   close();
-  bx_close_image(file_descriptor, pathname);
+  if (file_descriptor != -1)
+    bx_close_image(file_descriptor, pathname);
 }
 
 /*
@@ -286,11 +287,8 @@ int vmware3_image_t::open(const char* _pathname, int flags)
     char* filename = generate_cow_name(pathname, i);
     current = &images[i];
 
-    current->fd = ::open(filename, flags
-#ifdef O_BINARY
-                         | O_BINARY
-#endif
-                         );
+    current->fd = hdimage_open_file(filename, flags, NULL, NULL);
+    current->filename = filename;
     if (current->fd < 0)
       BX_PANIC(("unable to open vmware3 COW Disk file '%s'", filename));
 
@@ -336,7 +334,6 @@ int vmware3_image_t::open(const char* _pathname, int flags)
 
     current->offset = INVALID_OFFSET;
     current->synced = true;
-    delete [] filename;
   }
   current = &images[0];
   requested_offset = 0;
@@ -549,31 +546,29 @@ Bit64s vmware3_image_t::lseek(Bit64s offset, int whence)
 
 void vmware3_image_t::close()
 {
-  if (file_descriptor == -1)
-    return;
-    
-  if(current == 0)
+  if ((images == NULL) || (current == NULL))
     return;
 
-  unsigned count = current->header.number_of_chains;
+  // write back the last modified tlb
+  if (!sync())
+    BX_ERROR(("could not sync vmware3 COW image on close"));
+
+  unsigned count = images[0].header.number_of_chains;
   if (count < 1) count = 1;
   for(unsigned i = 0; i < count; ++i)
   {
-    if (images != NULL)
-    {
-      current = &images[i];
-      for(unsigned j = 0; j < current->header.flb_count; ++j)
-          delete[] current->slb[j];
-      delete[] current->flb;
-      delete[] current->slb;
-      delete[] current->tlb;
-      ::close(current->fd);
-    delete[] images;
-    images = NULL;
-    }
+    current = &images[i];
+    for(unsigned j = 0; j < current->header.flb_count; ++j)
+        delete[] current->slb[j];
+    delete[] current->flb;
+    delete[] current->slb;
+    delete[] current->tlb;
+    bx_close_image(current->fd, current->filename);
+    delete[] current->filename;
   }
-  current = 0;
-  file_descriptor = -1;
+  delete[] images;
+  images = NULL;
+  current = NULL;
 }
 
 Bit32u vmware3_image_t::get_capabilities(void)
@@ -586,6 +581,10 @@ bool vmware3_image_t::save_state(const char *backup_fname)
 {
   bool ret = 1;
   char tempfn[BX_PATHNAME_LEN];
+
+  // write back the last modified tlb before taking the backup
+  if (!sync())
+    return 0;
 
   unsigned count = current->header.number_of_chains;
   if (count < 1) count = 1;
