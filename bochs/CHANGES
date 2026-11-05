@@ -13,7 +13,7 @@ Changes after Bochs 3.1 release:
   ! Implemented MSR_CORE_THREAD_COUNT (0x35) for Intel Nehalem and later cpu models, reports the configured number of cores and threads
   ! Configurable Maximum Physical Address Width (MAXPHYADDR) through new 'maxphyaddr' parameter of the 'cpu' bochsrc option (supported maxphyaddr between 36 to 52 bit, default 40)
   ! Improved implementation of x87 transendential instructions (F2XM1/FYL2X/FYL2XP1/FPATAN/FSIN/FCOS/FSINCOS/FPTAN) to match HW
-  - Bugfixes for CPU emulation correctness (critical bugfixes for emulation of xAPIC, AVX_NE_CONVERT, AVX512/AVX512_FP16/AVX512_BF16, AMX, VMX, SVM, XOP, TBM, CET, FRED, MWAIT, XSAVE)
+  - Bugfixes for CPU emulation correctness (critical bugfixes for emulation of 3DNow!, xAPIC, AVX_NE_CONVERT, AVX512/AVX512_FP16/AVX512_BF16, AMX, VMX, SVM, XOP, TBM, CET, FRED, MWAIT, XSAVE)
     full list of all CPU bugfixes can be seen in Bochs source tree @ bochs/cpu/history)
 
 - Bochs debugger
