@@ -768,7 +768,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
 
 Bit64u BX_CPU_C::get_TSC(void)
 {
-  Bit64u tsc = bx_pc_system.time_ticks() + BX_CPU_THIS_PTR tsc_adjust;
+  Bit64u tsc = bx_pc_system.time_ticks() - BX_CPU_THIS_PTR tsc_last_reset + BX_CPU_THIS_PTR tsc_adjust;
   return tsc;
 }
 
@@ -843,9 +843,8 @@ void BX_CPU_C::set_TSC(Bit64u newval)
 {
   BX_INFO(("WRMSR: write 0x%08x%08x to MSR_IA32_TSC", GET32H(newval), GET32L(newval)));
 
-  // compute the correct setting of tsc_adjust so that a get_TSC()
-  // will return newval
-  BX_CPU_THIS_PTR tsc_adjust = newval - bx_pc_system.time_ticks();
+  // change of the TSC by value X also adds X to IA32_TSC_ADJUST
+  BX_CPU_THIS_PTR tsc_adjust += newval - get_TSC();
 
   // verify
   BX_ASSERT(get_TSC() == newval);

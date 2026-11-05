@@ -30,6 +30,7 @@
 #include "gui/siminterface.h"
 #include "param_names.h"
 #include "cpustats.h"
+#include "pc_system.h"
 
 #if BX_SUPPORT_APIC
 #include "apic.h"
@@ -411,6 +412,7 @@ void BX_CPU_C::register_state(void)
 #endif
 
 #if BX_CPU_LEVEL >= 5
+  BXRS_HEX_PARAM_FIELD(cpu, tsc_last_reset, tsc_last_reset);
   BXRS_HEX_PARAM_FIELD(cpu, tsc_adjust, tsc_adjust);
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM
   BXRS_HEX_PARAM_FIELD(cpu, tsc_offset, tsc_offset);
@@ -1242,7 +1244,9 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR tsc_offset = 0;
 #endif
   if (source == BX_RESET_HARDWARE) {
-    BX_CPU_THIS_PTR set_TSC(0); // do not change TSC on INIT
+    // do not change TSC on INIT
+    BX_CPU_THIS_PTR tsc_last_reset = bx_pc_system.time_ticks();
+    BX_CPU_THIS_PTR tsc_adjust = 0;
   }
 #endif // BX_CPU_LEVEL >= 5
 
