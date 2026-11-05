@@ -129,7 +129,9 @@ public:
   virtual bool set(Bit64u val) {
 #if BX_SUPPORT_VMX >= 2
     VMCS_CACHE *vm = &cpu->vmcs;
-    if (cpu->in_vmx_guest && vm->vmexec_ctrls3.VIRTUALIZE_IA32_SPEC_CTRL())
+    Bit64u src = val;
+    bool virtualize = cpu->in_vmx_guest && vm->vmexec_ctrls3.VIRTUALIZE_IA32_SPEC_CTRL();
+    if (virtualize)
       val = (cpu->msr.ia32_spec_ctrl & vm->ia32_spec_ctrl_mask) | (val & ~vm->ia32_spec_ctrl_mask);
 #endif
     bool valid = (get_cpu_feature() == BX_ISA_SPEC_CTRL_AMD) ? isValidMSR_SPEC_CTRL_AMD(val) : isValidMSR_IA32_SPEC_CTRL(val);
@@ -138,6 +140,11 @@ public:
       return false;
     }
     cpu->msr.ia32_spec_ctrl = GET32L(val);
+#if BX_SUPPORT_VMX >= 2
+    // the unmodified value of the source operand is written to the shadow if the write completes without a fault
+    if (virtualize)
+      vm->ia32_spec_ctrl_shadow = src;
+#endif
     return true;
   }
 };
