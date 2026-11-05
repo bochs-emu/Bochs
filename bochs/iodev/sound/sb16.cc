@@ -1178,24 +1178,16 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
          DSP_B.dataout.put((DSP.speaker == 1)?0xff:0x00);
          break;
 
-         // stop 16 bit auto DMA
+         // exit 16 bit auto DMA
        case 0xd9:
          // none
-         if (DSP.dma.mode != 0)
-           {
-             DSP.dma.mode = 1;  // no auto init anymore
-             dsp_dmadone(1);
-           }
-         break;
-
-         // stop 8 bit auto DMA
+         // exit 8 bit auto DMA
        case 0xda:
          // none
+         // the current block is finished, then the IRQ is raised and the
+         // transfer stops (see dsp_dmadone())
          if (DSP.dma.mode != 0)
-         {
-             DSP.dma.mode = 1;  // no auto init anymore
-             dsp_dmadone(1);
-         }
+           DSP.dma.mode = 1;  // no auto init anymore
          break;
 
          // DSP identification
@@ -1241,9 +1233,15 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
 
          // Trigger 8-bit IRQ
        case 0xf2:
-         DSP_B.dataout.put(0xaa);
          DSP.irqpending = 1;
          MIXER.reg[0x82] |= 1; // reg 82 shows the kind of IRQ
+         DEV_pic_raise_irq(BX_SB16_IRQ);
+         break;
+
+         // Trigger 16-bit IRQ
+       case 0xf3:
+         DSP.irqpending = 1;
+         MIXER.reg[0x82] |= 2;
          DEV_pic_raise_irq(BX_SB16_IRQ);
          break;
 
