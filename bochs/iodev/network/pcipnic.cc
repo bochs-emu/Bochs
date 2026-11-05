@@ -445,6 +445,7 @@ void bx_pcipnic_c::exec_command(void)
   case PNIC_CMD_RESET:
     /* Flush the receive queue */
     BX_PNIC_THIS s.recvQueueLength = 0;
+    set_irq_level(0);
     status = PNIC_STATUS_OK;
     break;
 
@@ -477,6 +478,10 @@ void bx_pcipnic_c::exec_command(void)
     qlen = BX_PNIC_THIS s.recvQueueLength;
     olength = sizeof(qlen);
     memcpy (data, &qlen, sizeof(qlen));
+    // XMIT and FORCE_IRQ have no status bit to clear, polling an empty queue acks them
+    if (! qlen) {
+      set_irq_level(0);
+    }
     status = PNIC_STATUS_OK;
     break;
 

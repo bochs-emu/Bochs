@@ -730,7 +730,7 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (offset == 0x1b) {
         BX_ERROR(("writing to legacy register 0x1b (value = 0x%02x)", value & 0xff));
         BX_ES1370_THIS s.legacy1B = (Bit8u)(value & 0xff);
-        set_irq_level(BX_ES1370_THIS s.legacy1B & 0x01);
+        update_status(BX_ES1370_THIS s.status);
       } else if (offset >= 0x30) {
         BX_DEBUG(("unsupported write to memory offset=0x%02x!",
                   (BX_ES1370_THIS s.mempage << 4) | (offset & 0x0f)));
@@ -872,7 +872,8 @@ void bx_es1370_c::update_status(Bit32u new_status)
   } else {
     BX_ES1370_THIS s.status = new_status & ~STAT_INTR;
   }
-  set_irq_level(level != 0);
+  // bit #0 of the legacy register is used by the Win9x driver to probe for the interrupt
+  set_irq_level((level != 0) || (BX_ES1370_THIS s.legacy1B & 0x01));
 }
 
 void bx_es1370_c::check_lower_irq(Bit32u sctl)
