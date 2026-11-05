@@ -1389,6 +1389,22 @@ bool bx_local_apic_c::read_x2apic(unsigned index, Bit64u *val_64)
   case BX_LAPIC_TIMER_DIVIDE_CFG:
     *val_64 = read_aligned(index);
     break;
+  // extended xAPIC registers (AMD)
+  case BX_LAPIC_EXT_APIC_FEATURE:
+  case BX_LAPIC_EXT_APIC_CONTROL:
+  case BX_LAPIC_SPECIFIC_EOI:
+  case BX_LAPIC_IER1:
+  case BX_LAPIC_IER2:
+  case BX_LAPIC_IER3:
+  case BX_LAPIC_IER4:
+  case BX_LAPIC_IER5:
+  case BX_LAPIC_IER6:
+  case BX_LAPIC_IER7:
+  case BX_LAPIC_IER8:
+    if (! cpu->is_cpu_extension_supported(BX_ISA_XAPIC_EXT))
+      return false;
+    *val_64 = read_aligned(index);
+    break;
   default:
     BX_ERROR(("read_x2apic: not supported apic register 0x%08x", index));
     return false;
@@ -1477,6 +1493,34 @@ bool bx_local_apic_c::write_x2apic(unsigned index, Bit32u val32_hi, Bit32u val32
   case BX_LAPIC_LVT_CMCI:
   case BX_LAPIC_TIMER_INITIAL_COUNT:
   case BX_LAPIC_TIMER_DIVIDE_CFG:
+    break; // use legacy write
+  // extended xAPIC registers (AMD)
+  case BX_LAPIC_EXT_APIC_FEATURE: // read only
+    return false;
+  case BX_LAPIC_EXT_APIC_CONTROL:
+    if (! cpu->is_cpu_extension_supported(BX_ISA_XAPIC_EXT))
+      return false;
+    // handle reserved bits, only bits 0-2 are writeable
+    if ((val32_lo & 0xfffffff8) != 0)
+      return false;
+    break; // use legacy write
+  case BX_LAPIC_SPECIFIC_EOI:
+    if (! cpu->is_cpu_extension_supported(BX_ISA_XAPIC_EXT))
+      return false;
+    // handle reserved bits, only bits 0-7 are writeable
+    if ((val32_lo & 0xffffff00) != 0)
+      return false;
+    break; // use legacy write
+  case BX_LAPIC_IER1:
+  case BX_LAPIC_IER2:
+  case BX_LAPIC_IER3:
+  case BX_LAPIC_IER4:
+  case BX_LAPIC_IER5:
+  case BX_LAPIC_IER6:
+  case BX_LAPIC_IER7:
+  case BX_LAPIC_IER8:
+    if (! cpu->is_cpu_extension_supported(BX_ISA_XAPIC_EXT))
+      return false;
     break; // use legacy write
   default:
     BX_ERROR(("write_x2apic: not supported apic register 0x%08x", index));
