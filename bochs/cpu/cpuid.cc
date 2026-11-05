@@ -258,7 +258,7 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_edx_common(Bit32u extra) const
     edx |= BX_CPUID_STD1_EDX_TSC;
 
   // [5:5]   MSR: RDMSR and WRMSR support
-  if (is_cpu_extension_supported(BX_ISA_PENTIUM))
+  if (is_cpu_extension_supported(BX_ISA_MSR))
     edx |= BX_CPUID_STD1_EDX_MSR;
 
   // [6:6]   PAE: Physical Address Extensions
@@ -1747,6 +1747,16 @@ void bx_cpuid_t::sanity_checks() const
   if (is_cpu_extension_supported(BX_ISA_PENTIUM) && ! is_cpu_extension_supported(BX_ISA_X87))
     BX_FATAL(("PANIC: FPU must be enabled for any Pentium and above CPU model !"));
 
+  if (is_cpu_extension_supported(BX_ISA_LONG_MODE)) {
+    if (! is_cpu_extension_supported(BX_ISA_PAE))
+      BX_FATAL(("PANIC: Long mode is enabled when PAE is not supported !"));
+    if (! is_cpu_extension_supported(BX_ISA_MSR))
+      BX_FATAL(("PANIC: Long mode is enabled when MSRs are not supported !"));
+  }
+
+  if (is_cpu_extension_supported(BX_ISA_X2APIC) && !is_cpu_extension_supported(BX_ISA_MSR))
+    BX_FATAL(("PANIC: X2APIC is enabled when MSRs are not supported !"));
+
   // 3DNow! -> MMX
   if (is_cpu_extension_supported(BX_ISA_3DNOW) && ! is_cpu_extension_supported(BX_ISA_MMX))
     BX_FATAL(("PANIC: 3dnow! ISA require MMX to be enabled !"));
@@ -1797,6 +1807,9 @@ void bx_cpuid_t::sanity_checks() const
     {
       BX_FATAL(("PANIC: AVX-512 extensions must be disabled if AVX-512 is not supported !"));
     }
+
+    if (is_cpu_extension_supported(BX_ISA_AMX))
+      BX_FATAL(("PANIC: AMX extensions must be disabled if AVX-512 is not supported !"));
   }
 
   if (! is_cpu_extension_supported(BX_ISA_CLFLUSH)) {

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2017 Stanislav Shwartsman
+//   Copyright (c) 2011-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -42,6 +42,7 @@ corei7_sandy_bridge_2600k_t::corei7_sandy_bridge_2600k_t(BX_CPU_C *cpu): bx_cpui
   enable_cpu_extension(BX_ISA_X87);
   enable_cpu_extension(BX_ISA_486);
   enable_cpu_extension(BX_ISA_PENTIUM);
+  enable_cpu_extension(BX_ISA_MSR);
   enable_cpu_extension(BX_ISA_P6);
   enable_cpu_extension(BX_ISA_MMX);
   enable_cpu_extension(BX_ISA_SYSENTER_SYSEXIT);

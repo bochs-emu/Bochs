@@ -889,8 +889,8 @@ bx_define_opcode(BX_IA_INVLPG, "invlpg", "invlpg", &BX_CPU_C::INVLPG, &BX_CPU_C:
 
 // Pentium new instructions
 bx_define_opcode(BX_IA_CMPXCHG8B, "cmpxchg8b", "cmpxchg8b", &BX_CPU_C::CMPXCHG8B, &BX_CPU_C::BxError, BX_ISA_PENTIUM, OP_Mq, OP_NONE, OP_NONE, OP_NONE, BX_LOCKABLE)
-bx_define_opcode(BX_IA_WRMSR, "wrmsr", "wrmsr", NULL, &BX_CPU_C::WRMSR, BX_ISA_PENTIUM, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
-bx_define_opcode(BX_IA_RDMSR, "rdmsr", "rdmsr", NULL, &BX_CPU_C::RDMSR, BX_ISA_PENTIUM, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_WRMSR, "wrmsr", "wrmsr", NULL, &BX_CPU_C::WRMSR, BX_ISA_MSR, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_RDMSR, "rdmsr", "rdmsr", NULL, &BX_CPU_C::RDMSR, BX_ISA_MSR, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 bx_define_opcode(BX_IA_RDTSC, "rdtsc", "rdtsc", NULL, &BX_CPU_C::RDTSC, BX_ISA_PENTIUM, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 // Pentium new instructions
 

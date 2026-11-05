@@ -69,7 +69,7 @@ private:
   BX_CPU_C *cpu;
 
 public:
-  ApicBaseMSR(BX_CPU_C *cpu_ptr): MSR_Descriptor("MSR_APICBASE", BX_ISA_PENTIUM), cpu(cpu_ptr) {}
+  ApicBaseMSR(BX_CPU_C *cpu_ptr): MSR_Descriptor("MSR_APICBASE", BX_ISA_MSR), cpu(cpu_ptr) {}
 
   virtual bool get(Bit64u *val) {
     *val = cpu->msr.apicbase;
@@ -90,7 +90,7 @@ private:
   BX_CPU_C *cpu;
 
 public:
-  TscMSR(BX_CPU_C *cpu_ptr): MSR_Descriptor("MSR_IA32_TSC", BX_ISA_PENTIUM), cpu(cpu_ptr) {}
+  TscMSR(BX_CPU_C *cpu_ptr): MSR_Descriptor("MSR_IA32_TSC", BX_ISA_MSR), cpu(cpu_ptr) {}
 
   virtual bool get(Bit64u *val) {
     *val = cpu->get_Virtual_TSC(); // takes into account VMX or SVM adjustments
@@ -161,7 +161,7 @@ private:
   Bit64u offset;
 
 public:
-  AperfMperfMSR(BX_CPU_C *cpu_ptr, const char *name): MSR_Descriptor(name, BX_ISA_PENTIUM), cpu(cpu_ptr), offset(0) {}
+  AperfMperfMSR(BX_CPU_C *cpu_ptr, const char *name): MSR_Descriptor(name, BX_ISA_MSR), cpu(cpu_ptr), offset(0) {}
 
   virtual bool get(Bit64u *val) {
     *val = cpu->get_TSC() - offset; // use system (not virtualized) TSC counter
@@ -207,7 +207,7 @@ private:
   BX_CPU_C *cpu;
 
 public:
-  EferMSR(BX_CPU_C *cpu_ptr, Bit64u reserved_bits): MSR_Descriptor("MSR_EFER", BX_ISA_PENTIUM, reserved_bits), cpu(cpu_ptr) {}
+  EferMSR(BX_CPU_C *cpu_ptr, Bit64u reserved_bits): MSR_Descriptor("MSR_EFER", BX_ISA_MSR, reserved_bits), cpu(cpu_ptr) {}
 
   virtual bool get(Bit64u *val) {
     *val = cpu->efer.get32();
@@ -252,7 +252,7 @@ void BX_CPU_C::init_MSRs()
     BX_CPU_THIS_PTR msr_desc[i] = NULL;
 
   BX_CPU_THIS_PTR msr_desc[BX_MSR_TSC] = new TscMSR(BX_CPU_THIS);
-  BX_CPU_THIS_PTR msr_desc[BX_MSR_PLATFORM_ID] = new ConstMSR("MSR_PLATFORM_ID", BX_ISA_PENTIUM, 0); // read only
+  BX_CPU_THIS_PTR msr_desc[BX_MSR_PLATFORM_ID] = new ConstMSR("MSR_PLATFORM_ID", BX_ISA_MSR, 0); // read only
 
 #if BX_CPU_LEVEL >= 6
   // Intel processors starting from Nehalem (first Intel cpu with SSE4.2, SYSENTER in long mode is Intel only)
@@ -1273,7 +1273,7 @@ private:
 
 public:
   UserMSR(Bit32u index, unsigned msr_type, Bit64u reset_val, Bit64u ro, Bit64u ignored_bits):
-     MSR_Descriptor(name, BX_ISA_PENTIUM, 0, ignored_bits), type(msr_type), value(reset_val), reset_value(reset_val), ro_bits(ro)
+     MSR_Descriptor(name, BX_ISA_MSR, 0, ignored_bits), type(msr_type), value(reset_val), reset_value(reset_val), ro_bits(ro)
   {
     sprintf(name, "USER_MSR_0x%x", index);
   }

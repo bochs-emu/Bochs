@@ -44,6 +44,7 @@ zambezi_t::zambezi_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_X87);
   enable_cpu_extension(BX_ISA_486);
   enable_cpu_extension(BX_ISA_PENTIUM);
+  enable_cpu_extension(BX_ISA_MSR);
   enable_cpu_extension(BX_ISA_P6);
   enable_cpu_extension(BX_ISA_AMD);
   enable_cpu_extension(BX_ISA_MMX);

@@ -14,7 +14,7 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
 - CPU Feature: pentium_ni
 
- Enables Pentium new instructions: RDMSR, WRMSR, RDTSC, CMPXHG8B and corresponding CPU features.
+ Enables Pentium new instructions: RDTSC, CMPXHG8B and corresponding CPU features.
 
  RDTSC: Time Stamp Counter
 
@@ -23,16 +23,16 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
         Enables RDTSC instruction (the instruction will #UD if the Time Stamp Counter is not supported).
         Enables MSR 0x010 IA_MSR_TSC.
 
- RDMSR/WRMSR: Model Specific Registers
-
-        Enables CPUID[0x00000001].EDX[5] flag.
-        Enables RDMSR/WRMSR instructions (the instructions will #UD if the MSR is not supported).
-        Enables access to Model Specific MSR registers.
- 
  CMPXCHG8B instruction
 
         Enables CPUID[0x00000001].EDX[8] flag.
         Enables CMPXCHG8B instruction (the instruction will #UD otherwise).
+
+- CPU Feature: msr
+
+ Enables CPUID[0x00000001].EDX[5] flag.
+ Enables RDMSR/WRMSR instructions (the instructions will #UD if the MSR is not supported).
+ Enables access to Model Specific MSR registers.
 
 - CPU feature: p6ni
 

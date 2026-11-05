@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2015-2017 Stanislav Shwartsman
+//   Copyright (c) 2015-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -34,6 +34,7 @@ pentium_t::pentium_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_X87);
   enable_cpu_extension(BX_ISA_486);
   enable_cpu_extension(BX_ISA_PENTIUM);
+  enable_cpu_extension(BX_ISA_MSR);
   enable_cpu_extension(BX_ISA_DEBUG_EXTENSIONS);
   enable_cpu_extension(BX_ISA_VME);
   enable_cpu_extension(BX_ISA_PSE);

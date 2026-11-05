@@ -49,6 +49,7 @@ corei7_icelake_t::corei7_icelake_t(BX_CPU_C *cpu):
   enable_cpu_extension(BX_ISA_X87);
   enable_cpu_extension(BX_ISA_486);
   enable_cpu_extension(BX_ISA_PENTIUM);
+  enable_cpu_extension(BX_ISA_MSR);
   enable_cpu_extension(BX_ISA_P6);
   enable_cpu_extension(BX_ISA_MMX);
   enable_cpu_extension(BX_ISA_SYSENTER_SYSEXIT);

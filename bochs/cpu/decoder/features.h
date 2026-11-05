@@ -23,6 +23,7 @@ x86_feature(BX_ISA_386, "386ni")                                           /* 38
 x86_feature(BX_ISA_X87, "x87")                                             /* FPU (x87) instruction */
 x86_feature(BX_ISA_486, "486ni")                                           /* 486 new instruction */
 x86_feature(BX_ISA_PENTIUM, "pentium_ni")                                  /* Pentium new instruction */
+x86_feature(BX_ISA_MSR, "msr")                                             /* RDMSR/WRMSR instructions and MSR registers support */
 x86_feature(BX_ISA_P6, "p6ni")                                             /* P6 new instruction */
 x86_feature(BX_ISA_AMD, "amd_implementation")                              /* AMD specific behaviours in x86 ISA handling */
 x86_feature(BX_ISA_MMX, "mmx")                                             /* MMX instruction */
