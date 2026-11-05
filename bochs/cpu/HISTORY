@@ -145,6 +145,7 @@ Changes after Bochs 3.1:
 - SVM: injected exception must push RFLAGS.RF=1 for faults (except #DB, #TS pushes RF=0 matching Zen HW) and RF=0 for #BP/#OF and software interrupts
 - SVM: CR0 write intercept VM exit must happen before intercepted MOV CR0 changed EFER.LMA and RIP[63:32]
 - TSC: IA32_TSC_ADJUST must be zero after hardware reset (read as minus the number of ticks passed before the reset)
+- LA57: LGDT, LIDT, LLDT and LTR must check base address canonical to the max supported linear address width (57-bit with LA57) regardless of current paging mode
 - SYSENTER: check SYSENTER_EIP/SYSENTER_ESP canonicality before modifying any state
 - SYSENTER/SYSEXIT: SYSENTER/SYSEXIT are not allowed in long mode on AMD
 - SYSCALL/SYSRET: SYSRET must clear RFLAGS.RF and RFLAGS.VM instead of loading them from R11

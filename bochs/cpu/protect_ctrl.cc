@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -431,7 +431,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
     descriptor.u.segment.base |= (Bit64u(dword3) << 32);
     BX_DEBUG(("64 bit LDT base = 0x%08x%08x",
        GET32H(descriptor.u.segment.base), GET32L(descriptor.u.segment.base)));
-    if (!IsCanonical(descriptor.u.segment.base)) {
+    if (!IsCpuidCanonical(descriptor.u.segment.base)) {
       BX_ERROR(("LLDT: non-canonical LDT descriptor base!"));
       exception(BX_GP_EXCEPTION, raw_selector & 0xfffc);
     }
@@ -535,7 +535,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
     descriptor.u.segment.base |= (Bit64u(dword3) << 32);
     BX_DEBUG(("64 bit TSS base = 0x%08x%08x",
        GET32H(descriptor.u.segment.base), GET32L(descriptor.u.segment.base)));
-    if (!IsCanonical(descriptor.u.segment.base)) {
+    if (!IsCpuidCanonical(descriptor.u.segment.base)) {
       BX_ERROR(("LTR: non-canonical TSS descriptor base!"));
       exception(BX_GP_EXCEPTION, raw_selector & 0xfffc);
     }
@@ -943,7 +943,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
 
   Bit64u base_64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), (eaddr + 2) & i->asize_mask()));
-  if (! IsCanonical(base_64)) {
+  if (! IsCpuidCanonical(base_64)) {
     BX_ERROR(("LGDT64_Ms: loaded base64 address is not in canonical form!"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -979,7 +979,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT64_Ms(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
 
   Bit64u base_64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), (eaddr + 2) & i->asize_mask()));
-  if (! IsCanonical(base_64)) {
+  if (! IsCpuidCanonical(base_64)) {
     BX_ERROR(("LIDT64_Ms: loaded base64 address is not in canonical form!"));
     exception(BX_GP_EXCEPTION, 0);
   }
