@@ -23,8 +23,6 @@
 
 #include "bochs.h"
 #include "cpu.h"
-#include "gui/siminterface.h"
-#include "param_names.h"
 #include "phenomx3_8650_toliman.h"
 
 #define LOG_THIS cpu->
@@ -170,10 +168,6 @@ void phenom_8650_toliman_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subf
 {
   static const char* brand_string = "AMD Phenom(tm) 8650 Triple-Core Processor\0\0\0\0\0\0\0";
 
-  static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
-  if (cpuid_limit_winnt)
-    if (function > 1 && function < 0x80000000) function = 1;
-
   switch(function) {
   case 0x80000000:
     get_ext_cpuid_leaf_0(leaf);
@@ -271,7 +265,7 @@ void phenom_8650_toliman_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
   // EDX: vendor ID string
   // ECX: vendor ID string
   unsigned max_leaf = BX_SUPPORT_MONITOR_MWAIT ? 0x5 : 0x1;
-  get_leaf_0(max_leaf, vendor_string, leaf, 0x1 /* max_leaf when limit_winnt is activated */);
+  get_leaf_0(max_leaf, vendor_string, leaf);
 }
 
 // leaf 0x00000001 //

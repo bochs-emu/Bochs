@@ -23,8 +23,6 @@
 
 #include "bochs.h"
 #include "cpu.h"
-#include "gui/siminterface.h"
-#include "param_names.h"
 #include "corei7_ivy_bridge_3770K.h"
 
 #define LOG_THIS cpu->
@@ -156,10 +154,6 @@ corei7_ivy_bridge_3770k_t::corei7_ivy_bridge_3770k_t(BX_CPU_C *cpu): bx_cpuid_t(
 void corei7_ivy_bridge_3770k_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "       Intel(R) Core(TM) i7-3770K CPU @ 3.50GHz";
-
-  static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
-  if (cpuid_limit_winnt)
-    if (function > 2 && function < 0x80000000) function = 2;
 
   switch(function) {
   case 0x80000000:

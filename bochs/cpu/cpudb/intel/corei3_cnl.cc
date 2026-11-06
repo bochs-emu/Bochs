@@ -23,8 +23,6 @@
 
 #include "bochs.h"
 #include "cpu.h"
-#include "gui/siminterface.h"
-#include "param_names.h"
 #include "corei3_cnl.h"
 
 #define LOG_THIS cpu->
@@ -217,10 +215,6 @@ corei3_cnl_t::corei3_cnl_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 void corei3_cnl_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "Intel(R) Core(TM) i3-8121U CPU @ 2.20GHz\0\0\0\0\0\0\0\0";
-  static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
-  if (cpuid_limit_winnt)
-    if (function > 2 && function < 0x80000000) function = 2;
-
   switch(function) {
   case 0x80000000:
     get_leaf_0(max_ext_leaf, NULL, leaf); // highest extended function understood by CPUID

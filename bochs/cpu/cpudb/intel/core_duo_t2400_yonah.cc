@@ -23,8 +23,6 @@
 
 #include "bochs.h"
 #include "cpu.h"
-#include "gui/siminterface.h"
-#include "param_names.h"
 #include "core_duo_t2400_yonah.h"
 
 #define LOG_THIS cpu->
@@ -122,10 +120,6 @@ core_duo_t2400_yonah_t::core_duo_t2400_yonah_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 void core_duo_t2400_yonah_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "Intel(R) Core(TM) Duo CPU      T2400  @ 1.83GHz";
-
-  static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
-  if (cpuid_limit_winnt)
-    if (function > 2 && function < 0x80000000) function = 2;
 
   switch(function) {
   case 0x80000000:

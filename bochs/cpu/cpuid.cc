@@ -186,18 +186,12 @@ void bx_cpuid_t::set_max_leaf(Bit32u _max_std_leaf, Bit32u _max_ext_leaf)
   max_ext_leaf = _max_ext_leaf;
 }
 
-void bx_cpuid_t::get_leaf_0(unsigned max_leaf, const char *vendor_string, cpuid_function_t *leaf, unsigned limited_max_leaf) const
+void bx_cpuid_t::get_leaf_0(unsigned max_leaf, const char *vendor_string, cpuid_function_t *leaf) const
 {
   // EAX: highest function understood by CPUID
   // EBX: vendor ID string
   // EDX: vendor ID string
   // ECX: vendor ID string
-  if (max_leaf < 0x80000000 && max_leaf > 0x2) {
-    // do not limit extended CPUID leafs
-    static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
-    if (cpuid_limit_winnt)
-      max_leaf = (limited_max_leaf < 0x02) ? limited_max_leaf : 0x02;
-  }
   leaf->eax = max_leaf;
 
   if (vendor_string == NULL) {
@@ -1804,7 +1798,16 @@ void bx_cpuid_t::get_cpuid_hidden_level(cpuid_function_t *leaf, const char *magi
 
 void bx_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
+  // limit max std CPUID leaf to 2, do not limit extended CPUID leafs
+  static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
+  bool limit_winnt = cpuid_limit_winnt && max_std_leaf > 2;
+  if (limit_winnt && function > 2 && function < 0x80000000)
+    function = 2;
+
   get_hardware_cpuid_leaf(function, subfunction, leaf);
+
+  if (limit_winnt && function == 0)
+    leaf->eax = 2;
 
   if (function == 0xA)
     BX_INFO(("WARNING: Architectural Performance Monitoring is not implemented"));

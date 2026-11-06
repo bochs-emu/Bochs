@@ -23,8 +23,6 @@
 
 #include "bochs.h"
 #include "cpu.h"
-#include "gui/siminterface.h"
-#include "param_names.h"
 #include "corei5_arrandale_m520.h"
 
 #define LOG_THIS cpu->
@@ -140,10 +138,6 @@ corei5_arrandale_m520_t::corei5_arrandale_m520_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 void corei5_arrandale_m520_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "Intel(R) Core(TM) i5 CPU       M 520  @ 2.40GHz";
-
-  static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
-  if (cpuid_limit_winnt)
-    if (function > 2 && function < 0x80000000) function = 2;
 
   switch(function) {
   case 0x80000000:

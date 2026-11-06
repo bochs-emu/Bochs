@@ -23,8 +23,6 @@
 
 #include "bochs.h"
 #include "cpu/cpu.h"
-#include "gui/siminterface.h"
-#include "param_names.h"
 #include "corei7_icelake-u.h"
 
 #define LOG_THIS cpu->
@@ -252,10 +250,6 @@ corei7_icelake_t::corei7_icelake_t(BX_CPU_C *cpu):
 void corei7_icelake_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "QuadCore Intel Core i7-1065G7, 1300 MHz\0\0\0\0\0\0\0\0";
-
-  static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
-  if (cpuid_limit_winnt)
-    if (function > 2 && function < 0x80000000) function = 2;
 
   switch(function) {
   case 0x80000000:

@@ -23,8 +23,6 @@
 
 #include "bochs.h"
 #include "cpu/cpu.h"
-#include "gui/siminterface.h"
-#include "param_names.h"
 #include "tigerlake.h"
 
 #define LOG_THIS cpu->
@@ -258,10 +256,6 @@ tigerlake_t::tigerlake_t(BX_CPU_C *cpu):
 void tigerlake_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz\0";
-
-  static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
-  if (cpuid_limit_winnt)
-    if (function > 2 && function < 0x80000000) function = 2;
 
   switch(function) {
   case 0x80000000:

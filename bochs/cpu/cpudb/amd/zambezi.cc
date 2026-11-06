@@ -23,8 +23,6 @@
 
 #include "bochs.h"
 #include "cpu.h"
-#include "gui/siminterface.h"
-#include "param_names.h"
 #include "zambezi.h"
 
 #define LOG_THIS cpu->
@@ -204,10 +202,6 @@ void zambezi_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpu
 {
   static const char* brand_string = "AMD FX(tm)-4100 Quad-Core Processor            ";
 
-  static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
-  if (cpuid_limit_winnt)
-    if (function > 1 && function < 0x80000000) function = 1;
-
   switch(function) {
   case 0x80000000:
     get_ext_cpuid_leaf_0(leaf);
@@ -323,7 +317,7 @@ void zambezi_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
   // EBX: vendor ID string
   // EDX: vendor ID string
   // ECX: vendor ID string
-  get_leaf_0(0xD, "AuthenticAMD", leaf, 0x1);
+  get_leaf_0(0xD, "AuthenticAMD", leaf);
 }
 
 // leaf 0x00000001 //
