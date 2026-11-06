@@ -199,6 +199,7 @@ static char szMouseTooltip[64];
 
 static const char szAppName[] = "Bochs for Windows";
 static const char szWindowName[] = "Bochs for Windows - Display";
+static const char szRegLocation[] = "Software\\Bochs for Windows";
 
 typedef struct {
   HINSTANCE hInstance;
@@ -976,6 +977,14 @@ DWORD WINAPI UIThread(LPVOID)
                      NULL);
 
   if (stInfo.mainWnd) {
+    // Look in the registry to see if we have the coord's of the last session
+    // If so, set this window to those coord's
+    DWORD Left, LeftSize = sizeof(DWORD);
+    DWORD Top, TopSize = sizeof(DWORD);
+    LONG resLeft = RegGetValue(HKEY_CURRENT_USER, szRegLocation, "MainWinLeft", RRF_RT_DWORD, NULL, &Left, &LeftSize);
+    LONG resTop = RegGetValue(HKEY_CURRENT_USER, szRegLocation, "MainWinTop", RRF_RT_DWORD, NULL, &Top, &TopSize);
+    if ((resLeft == ERROR_SUCCESS) && (resTop == ERROR_SUCCESS))
+      SetWindowPos(stInfo.mainWnd, HWND_TOP, Left, Top, 0, 0, SWP_NOSIZE | SWP_SHOWWINDOW);
 
     InitCommonControls();
     hwndTB = CreateWindowEx(0, TOOLBARCLASSNAME, (LPSTR) NULL,
@@ -2152,6 +2161,22 @@ void bx_win32_gui_c::exit(void)
     close_debug_dialog();
   }
 #endif
+  
+  // Save the coord's of the current window to the registry so that next time
+  //  we can place the window in the same place
+  HKEY hKey;
+  LONG result = RegCreateKeyEx(HKEY_CURRENT_USER, szRegLocation, 0, NULL,
+                               REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
+  if (result == ERROR_SUCCESS) {
+    RECT Rect;
+    if (GetWindowRect(stInfo.mainWnd, &Rect)) {
+      // LONG might not be the same size as DWORD
+      DWORD Left = (DWORD) Rect.left;
+      DWORD Top = (DWORD) Rect.top;
+      RegSetValueEx(hKey, "MainWinLeft", 0, REG_DWORD, (const BYTE *) &Left, sizeof(DWORD));
+      RegSetValueEx(hKey, "MainWinTop", 0, REG_DWORD, (const BYTE *) &Top, sizeof(DWORD));
+    }
+  }
 
   // kill thread first...
   PostMessage(stInfo.mainWnd, WM_CLOSE, 0, 0);
