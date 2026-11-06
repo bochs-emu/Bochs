@@ -143,11 +143,10 @@ arrow_lake_t::arrow_lake_t(BX_CPU_C *cpu):
 #endif
   enable_cpu_extension(BX_ISA_SPEC_CTRL);
 
-  max_std_leaf = 0x20;
-  max_ext_leaf = 0x80000008;
+  set_max_leaf(0x20, 0x80000008);
 }
 
-void arrow_lake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void arrow_lake_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "Intel(R) Core(TM) Ultra 5 245K\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
 
@@ -208,7 +207,7 @@ void arrow_lake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_fun
     get_reserved_leaf(leaf);
     return;
   case 0x0000000A: // CPUID leaf 0x0000000A - Architectural Performance Monitor
-    get_std_cpuid_leaf_A(leaf);
+    get_leaf(leaf, 0x0d300806, 0x00000280, 0x00000007, 0x00008603);
     return;
   case 0x0000000B:
     get_std_cpuid_extended_topology_leaf(subfunction, leaf);
@@ -658,16 +657,6 @@ void arrow_lake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *le
 // leaf 0x00000009 direct cache access not supported //
 
 // leaf 0x0000000A //
-void arrow_lake_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x0000000A - Architectural Performance Monitoring Leaf
-  leaf->eax = 0x0d300806;
-  leaf->ebx = 0x00000280;
-  leaf->ecx = 0x00000007;
-  leaf->edx = 0x00008603;
-
-  BX_INFO(("WARNING: Architectural Performance Monitoring is not implemented"));
-}
 
 // leaf 0x0000000C - reserved //
 // leaf 0x0000000D - XSAVE //
@@ -800,11 +789,6 @@ void arrow_lake_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000006 //
 // leaf 0x80000007 - Advanced Power Management //
 // leaf 0x80000008 //
-
-void arrow_lake_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(max_std_leaf, max_ext_leaf);
-}
 
 bx_cpuid_t *create_arrow_lake_cpuid(BX_CPU_C *cpu) { return new arrow_lake_t(cpu); }
 

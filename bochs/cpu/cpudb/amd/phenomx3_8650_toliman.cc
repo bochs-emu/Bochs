@@ -83,9 +83,11 @@ phenom_8650_toliman_t::phenom_8650_toliman_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 #endif
   enable_cpu_extension(BX_ISA_ALT_MOV_CR8);
   enable_cpu_extension(BX_ISA_XAPIC_EXT);
+
+  set_max_leaf(BX_SUPPORT_MONITOR_MWAIT ? 0x5 : 0x1, 0x8000001A);
 }
 
-void phenom_8650_toliman_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void phenom_8650_toliman_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "AMD Phenom(tm) 8650 Triple-Core Processor\0\0\0\0\0\0\0";
 
@@ -446,11 +448,6 @@ void phenom_8650_toliman_t::get_ext_cpuid_leaf_1A(cpuid_function_t *leaf) const
   leaf->ebx = 0;
   leaf->ecx = 0;
   leaf->edx = 0;
-}
-
-void phenom_8650_toliman_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(BX_SUPPORT_MONITOR_MWAIT ? 0x5 : 0x1, 0x8000001A);
 }
 
 bx_cpuid_t *create_phenom_8650_toliman_cpuid(BX_CPU_C *cpu) { return new phenom_8650_toliman_t(cpu); }

@@ -90,9 +90,11 @@ zambezi_t::zambezi_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_ALT_MOV_CR8);
   enable_cpu_extension(BX_ISA_XAPIC_EXT);
   enable_cpu_extension(BX_ISA_TCE);
+
+  set_max_leaf(0xD, 0x8000001E);
 }
 
-void zambezi_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void zambezi_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "AMD FX(tm)-4100 Quad-Core Processor            ";
 
@@ -378,8 +380,9 @@ void zambezi_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
                                        BX_CPUID_EXT1_ECX_PREFETCHW |
                                        BX_CPUID_EXT1_ECX_OSVW |
                                        BX_CPUID_EXT1_ECX_IBS |
-                                       BX_CPUID_EXT1_ECX_XOP |
+                                    /* BX_CPUID_EXT1_ECX_SKINIT | */ // not implemented
                                        BX_CPUID_EXT1_ECX_WDT |
+                                    /* BX_CPUID_EXT1_ECX_LWP | */    // not implemented
                                        BX_CPUID_EXT1_ECX_NODEID |
                                        BX_CPUID_EXT1_ECX_TOPOLOGY_EXTENSIONS |
                                        BX_CPUID_EXT1_ECX_PERFCTR_EXT_CORE |
@@ -526,11 +529,6 @@ void zambezi_t::get_ext_cpuid_leaf_1D(Bit32u subfunction, cpuid_function_t *leaf
     leaf->edx = 0;
     return;
   }
-}
-
-void zambezi_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(0xD, 0x8000001E);
 }
 
 bx_cpuid_t *create_zambezi_cpuid(BX_CPU_C *cpu) { return new zambezi_t(cpu); }

@@ -53,9 +53,11 @@ athlon_xp_t::athlon_xp_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_PAT);
   enable_cpu_extension(BX_ISA_SSE);
   enable_cpu_extension(BX_ISA_XAPIC);
+
+  set_max_leaf(0x1, 0x80000008);
 }
 
-void athlon_xp_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void athlon_xp_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "AMD Athlon(tm) XP 2200+\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
 
@@ -233,11 +235,6 @@ void athlon_xp_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
   leaf->ebx = 0;
   leaf->ecx = 0;
   leaf->edx = 0x00000001;
-}
-
-void athlon_xp_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(0x1, 0x80000008);
 }
 
 bx_cpuid_t *create_athlon_xp_cpuid(BX_CPU_C *cpu) { return new athlon_xp_t(cpu); }

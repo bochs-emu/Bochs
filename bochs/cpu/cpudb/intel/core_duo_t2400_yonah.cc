@@ -63,11 +63,10 @@ core_duo_t2400_yonah_t::core_duo_t2400_yonah_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_XAPIC);
   enable_cpu_extension(BX_ISA_NX);
 
-  max_std_leaf = 0xA;
-  max_ext_leaf = 0x80000008;
+  set_max_leaf(0xA, 0x80000008);
 }
 
-void core_duo_t2400_yonah_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void core_duo_t2400_yonah_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "Intel(R) Core(TM) Duo CPU      T2400  @ 1.83GHz";
 
@@ -125,9 +124,9 @@ void core_duo_t2400_yonah_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction,
   case 0x00000009:
     get_reserved_leaf(leaf);
     return;
-  case 0x0000000A:
+  case 0x0000000A: // CPUID leaf 0x0000000A - Architectural Performance Monitoring Leaf
   default:
-    get_std_cpuid_leaf_A(leaf);
+    get_leaf(leaf, 0x07280201, 0x00000000, 0x00000000, 0x00000000);
     return;
   }
 }
@@ -314,41 +313,6 @@ void core_duo_t2400_yonah_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_func
 // leaf 0x00000009 direct cache access not supported //
 
 // leaf 0x0000000A //
-void core_duo_t2400_yonah_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x0000000A - Architectural Performance Monitoring Leaf
-
-  // EAX:
-  //   [7:0] Version ID of architectural performance monitoring
-  //  [15:8] Number of general-purpose performance monitoring counters per logical processor
-  // [23:16] Bit width of general-purpose, performance monitoring counter
-  // [31:24] Length of EBX bit vector to enumerate architectural performance
-  //         monitoring events.
-
-  // EBX:
-  //     [0] Core cycle event not available if 1
-  //     [1] Instruction retired event not available if 1
-  //     [2] Reference cycles event not available if 1
-  //     [3] Last-level cache reference event not available if 1
-  //     [4] Last-level cache misses event not available if 1
-  //     [5] Branch instruction retired event not available if 1
-  //     [6] Branch mispredict retired event not available if 1
-  //  [31:7] reserved
-
-  // ECX: reserved
-
-  // EDX:
-  //   [4:0] Number of fixed performance counters (if Version ID > 1)
-  //  [12:5] Bit width of fixed-function performance counters (if Version ID > 1)
-  // [31:13] reserved
-
-  leaf->eax = 0x07280201;
-  leaf->ebx = 0x00000000;
-  leaf->ecx = 0x00000000;
-  leaf->edx = 0x00000000;
-
-  BX_INFO(("WARNING: Architectural Performance Monitoring is not implemented"));
-}
 
 // leaf 0x80000000 //
 
@@ -400,11 +364,6 @@ void core_duo_t2400_yonah_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000006 - L2 Cache and TLB Identifiers
 // leaf 0x80000007 - Advanced Power Management
 // leaf 0x80000008 //
-
-void core_duo_t2400_yonah_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(max_std_leaf, max_ext_leaf);
-}
 
 bx_cpuid_t *create_core_duo_t2400_yonah_cpuid(BX_CPU_C *cpu) { return new core_duo_t2400_yonah_t(cpu); }
 

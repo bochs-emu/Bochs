@@ -119,11 +119,10 @@ corei3_cnl_t::corei3_cnl_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_MPX);
 #endif
 
-  max_std_leaf = 0x16;
-  max_ext_leaf = 0x80000008;
+  set_max_leaf(0x16, 0x80000008);
 }
 
-void corei3_cnl_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void corei3_cnl_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "Intel(R) Core(TM) i3-8121U CPU @ 2.20GHz\0\0\0\0\0\0\0\0";
   static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
@@ -183,7 +182,7 @@ void corei3_cnl_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_fun
     get_reserved_leaf(leaf);
     return;
   case 0x0000000A: // CPUID leaf 0x0000000A - Architectural Performance Monitor
-    get_std_cpuid_leaf_A(leaf);
+    get_leaf(leaf, 0x07300404, 0x00000000, 0x00000000, 0x00000603);
     return;
   case 0x0000000B:
     get_std_cpuid_extended_topology_leaf(subfunction, leaf);
@@ -524,41 +523,6 @@ void corei3_cnl_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *le
 // leaf 0x00000009 direct cache access not supported //
 
 // leaf 0x0000000A //
-void corei3_cnl_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x0000000A - Architectural Performance Monitoring Leaf
-
-  // EAX:
-  //   [7:0] Version ID of architectural performance monitoring
-  //  [15:8] Number of general-purpose performance monitoring counters per logical processor
-  // [23:16] Bit width of general-purpose, performance monitoring counter
-  // [31:24] Length of EBX bit vector to enumerate architectural performance
-  //         monitoring events.
-
-  // EBX:
-  //     [0] Core cycle event not available if 1
-  //     [1] Instruction retired event not available if 1
-  //     [2] Reference cycles event not available if 1
-  //     [3] Last-level cache reference event not available if 1
-  //     [4] Last-level cache misses event not available if 1
-  //     [5] Branch instruction retired event not available if 1
-  //     [6] Branch mispredict retired event not available if 1
-  //  [31:7] reserved
-
-  // ECX: reserved
-
-  // EDX:
-  //   [4:0] Number of fixed performance counters (if Version ID > 1)
-  //  [12:5] Bit width of fixed-function performance counters (if Version ID > 1)
-  // [31:13] reserved
-
-  leaf->eax = 0x07300404;
-  leaf->ebx = 0x00000000;
-  leaf->ecx = 0x00000000;
-  leaf->edx = 0x00000603;
-
-  BX_INFO(("WARNING: Architectural Performance Monitoring is not implemented"));
-}
 
 // leaf 0x0000000C reserved //
 // leaf 0x0000000D - XSAVE //
@@ -638,11 +602,6 @@ void corei3_cnl_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000005 - L1 Cache and TLB Identifiers (reserved for Intel)
 // leaf 0x80000006 - L2 Cache and TLB Identifiers
 // leaf 0x80000007 - Advanced Power Management
-
-void corei3_cnl_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(max_std_leaf, max_ext_leaf);
-}
 
 bx_cpuid_t *create_corei3_cnl_cpuid(BX_CPU_C *cpu) { return new corei3_cnl_t(cpu); }
 

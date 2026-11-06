@@ -54,6 +54,9 @@ public:
 
   void init();
 
+  Bit32u get_max_std_leaf() const { return max_std_leaf; }
+  Bit32u get_max_ext_leaf() const { return max_ext_leaf; }
+
   // return CPU name
   virtual const char *get_name(void) const = 0;
 
@@ -78,12 +81,11 @@ public:
   virtual Bit32u get_svm_extensions_bitmask(void) const { return 0; }
 #endif
 
-  virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const = 0;
+  void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
 
-  virtual void dump_cpuid(void) const = 0;
+  virtual void dump_cpuid(void) const;
 
   void dump_features() const;
-
   void sanity_checks() const;
 
 #if BX_CPU_LEVEL >= 5
@@ -119,6 +121,13 @@ protected:
   unsigned nthreads;
 
   Bit32u ia_extensions_bitmask[BX_ISA_EXTENSIONS_ARRAY_SIZE];
+
+  Bit32u max_std_leaf;
+  Bit32u max_ext_leaf;
+
+  void set_max_leaf(Bit32u max_std_leaf, Bit32u max_ext_leaf);
+
+  virtual void get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const = 0;
 
   void get_leaf_0(unsigned max_leaf, const char *vendor_string, cpuid_function_t *leaf, unsigned limited_max_leaf = 0x02) const;
   void get_ext_cpuid_brand_string_leaf(const char *brand_string, Bit32u function, cpuid_function_t *leaf) const;

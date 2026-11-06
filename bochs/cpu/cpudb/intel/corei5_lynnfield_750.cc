@@ -76,11 +76,10 @@ corei5_lynnfield_750_t::corei5_lynnfield_750_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_CMPXCHG16B);
   enable_cpu_extension(BX_ISA_RDTSCP);
 
-  max_std_leaf = 0xB;
-  max_ext_leaf = 0x80000008;
+  set_max_leaf(0xB, 0x80000008);
 }
 
-void corei5_lynnfield_750_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void corei5_lynnfield_750_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "Intel(R) Core(TM) i5 CPU         750  @ 2.67GHz";
 
@@ -138,8 +137,8 @@ void corei5_lynnfield_750_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction,
   case 0x00000009:
     get_reserved_leaf(leaf);
     return;
-  case 0x0000000A:
-    get_std_cpuid_leaf_A(leaf);
+  case 0x0000000A: // CPUID leaf 0x0000000A - Architectural Performance Monitoring Leaf
+    get_leaf(leaf, 0x07300403, 0x00000044, 0x00000000, 0x00000603);
     return;
   case 0x0000000B:
   default:
@@ -361,41 +360,6 @@ void corei5_lynnfield_750_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_func
 // leaf 0x00000009 direct cache access not supported //
 
 // leaf 0x0000000A //
-void corei5_lynnfield_750_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x0000000A - Architectural Performance Monitoring Leaf
-
-  // EAX:
-  //   [7:0] Version ID of architectural performance monitoring
-  //  [15:8] Number of general-purpose performance monitoring counters per logical processor
-  // [23:16] Bit width of general-purpose, performance monitoring counter
-  // [31:24] Length of EBX bit vector to enumerate architectural performance
-  //         monitoring events.
-
-  // EBX:
-  //     [0] Core cycle event not available if 1
-  //     [1] Instruction retired event not available if 1
-  //     [2] Reference cycles event not available if 1
-  //     [3] Last-level cache reference event not available if 1
-  //     [4] Last-level cache misses event not available if 1
-  //     [5] Branch instruction retired event not available if 1
-  //     [6] Branch mispredict retired event not available if 1
-  //  [31:7] reserved
-
-  // ECX: reserved
-
-  // EDX:
-  //   [4:0] Number of fixed performance counters (if Version ID > 1)
-  //  [12:5] Bit width of fixed-function performance counters (if Version ID > 1)
-  // [31:13] reserved
-
-  leaf->eax = 0x07300403;
-  leaf->ebx = 0x00000044;
-  leaf->ecx = 0x00000000;
-  leaf->edx = 0x00000603;
-
-  BX_INFO(("WARNING: Architectural Performance Monitoring is not implemented"));
-}
 
 // leaf 0x80000000 //
 
@@ -448,11 +412,6 @@ void corei5_lynnfield_750_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000006 - L2 Cache and TLB Identifiers
 // leaf 0x80000007 - Advanced Power Management
 // leaf 0x80000008 //
-
-void corei5_lynnfield_750_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(max_std_leaf, max_ext_leaf);
-}
 
 bx_cpuid_t *create_corei5_lynnfield_750_cpuid(BX_CPU_C *cpu) { return new corei5_lynnfield_750_t(cpu); }
 

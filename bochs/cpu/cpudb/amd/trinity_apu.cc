@@ -94,9 +94,11 @@ trinity_apu_t::trinity_apu_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_ALT_MOV_CR8);
   enable_cpu_extension(BX_ISA_XAPIC_EXT);
   enable_cpu_extension(BX_ISA_TCE);
+
+  set_max_leaf(0xD, 0x8000001E);
 }
 
-void trinity_apu_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void trinity_apu_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "AMD A8-5600K APU with Radeon(tm) HD Graphics   ";
 
@@ -406,10 +408,10 @@ void trinity_apu_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [9:9]   OSVW: OS visible workarounds (AMD)
   // * [10:10] IBS: Instruction based sampling
   // * [11:11] XOP: Extended Operations Support and XOP Prefix
-  // * [12:12] SKINIT support
+  // ! [12:12] SKINIT support
   // * [13:13] WDT: Watchdog timer support
   //   [14:14] Reserved
-  // * [15:15] LWP: Light weight profiling
+  // ! [15:15] LWP: Light weight profiling
   // * [16:16] FMA4: Four-operand FMA instructions support
   // * [17:17] TCE: Translation Cache Extensions
   //   [18:18] Reserved
@@ -424,7 +426,6 @@ void trinity_apu_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
                                        BX_CPUID_EXT1_ECX_PREFETCHW |
                                        BX_CPUID_EXT1_ECX_OSVW |
                                        BX_CPUID_EXT1_ECX_IBS |
-                                       BX_CPUID_EXT1_ECX_XOP |
                                     /* BX_CPUID_EXT1_ECX_SKINIT | */ // not implemented
                                        BX_CPUID_EXT1_ECX_WDT |
                                     /* BX_CPUID_EXT1_ECX_LWP | */    // not implemented
@@ -568,11 +569,6 @@ void trinity_apu_t::get_ext_cpuid_leaf_1D(Bit32u subfunction, cpuid_function_t *
     leaf->edx = 0;
     return;
   }
-}
-
-void trinity_apu_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(0xD, 0x8000001E);
 }
 
 bx_cpuid_t *create_trinity_apu_cpuid(BX_CPU_C *cpu) { return new trinity_apu_t(cpu); }

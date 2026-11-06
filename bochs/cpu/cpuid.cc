@@ -81,6 +81,14 @@ void bx_cpuid_t::init()
 
   // every cpu supported by Bochs support all 386 and earlier instructions
   ia_extensions_bitmask[0] = (1 << BX_ISA_386);
+
+  set_max_leaf(0, 0);
+}
+
+void bx_cpuid_t::set_max_leaf(Bit32u _max_std_leaf, Bit32u _max_ext_leaf)
+{
+  max_std_leaf = _max_std_leaf;
+  max_ext_leaf = _max_ext_leaf;
 }
 
 void bx_cpuid_t::get_leaf_0(unsigned max_leaf, const char *vendor_string, cpuid_function_t *leaf, unsigned limited_max_leaf) const
@@ -1386,6 +1394,8 @@ Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_ecx(Bit32u extra) const
   //   [30:30] AddrMaskExt: address mask extension support for instruction breakpoint
   //   [31:31] Reserved
 
+  // i - can also be reported by Intel
+
 #if BX_SUPPORT_X86_64
   // [0:0]   LAHF/SAHF instructions support in 64-bit mode
   if (is_cpu_extension_supported(BX_ISA_LM_LAHF_SAHF))
@@ -1697,6 +1707,14 @@ void bx_cpuid_t::get_cpuid_hidden_level(cpuid_function_t *leaf, const char *magi
 #endif
 }
 
+void bx_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+{
+  get_hardware_cpuid_leaf(function, subfunction, leaf);
+
+  if (function == 0xA)
+    BX_INFO(("WARNING: Architectural Performance Monitoring is not implemented"));
+}
+
 void bx_cpuid_t::dump_cpuid_leaf(unsigned function, unsigned subfunction) const
 {
   struct cpuid_function_t leaf;
@@ -1704,16 +1722,23 @@ void bx_cpuid_t::dump_cpuid_leaf(unsigned function, unsigned subfunction) const
   BX_INFO(("CPUID[0x%08x]: %08x %08x %08x %08x", function, leaf.eax, leaf.ebx, leaf.ecx, leaf.edx));
 }
 
+void bx_cpuid_t::dump_cpuid(void) const
+{
+  dump_cpuid(max_std_leaf, max_ext_leaf);
+}
+
 void bx_cpuid_t::dump_cpuid(unsigned max_std_leaf, unsigned max_ext_leaf) const
 {
-  for (unsigned std_leaf=0; std_leaf <= max_std_leaf; std_leaf++) {
-    dump_cpuid_leaf(std_leaf);
+  if (max_std_leaf) {
+    for (unsigned std_leaf=0; std_leaf <= max_std_leaf; std_leaf++) {
+      dump_cpuid_leaf(std_leaf);
+    }
   }
 
-  if (max_ext_leaf == 0) return;
-
-  for (unsigned ext_leaf=0x80000000; ext_leaf <= max_ext_leaf; ext_leaf++) {
-    dump_cpuid_leaf(ext_leaf);
+  if (max_ext_leaf) {
+    for (unsigned ext_leaf=0x80000000; ext_leaf <= max_ext_leaf; ext_leaf++) {
+      dump_cpuid_leaf(ext_leaf);
+    }
   }
 }
 

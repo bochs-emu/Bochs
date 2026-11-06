@@ -39,9 +39,11 @@ i486dx4_t::i486dx4_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_X87);
   enable_cpu_extension(BX_ISA_486);
   enable_cpu_extension(BX_ISA_VME);
+
+  set_max_leaf(0x1, 0);
 }
 
-void i486dx4_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void i486dx4_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   switch(function) {
   case 0x00000000:
@@ -105,11 +107,6 @@ void i486dx4_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [30:30] Reserved
   //   [31:31] PBE: Pending Break Enable
   leaf->edx = get_std_cpuid_leaf_1_edx();
-}
-
-void i486dx4_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(0x1, 0);
 }
 
 bx_cpuid_t *create_i486dx4_cpuid(BX_CPU_C *cpu) { return new i486dx4_t(cpu); }

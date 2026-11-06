@@ -40,9 +40,7 @@ public:
   virtual Bit32u get_svm_extensions_bitmask(void) const;
 #endif
 
-  virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
-
-  virtual void dump_cpuid(void) const;
+  virtual void get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
 
 private:
   void get_std_cpuid_leaf_0(cpuid_function_t *leaf) const;

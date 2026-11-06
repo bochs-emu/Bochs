@@ -32,13 +32,14 @@ class i386_t : public bx_cpuid_t {
 public:
   i386_t(BX_CPU_C *cpu): bx_cpuid_t(cpu) {
     enable_cpu_extension(BX_ISA_X87);
+    set_max_leaf(0, 0);
   }
   virtual ~i386_t() {}
 
   // return CPU name
   virtual const char *get_name(void) const { return "i386"; }
 
-  virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const { assert(0); }
+  virtual void get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const { assert(0); }
 
   virtual void dump_cpuid(void) const {}
 

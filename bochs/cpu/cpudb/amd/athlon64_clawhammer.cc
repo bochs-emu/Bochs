@@ -58,9 +58,11 @@ athlon64_clawhammer_t::athlon64_clawhammer_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_LONG_MODE);
   enable_cpu_extension(BX_ISA_LM_LAHF_SAHF);
   enable_cpu_extension(BX_ISA_NX);
+
+  set_max_leaf(0x1, 0x80000018);
 }
 
-void athlon64_clawhammer_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void athlon64_clawhammer_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "AMD Athlon(tm) 64 Processor 2800+\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
   static const char* magic_string = "IT'S HAMMER TIME";

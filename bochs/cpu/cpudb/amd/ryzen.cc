@@ -107,9 +107,11 @@ ryzen_t::ryzen_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 #if BX_SUPPORT_MONITOR_MWAIT
   enable_cpu_extension(BX_ISA_MONITORX_MWAITX);
 #endif
+
+  set_max_leaf(0xD, 0x8000001F);
 }
 
-void ryzen_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void ryzen_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "AMD Ryzen 7 1700 Eight-Core Processor          ";
 
@@ -622,11 +624,6 @@ void ryzen_t::get_ext_cpuid_leaf_1F(cpuid_function_t *leaf) const
   //                EDX = 0
 
   get_reserved_leaf(leaf);
-}
-
-void ryzen_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(0xD, 0x8000001F);
 }
 
 bx_cpuid_t *create_ryzen_cpuid(BX_CPU_C *cpu) { return new ryzen_t(cpu); }

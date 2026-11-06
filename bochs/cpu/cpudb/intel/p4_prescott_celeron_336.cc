@@ -62,11 +62,10 @@ p4_prescott_celeron_336_t::p4_prescott_celeron_336_t(BX_CPU_C *cpu): bx_cpuid_t(
   enable_cpu_extension(BX_ISA_NX);
   enable_cpu_extension(BX_ISA_CMPXCHG16B);
 
-  max_std_leaf = 0x3;
-  max_ext_leaf = 0x80000008;
+  set_max_leaf(0x3, 0x80000008);
 }
 
-void p4_prescott_celeron_336_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void p4_prescott_celeron_336_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "                Intel(R) Celeron(R) CPU 2.80GHz";
 
@@ -273,11 +272,6 @@ void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) con
 // leaf 0x80000006 - L2 Cache and TLB Identifiers
 // leaf 0x80000007 - Advanced Power Management
 // leaf 0x80000008 //
-
-void p4_prescott_celeron_336_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(max_std_leaf, max_ext_leaf);
-}
 
 bx_cpuid_t *create_p4_prescott_celeron_336_cpuid(BX_CPU_C *cpu) { return new p4_prescott_celeron_336_t(cpu); }
 

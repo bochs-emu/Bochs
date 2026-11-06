@@ -46,9 +46,11 @@ p3_katmai_t::p3_katmai_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_PGE);
   enable_cpu_extension(BX_ISA_MTRR);
   enable_cpu_extension(BX_ISA_PAT);
+
+  set_max_leaf(0x3, 0);
 }
 
-void p3_katmai_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void p3_katmai_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   switch(function) {
   case 0x00000000:
@@ -122,11 +124,6 @@ void p3_katmai_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 
 // leaf 0x00000002 - Cache and TLB Descriptors //
 // leaf 0x00000003 - Processor Serial Number   //
-
-void p3_katmai_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(0x3, 0);
-}
 
 bx_cpuid_t *create_p3_katmai_cpuid(BX_CPU_C *cpu) { return new p3_katmai_t(cpu); }
 

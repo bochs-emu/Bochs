@@ -87,11 +87,10 @@ corei7_ivy_bridge_3770k_t::corei7_ivy_bridge_3770k_t(BX_CPU_C *cpu): bx_cpuid_t(
   enable_cpu_extension(BX_ISA_SMEP);
   enable_cpu_extension(BX_ISA_RDRAND);
 
-  max_std_leaf = 0xD;
-  max_ext_leaf = 0x80000008;
+  set_max_leaf(0xD, 0x80000008);
 }
 
-void corei7_ivy_bridge_3770k_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void corei7_ivy_bridge_3770k_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "       Intel(R) Core(TM) i7-3770K CPU @ 3.50GHz";
 
@@ -151,8 +150,8 @@ void corei7_ivy_bridge_3770k_t::get_cpuid_leaf(Bit32u function, Bit32u subfuncti
   case 0x00000009:
     get_reserved_leaf(leaf);
     return;
-  case 0x0000000A:
-    get_std_cpuid_leaf_A(leaf);
+  case 0x0000000A: // CPUID leaf 0x0000000A - Architectural Performance Monitoring Leaf
+    get_leaf(leaf, 0x07300403, 0x00000000, 0x00000000, 0x00000603);
     return;
   case 0x0000000B:
     get_std_cpuid_extended_topology_leaf(subfunction, leaf);
@@ -439,41 +438,6 @@ void corei7_ivy_bridge_3770k_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_f
 // leaf 0x00000009 direct cache access not supported //
 
 // leaf 0x0000000A //
-void corei7_ivy_bridge_3770k_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x0000000A - Architectural Performance Monitoring Leaf
-
-  // EAX:
-  //   [7:0] Version ID of architectural performance monitoring
-  //  [15:8] Number of general-purpose performance monitoring counters per logical processor
-  // [23:16] Bit width of general-purpose, performance monitoring counter
-  // [31:24] Length of EBX bit vector to enumerate architectural performance
-  //         monitoring events.
-
-  // EBX:
-  //     [0] Core cycle event not available if 1
-  //     [1] Instruction retired event not available if 1
-  //     [2] Reference cycles event not available if 1
-  //     [3] Last-level cache reference event not available if 1
-  //     [4] Last-level cache misses event not available if 1
-  //     [5] Branch instruction retired event not available if 1
-  //     [6] Branch mispredict retired event not available if 1
-  //  [31:7] reserved
-
-  // ECX: reserved
-
-  // EDX:
-  //   [4:0] Number of fixed performance counters (if Version ID > 1)
-  //  [12:5] Bit width of fixed-function performance counters (if Version ID > 1)
-  // [31:13] reserved
-
-  leaf->eax = 0x07300403;
-  leaf->ebx = 0x00000000;
-  leaf->ecx = 0x00000000;
-  leaf->edx = 0x00000603;
-
-  BX_INFO(("WARNING: Architectural Performance Monitoring is not implemented"));
-}
 
 // leaf 0x0000000C reserved //
 // leaf 0x0000000D - XSAVE  //
@@ -541,11 +505,6 @@ void corei7_ivy_bridge_3770k_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) con
 // leaf 0x80000006 - L2 Cache and TLB Identifiers
 // leaf 0x80000007 - Advanced Power Management
 // leaf 0x80000008 //
-
-void corei7_ivy_bridge_3770k_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(max_std_leaf, max_ext_leaf);
-}
 
 bx_cpuid_t *create_corei7_ivy_bridge_3770k_cpuid(BX_CPU_C *cpu) { return new corei7_ivy_bridge_3770k_t(cpu); }
 

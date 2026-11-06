@@ -36,14 +36,9 @@ public:
   // return CPU name
   virtual const char *get_name(void) const { return "p4_prescott_celeron_336"; }
 
-  virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
-
-  virtual void dump_cpuid(void) const;
+  virtual void get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
 
 private:
-  Bit32u max_std_leaf;
-  Bit32u max_ext_leaf;
-
   void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const;
 };

@@ -120,9 +120,11 @@ zen3_vermeer_t::zen3_vermeer_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 #if BX_SUPPORT_MONITOR_MWAIT
   enable_cpu_extension(BX_ISA_MONITORX_MWAITX);
 #endif
+
+  set_max_leaf(0x10, 0x80000023);
 }
 
-void zen3_vermeer_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void zen3_vermeer_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "AMD Ryzen 7 5800X 8-Core Processor             ";
 
@@ -786,11 +788,6 @@ void zen3_vermeer_t::get_ext_cpuid_leaf_21(cpuid_function_t *leaf) const
   leaf->ebx = 0;
   leaf->ecx = 0;
   leaf->edx = 0;
-}
-
-void zen3_vermeer_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(0x10, 0x80000023);
 }
 
 bx_cpuid_t *create_zen3_vermeer_cpuid(BX_CPU_C *cpu) { return new zen3_vermeer_t(cpu); }

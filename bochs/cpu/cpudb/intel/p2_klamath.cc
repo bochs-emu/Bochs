@@ -44,9 +44,11 @@ p2_klamath_t::p2_klamath_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_PAE);
   enable_cpu_extension(BX_ISA_PGE);
   enable_cpu_extension(BX_ISA_MTRR);
+
+  set_max_leaf(0x2, 0);
 }
 
-void p2_klamath_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void p2_klamath_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   switch(function) {
   case 0x00000000:
@@ -116,11 +118,6 @@ void p2_klamath_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 }
 
 // leaf 0x00000002 - Cache and TLB Descriptors //
-
-void p2_klamath_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(0x2, 0);
-}
 
 bx_cpuid_t *create_p2_klamath_cpuid(BX_CPU_C *cpu) { return new p2_klamath_t(cpu); }
 

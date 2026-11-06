@@ -38,9 +38,11 @@ pentium_t::pentium_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_DEBUG_EXTENSIONS);
   enable_cpu_extension(BX_ISA_VME);
   enable_cpu_extension(BX_ISA_PSE);
+
+  set_max_leaf(0x1, 0);
 }
 
-void pentium_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void pentium_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   switch(function) {
   case 0x00000000:
@@ -104,11 +106,6 @@ void pentium_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [30:30] Reserved
   //   [31:31] PBE: Pending Break Enable
   leaf->edx = get_std_cpuid_leaf_1_edx();
-}
-
-void pentium_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(0x1, 0);
 }
 
 bx_cpuid_t *create_pentium_cpuid(BX_CPU_C *cpu) { return new pentium_t(cpu); }
