@@ -29,8 +29,25 @@
 
 #define LOG_THIS cpu->
 
+// CPUID dump of the real CPU (taken from p3_katmai.txt), several rows of the same leaf are its subleafs
+static const cpuid_function_t std_leafs[] = {
+  /* leaf 0x00000000 */ { 0x00000003, 0x756E6547, 0x6C65746E, 0x49656E69 },
+  /* leaf 0x00000001 */ { 0x00000673, 0x00000000, 0x00000000, 0x0387F9FF },
+  /* leaf 0x00000002 */ { 0x03020101, 0x00000000, 0x00000000, 0x0C040843 },
+  /* leaf 0x00000003 */ { 0x00000000, 0x00000000, 0x11814197, 0x0001C236 }
+};
+
 p3_katmai_t::p3_katmai_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
+  set_max_leaf(0x3, 0);
+
+  cpuid_table = new bx_cpuid_table_t(max_std_leaf, max_ext_leaf);
+
+  cpuid_table->register_leaf(0x00000000, 1, std_leafs + 0);
+  cpuid_table->register_leaf(0x00000001, 1, std_leafs + 1);
+  cpuid_table->register_leaf(0x00000002, 1, std_leafs + 2);
+  cpuid_table->register_leaf(0x00000003, 1, std_leafs + 3);
+
   enable_cpu_extension(BX_ISA_X87);
   enable_cpu_extension(BX_ISA_486);
   enable_cpu_extension(BX_ISA_PENTIUM);
@@ -48,7 +65,7 @@ p3_katmai_t::p3_katmai_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_PAT);
 }
 
-void p3_katmai_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void p3_katmai_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   switch(function) {
   case 0x00000000:
@@ -58,11 +75,9 @@ void p3_katmai_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_func
     get_std_cpuid_leaf_1(leaf);
     return;
   case 0x00000002: // CPUID leaf 0x00000002 - Cache and TLB Descriptors
-    get_leaf(leaf, 0x03020101, 0x00000000, 0x00000000, 0x0C040843);
-    return;
   case 0x00000003: // Processor Serial Number
   default:
-    get_leaf(leaf, 0x00000000, 0x00000000, 0x00000000, 0x00000000);
+    cpuid_table->get_std_leaf(function, 0, leaf);
     return;
   }
 }
@@ -122,11 +137,6 @@ void p3_katmai_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 
 // leaf 0x00000002 - Cache and TLB Descriptors //
 // leaf 0x00000003 - Processor Serial Number   //
-
-void p3_katmai_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(0x3, 0);
-}
 
 bx_cpuid_t *create_p3_katmai_cpuid(BX_CPU_C *cpu) { return new p3_katmai_t(cpu); }
 

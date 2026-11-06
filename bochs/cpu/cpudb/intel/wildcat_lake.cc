@@ -23,8 +23,6 @@
 
 #include "bochs.h"
 #include "cpu/cpu.h"
-#include "gui/siminterface.h"
-#include "param_names.h"
 #include "wildcat_lake.h"
 
 #define LOG_THIS cpu->
@@ -33,6 +31,104 @@
 
 #define VMCS_REVISION_ID 0x04
 
+// CPUID dump of the real CPU (taken from wildcat_lake.txt), several rows of the same leaf are its subleafs
+static const cpuid_function_t std_leafs[] = {
+  /* leaf 0x00000000 */ { 0x00000028, 0x756E6547, 0x6C65746E, 0x49656E69 },
+  /* leaf 0x00000001 */ { 0x000D0651, 0x00800800, 0x7FFAFBFF, 0xBFEBFBFF },
+  /* leaf 0x00000002 */ { 0x00FEFF01, 0x000000F0, 0x00000000, 0x00000000 },
+  /* leaf 0x00000003 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000004 */ { 0xFC004121, 0x02C0003F, 0x0000003F, 0x00000000 }, // [SL 00] [L1D: 48 KB]
+  /* leaf 0x00000004 */ { 0xFC004122, 0x03C0003F, 0x0000003F, 0x00000000 }, // [SL 01] [L1I: 64 KB]
+  /* leaf 0x00000004 */ { 0xFC01C143, 0x02C0003F, 0x00000FFF, 0x00000000 }, // [SL 02] [L2U: 3 MB]
+  /* leaf 0x00000004 */ { 0xFC0FC163, 0x02C0003F, 0x00001FFF, 0x00000004 }, // [SL 03] [L3U: 6 MB]
+  /* leaf 0x00000005 */ { 0x00000040, 0x00000040, 0x00000003, 0x10002020 },
+  /* leaf 0x00000006 */ { 0x00DFCFF7, 0x00000002, 0x00000409, 0x00000003 },
+  /* leaf 0x00000007 */ { 0x00000002, 0x239CA7EB, 0x994007AC, 0xFC18C430 }, // [SL 00]
+  /* leaf 0x00000007 */ { 0x4CCE09D7, 0x00000001, 0x00000002, 0x00040430 }, // [SL 01]
+  /* leaf 0x00000007 */ { 0x00000000, 0x00000000, 0x00000000, 0x000000BF }, // [SL 02]
+  /* leaf 0x00000008 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000009 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000000A */ { 0x0D300806, 0x00000280, 0x00000007, 0x00008603 },
+  /* leaf 0x0000000B */ { 0x00000001, 0x00000001, 0x00000100, 0x00000000 }, // [SL 00]
+  /* leaf 0x0000000B */ { 0x00000007, 0x00000006, 0x00000201, 0x00000000 }, // [SL 01]
+  /* leaf 0x0000000C */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000000D */ { 0x00000207, 0x00000340, 0x00000A88, 0x00000000 }, // [SL 00] [x87]
+  /* leaf 0x0000000D */ { 0x0000000F, 0x000003D0, 0x0001D900, 0x00000000 }, // [SL 01] [SSE]
+  /* leaf 0x0000000D */ { 0x00000100, 0x00000240, 0x00000000, 0x00000000 }, // [SL 02] [AVX]
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 03] not in dump
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 04] not in dump
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 05] not in dump
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 06] not in dump
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 07] not in dump
+  /* leaf 0x0000000D */ { 0x00000080, 0x00000000, 0x00000001, 0x00000000 }, // [SL 08] [PT]
+  /* leaf 0x0000000D */ { 0x00000008, 0x00000A80, 0x00000000, 0x00000000 }, // [SL 09] [PKRU]
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 0A] not in dump
+  /* leaf 0x0000000D */ { 0x00000010, 0x00000000, 0x00000001, 0x00000000 }, // [SL 0B] [CET_U]
+  /* leaf 0x0000000D */ { 0x00000018, 0x00000000, 0x00000001, 0x00000000 }, // [SL 0C] [CET_S]
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 0D] not in dump
+  /* leaf 0x0000000D */ { 0x00000030, 0x00000000, 0x00000001, 0x00000000 }, // [SL 0E] [UINTR]
+  /* leaf 0x0000000D */ { 0x00000328, 0x00000000, 0x00000001, 0x00000000 }, // [SL 0F] [LBR]
+  /* leaf 0x0000000D */ { 0x00000008, 0x00000000, 0x00000001, 0x00000000 }, // [SL 10] [HWP]
+  /* leaf 0x0000000E */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000000F */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x0000000F */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 01]
+  /* leaf 0x00000010 */ { 0x00000000, 0x00000040, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x00000010 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 01]
+  /* leaf 0x00000011 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000012 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x00000012 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 01]
+  /* leaf 0x00000013 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000014 */ { 0x00000001, 0x0000015F, 0x00000007, 0x00000000 }, // [SL 00]
+  /* leaf 0x00000014 */ { 0x02490002, 0x003F003F, 0x00000000, 0x00000000 }, // [SL 01]
+  /* leaf 0x00000015 */ { 0x00000002, 0x00000082, 0x0249F000, 0x00000000 },
+  /* leaf 0x00000016 */ { 0x000009C4, 0x000011F8, 0x00000064, 0x00000000 },
+  /* leaf 0x00000017 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x00000018 */ { 0x00000008, 0x00000000, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x00000018 */ { 0x00000000, 0x00080001, 0x00000020, 0x00004022 }, // [SL 01]
+  /* leaf 0x00000018 */ { 0x00000000, 0x00080006, 0x00000004, 0x00004022 }, // [SL 02]
+  /* leaf 0x00000018 */ { 0x00000000, 0x0010000F, 0x00000001, 0x00004125 }, // [SL 03]
+  /* leaf 0x00000018 */ { 0x00000000, 0x00080001, 0x00000010, 0x00004024 }, // [SL 04]
+  /* leaf 0x00000018 */ { 0x00000000, 0x00040006, 0x00000008, 0x00004024 }, // [SL 05]
+  /* leaf 0x00000018 */ { 0x00000000, 0x00080008, 0x00000001, 0x00004124 }, // [SL 06]
+  /* leaf 0x00000018 */ { 0x00000000, 0x00080007, 0x00000100, 0x00004043 }, // [SL 07]
+  /* leaf 0x00000018 */ { 0x00000000, 0x00040009, 0x00000100, 0x00004043 }, // [SL 08]
+  /* leaf 0x00000019 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000001A */ { 0x40000004, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000001B */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // not in dump
+  /* leaf 0x0000001C */ { 0x4000000B, 0x00000007, 0x000F0007, 0x00000000 },
+  /* leaf 0x0000001D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x0000001E */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x0000001F */ { 0x00000001, 0x00000001, 0x00000100, 0x00000000 }, // [SL 00]
+  /* leaf 0x0000001F */ { 0x00000003, 0x00000001, 0x00000201, 0x00000000 }, // [SL 01]
+  /* leaf 0x0000001F */ { 0x00000007, 0x00000006, 0x00000302, 0x00000000 }, // [SL 02]
+  /* leaf 0x00000020 */ { 0x00000000, 0x00000001, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x00000021 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000022 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000023 */ { 0x0000003B, 0x00000003, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x00000023 */ { 0x000003FF, 0x0000000F, 0x00000000, 0x00000000 }, // [SL 01]
+  /* leaf 0x00000023 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 02] not in dump
+  /* leaf 0x00000023 */ { 0x00001DFF, 0x00000000, 0x00000000, 0x00000000 }, // [SL 03]
+  /* leaf 0x00000023 */ { 0x00000000, 0x60060378, 0x00000000, 0x00000000 }, // [SL 04]
+  /* leaf 0x00000023 */ { 0x000003FF, 0x00000003, 0x0000000F, 0x00000001 }, // [SL 05]
+  /* leaf 0x00000024 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x00000025 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000026 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000027 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x00000028 */ { 0x00000000, 0x00000040, 0x00000000, 0x00000000 }  // [SL 00]
+};
+
+static const cpuid_function_t ext_leafs[] = {
+  /* leaf 0x80000000 */ { 0x80000008, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000001 */ { 0x00000000, 0x00000000, 0x00000121, 0x2C100800 },
+  /* leaf 0x80000002 */ { 0x65746E49, 0x2952286C, 0x726F4320, 0x4D542865 },
+  /* leaf 0x80000003 */ { 0x20352029, 0x00303233, 0x00000000, 0x00000000 },
+  /* leaf 0x80000004 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000005 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000006 */ { 0x00000000, 0x00000000, 0x0C007040, 0x00000000 },
+  /* leaf 0x80000007 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000100 },
+  /* leaf 0x80000008 */ { 0x0000302E, 0x00000200, 0x00000000, 0x00000000 }
+};
+
 wildcat_lake_t::wildcat_lake_t(BX_CPU_C *cpu):
 #if BX_SUPPORT_VMX
     bx_cpuid_t(cpu, VMCS_REVISION_ID)
@@ -40,6 +136,62 @@ wildcat_lake_t::wildcat_lake_t(BX_CPU_C *cpu):
     bx_cpuid_t(cpu)
 #endif
 {
+  set_max_leaf(0x28, 0x80000008);
+
+  cpuid_table = new bx_cpuid_table_t(max_std_leaf, max_ext_leaf);
+
+  cpuid_table->register_leaf(0x00000000,  1, std_leafs +  0);
+  cpuid_table->register_leaf(0x00000001,  1, std_leafs +  1);
+  cpuid_table->register_leaf(0x00000002,  1, std_leafs +  2);
+  cpuid_table->register_leaf(0x00000003,  1, std_leafs +  3);
+  cpuid_table->register_leaf(0x00000004,  4, std_leafs +  4);
+  cpuid_table->register_leaf(0x00000005,  1, std_leafs +  8);
+  cpuid_table->register_leaf(0x00000006,  1, std_leafs +  9);
+  cpuid_table->register_leaf(0x00000007,  3, std_leafs + 10);
+  cpuid_table->register_leaf(0x00000008,  1, std_leafs + 13);
+  cpuid_table->register_leaf(0x00000009,  1, std_leafs + 14);
+  cpuid_table->register_leaf(0x0000000A,  1, std_leafs + 15);
+  cpuid_table->register_leaf(0x0000000B,  2, std_leafs + 16);
+  cpuid_table->register_leaf(0x0000000C,  1, std_leafs + 18);
+  cpuid_table->register_leaf(0x0000000D, 17, std_leafs + 19);
+  cpuid_table->register_leaf(0x0000000E,  1, std_leafs + 36);
+  cpuid_table->register_leaf(0x0000000F,  2, std_leafs + 37);
+  cpuid_table->register_leaf(0x00000010,  2, std_leafs + 39);
+  cpuid_table->register_leaf(0x00000011,  1, std_leafs + 41);
+  cpuid_table->register_leaf(0x00000012,  2, std_leafs + 42);
+  cpuid_table->register_leaf(0x00000013,  1, std_leafs + 44);
+  cpuid_table->register_leaf(0x00000014,  2, std_leafs + 45);
+  cpuid_table->register_leaf(0x00000015,  1, std_leafs + 47);
+  cpuid_table->register_leaf(0x00000016,  1, std_leafs + 48);
+  cpuid_table->register_leaf(0x00000017,  1, std_leafs + 49);
+  cpuid_table->register_leaf(0x00000018,  9, std_leafs + 50);
+  cpuid_table->register_leaf(0x00000019,  1, std_leafs + 59);
+  cpuid_table->register_leaf(0x0000001A,  1, std_leafs + 60);
+  cpuid_table->register_leaf(0x0000001B,  1, std_leafs + 61);
+  cpuid_table->register_leaf(0x0000001C,  1, std_leafs + 62);
+  cpuid_table->register_leaf(0x0000001D,  1, std_leafs + 63);
+  cpuid_table->register_leaf(0x0000001E,  1, std_leafs + 64);
+  cpuid_table->register_leaf(0x0000001F,  3, std_leafs + 65);
+  cpuid_table->register_leaf(0x00000020,  1, std_leafs + 68);
+  cpuid_table->register_leaf(0x00000021,  1, std_leafs + 69);
+  cpuid_table->register_leaf(0x00000022,  1, std_leafs + 70);
+  cpuid_table->register_leaf(0x00000023,  6, std_leafs + 71);
+  cpuid_table->register_leaf(0x00000024,  1, std_leafs + 77);
+  cpuid_table->register_leaf(0x00000025,  1, std_leafs + 78);
+  cpuid_table->register_leaf(0x00000026,  1, std_leafs + 79);
+  cpuid_table->register_leaf(0x00000027,  1, std_leafs + 80);
+  cpuid_table->register_leaf(0x00000028,  1, std_leafs + 81);
+
+  cpuid_table->register_leaf(0x80000000,  1, ext_leafs +  0);
+  cpuid_table->register_leaf(0x80000001,  1, ext_leafs +  1);
+  cpuid_table->register_leaf(0x80000002,  1, ext_leafs +  2);
+  cpuid_table->register_leaf(0x80000003,  1, ext_leafs +  3);
+  cpuid_table->register_leaf(0x80000004,  1, ext_leafs +  4);
+  cpuid_table->register_leaf(0x80000005,  1, ext_leafs +  5);
+  cpuid_table->register_leaf(0x80000006,  1, ext_leafs +  6);
+  cpuid_table->register_leaf(0x80000007,  1, ext_leafs +  7);
+  cpuid_table->register_leaf(0x80000008,  1, ext_leafs +  8);
+
   if (BX_SUPPORT_VMX == 1)
     BX_INFO(("You must compile with --enable-vmx=2 for Intel Core Wildcat Lake VMX configuration"));
 
@@ -147,18 +299,11 @@ wildcat_lake_t::wildcat_lake_t(BX_CPU_C *cpu):
   enable_cpu_extension(BX_ISA_FRED);
 #endif
   enable_cpu_extension(BX_ISA_SPEC_CTRL);
-
-  max_std_leaf = 0x20;
-  max_ext_leaf = 0x80000008;
 }
 
-void wildcat_lake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void wildcat_lake_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "Intel(R) Core(TM) 5 320\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
-
-  static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
-  if (cpuid_limit_winnt)
-    if (function > 2 && function < 0x80000000) function = 2;
 
   switch(function) {
   case 0x80000000:
@@ -173,13 +318,9 @@ void wildcat_lake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_f
     get_ext_cpuid_brand_string_leaf(brand_string, function, leaf);
     return;
   case 0x80000005:
-    get_reserved_leaf(leaf);
-    return;
   case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
-    get_leaf(leaf, 0x00000000, 0x00000000, 0x0c007040, 0x00000000);
-    return;
-  case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management leaf
-    get_leaf(leaf, 0x00000000, 0x00000000, 0x00000000, 0x00000100); // EDX[8] - invariant TSC
+  case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management leaf, EDX[8] - invariant TSC
+    cpuid_table->get_ext_leaf(function, 0, leaf);
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8(leaf);
@@ -191,35 +332,31 @@ void wildcat_lake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_f
     get_std_cpuid_leaf_1(leaf);
     return;
   case 0x00000002: // CPUID leaf 0x00000002 - Cache and TLB Descriptors
-    get_leaf(leaf, 0x00feff01, 0x000000f0, 0x00000000, 0x00000000);
-    return;
   case 0x00000003:
-    get_reserved_leaf(leaf);
+    cpuid_table->get_std_leaf(function, 0, leaf);
     return;
-  case 0x00000004:
-    get_std_cpuid_leaf_4(subfunction, leaf);
+  case 0x00000004: // CPUID leaf 0x00000004 - Deterministic Cache Parameters
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   case 0x00000005: // CPUID leaf 0x00000005 - MONITOR/MWAIT leaf
     get_std_cpuid_monitor_mwait_leaf(leaf, 0x10002020);
     return;
   case 0x00000006: // CPUID leaf 0x00000006 - Thermal and Power Management Leaf
-    get_leaf(leaf, 0x00dfcff7, 0x00000002, 0x00000409, 0x00000003);
+    cpuid_table->get_std_leaf(function, 0, leaf);
     return;
   case 0x00000007:
     get_std_cpuid_leaf_7(subfunction, leaf);
     return;
   case 0x00000008:
   case 0x00000009:
-    get_reserved_leaf(leaf);
-    return;
   case 0x0000000A: // CPUID leaf 0x0000000A - Architectural Performance Monitor
-    get_std_cpuid_leaf_A(leaf);
+    cpuid_table->get_std_leaf(function, 0, leaf);
     return;
   case 0x0000000B:
     get_std_cpuid_extended_topology_leaf(subfunction, leaf);
     return;
   case 0x0000000C:
-    get_reserved_leaf(leaf);
+    cpuid_table->get_std_leaf(function, 0, leaf);
     return;
   case 0x0000000D:
     get_std_cpuid_xsave_leaf(subfunction, leaf);
@@ -240,10 +377,10 @@ void wildcat_lake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_f
     get_freq_leaf_16(leaf, 0x000009c4, 0x000011f8, 0x00000064);
     return;
   case 0x00000017:
-    get_reserved_leaf(leaf);
+    cpuid_table->get_std_leaf(function, 0, leaf);
     return;
   case 0x00000018: // TLB Descriptors
-    get_std_cpuid_leaf_18(subfunction, leaf);
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   case 0x00000019: // CPUID leaf 0x00000019 - Keylocker Leaf (not supported)
   case 0x0000001A: // CPUID leaf 0x0000001A - native Model ID Enumeration leaf (for Hybrid) - HYBRID not supported yet
@@ -253,7 +390,7 @@ void wildcat_lake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_f
     return;
   case 0x0000001D: // AMX
   case 0x0000001E: // AMX: TMUL Information Main leaf
-    get_reserved_leaf(leaf);
+    cpuid_table->get_std_leaf(function, 0, leaf);
     return;
   case 0x0000001F: // V2 Extended Topology Enumberation leaf
     get_reserved_leaf(leaf); // until figured it out
@@ -415,42 +552,7 @@ void wildcat_lake_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 
 // leaf 0x00000003 - Processor Serial Number (not supported) //
 
-// leaf 0x00000004 //
-void wildcat_lake_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000004 - Deterministic Cache Parameters
-  switch(subfunction) {
-  case 0:
-    leaf->eax = 0xfc004121;
-    leaf->ebx = 0x02c0003f;
-    leaf->ecx = 0x0000003f;
-    leaf->edx = 0x00000000;
-    return;
-  case 1:
-    leaf->eax = 0xfc004122;
-    leaf->ebx = 0x03c0003f;
-    leaf->ecx = 0x0000003f;
-    leaf->edx = 0x00000000;
-    return;
-  case 2:
-    leaf->eax = 0xfc01c143;
-    leaf->ebx = 0x02c0003f;
-    leaf->ecx = 0x00000fff;
-    leaf->edx = 0x00000000;
-    return;
-  case 3:
-    leaf->eax = 0xfc0fc163;
-    leaf->ebx = 0x02c0003f;
-    leaf->ecx = 0x00001fff;
-    leaf->edx = 0x00000004;
-    return;
-  default:
-    leaf->eax = 0;
-    leaf->ebx = 0;
-    leaf->ecx = 0;
-    leaf->edx = 0;
-  }
-}
+// leaf 0x00000004 - Deterministic Cache Parameters //
 
 // leaf 0x00000005 MONITOR/MWAIT Leaf                //
 // leaf 0x00000006 Thermal and Power Management Leaf //
@@ -670,16 +772,6 @@ void wildcat_lake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *
 // leaf 0x00000009 direct cache access not supported //
 
 // leaf 0x0000000A //
-void wildcat_lake_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x0000000A - Architectural Performance Monitoring Leaf
-  leaf->eax = 0x0d300806;
-  leaf->ebx = 0x00000280;
-  leaf->ecx = 0x00000007;
-  leaf->edx = 0x00008603;
-
-  BX_INFO(("WARNING: Architectural Performance Monitoring is not implemented"));
-}
 
 // leaf 0x0000000C - reserved //
 // leaf 0x0000000D - XSAVE //
@@ -695,72 +787,7 @@ void wildcat_lake_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
 // leaf 0x00000016 - Processor Frequency Information Leaf
 // leaf 0x00000017 - System-On-Chip Vendor Attribute Enumeration //
 
-// leaf 0x00000018
-void wildcat_lake_t::get_std_cpuid_leaf_18(Bit32u subfunction, cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000018 - Deterministic Address Translation Parameters
-  switch(subfunction) {
-  case 0:
-    leaf->eax = 0x00000008;
-    leaf->ebx = 0x00000000;
-    leaf->ecx = 0x00000000;
-    leaf->edx = 0x00000000;
-    return;
-  case 1:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x00080001;
-    leaf->ecx = 0x00000020;
-    leaf->edx = 0x00004022;
-    return;
-  case 2:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x00080006;
-    leaf->ecx = 0x00000004;
-    leaf->edx = 0x00004022;
-    return;
-  case 3:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x0010000f;
-    leaf->ecx = 0x00000001;
-    leaf->edx = 0x00004125;
-    return;
-  case 4:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x00080001;
-    leaf->ecx = 0x00000010;
-    leaf->edx = 0x00004024;
-    return;
-  case 5:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x00040006;
-    leaf->ecx = 0x00000008;
-    leaf->edx = 0x00004024;
-    return;
-  case 6:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x00080008;
-    leaf->ecx = 0x00000001;
-    leaf->edx = 0x00004124;
-    return;
-  case 7:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x00080007;
-    leaf->ecx = 0x00000100;
-    leaf->edx = 0x00004043;
-    return;
-  case 8:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x00080009;
-    leaf->ecx = 0x00000100;
-    leaf->edx = 0x00004043;
-    return;
-  default:
-    leaf->eax = 0;
-    leaf->ebx = 0;
-    leaf->ecx = 0;
-    leaf->edx = 0;
-  }
-}
+// leaf 0x00000018 - Deterministic Address Translation Parameters //
 
 // leaf 0x80000000 //
 
@@ -812,11 +839,6 @@ void wildcat_lake_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000006 //
 // leaf 0x80000007 - Advanced Power Management //
 // leaf 0x80000008 //
-
-void wildcat_lake_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(max_std_leaf, max_ext_leaf);
-}
 
 bx_cpuid_t *create_wildcat_lake_cpuid(BX_CPU_C *cpu) { return new wildcat_lake_t(cpu); }
 

@@ -23,16 +23,152 @@
 
 #include "bochs.h"
 #include "cpu.h"
-#include "gui/siminterface.h"
-#include "param_names.h"
 #include "zen3_vermeer.h"
 
 #define LOG_THIS cpu->
 
 #if BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
 
+// CPUID dump of the real CPU (taken from zen3_vermeer.txt), several rows of the same leaf are its subleafs
+static const cpuid_function_t std_leafs[] = {
+  /* leaf 0x00000000 */ { 0x00000010, 0x68747541, 0x444D4163, 0x69746E65 },
+  /* leaf 0x00000001 */ { 0x00A20F12, 0x00100800, 0x7EF8320B, 0x178BFBFF },
+  /* leaf 0x00000002 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000003 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000004 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // not in dump
+  /* leaf 0x00000005 */ { 0x00000040, 0x00000040, 0x00000003, 0x00000011 },
+  /* leaf 0x00000006 */ { 0x00000004, 0x00000000, 0x00000001, 0x00000000 },
+  /* leaf 0x00000007 */ { 0x00000000, 0x219C97A9, 0x0040068C, 0x00000010 }, // [SL 00]
+  /* leaf 0x00000008 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000009 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000000A */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000000B */ { 0x00000001, 0x00000002, 0x00000100, 0x00000000 }, // [SL 00]
+  /* leaf 0x0000000B */ { 0x00000004, 0x00000010, 0x00000201, 0x00000000 }, // [SL 01]
+  /* leaf 0x0000000C */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000000D */ { 0x00000207, 0x00000340, 0x00000988, 0x00000000 }, // [SL 00] [x87]
+  /* leaf 0x0000000D */ { 0x0000000F, 0x00000350, 0x00001800, 0x00000000 }, // [SL 01] [SSE]
+  /* leaf 0x0000000D */ { 0x00000100, 0x00000240, 0x00000000, 0x00000000 }, // [SL 02] [AVX]
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 03] not in dump
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 04] not in dump
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 05] not in dump
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 06] not in dump
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 07] not in dump
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 08] not in dump
+  /* leaf 0x0000000D */ { 0x00000008, 0x00000980, 0x00000000, 0x00000000 }, // [SL 09] [PKRU]
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 0A] not in dump
+  /* leaf 0x0000000D */ { 0x00000010, 0x00000000, 0x00000001, 0x00000000 }, // [SL 0B] [CET_U]
+  /* leaf 0x0000000D */ { 0x00000018, 0x00000000, 0x00000001, 0x00000000 }, // [SL 0C] [CET_S]
+  /* leaf 0x0000000E */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000000F */ { 0x00000000, 0x000000FF, 0x00000000, 0x00000002 }, // [SL 00]
+  /* leaf 0x0000000F */ { 0x00000000, 0x00000040, 0x000000FF, 0x00000007 }, // [SL 01]
+  /* leaf 0x00000010 */ { 0x00000000, 0x00000002, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x00000010 */ { 0x0000000F, 0x00000000, 0x00000004, 0x0000000F }  // [SL 01]
+};
+
+static const cpuid_function_t ext_leafs[] = {
+  /* leaf 0x80000000 */ { 0x80000023, 0x68747541, 0x444D4163, 0x69746E65 },
+  /* leaf 0x80000001 */ { 0x00A20F12, 0x20000000, 0x75C237FF, 0x2FD3FBFF },
+  /* leaf 0x80000002 */ { 0x20444D41, 0x657A7952, 0x2037206E, 0x30303835 },
+  /* leaf 0x80000003 */ { 0x2D382058, 0x65726F43, 0x6F725020, 0x73736563 },
+  /* leaf 0x80000004 */ { 0x2020726F, 0x20202020, 0x20202020, 0x00202020 },
+  /* leaf 0x80000005 */ { 0xFF40FF40, 0xFF40FF40, 0x20080140, 0x20080140 },
+  /* leaf 0x80000006 */ { 0x48002200, 0x68004200, 0x02006140, 0x01009140 },
+  /* leaf 0x80000007 */ { 0x00000000, 0x0000003B, 0x00000000, 0x00006599 },
+  /* leaf 0x80000008 */ { 0x00003030, 0x111EF657, 0x0000400F, 0x00010000 },
+  /* leaf 0x80000009 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000A */ { 0x00000001, 0x00008000, 0x00000000, 0x101BBCFF },
+  /* leaf 0x8000000B */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000C */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000E */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000F */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000010 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000011 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000012 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000013 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000014 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000015 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000016 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000017 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000018 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000019 */ { 0xF040F040, 0xF0400000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000001A */ { 0x00000006, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000001B */ { 0x000003FF, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000001C */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000001D */ { 0x00004121, 0x01C0003F, 0x0000003F, 0x00000000 }, // [SL 00] [L1D: 32 KB]
+  /* leaf 0x8000001D */ { 0x00004122, 0x01C0003F, 0x0000003F, 0x00000000 }, // [SL 01] [L1I: 32 KB]
+  /* leaf 0x8000001D */ { 0x00004143, 0x01C0003F, 0x000003FF, 0x00000002 }, // [SL 02] [L2U: 512 KB]
+  /* leaf 0x8000001D */ { 0x0003C163, 0x03C0003F, 0x00007FFF, 0x00000001 }, // [SL 03] [L3U: 32 MB]
+  /* leaf 0x8000001E */ { 0x00000000, 0x00000100, 0x00000000, 0x00000000 },
+  /* leaf 0x8000001F */ { 0x0001780F, 0x00000173, 0x000001FD, 0x00000001 },
+  /* leaf 0x80000020 */ { 0x00000000, 0x00000002, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x80000020 */ { 0x0000000B, 0x00000000, 0x00000000, 0x0000000F }, // [SL 01]
+  /* leaf 0x80000021 */ { 0x0000004D, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000022 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000023 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }
+};
+
 zen3_vermeer_t::zen3_vermeer_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
+  set_max_leaf(0x10, 0x80000023);
+
+  cpuid_table = new bx_cpuid_table_t(max_std_leaf, max_ext_leaf);
+
+  cpuid_table->register_leaf(0x00000000,  1, std_leafs +  0);
+  cpuid_table->register_leaf(0x00000001,  1, std_leafs +  1);
+  cpuid_table->register_leaf(0x00000002,  1, std_leafs +  2);
+  cpuid_table->register_leaf(0x00000003,  1, std_leafs +  3);
+  cpuid_table->register_leaf(0x00000004,  1, std_leafs +  4);
+  cpuid_table->register_leaf(0x00000005,  1, std_leafs +  5);
+  cpuid_table->register_leaf(0x00000006,  1, std_leafs +  6);
+  cpuid_table->register_leaf(0x00000007,  1, std_leafs +  7);
+  cpuid_table->register_leaf(0x00000008,  1, std_leafs +  8);
+  cpuid_table->register_leaf(0x00000009,  1, std_leafs +  9);
+  cpuid_table->register_leaf(0x0000000A,  1, std_leafs + 10);
+  cpuid_table->register_leaf(0x0000000B,  2, std_leafs + 11);
+  cpuid_table->register_leaf(0x0000000C,  1, std_leafs + 13);
+  cpuid_table->register_leaf(0x0000000D, 13, std_leafs + 14);
+  cpuid_table->register_leaf(0x0000000E,  1, std_leafs + 27);
+  cpuid_table->register_leaf(0x0000000F,  2, std_leafs + 28);
+  cpuid_table->register_leaf(0x00000010,  2, std_leafs + 30);
+
+  cpuid_table->register_leaf(0x80000000, 1, ext_leafs +  0);
+  cpuid_table->register_leaf(0x80000001, 1, ext_leafs +  1);
+  cpuid_table->register_leaf(0x80000002, 1, ext_leafs +  2);
+  cpuid_table->register_leaf(0x80000003, 1, ext_leafs +  3);
+  cpuid_table->register_leaf(0x80000004, 1, ext_leafs +  4);
+  cpuid_table->register_leaf(0x80000005, 1, ext_leafs +  5);
+  cpuid_table->register_leaf(0x80000006, 1, ext_leafs +  6);
+  cpuid_table->register_leaf(0x80000007, 1, ext_leafs +  7);
+  cpuid_table->register_leaf(0x80000008, 1, ext_leafs +  8);
+  cpuid_table->register_leaf(0x80000009, 1, ext_leafs +  9);
+  cpuid_table->register_leaf(0x8000000A, 1, ext_leafs + 10);
+  cpuid_table->register_leaf(0x8000000B, 1, ext_leafs + 11);
+  cpuid_table->register_leaf(0x8000000C, 1, ext_leafs + 12);
+  cpuid_table->register_leaf(0x8000000D, 1, ext_leafs + 13);
+  cpuid_table->register_leaf(0x8000000E, 1, ext_leafs + 14);
+  cpuid_table->register_leaf(0x8000000F, 1, ext_leafs + 15);
+  cpuid_table->register_leaf(0x80000010, 1, ext_leafs + 16);
+  cpuid_table->register_leaf(0x80000011, 1, ext_leafs + 17);
+  cpuid_table->register_leaf(0x80000012, 1, ext_leafs + 18);
+  cpuid_table->register_leaf(0x80000013, 1, ext_leafs + 19);
+  cpuid_table->register_leaf(0x80000014, 1, ext_leafs + 20);
+  cpuid_table->register_leaf(0x80000015, 1, ext_leafs + 21);
+  cpuid_table->register_leaf(0x80000016, 1, ext_leafs + 22);
+  cpuid_table->register_leaf(0x80000017, 1, ext_leafs + 23);
+  cpuid_table->register_leaf(0x80000018, 1, ext_leafs + 24);
+  cpuid_table->register_leaf(0x80000019, 1, ext_leafs + 25);
+  cpuid_table->register_leaf(0x8000001A, 1, ext_leafs + 26);
+  cpuid_table->register_leaf(0x8000001B, 1, ext_leafs + 27);
+  cpuid_table->register_leaf(0x8000001C, 1, ext_leafs + 28);
+  cpuid_table->register_leaf(0x8000001D, 4, ext_leafs + 29);
+  cpuid_table->register_leaf(0x8000001E, 1, ext_leafs + 33);
+  cpuid_table->register_leaf(0x8000001F, 1, ext_leafs + 34);
+  cpuid_table->register_leaf(0x80000020, 2, ext_leafs + 35);
+  cpuid_table->register_leaf(0x80000021, 1, ext_leafs + 37);
+  cpuid_table->register_leaf(0x80000022, 1, ext_leafs + 38);
+  cpuid_table->register_leaf(0x80000023, 1, ext_leafs + 39);
+
   if (! BX_SUPPORT_SVM)
     BX_INFO(("WARNING: SVM support is not compiled in !"));
 
@@ -122,13 +258,9 @@ zen3_vermeer_t::zen3_vermeer_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 #endif
 }
 
-void zen3_vermeer_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void zen3_vermeer_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "AMD Ryzen 7 5800X 8-Core Processor             ";
-
-  static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
-  if (cpuid_limit_winnt)
-    if (function > 1 && function < 0x80000000) function = 1;
 
   switch(function) {
   case 0x80000000:
@@ -142,14 +274,10 @@ void zen3_vermeer_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_f
   case 0x80000004:
     get_ext_cpuid_brand_string_leaf(brand_string, function, leaf);
     return;
-  case 0x80000005:
-    get_ext_cpuid_leaf_5(leaf);
-    return;
-  case 0x80000006:
-    get_ext_cpuid_leaf_6(leaf);
-    return;
-  case 0x80000007:
-    get_ext_cpuid_leaf_7(leaf);
+  case 0x80000005: // CPUID leaf 0x80000005 - L1 Cache and TLB Identifiers
+  case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
+  case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management
+    cpuid_table->get_ext_leaf(function, 0, leaf);
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8(leaf);
@@ -159,20 +287,14 @@ void zen3_vermeer_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_f
     get_ext_cpuid_leaf_A(leaf);
     return;
 #endif
-  case 0x80000019:
-    get_ext_cpuid_leaf_19(leaf);
-    return;
+  case 0x80000019: // CPUID leaf 0x80000019 - 1G Page TLB Identifiers
   case 0x8000001A: // CPUID leaf 0x8000001A - Performance Optimization Identifiers
-    get_leaf(leaf, 0x00000006, 0x00000000, 0x00000000, 0x00000000);
+  case 0x8000001B: // CPUID leaf 0x8000001B - Instruction Based Sampling Identifiers
+  case 0x8000001C: // Lightweight Profiling Capabilities (not implemented)
+    cpuid_table->get_ext_leaf(function, 0, leaf);
     return;
-  case 0x8000001B:
-    get_ext_cpuid_leaf_1B(leaf);
-    return;
-  case 0x8000001C:
-    get_reserved_leaf(leaf); // Lightweight Profiling Capabilities (not implemented)
-    return;
-  case 0x8000001D:
-    get_ext_cpuid_leaf_1D(subfunction, leaf);
+  case 0x8000001D: // CPUID leaf 0x8000001D - Cache Properties
+    cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x8000001E:
     get_ext_cpuid_leaf_1E(leaf);
@@ -188,7 +310,7 @@ void zen3_vermeer_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_f
     return;
   case 0x80000022: // Extended Performance Monitoring and Debug
   case 0x80000023: // Multi-Key Encrypted Memory Capabilities - not implemented
-    get_reserved_leaf(leaf);
+    cpuid_table->get_ext_leaf(function, 0, leaf);
     return;
   case 0x00000000:
     get_std_cpuid_leaf_0(leaf);
@@ -200,7 +322,7 @@ void zen3_vermeer_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_f
     get_std_cpuid_monitor_mwait_leaf(leaf, 0x11);
     return;
   case 0x00000006: // CPUID leaf 0x00000006 - Thermal and Power Management Leaf
-    get_leaf(leaf, 0x00000004, 0x00000000, 0x00000001, 0x00000000);
+    cpuid_table->get_std_leaf(function, 0, leaf);
     return;
   case 0x00000007:
     get_std_cpuid_leaf_7(subfunction, leaf);
@@ -279,7 +401,7 @@ void zen3_vermeer_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
   // EBX: vendor ID string
   // EDX: vendor ID string
   // ECX: vendor ID string
-  get_leaf_0(0x10, "AuthenticAMD", leaf, 0x1);
+  get_leaf_0(0x10, "AuthenticAMD", leaf);
 }
 
 // leaf 0x00000001 //
@@ -605,33 +727,8 @@ void zen3_vermeer_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000004 //
 
 // leaf 0x80000005 - L1 Cache and TLB Identifiers //
-void zen3_vermeer_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
-{
-  leaf->eax = 0xff40ff40;
-  leaf->ebx = 0xff40ff40;
-  leaf->ecx = 0x20080140;
-  leaf->edx = 0x20080140;
-}
-
 // leaf 0x80000006 - L2 Cache and TLB Identifiers //
-void zen3_vermeer_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
-{
-  leaf->eax = 0x48002200;
-  leaf->ebx = 0x68004200;
-  leaf->ecx = 0x02006140;
-  leaf->edx = 0x01009140;
-}
-
 // leaf 0x80000007 - Advanced Power Management //
-void zen3_vermeer_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x80000007 - Advanced Power Management
-  leaf->eax = 0;
-  leaf->ebx = 0x0000003b;
-  leaf->ecx = 0;
-  leaf->edx = 0x00006599;
-}
-
 // leaf 0x80000008 - Address Sizes and Extended Feature Identifiers //
 void zen3_vermeer_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
 {
@@ -672,64 +769,13 @@ void zen3_vermeer_t::get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const
 
 // leaf 0x8000000B - 0x80000018: Reserved //
 
-void zen3_vermeer_t::get_ext_cpuid_leaf_19(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x800000019 - 1G Page TLB Identifiers
-  leaf->eax = 0xf040f040;
-  leaf->ebx = 0xf0400000;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-}
+// leaf 0x80000019 - 1G Page TLB Identifiers //
 
 // CPUID leaf 0x80000001A - Performance Optimization Identifiers
 
-void zen3_vermeer_t::get_ext_cpuid_leaf_1B(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x80000001B - Instruction Based Sampling Identifiers
-  leaf->eax = 0x3FF;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
+// leaf 0x8000001B - Instruction Based Sampling Identifiers //
 
-  BX_INFO(("WARNING: Instruction Based Sampling is not implemented"));
-}
-
-void zen3_vermeer_t::get_ext_cpuid_leaf_1D(Bit32u subfunction, cpuid_function_t *leaf) const
-{
-  // CPUID function 0x80000001D - Cache Properties
-  switch(subfunction) {
-  case 0:
-    leaf->eax = 0x00004121;
-    leaf->ebx = 0x01c0003f;
-    leaf->ecx = 0x0000003f;
-    leaf->edx = 0x00000000;
-    return;
-  case 1:
-    leaf->eax = 0x00004122;
-    leaf->ebx = 0x01c0003f;
-    leaf->ecx = 0x0000003f;
-    leaf->edx = 0x00000000;
-    return;
-  case 2:
-    leaf->eax = 0x00004143;
-    leaf->ebx = 0x01c0003f;
-    leaf->ecx = 0x000003ff;
-    leaf->edx = 0x00000002;
-    return;
-  case 3:
-    leaf->eax = 0x0003c163;
-    leaf->ebx = 0x03c0003f;
-    leaf->ecx = 0x00007fff;
-    leaf->edx = 0x00000001;
-    return;
-  default:
-    leaf->eax = 0;
-    leaf->ebx = 0;
-    leaf->ecx = 0;
-    leaf->edx = 0;
-    return;
-  }
-}
+// leaf 0x8000001D - Cache Properties //
 
 void zen3_vermeer_t::get_ext_cpuid_leaf_1F(cpuid_function_t *leaf) const
 {
@@ -786,11 +832,6 @@ void zen3_vermeer_t::get_ext_cpuid_leaf_21(cpuid_function_t *leaf) const
   leaf->ebx = 0;
   leaf->ecx = 0;
   leaf->edx = 0;
-}
-
-void zen3_vermeer_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(0x10, 0x80000023);
 }
 
 bx_cpuid_t *create_zen3_vermeer_cpuid(BX_CPU_C *cpu) { return new zen3_vermeer_t(cpu); }

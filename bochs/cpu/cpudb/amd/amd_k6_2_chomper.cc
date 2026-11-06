@@ -29,8 +29,37 @@
 
 #if BX_CPU_LEVEL >= 5
 
+// CPUID dump of the real CPU (taken from amd_k6_2_chomper.txt), several rows of the same leaf are its subleafs
+static const cpuid_function_t std_leafs[] = {
+  /* leaf 0x00000000 */ { 0x00000001, 0x68747541, 0x444D4163, 0x69746E65 },
+  /* leaf 0x00000001 */ { 0x00000580, 0x00000000, 0x00000000, 0x008001BF }
+};
+
+static const cpuid_function_t ext_leafs[] = {
+  /* leaf 0x80000000 */ { 0x80000005, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000001 */ { 0x00000680, 0x00000000, 0x00000000, 0x808009BF },
+  /* leaf 0x80000002 */ { 0x2D444D41, 0x7428364B, 0x3320296D, 0x72702044 },
+  /* leaf 0x80000003 */ { 0x7365636F, 0x00726F73, 0x00000000, 0x00000000 },
+  /* leaf 0x80000004 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000005 */ { 0x00000000, 0x02800140, 0x20020220, 0x20020220 }
+};
+
 amd_k6_2_chomper_t::amd_k6_2_chomper_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
+  set_max_leaf(0x1, 0x80000005);
+
+  cpuid_table = new bx_cpuid_table_t(max_std_leaf, max_ext_leaf);
+
+  cpuid_table->register_leaf(0x00000000, 1, std_leafs + 0);
+  cpuid_table->register_leaf(0x00000001, 1, std_leafs + 1);
+
+  cpuid_table->register_leaf(0x80000000, 1, ext_leafs + 0);
+  cpuid_table->register_leaf(0x80000001, 1, ext_leafs + 1);
+  cpuid_table->register_leaf(0x80000002, 1, ext_leafs + 2);
+  cpuid_table->register_leaf(0x80000003, 1, ext_leafs + 3);
+  cpuid_table->register_leaf(0x80000004, 1, ext_leafs + 4);
+  cpuid_table->register_leaf(0x80000005, 1, ext_leafs + 5);
+
   enable_cpu_extension(BX_ISA_X87);
   enable_cpu_extension(BX_ISA_486);
   enable_cpu_extension(BX_ISA_PENTIUM);
@@ -46,7 +75,7 @@ amd_k6_2_chomper_t::amd_k6_2_chomper_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_PSE);
 }
 
-void amd_k6_2_chomper_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void amd_k6_2_chomper_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "AMD-K6(tm) 3D processor\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
   static const char* magic_string = "NexGenerationAMD";
@@ -66,8 +95,8 @@ void amd_k6_2_chomper_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpu
   case 0x80000004:
     get_ext_cpuid_brand_string_leaf(brand_string, function, leaf);
     return;
-  case 0x80000005:
-    get_ext_cpuid_leaf_5(leaf);
+  case 0x80000005: // CPUID leaf 0x80000005 - L1 Cache and TLB Identifiers
+    cpuid_table->get_ext_leaf(function, 0, leaf);
     return;
   case 0x00000000:
     get_std_cpuid_leaf_0(leaf);
@@ -195,14 +224,6 @@ void amd_k6_2_chomper_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 }
 
 // leaf 0x80000005 - L1 Cache and TLB Identifiers //
-void amd_k6_2_chomper_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
-{
-  leaf->eax = 0x00000000;
-  leaf->ebx = 0x02800140;
-  leaf->ecx = 0x20020220;
-  leaf->edx = 0x20020220;
-}
-
 void amd_k6_2_chomper_t::dump_cpuid(void) const
 {
   bx_cpuid_t::dump_cpuid(0x1, 0x80000005);

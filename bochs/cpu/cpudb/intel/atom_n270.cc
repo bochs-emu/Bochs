@@ -23,16 +23,69 @@
 
 #include "bochs.h"
 #include "cpu.h"
-#include "gui/siminterface.h"
-#include "param_names.h"
 #include "atom_n270.h"
 
 #define LOG_THIS cpu->
 
 #if BX_CPU_LEVEL >= 6
 
+// CPUID dump of the real CPU (taken from atom_n270.txt), several rows of the same leaf are its subleafs
+static const cpuid_function_t std_leafs[] = {
+  /* leaf 0x00000000 */ { 0x0000000A, 0x756E6547, 0x6C65746E, 0x49656E69 },
+  /* leaf 0x00000001 */ { 0x000106C2, 0x00020800, 0x0040C39D, 0xBFE9FBFF },
+  /* leaf 0x00000002 */ { 0x4FBA5901, 0x0E3080C0, 0x00000000, 0x00000000 },
+  /* leaf 0x00000003 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000004 */ { 0x00004121, 0x0140003F, 0x0000003F, 0x00000001 }, // [SL 0]
+  /* leaf 0x00000004 */ { 0x00004122, 0x01C0003F, 0x0000003F, 0x00000001 }, // [SL 1]
+  /* leaf 0x00000004 */ { 0x00004143, 0x01C0003F, 0x000003FF, 0x00000001 }, // [SL 2]
+  /* leaf 0x00000005 */ { 0x00000040, 0x00000040, 0x00000003, 0x00020220 },
+  /* leaf 0x00000006 */ { 0x00000001, 0x00000002, 0x00000001, 0x00000000 },
+  /* leaf 0x00000007 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000008 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000009 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000000A */ { 0x07280203, 0x00000000, 0x00000000, 0x00002501 }
+};
+
+static const cpuid_function_t ext_leafs[] = {
+  /* leaf 0x80000000 */ { 0x80000008, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000001 */ { 0x00000000, 0x00000000, 0x00000001, 0x00000000 },
+  /* leaf 0x80000002 */ { 0x20202020, 0x20202020, 0x746E4920, 0x52286C65 },
+  /* leaf 0x80000003 */ { 0x74412029, 0x54286D6F, 0x4320294D, 0x4E205550 },
+  /* leaf 0x80000004 */ { 0x20303732, 0x20402020, 0x30362E31, 0x007A4847 },
+  /* leaf 0x80000005 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000006 */ { 0x00000000, 0x00000000, 0x02008040, 0x00000000 },
+  /* leaf 0x80000007 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000008 */ { 0x00002020, 0x00000000, 0x00000000, 0x00000000 }
+};
+
 atom_n270_t::atom_n270_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
+  set_max_leaf(0xA, 0x80000008);
+
+  cpuid_table = new bx_cpuid_table_t(max_std_leaf, max_ext_leaf);
+
+  cpuid_table->register_leaf(0x00000000, 1, std_leafs +  0);
+  cpuid_table->register_leaf(0x00000001, 1, std_leafs +  1);
+  cpuid_table->register_leaf(0x00000002, 1, std_leafs +  2);
+  cpuid_table->register_leaf(0x00000003, 1, std_leafs +  3);
+  cpuid_table->register_leaf(0x00000004, 3, std_leafs +  4);
+  cpuid_table->register_leaf(0x00000005, 1, std_leafs +  7);
+  cpuid_table->register_leaf(0x00000006, 1, std_leafs +  8);
+  cpuid_table->register_leaf(0x00000007, 1, std_leafs +  9);
+  cpuid_table->register_leaf(0x00000008, 1, std_leafs + 10);
+  cpuid_table->register_leaf(0x00000009, 1, std_leafs + 11);
+  cpuid_table->register_leaf(0x0000000A, 1, std_leafs + 12);
+
+  cpuid_table->register_leaf(0x80000000, 1, ext_leafs +  0);
+  cpuid_table->register_leaf(0x80000001, 1, ext_leafs +  1);
+  cpuid_table->register_leaf(0x80000002, 1, ext_leafs +  2);
+  cpuid_table->register_leaf(0x80000003, 1, ext_leafs +  3);
+  cpuid_table->register_leaf(0x80000004, 1, ext_leafs +  4);
+  cpuid_table->register_leaf(0x80000005, 1, ext_leafs +  5);
+  cpuid_table->register_leaf(0x80000006, 1, ext_leafs +  6);
+  cpuid_table->register_leaf(0x80000007, 1, ext_leafs +  7);
+  cpuid_table->register_leaf(0x80000008, 1, ext_leafs +  8);
+
   if (! BX_SUPPORT_MONITOR_MWAIT)
     BX_INFO(("WARNING: MONITOR/MWAIT support is not compiled in !"));
 
@@ -60,18 +113,11 @@ atom_n270_t::atom_n270_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_PAT);
   enable_cpu_extension(BX_ISA_XAPIC);
   enable_cpu_extension(BX_ISA_MOVBE);
-
-  max_std_leaf = 0xA;
-  max_ext_leaf = 0x80000008;
 }
 
-void atom_n270_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void atom_n270_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "         Intel(R) Atom(TM) CPU N270   @ 1.60GHz";
-
-  static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
-  if (cpuid_limit_winnt)
-    if (function > 2 && function < 0x80000000) function = 2;
 
   switch(function) {
   case 0x80000000:
@@ -86,13 +132,9 @@ void atom_n270_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_func
     get_ext_cpuid_brand_string_leaf(brand_string, function, leaf);
     return;
   case 0x80000005:
-    get_reserved_leaf(leaf);
-    return;
   case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
-    get_leaf(leaf, 0x00000000, 0x00000000, 0x02008040, 0x00000000);
-    return;
   case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management
-    get_reserved_leaf(leaf);
+    cpuid_table->get_ext_leaf(function, 0, leaf);
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8(leaf);
@@ -104,28 +146,22 @@ void atom_n270_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_func
     get_std_cpuid_leaf_1(leaf);
     return;
   case 0x00000002: // CPUID leaf 0x00000002 - Cache and TLB Descriptors
-    get_leaf(leaf, 0x4FBA5901, 0x0E3080C0, 0x00000000, 0x00000000);
-    return;
   case 0x00000003:
-    get_reserved_leaf(leaf);
+    cpuid_table->get_std_leaf(function, 0, leaf);
     return;
-  case 0x00000004:
-    get_std_cpuid_leaf_4(subfunction, leaf);
+  case 0x00000004: // CPUID leaf 0x00000004 - Deterministic Cache Parameters
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   case 0x00000005:
     get_std_cpuid_monitor_mwait_leaf(leaf, 0x00020220);
     return;
   case 0x00000006: // CPUID leaf 0x00000006 - Thermal and Power Management Leaf
-    get_leaf(leaf, 0x00000001, 0x00000002, 0x00000001, 0x00000000);
-    return;
   case 0x00000007:
   case 0x00000008:
   case 0x00000009:
-    get_reserved_leaf(leaf);
-    return;
-  case 0x0000000A:
+  case 0x0000000A: // CPUID leaf 0x0000000A - Architectural Performance Monitoring Leaf
   default:
-    get_std_cpuid_leaf_A(leaf);
+    cpuid_table->get_std_leaf(function, 0, leaf);
     return;
   }
 }
@@ -243,61 +279,7 @@ void atom_n270_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x00000002 - Cache and TLB Descriptors //
 // leaf 0x00000003 - Processor Serial Number (not supported) //
 
-// leaf 0x00000004 //
-void atom_n270_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000004 - Deterministic Cache Parameters
-
-  // EAX:
-  //   [04-00] - Cache Type Field
-  //             0 = No more caches
-  //             1 = Data Cache
-  //             2 = Instruction Cache
-  //             3 = Unified Cache
-  //   [07-05] - Cache Level (starts at 1)]
-  //      [08] - Self Initializing cache level (doesn't need software initialization)
-  //      [09] - Fully Associative cache
-  //   [13-10] - Reserved
-  //   [25-14] - Maximum number of addressable IDs for logical processors sharing this cache
-  //   [31-26] - Maximum number of addressable IDs for processor cores in the physical package - 1
-  // EBX:
-  //   [11-00] - L = System Coherency Line Size
-  //   [21-12] - P = Physical Line partitions
-  //   [31-22] - W = Ways of associativity
-  // ECX: Number of Sets
-  // EDX:
-  //      [00] - Writeback invalidate
-  //      [01] - Cache Inclusiveness
-  //      [02] - Complex Cache Indexing
-  //   [31-03] - Reserved
-
-  switch(subfunction) {
-  case 0:
-    leaf->eax = 0x00004121;
-    leaf->ebx = 0x0140003F;
-    leaf->ecx = 0x0000003F;
-    leaf->edx = 0x00000001;
-    break;
-  case 1:
-    leaf->eax = 0x00004122;
-    leaf->ebx = 0x01C0003F;
-    leaf->ecx = 0x0000003F;
-    leaf->edx = 0x00000001;
-    break;
-  case 2:
-    leaf->eax = 0x00004143;
-    leaf->ebx = 0x01C0003F;
-    leaf->ecx = 0x000003FF;
-    leaf->edx = 0x00000001;
-    break;
-  default:
-    leaf->eax = 0;
-    leaf->ebx = 0;
-    leaf->ecx = 0;
-    leaf->edx = 0;
-    return;
-  }
-}
+// leaf 0x00000004 - Deterministic Cache Parameters //
 
 // leaf 0x00000005 Monitor-Mwait Leaf                //
 // leaf 0x00000006 Thermal and Power Management Leaf //
@@ -306,41 +288,6 @@ void atom_n270_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *lea
 // leaf 0x00000009 direct cache access not supported //
 
 // leaf 0x0000000A //
-void atom_n270_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x0000000A - Architectural Performance Monitoring Leaf
-
-  // EAX:
-  //   [7:0] Version ID of architectural performance monitoring
-  //  [15:8] Number of general-purpose performance monitoring counters per logical processor
-  // [23:16] Bit width of general-purpose, performance monitoring counter
-  // [31:24] Length of EBX bit vector to enumerate architectural performance
-  //         monitoring events.
-
-  // EBX:
-  //     [0] Core cycle event not available if 1
-  //     [1] Instruction retired event not available if 1
-  //     [2] Reference cycles event not available if 1
-  //     [3] Last-level cache reference event not available if 1
-  //     [4] Last-level cache misses event not available if 1
-  //     [5] Branch instruction retired event not available if 1
-  //     [6] Branch mispredict retired event not available if 1
-  //  [31:7] reserved
-
-  // ECX: reserved
-
-  // EDX:
-  //   [4:0] Number of fixed performance counters (if Version ID > 1)
-  //  [12:5] Bit width of fixed-function performance counters (if Version ID > 1)
-  // [31:13] reserved
-
-  leaf->eax = 0x07280203;
-  leaf->ebx = 0x00000000;
-  leaf->ecx = 0x00000000;
-  leaf->edx = 0x00002501;
-
-  BX_INFO(("WARNING: Architectural Performance Monitoring is not implemented"));
-}
 
 // leaf 0x80000000 //
 
@@ -392,11 +339,6 @@ void atom_n270_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000006 - L2 Cache and TLB Identifiers
 // leaf 0x80000007 //
 // leaf 0x80000008 //
-
-void atom_n270_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(max_std_leaf, max_ext_leaf);
-}
 
 bx_cpuid_t *create_atom_n270_cpuid(BX_CPU_C *cpu) { return new atom_n270_t(cpu); }
 

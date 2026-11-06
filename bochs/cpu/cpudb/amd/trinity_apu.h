@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2014-2017 Stanislav Shwartsman
+//   Copyright (c) 2014-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -31,7 +31,7 @@
 class trinity_apu_t : public bx_cpuid_t {
 public:
   trinity_apu_t(BX_CPU_C *cpu);
-  virtual ~trinity_apu_t() {}
+  virtual ~trinity_apu_t() { delete cpuid_table; }
 
   // return CPU name
   virtual const char *get_name(void) const { return "trinity_apu"; }
@@ -40,26 +40,20 @@ public:
   virtual Bit32u get_svm_extensions_bitmask(void) const;
 #endif
 
-  virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
-
-  virtual void dump_cpuid(void) const;
+  virtual void get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
 
 private:
+  bx_cpuid_table_t *cpuid_table;
+
   void get_std_cpuid_leaf_0(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const;
 
   void get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const;
-  void get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const;
-  void get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const;
-  void get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const;
 #if BX_SUPPORT_SVM
   void get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const;
 #endif
-  void get_ext_cpuid_leaf_19(cpuid_function_t *leaf) const;
-  void get_ext_cpuid_leaf_1B(cpuid_function_t *leaf) const;
-  void get_ext_cpuid_leaf_1D(Bit32u subfunction, cpuid_function_t *leaf) const;
 };
 
 extern bx_cpuid_t *create_trinity_apu_cpuid(BX_CPU_C *cpu);

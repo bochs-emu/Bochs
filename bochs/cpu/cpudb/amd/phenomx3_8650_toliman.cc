@@ -23,16 +23,95 @@
 
 #include "bochs.h"
 #include "cpu.h"
-#include "gui/siminterface.h"
-#include "param_names.h"
 #include "phenomx3_8650_toliman.h"
 
 #define LOG_THIS cpu->
 
 #if BX_SUPPORT_X86_64
 
+// CPUID dump of the real CPU (taken from phenomx3_8650_toliman.txt), several rows of the same leaf are its subleafs
+static const cpuid_function_t std_leafs[] = {
+  /* leaf 0x00000000 */ { 0x00000005, 0x68747541, 0x444D4163, 0x69746E65 },
+  /* leaf 0x00000001 */ { 0x00100F23, 0x00030800, 0x00802009, 0x178BFBFF },
+  /* leaf 0x00000002 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000003 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000004 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000005 */ { 0x00000040, 0x00000040, 0x00000003, 0x00000000 }
+};
+
+static const cpuid_function_t ext_leafs[] = {
+  /* leaf 0x80000000 */ { 0x8000001A, 0x68747541, 0x444D4163, 0x69746E65 },
+  /* leaf 0x80000001 */ { 0x00100F23, 0x10000563, 0x000007FF, 0xEFD3FBFF },
+  /* leaf 0x80000002 */ { 0x20444D41, 0x6E656850, 0x74286D6F, 0x3820296D },
+  /* leaf 0x80000003 */ { 0x20303536, 0x70697254, 0x432D656C, 0x2065726F },
+  /* leaf 0x80000004 */ { 0x636F7250, 0x6F737365, 0x00000072, 0x00000000 },
+  /* leaf 0x80000005 */ { 0xFF30FF10, 0xFF30FF20, 0x40020140, 0x40020140 },
+  /* leaf 0x80000006 */ { 0x20800000, 0x42004200, 0x02008140, 0x0010A140 },
+  /* leaf 0x80000007 */ { 0x00000000, 0x00000000, 0x00000000, 0x000001F9 },
+  /* leaf 0x80000008 */ { 0x00003030, 0x00000000, 0x00002002, 0x00000000 },
+  /* leaf 0x80000009 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000A */ { 0x00000001, 0x00000040, 0x00000000, 0x00000007 },
+  /* leaf 0x8000000B */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000C */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000E */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000F */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000010 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000011 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000012 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000013 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000014 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000015 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000016 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000017 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000018 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000019 */ { 0xF0300000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000001A */ { 0x00000003, 0x00000000, 0x00000000, 0x00000000 }
+};
+
 phenom_8650_toliman_t::phenom_8650_toliman_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
+  set_max_leaf(BX_SUPPORT_MONITOR_MWAIT ? 0x5 : 0x1, 0x8000001A);
+
+  cpuid_table = new bx_cpuid_table_t(max_std_leaf, max_ext_leaf);
+
+  cpuid_table->register_leaf(0x00000000, 1, std_leafs + 0);
+  cpuid_table->register_leaf(0x00000001, 1, std_leafs + 1);
+#if BX_SUPPORT_MONITOR_MWAIT
+  cpuid_table->register_leaf(0x00000002, 1, std_leafs + 2);
+  cpuid_table->register_leaf(0x00000003, 1, std_leafs + 3);
+  cpuid_table->register_leaf(0x00000004, 1, std_leafs + 4);
+  cpuid_table->register_leaf(0x00000005, 1, std_leafs + 5);
+#endif
+
+  cpuid_table->register_leaf(0x80000000, 1, ext_leafs +  0);
+  cpuid_table->register_leaf(0x80000001, 1, ext_leafs +  1);
+  cpuid_table->register_leaf(0x80000002, 1, ext_leafs +  2);
+  cpuid_table->register_leaf(0x80000003, 1, ext_leafs +  3);
+  cpuid_table->register_leaf(0x80000004, 1, ext_leafs +  4);
+  cpuid_table->register_leaf(0x80000005, 1, ext_leafs +  5);
+  cpuid_table->register_leaf(0x80000006, 1, ext_leafs +  6);
+  cpuid_table->register_leaf(0x80000007, 1, ext_leafs +  7);
+  cpuid_table->register_leaf(0x80000008, 1, ext_leafs +  8);
+  cpuid_table->register_leaf(0x80000009, 1, ext_leafs +  9);
+  cpuid_table->register_leaf(0x8000000A, 1, ext_leafs + 10);
+  cpuid_table->register_leaf(0x8000000B, 1, ext_leafs + 11);
+  cpuid_table->register_leaf(0x8000000C, 1, ext_leafs + 12);
+  cpuid_table->register_leaf(0x8000000D, 1, ext_leafs + 13);
+  cpuid_table->register_leaf(0x8000000E, 1, ext_leafs + 14);
+  cpuid_table->register_leaf(0x8000000F, 1, ext_leafs + 15);
+  cpuid_table->register_leaf(0x80000010, 1, ext_leafs + 16);
+  cpuid_table->register_leaf(0x80000011, 1, ext_leafs + 17);
+  cpuid_table->register_leaf(0x80000012, 1, ext_leafs + 18);
+  cpuid_table->register_leaf(0x80000013, 1, ext_leafs + 19);
+  cpuid_table->register_leaf(0x80000014, 1, ext_leafs + 20);
+  cpuid_table->register_leaf(0x80000015, 1, ext_leafs + 21);
+  cpuid_table->register_leaf(0x80000016, 1, ext_leafs + 22);
+  cpuid_table->register_leaf(0x80000017, 1, ext_leafs + 23);
+  cpuid_table->register_leaf(0x80000018, 1, ext_leafs + 24);
+  cpuid_table->register_leaf(0x80000019, 1, ext_leafs + 25);
+  cpuid_table->register_leaf(0x8000001A, 1, ext_leafs + 26);
+
   if (! BX_SUPPORT_SVM)
     BX_INFO(("WARNING: SVM support is not compiled in !"));
 
@@ -85,13 +164,9 @@ phenom_8650_toliman_t::phenom_8650_toliman_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_XAPIC_EXT);
 }
 
-void phenom_8650_toliman_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void phenom_8650_toliman_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "AMD Phenom(tm) 8650 Triple-Core Processor\0\0\0\0\0\0\0";
-
-  static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
-  if (cpuid_limit_winnt)
-    if (function > 1 && function < 0x80000000) function = 1;
 
   switch(function) {
   case 0x80000000:
@@ -105,14 +180,10 @@ void phenom_8650_toliman_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, 
   case 0x80000004:
     get_ext_cpuid_brand_string_leaf(brand_string, function, leaf);
     return;
-  case 0x80000005:
-    get_ext_cpuid_leaf_5(leaf);
-    return;
-  case 0x80000006:
-    get_ext_cpuid_leaf_6(leaf);
-    return;
-  case 0x80000007:
-    get_ext_cpuid_leaf_7(leaf);
+  case 0x80000005: // CPUID leaf 0x80000005 - L1 Cache and TLB Identifiers
+  case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
+  case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management
+    cpuid_table->get_ext_leaf(function, 0, leaf);
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8_amd(leaf);
@@ -122,11 +193,9 @@ void phenom_8650_toliman_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, 
     get_ext_cpuid_leaf_A(leaf);
     return;
 #endif
-  case 0x80000019:
-    get_ext_cpuid_leaf_19(leaf);
-    return;
-  case 0x8000001A:
-    get_ext_cpuid_leaf_1A(leaf);
+  case 0x80000019: // CPUID leaf 0x80000019 - 1G Page TLB Identifiers
+  case 0x8000001A: // CPUID leaf 0x8000001A - Performance Optimization Identifiers
+    cpuid_table->get_ext_leaf(function, 0, leaf);
     return;
   case 0x00000000:
     get_std_cpuid_leaf_0(leaf);
@@ -196,7 +265,7 @@ void phenom_8650_toliman_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
   // EDX: vendor ID string
   // ECX: vendor ID string
   unsigned max_leaf = BX_SUPPORT_MONITOR_MWAIT ? 0x5 : 0x1;
-  get_leaf_0(max_leaf, vendor_string, leaf, 0x1 /* max_leaf when limit_winnt is activated */);
+  get_leaf_0(max_leaf, vendor_string, leaf);
 }
 
 // leaf 0x00000001 //
@@ -388,33 +457,8 @@ void phenom_8650_toliman_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000004 //
 
 // leaf 0x80000005 - L1 Cache and TLB Identifiers //
-void phenom_8650_toliman_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
-{
-  leaf->eax = 0xFF30FF10;
-  leaf->ebx = 0xFF20FF20;
-  leaf->ecx = 0x40020140;
-  leaf->edx = 0x40020140;
-}
-
 // leaf 0x80000006 - L2 Cache and TLB Identifiers //
-void phenom_8650_toliman_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
-{
-  leaf->eax = 0x20800000;
-  leaf->ebx = 0x42004200;
-  leaf->ecx = 0x02008140;
-  leaf->edx = 0x0010A140;
-}
-
 // leaf 0x80000007 - Advanced Power Management //
-void phenom_8650_toliman_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x80000007 - Advanced Power Management
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0x000001F9;
-}
-
 #if BX_SUPPORT_SVM
 
 // leaf 0x8000000A : SVM //
@@ -430,28 +474,9 @@ void phenom_8650_toliman_t::get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const
 
 // leaf 0x8000000B - 0x80000018: Reserved //
 
-void phenom_8650_toliman_t::get_ext_cpuid_leaf_19(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x800000019 - 1G Page TLB Identifiers
-  leaf->eax = 0xF0300000;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-}
+// leaf 0x80000019 - 1G Page TLB Identifiers //
 
-void phenom_8650_toliman_t::get_ext_cpuid_leaf_1A(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x80000001A - Performance Optimization Identifiers
-  leaf->eax = 0x00000003;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-}
-
-void phenom_8650_toliman_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(BX_SUPPORT_MONITOR_MWAIT ? 0x5 : 0x1, 0x8000001A);
-}
+// leaf 0x8000001A - Performance Optimization Identifiers //
 
 bx_cpuid_t *create_phenom_8650_toliman_cpuid(BX_CPU_C *cpu) { return new phenom_8650_toliman_t(cpu); }
 

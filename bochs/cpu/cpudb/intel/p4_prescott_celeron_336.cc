@@ -29,8 +29,47 @@
 
 #if BX_SUPPORT_X86_64
 
+// CPUID dump of the real CPU (taken from p4_prescott_celeron_336.txt), several rows of the same leaf are its subleafs
+static const cpuid_function_t std_leafs[] = {
+  /* leaf 0x00000000 */ { 0x00000003, 0x756E6547, 0x6C65746E, 0x49656E69 },
+  /* leaf 0x00000001 */ { 0x00000F41, 0x00010800, 0x0000651D, 0xBFEBFBFF },
+  /* leaf 0x00000002 */ { 0x605B5101, 0x00000000, 0x00000000, 0x003C7040 },
+  /* leaf 0x00000003 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }
+};
+
+static const cpuid_function_t ext_leafs[] = {
+  /* leaf 0x80000000 */ { 0x80000008, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000001 */ { 0x00000000, 0x00000000, 0x00000000, 0x20100000 },
+  /* leaf 0x80000002 */ { 0x20202020, 0x20202020, 0x20202020, 0x20202020 },
+  /* leaf 0x80000003 */ { 0x65746E49, 0x2952286C, 0x6C654320, 0x6E6F7265 },
+  /* leaf 0x80000004 */ { 0x20295228, 0x20555043, 0x30382E32, 0x007A4847 },
+  /* leaf 0x80000005 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000006 */ { 0x00000000, 0x00000000, 0x01004040, 0x00000000 },
+  /* leaf 0x80000007 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000008 */ { 0x00003024, 0x00000000, 0x00000000, 0x00000000 }
+};
+
 p4_prescott_celeron_336_t::p4_prescott_celeron_336_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
+  set_max_leaf(0x3, 0x80000008);
+
+  cpuid_table = new bx_cpuid_table_t(max_std_leaf, max_ext_leaf);
+
+  cpuid_table->register_leaf(0x00000000, 1, std_leafs + 0);
+  cpuid_table->register_leaf(0x00000001, 1, std_leafs + 1);
+  cpuid_table->register_leaf(0x00000002, 1, std_leafs + 2);
+  cpuid_table->register_leaf(0x00000003, 1, std_leafs + 3);
+
+  cpuid_table->register_leaf(0x80000000, 1, ext_leafs + 0);
+  cpuid_table->register_leaf(0x80000001, 1, ext_leafs + 1);
+  cpuid_table->register_leaf(0x80000002, 1, ext_leafs + 2);
+  cpuid_table->register_leaf(0x80000003, 1, ext_leafs + 3);
+  cpuid_table->register_leaf(0x80000004, 1, ext_leafs + 4);
+  cpuid_table->register_leaf(0x80000005, 1, ext_leafs + 5);
+  cpuid_table->register_leaf(0x80000006, 1, ext_leafs + 6);
+  cpuid_table->register_leaf(0x80000007, 1, ext_leafs + 7);
+  cpuid_table->register_leaf(0x80000008, 1, ext_leafs + 8);
+
   if (! BX_SUPPORT_MONITOR_MWAIT)
     BX_INFO(("WARNING: MONITOR/MWAIT support is not compiled in !"));
 
@@ -61,12 +100,9 @@ p4_prescott_celeron_336_t::p4_prescott_celeron_336_t(BX_CPU_C *cpu): bx_cpuid_t(
   enable_cpu_extension(BX_ISA_LONG_MODE);
   enable_cpu_extension(BX_ISA_NX);
   enable_cpu_extension(BX_ISA_CMPXCHG16B);
-
-  max_std_leaf = 0x3;
-  max_ext_leaf = 0x80000008;
 }
 
-void p4_prescott_celeron_336_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void p4_prescott_celeron_336_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "                Intel(R) Celeron(R) CPU 2.80GHz";
 
@@ -83,13 +119,9 @@ void p4_prescott_celeron_336_t::get_cpuid_leaf(Bit32u function, Bit32u subfuncti
     get_ext_cpuid_brand_string_leaf(brand_string, function, leaf);
     return;
   case 0x80000005:
-    get_reserved_leaf(leaf);
-    return;
   case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
-    get_leaf(leaf, 0x00000000, 0x00000000, 0x01004040, 0x00000000);
-    return;
   case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management leaf
-    get_reserved_leaf(leaf);
+    cpuid_table->get_ext_leaf(function, 0, leaf);
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8(leaf);
@@ -101,11 +133,9 @@ void p4_prescott_celeron_336_t::get_cpuid_leaf(Bit32u function, Bit32u subfuncti
     get_std_cpuid_leaf_1(leaf);
     return;
   case 0x00000002: // CPUID leaf 0x00000002 - Cache and TLB Descriptors
-    get_leaf(leaf, 0x605B5101, 0x00000000, 0x00000000, 0x003C7040);
-    return;
   case 0x00000003: // Processor Serial Number
   default:
-    get_leaf(leaf, 0x00000000, 0x00000000, 0x00000000, 0x00000000);
+    cpuid_table->get_std_leaf(function, 0, leaf);
     return;
   }
 }
@@ -273,11 +303,6 @@ void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) con
 // leaf 0x80000006 - L2 Cache and TLB Identifiers
 // leaf 0x80000007 - Advanced Power Management
 // leaf 0x80000008 //
-
-void p4_prescott_celeron_336_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(max_std_leaf, max_ext_leaf);
-}
 
 bx_cpuid_t *create_p4_prescott_celeron_336_cpuid(BX_CPU_C *cpu) { return new p4_prescott_celeron_336_t(cpu); }
 

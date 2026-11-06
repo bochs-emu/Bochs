@@ -23,16 +23,121 @@
 
 #include "bochs.h"
 #include "cpu.h"
-#include "gui/siminterface.h"
-#include "param_names.h"
 #include "trinity_apu.h"
 
 #define LOG_THIS cpu->
 
 #if BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
 
+// CPUID dump of the real CPU (taken from trinity_apu.txt), several rows of the same leaf are its subleafs
+static const cpuid_function_t std_leafs[] = {
+  /* leaf 0x00000000 */ { 0x0000000D, 0x68747541, 0x444D4163, 0x69746E65 },
+  /* leaf 0x00000001 */ { 0x00610F01, 0x00040800, 0x3E98320B, 0x178BFBFF },
+  /* leaf 0x00000002 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000003 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000004 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // not in dump
+  /* leaf 0x00000005 */ { 0x00000040, 0x00000040, 0x00000003, 0x00000000 },
+  /* leaf 0x00000006 */ { 0x00000000, 0x00000000, 0x00000001, 0x00000000 },
+  /* leaf 0x00000007 */ { 0x00000000, 0x00000008, 0x00000000, 0x00000000 },
+  /* leaf 0x00000008 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000009 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000000A */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000000B */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // not in dump
+  /* leaf 0x0000000C */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000000D */ { 0x00000007, 0x00000340, 0x000003C0, 0x40000000 }, // [SL 00]
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 01] not in dump
+  /* leaf 0x0000000D */ { 0x00000100, 0x00000240, 0x00000000, 0x00000000 }  // [SL 02]
+};
+
+static const cpuid_function_t ext_leafs[] = {
+  /* leaf 0x80000000 */ { 0x8000001E, 0x68747541, 0x444D4163, 0x69746E65 },
+  /* leaf 0x80000001 */ { 0x00610F01, 0x20000000, 0x01EBBFFF, 0x2FD3FBFF },
+  /* leaf 0x80000002 */ { 0x20444D41, 0x2D303141, 0x30303835, 0x5041204B },
+  /* leaf 0x80000003 */ { 0x69772055, 0x52206874, 0x6F656461, 0x6D74286E },
+  /* leaf 0x80000004 */ { 0x44482029, 0x61724720, 0x63696870, 0x00202073 },
+  /* leaf 0x80000005 */ { 0xFF40FF18, 0xFF40FF30, 0x10040140, 0x40020140 },
+  /* leaf 0x80000006 */ { 0x64006400, 0x64004200, 0x08008140, 0x00000000 },
+  /* leaf 0x80000007 */ { 0x00000000, 0x00000000, 0x00000000, 0x000007D9 },
+  /* leaf 0x80000008 */ { 0x00003030, 0x00000000, 0x00004003, 0x00000000 },
+  /* leaf 0x80000009 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000A */ { 0x00000001, 0x00010000, 0x00000000, 0x00001CFF },
+  /* leaf 0x8000000B */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000C */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000E */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000F */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000010 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000011 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000012 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000013 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000014 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000015 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000016 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000017 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000018 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000019 */ { 0xF040F018, 0x64006400, 0x00000000, 0x00000000 },
+  /* leaf 0x8000001A */ { 0x00000003, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000001B */ { 0x000000FF, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000001C */ { 0x00000000, 0x80032013, 0x00010200, 0x8000000F },
+  /* leaf 0x8000001D */ { 0x00000121, 0x00C0003F, 0x0000003F, 0x00000000 }, // [SL 00]
+  /* leaf 0x8000001D */ { 0x00004122, 0x0040003F, 0x000001FF, 0x00000000 }, // [SL 01]
+  /* leaf 0x8000001D */ { 0x00004143, 0x03C0003F, 0x000007FF, 0x00000001 }, // [SL 02]
+  /* leaf 0x8000001E */ { 0x00000010, 0x00000100, 0x00000000, 0x00000000 }
+};
+
 trinity_apu_t::trinity_apu_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
+  set_max_leaf(0xD, 0x8000001E);
+
+  cpuid_table = new bx_cpuid_table_t(max_std_leaf, max_ext_leaf);
+
+  cpuid_table->register_leaf(0x00000000, 1, std_leafs +  0);
+  cpuid_table->register_leaf(0x00000001, 1, std_leafs +  1);
+  cpuid_table->register_leaf(0x00000002, 1, std_leafs +  2);
+  cpuid_table->register_leaf(0x00000003, 1, std_leafs +  3);
+  cpuid_table->register_leaf(0x00000004, 1, std_leafs +  4);
+  cpuid_table->register_leaf(0x00000005, 1, std_leafs +  5);
+  cpuid_table->register_leaf(0x00000006, 1, std_leafs +  6);
+  cpuid_table->register_leaf(0x00000007, 1, std_leafs +  7);
+  cpuid_table->register_leaf(0x00000008, 1, std_leafs +  8);
+  cpuid_table->register_leaf(0x00000009, 1, std_leafs +  9);
+  cpuid_table->register_leaf(0x0000000A, 1, std_leafs + 10);
+  cpuid_table->register_leaf(0x0000000B, 1, std_leafs + 11);
+  cpuid_table->register_leaf(0x0000000C, 1, std_leafs + 12);
+  cpuid_table->register_leaf(0x0000000D, 3, std_leafs + 13);
+
+  cpuid_table->register_leaf(0x80000000, 1, ext_leafs +  0);
+  cpuid_table->register_leaf(0x80000001, 1, ext_leafs +  1);
+  cpuid_table->register_leaf(0x80000002, 1, ext_leafs +  2);
+  cpuid_table->register_leaf(0x80000003, 1, ext_leafs +  3);
+  cpuid_table->register_leaf(0x80000004, 1, ext_leafs +  4);
+  cpuid_table->register_leaf(0x80000005, 1, ext_leafs +  5);
+  cpuid_table->register_leaf(0x80000006, 1, ext_leafs +  6);
+  cpuid_table->register_leaf(0x80000007, 1, ext_leafs +  7);
+  cpuid_table->register_leaf(0x80000008, 1, ext_leafs +  8);
+  cpuid_table->register_leaf(0x80000009, 1, ext_leafs +  9);
+  cpuid_table->register_leaf(0x8000000A, 1, ext_leafs + 10);
+  cpuid_table->register_leaf(0x8000000B, 1, ext_leafs + 11);
+  cpuid_table->register_leaf(0x8000000C, 1, ext_leafs + 12);
+  cpuid_table->register_leaf(0x8000000D, 1, ext_leafs + 13);
+  cpuid_table->register_leaf(0x8000000E, 1, ext_leafs + 14);
+  cpuid_table->register_leaf(0x8000000F, 1, ext_leafs + 15);
+  cpuid_table->register_leaf(0x80000010, 1, ext_leafs + 16);
+  cpuid_table->register_leaf(0x80000011, 1, ext_leafs + 17);
+  cpuid_table->register_leaf(0x80000012, 1, ext_leafs + 18);
+  cpuid_table->register_leaf(0x80000013, 1, ext_leafs + 19);
+  cpuid_table->register_leaf(0x80000014, 1, ext_leafs + 20);
+  cpuid_table->register_leaf(0x80000015, 1, ext_leafs + 21);
+  cpuid_table->register_leaf(0x80000016, 1, ext_leafs + 22);
+  cpuid_table->register_leaf(0x80000017, 1, ext_leafs + 23);
+  cpuid_table->register_leaf(0x80000018, 1, ext_leafs + 24);
+  cpuid_table->register_leaf(0x80000019, 1, ext_leafs + 25);
+  cpuid_table->register_leaf(0x8000001A, 1, ext_leafs + 26);
+  cpuid_table->register_leaf(0x8000001B, 1, ext_leafs + 27);
+  cpuid_table->register_leaf(0x8000001C, 1, ext_leafs + 28);
+  cpuid_table->register_leaf(0x8000001D, 3, ext_leafs + 29);
+  cpuid_table->register_leaf(0x8000001E, 1, ext_leafs + 32);
+
   BX_INFO(("WARNING: Light Weight Profiling (LWP) support is not implemented !"));
 
   if (! BX_SUPPORT_SVM)
@@ -96,13 +201,9 @@ trinity_apu_t::trinity_apu_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_TCE);
 }
 
-void trinity_apu_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void trinity_apu_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   static const char* brand_string = "AMD A8-5600K APU with Radeon(tm) HD Graphics   ";
-
-  static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
-  if (cpuid_limit_winnt)
-    if (function > 1 && function < 0x80000000) function = 1;
 
   switch(function) {
   case 0x80000000:
@@ -116,14 +217,10 @@ void trinity_apu_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_fu
   case 0x80000004:
     get_ext_cpuid_brand_string_leaf(brand_string, function, leaf);
     return;
-  case 0x80000005:
-    get_ext_cpuid_leaf_5(leaf);
-    return;
-  case 0x80000006:
-    get_ext_cpuid_leaf_6(leaf);
-    return;
-  case 0x80000007:
-    get_ext_cpuid_leaf_7(leaf);
+  case 0x80000005: // CPUID leaf 0x80000005 - L1 Cache and TLB Identifiers
+  case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
+  case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management
+    cpuid_table->get_ext_leaf(function, 0, leaf);
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8_amd(leaf);
@@ -133,20 +230,16 @@ void trinity_apu_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_fu
     get_ext_cpuid_leaf_A(leaf);
     return;
 #endif
-  case 0x80000019:
-    get_ext_cpuid_leaf_19(leaf);
-    return;
+  case 0x80000019: // CPUID leaf 0x80000019 - 1G Page TLB Identifiers
   case 0x8000001A: // CPUID leaf 0x8000001A - Performance Optimization Identifiers
-    get_leaf(leaf, 0x00000003, 0x00000000, 0x00000000, 0x00000000);
-    return;
-  case 0x8000001B:
-    get_ext_cpuid_leaf_1B(leaf);
+  case 0x8000001B: // CPUID leaf 0x8000001B - Instruction Based Sampling Identifiers
+    cpuid_table->get_ext_leaf(function, 0, leaf);
     return;
   case 0x8000001C:
     get_reserved_leaf(leaf); // Lightweight Profiling Capabilities (not implemented)
     return;
-  case 0x8000001D:
-    get_ext_cpuid_leaf_1D(subfunction, leaf);
+  case 0x8000001D: // CPUID leaf 0x8000001D - Cache Properties
+    cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x8000001E:
     get_ext_cpuid_leaf_1E(leaf);
@@ -161,7 +254,7 @@ void trinity_apu_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_fu
     get_std_cpuid_monitor_mwait_leaf(leaf, 0);
     return;
   case 0x00000006: // CPUID leaf 0x00000006 - Thermal and Power Management Leaf
-    get_leaf(leaf, 0x00000000, 0x00000000, 0x00000001, 0x00000000);
+    cpuid_table->get_std_leaf(function, 0, leaf);
     return;
   case 0x00000007:
     get_std_cpuid_leaf_7(subfunction, leaf);
@@ -230,7 +323,7 @@ void trinity_apu_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
   // EBX: vendor ID string
   // EDX: vendor ID string
   // ECX: vendor ID string
-  get_leaf_0(0xD, "AuthenticAMD", leaf, 0x1);
+  get_leaf_0(0xD, "AuthenticAMD", leaf);
 }
 
 // leaf 0x00000001 //
@@ -406,10 +499,10 @@ void trinity_apu_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [9:9]   OSVW: OS visible workarounds (AMD)
   // * [10:10] IBS: Instruction based sampling
   // * [11:11] XOP: Extended Operations Support and XOP Prefix
-  // * [12:12] SKINIT support
+  // ! [12:12] SKINIT support
   // * [13:13] WDT: Watchdog timer support
   //   [14:14] Reserved
-  // * [15:15] LWP: Light weight profiling
+  // ! [15:15] LWP: Light weight profiling
   // * [16:16] FMA4: Four-operand FMA instructions support
   // * [17:17] TCE: Translation Cache Extensions
   //   [18:18] Reserved
@@ -424,7 +517,6 @@ void trinity_apu_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
                                        BX_CPUID_EXT1_ECX_PREFETCHW |
                                        BX_CPUID_EXT1_ECX_OSVW |
                                        BX_CPUID_EXT1_ECX_IBS |
-                                       BX_CPUID_EXT1_ECX_XOP |
                                     /* BX_CPUID_EXT1_ECX_SKINIT | */ // not implemented
                                        BX_CPUID_EXT1_ECX_WDT |
                                     /* BX_CPUID_EXT1_ECX_LWP | */    // not implemented
@@ -474,34 +566,9 @@ void trinity_apu_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000003 //
 // leaf 0x80000004 //
 
-// leaf 0x80000005 //
-void trinity_apu_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
-{
-  leaf->eax = 0xFF40FF18;
-  leaf->ebx = 0xFF40FF30;
-  leaf->ecx = 0x10040140;
-  leaf->edx = 0x40020140;
-}
-
-// leaf 0x80000006 //
-void trinity_apu_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
-{
-  leaf->eax = 0x64006400;
-  leaf->ebx = 0x64004200;
-  leaf->ecx = 0x08008140;
-  leaf->edx = 0x00000000;
-}
-
-// leaf 0x80000007 //
-void trinity_apu_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x80000007 - Advanced Power Management
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0x000007D9;
-}
-
+// leaf 0x80000005 - L1 Cache and TLB Identifiers //
+// leaf 0x80000006 - L2 Cache and TLB Identifiers //
+// leaf 0x80000007 - Advanced Power Management //
 #if BX_SUPPORT_SVM
 
 // leaf 0x8000000A : SVM //
@@ -517,63 +584,13 @@ void trinity_apu_t::get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const
 
 // leaf 0x8000000B - 0x80000018: Reserved //
 
-void trinity_apu_t::get_ext_cpuid_leaf_19(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x800000019 - 1G Page TLB Identifiers
-  leaf->eax = 0xF040F018;
-  leaf->ebx = 0x64006400;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-}
+// leaf 0x80000019 - 1G Page TLB Identifiers //
 
 // CPUID leaf 0x80000001A - Performance Optimization Identifiers
 
-void trinity_apu_t::get_ext_cpuid_leaf_1B(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x80000001B - Instruction Based Sampling Identifiers
-  leaf->eax = 0xFF;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
+// leaf 0x8000001B - Instruction Based Sampling Identifiers //
 
-  BX_INFO(("WARNING: Instruction Based Sampling is not implemented"));
-}
-
-void trinity_apu_t::get_ext_cpuid_leaf_1D(Bit32u subfunction, cpuid_function_t *leaf) const
-{
-  // CPUID function 0x80000001D - Cache Properties
-  switch(subfunction) {
-  case 0:
-    leaf->eax = 0x00000121;
-    leaf->ebx = 0x00C0003F;
-    leaf->ecx = 0x0000003F;
-    leaf->edx = 0x00000000;
-    return;
-  case 1:
-    leaf->eax = 0x00004122;
-    leaf->ebx = 0x0040003F;
-    leaf->ecx = 0x000001FF;
-    leaf->edx = 0x00000000;
-    return;
-  case 2:
-    leaf->eax = 0x00004143;
-    leaf->ebx = 0x03C0003F;
-    leaf->ecx = 0x000007FF;
-    leaf->edx = 0x00000001;
-    return;
-  default:
-    leaf->eax = 0;
-    leaf->ebx = 0;
-    leaf->ecx = 0;
-    leaf->edx = 0;
-    return;
-  }
-}
-
-void trinity_apu_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(0xD, 0x8000001E);
-}
+// leaf 0x8000001D - Cache Properties //
 
 bx_cpuid_t *create_trinity_apu_cpuid(BX_CPU_C *cpu) { return new trinity_apu_t(cpu); }
 

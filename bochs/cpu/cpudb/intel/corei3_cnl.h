@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2018 Stanislav Shwartsman
+//   Copyright (c) 2018-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -31,7 +31,7 @@
 class corei3_cnl_t : public bx_cpuid_t {
 public:
   corei3_cnl_t(BX_CPU_C *cpu);
-  virtual ~corei3_cnl_t() {}
+  virtual ~corei3_cnl_t() { delete cpuid_table; }
 
   // return CPU name
   virtual const char *get_name(void) const { return "corei3_cnl_t"; }
@@ -40,18 +40,13 @@ public:
   virtual Bit32u get_vmx_extensions_bitmask(void) const;
 #endif
 
-  virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
-
-  virtual void dump_cpuid(void) const;
+  virtual void get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
 
 private:
-  Bit32u max_std_leaf;
-  Bit32u max_ext_leaf;
+  bx_cpuid_table_t *cpuid_table;
 
   void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
-  void get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const;
-  void get_std_cpuid_leaf_A(cpuid_function_t *leaf) const;
 
   void get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const;
 };

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2025 Stanislav Shwartsman
+//   Copyright (c) 2025-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -31,24 +31,21 @@
 class athlon_xp_t : public bx_cpuid_t {
 public:
   athlon_xp_t(BX_CPU_C *cpu);
-  virtual ~athlon_xp_t() {}
+  virtual ~athlon_xp_t() { delete cpuid_table; }
 
   // return CPU name
   virtual const char *get_name(void) const { return "athlon_xp"; }
 
-  virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
-
-  virtual void dump_cpuid(void) const;
+  virtual void get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
 
 private:
+  bx_cpuid_table_t *cpuid_table;
+
   void get_std_cpuid_leaf_0(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
 
   void get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const;
-  void get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const;
-  void get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const;
-  void get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const;
 };
 
 extern bx_cpuid_t *create_athlon_xp_cpuid(BX_CPU_C *cpu);

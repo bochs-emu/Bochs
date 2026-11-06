@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2017 Stanislav Shwartsman
+//   Copyright (c) 2011-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -31,22 +31,17 @@
 class atom_n270_t : public bx_cpuid_t {
 public:
   atom_n270_t(BX_CPU_C *cpu);
-  virtual ~atom_n270_t() {}
+  virtual ~atom_n270_t() { delete cpuid_table; }
 
   // return CPU name
   virtual const char *get_name(void) const { return "atom_n270"; }
 
-  virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
-
-  virtual void dump_cpuid(void) const;
+  virtual void get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
 
 private:
-  Bit32u max_std_leaf;
-  Bit32u max_ext_leaf;
+  bx_cpuid_table_t *cpuid_table;
 
   void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
-  void get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const;
-  void get_std_cpuid_leaf_A(cpuid_function_t *leaf) const;
 
   void get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const;
 };
