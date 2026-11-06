@@ -33,6 +33,36 @@ struct cpuid_function_t {
   bool is_empty() { return (eax | ebx | ecx | edx) == 0; }
 };
 
+// CPUID leafs of the modeled CPU, every registered leaf points into a static
+// flat table of the model (several rows of the same leaf are its subleafs)
+class bx_cpuid_table_t {
+public:
+  bx_cpuid_table_t(Bit32u max_std_leaf, Bit32u max_ext_leaf);
+ ~bx_cpuid_table_t();
+
+  // rows must stay valid for the lifetime of the table (static table of the model)
+  // the leaf must be in range, not registered yet and have at least one row
+  void register_leaf(Bit32u function, Bit32u num_subleafs, const cpuid_function_t *subleafs);
+
+  void get_std_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
+  void get_ext_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
+
+private:
+  Bit32u max_std_leaf;
+  Bit32u max_ext_leaf;
+
+  const cpuid_function_t **std_leafs; // [max_std_leaf + 1], reserved leaf if never registered
+  Bit32u *std_leafs_num_subleafs;     // [max_std_leaf + 1]
+
+  const cpuid_function_t **ext_leafs; // [max_ext_leaf - 0x80000000 + 1], reserved leaf if never registered, NULL if no ext leafs
+  Bit32u *ext_leafs_num_subleafs;     // [max_ext_leaf - 0x80000000 + 1], NULL if no ext leafs
+
+  // function must be a valid std leaf (<= max_std_leaf)
+  Bit32u get_std_leaf_num_subleafs(Bit32u function) const { return std_leafs_num_subleafs[function]; }
+  // function must be a valid ext leaf (0x80000000 .. max_ext_leaf)
+  Bit32u get_ext_leaf_num_subleafs(Bit32u function) const { return ext_leafs_num_subleafs[function - 0x80000000]; }
+};
+
 class VMCS_Mapping;
 
 // modes of the bochsrc 'cpu: cpuid_freq=' option controlling how the CPUID

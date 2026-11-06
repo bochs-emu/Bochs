@@ -44,6 +44,101 @@ int match_cpu_feature(const char *name)
   return -1; // match not found
 }
 
+// every leaf never registered in the table points to this reserved leaf with 1 subleaf
+static const cpuid_function_t reserved_leaf = { 0, 0, 0, 0 };
+
+bx_cpuid_table_t::bx_cpuid_table_t(Bit32u _max_std_leaf, Bit32u _max_ext_leaf):
+    max_std_leaf(_max_std_leaf), max_ext_leaf(_max_ext_leaf)
+{
+  std_leafs = new const cpuid_function_t* [max_std_leaf + 1];
+  std_leafs_num_subleafs = new Bit32u [max_std_leaf + 1];
+
+  for (unsigned n=0; n <= max_std_leaf; n++) {
+    std_leafs[n] = &reserved_leaf;
+    std_leafs_num_subleafs[n] = 1;
+  }
+
+  // models without ext leafs have max_ext_leaf below 0x80000000
+  if (max_ext_leaf >= 0x80000000) {
+    Bit32u num_ext_leafs = max_ext_leaf - 0x80000000 + 1;
+
+    ext_leafs = new const cpuid_function_t* [num_ext_leafs];
+    ext_leafs_num_subleafs = new Bit32u [num_ext_leafs];
+
+    for (unsigned n=0; n < num_ext_leafs; n++) {
+      ext_leafs[n] = &reserved_leaf;
+      ext_leafs_num_subleafs[n] = 1;
+    }
+  }
+  else {
+    ext_leafs = NULL;
+    ext_leafs_num_subleafs = NULL;
+  }
+}
+
+bx_cpuid_table_t::~bx_cpuid_table_t()
+{
+  delete [] std_leafs;
+  delete [] std_leafs_num_subleafs;
+  delete [] ext_leafs;
+  delete [] ext_leafs_num_subleafs;
+}
+
+void bx_cpuid_table_t::register_leaf(Bit32u function, Bit32u num_subleafs, const cpuid_function_t *subleafs)
+{
+  assert(num_subleafs > 0 && subleafs != NULL);
+
+  if (function >= 0x80000000) {
+    assert(ext_leafs != NULL && function <= max_ext_leaf);
+
+    Bit32u ext_leaf = function - 0x80000000;
+    assert(ext_leafs[ext_leaf] == &reserved_leaf);
+
+    ext_leafs[ext_leaf] = subleafs;
+    ext_leafs_num_subleafs[ext_leaf] = num_subleafs;
+  }
+  else {
+    assert(function <= max_std_leaf && std_leafs[function] == &reserved_leaf);
+
+    std_leafs[function] = subleafs;
+    std_leafs_num_subleafs[function] = num_subleafs;
+  }
+}
+
+void bx_cpuid_table_t::get_std_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+{
+  // unknown leaf returns the same as the highest std leaf
+  if (function > max_std_leaf)
+    function = max_std_leaf;
+
+  // subleaf beyond the last row of the leaf returns reserved (all zero)
+  if (subfunction >= std_leafs_num_subleafs[function]) {
+    *leaf = reserved_leaf;
+    return;
+  }
+
+  *leaf = std_leafs[function][subfunction];
+}
+
+void bx_cpuid_table_t::get_ext_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+{
+  // unknown leaf returns the same as the highest std leaf
+  if (ext_leafs == NULL || function < 0x80000000 || function > max_ext_leaf) {
+    get_std_leaf(max_std_leaf, subfunction, leaf);
+    return;
+  }
+
+  Bit32u ext_leaf = function - 0x80000000;
+
+  // subleaf beyond the last row of the leaf returns reserved (all zero)
+  if (subfunction >= ext_leafs_num_subleafs[ext_leaf]) {
+    *leaf = reserved_leaf;
+    return;
+  }
+
+  *leaf = ext_leafs[ext_leaf][subfunction];
+}
+
 #define LOG_THIS cpu->
 bx_cpuid_t::bx_cpuid_t(BX_CPU_C *_cpu): cpu(_cpu)
 {
@@ -1713,6 +1808,9 @@ void bx_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_funct
 
   if (function == 0xA)
     BX_INFO(("WARNING: Architectural Performance Monitoring is not implemented"));
+
+  if (function == 0x8000001B)
+    BX_INFO(("WARNING: Instruction Based Sampling is not implemented"));
 }
 
 void bx_cpuid_t::dump_cpuid_leaf(unsigned function, unsigned subfunction) const

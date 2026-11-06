@@ -29,8 +29,43 @@
 
 #if BX_CPU_LEVEL >= 6
 
+// CPUID dump of the real CPU (taken from athlon_xp.txt), several rows of the same leaf are its subleafs
+static const cpuid_function_t std_leafs[] = {
+  /* leaf 0x00000000 */ { 0x00000001, 0x68747541, 0x444D4163, 0x69746E65 },
+  /* leaf 0x00000001 */ { 0x00000680, 0x00000000, 0x00000000, 0x0383FBFF }
+};
+
+static const cpuid_function_t ext_leafs[] = {
+  /* leaf 0x80000000 */ { 0x80000008, 0x68747541, 0x444D4163, 0x69746E65 },
+  /* leaf 0x80000001 */ { 0x00000780, 0x00000000, 0x00000000, 0xC1C3FBFF },
+  /* leaf 0x80000002 */ { 0x20444D41, 0x6C687441, 0x74286E6F, 0x5820296D },
+  /* leaf 0x80000003 */ { 0x32322050, 0x002B3030, 0x00000000, 0x00000000 },
+  /* leaf 0x80000004 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000005 */ { 0x0408FF08, 0xFF20FF10, 0x40020140, 0x40020140 },
+  /* leaf 0x80000006 */ { 0x00000000, 0x41004100, 0x01008140, 0x00000000 },
+  /* leaf 0x80000007 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000001 },
+  /* leaf 0x80000008 */ { 0x00002022, 0x00000000, 0x00000000, 0x00000000 }
+};
+
 athlon_xp_t::athlon_xp_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
+  set_max_leaf(0x1, 0x80000008);
+
+  cpuid_table = new bx_cpuid_table_t(max_std_leaf, max_ext_leaf);
+
+  cpuid_table->register_leaf(0x00000000, 1, std_leafs + 0);
+  cpuid_table->register_leaf(0x00000001, 1, std_leafs + 1);
+
+  cpuid_table->register_leaf(0x80000000, 1, ext_leafs + 0);
+  cpuid_table->register_leaf(0x80000001, 1, ext_leafs + 1);
+  cpuid_table->register_leaf(0x80000002, 1, ext_leafs + 2);
+  cpuid_table->register_leaf(0x80000003, 1, ext_leafs + 3);
+  cpuid_table->register_leaf(0x80000004, 1, ext_leafs + 4);
+  cpuid_table->register_leaf(0x80000005, 1, ext_leafs + 5);
+  cpuid_table->register_leaf(0x80000006, 1, ext_leafs + 6);
+  cpuid_table->register_leaf(0x80000007, 1, ext_leafs + 7);
+  cpuid_table->register_leaf(0x80000008, 1, ext_leafs + 8);
+
   enable_cpu_extension(BX_ISA_X87);
   enable_cpu_extension(BX_ISA_486);
   enable_cpu_extension(BX_ISA_PENTIUM);
@@ -53,8 +88,6 @@ athlon_xp_t::athlon_xp_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_PAT);
   enable_cpu_extension(BX_ISA_SSE);
   enable_cpu_extension(BX_ISA_XAPIC);
-
-  set_max_leaf(0x1, 0x80000008);
 }
 
 void athlon_xp_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -73,14 +106,10 @@ void athlon_xp_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, c
   case 0x80000004:
     get_ext_cpuid_brand_string_leaf(brand_string, function, leaf);
     return;
-  case 0x80000005:
-    get_ext_cpuid_leaf_5(leaf);
-    return;
-  case 0x80000006:
-    get_ext_cpuid_leaf_6(leaf);
-    return;
-  case 0x80000007:
-    get_ext_cpuid_leaf_7(leaf);
+  case 0x80000005: // CPUID leaf 0x80000005 - L1 Cache and TLB Identifiers
+  case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
+  case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management
+    cpuid_table->get_ext_leaf(function, 0, leaf);
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8(leaf);
@@ -211,32 +240,8 @@ void athlon_xp_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 }
 
 // leaf 0x80000005 - L1 Cache and TLB Identifiers //
-void athlon_xp_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
-{
-  leaf->eax = 0x0408ff08;
-  leaf->ebx = 0xff20ff10;
-  leaf->ecx = 0x40020140;
-  leaf->edx = 0x40020140;
-}
-
 // leaf 0x80000006 - L2 Cache and TLB Identifiers //
-void athlon_xp_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
-{
-  leaf->eax = 0x00000000;
-  leaf->ebx = 0x41004100;
-  leaf->ecx = 0x01008140;
-  leaf->edx = 0x00000000;
-}
-
 // leaf 0x80000007 - Advanced Power Management //
-void athlon_xp_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
-{
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0x00000001;
-}
-
 bx_cpuid_t *create_athlon_xp_cpuid(BX_CPU_C *cpu) { return new athlon_xp_t(cpu); }
 
 #endif

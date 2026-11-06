@@ -29,8 +29,23 @@
 
 #define LOG_THIS cpu->
 
+// CPUID dump of the real CPU (taken from p2_klamath.txt), several rows of the same leaf are its subleafs
+static const cpuid_function_t std_leafs[] = {
+  /* leaf 0x00000000 */ { 0x00000002, 0x756E6547, 0x6C65746E, 0x49656E69 },
+  /* leaf 0x00000001 */ { 0x00000634, 0x00000000, 0x00000000, 0x0080FBFF },
+  /* leaf 0x00000002 */ { 0x03020101, 0x00000000, 0x00000000, 0x0C040843 }
+};
+
 p2_klamath_t::p2_klamath_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
+  set_max_leaf(0x2, 0);
+
+  cpuid_table = new bx_cpuid_table_t(max_std_leaf, max_ext_leaf);
+
+  cpuid_table->register_leaf(0x00000000, 1, std_leafs + 0);
+  cpuid_table->register_leaf(0x00000001, 1, std_leafs + 1);
+  cpuid_table->register_leaf(0x00000002, 1, std_leafs + 2);
+
   enable_cpu_extension(BX_ISA_X87);
   enable_cpu_extension(BX_ISA_486);
   enable_cpu_extension(BX_ISA_PENTIUM);
@@ -44,8 +59,6 @@ p2_klamath_t::p2_klamath_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_PAE);
   enable_cpu_extension(BX_ISA_PGE);
   enable_cpu_extension(BX_ISA_MTRR);
-
-  set_max_leaf(0x2, 0);
 }
 
 void p2_klamath_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -59,7 +72,7 @@ void p2_klamath_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, 
     return;
   case 0x00000002: // CPUID leaf 0x00000002 - Cache and TLB Descriptors
   default:
-    get_leaf(leaf, 0x03020101, 0x00000000, 0x00000000, 0x0C040843);
+    cpuid_table->get_std_leaf(function, 0, leaf);
     return;
   }
 }

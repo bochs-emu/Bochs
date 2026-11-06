@@ -31,8 +31,118 @@
 
 #if BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
 
+// CPUID dump of the real CPU (taken from ryzen.txt), several rows of the same leaf are its subleafs
+static const cpuid_function_t std_leafs[] = {
+  /* leaf 0x00000000 */ { 0x0000000D, 0x68747541, 0x444D4163, 0x69746E65 },
+  /* leaf 0x00000001 */ { 0x00800F11, 0x00100800, 0x7ED8320B, 0x178BFBFF },
+  /* leaf 0x00000002 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000003 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000004 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000005 */ { 0x00000040, 0x00000040, 0x00000003, 0x00000000 },
+  /* leaf 0x00000006 */ { 0x00000004, 0x00000000, 0x00000001, 0x00000000 },
+  /* leaf 0x00000007 */ { 0x00000000, 0x209C01A9, 0x00000000, 0x00000000 },
+  /* leaf 0x00000008 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000009 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000000A */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000000B */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000000C */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000000D */ { 0x00000007, 0x00000340, 0x00000340, 0x00000000 }, // [SL 00]
+  /* leaf 0x0000000D */ { 0x0000000F, 0x00000340, 0x00000000, 0x00000000 }, // [SL 01]
+  /* leaf 0x0000000D */ { 0x00000100, 0x00000240, 0x00000000, 0x00000000 }  // [SL 02]
+};
+
+static const cpuid_function_t ext_leafs[] = {
+  /* leaf 0x80000000 */ { 0x8000001F, 0x68747541, 0x444D4163, 0x69746E65 },
+  /* leaf 0x80000001 */ { 0x00800F11, 0x20000000, 0x35C233FF, 0x2FD3FBFF },
+  /* leaf 0x80000002 */ { 0x20444D41, 0x657A7952, 0x2037206E, 0x30303731 },
+  /* leaf 0x80000003 */ { 0x67694520, 0x432D7468, 0x2065726F, 0x636F7250 },
+  /* leaf 0x80000004 */ { 0x6F737365, 0x20202072, 0x20202020, 0x00202020 },
+  /* leaf 0x80000005 */ { 0xFF40FF40, 0xFF40FF40, 0x20080140, 0x40040140 },
+  /* leaf 0x80000006 */ { 0x26006400, 0x66006400, 0x02006140, 0x00808140 },
+  /* leaf 0x80000007 */ { 0x00000000, 0x0000001B, 0x00000000, 0x00006599 },
+  /* leaf 0x80000008 */ { 0x00003030, 0x00000007, 0x0000400F, 0x00000000 },
+  /* leaf 0x80000009 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000A */ { 0x00000001, 0x00008000, 0x00000000, 0x0001BCFF },
+  /* leaf 0x8000000B */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000C */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000E */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000F */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000010 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000011 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000012 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000013 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000014 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000015 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000016 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000017 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000018 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000019 */ { 0xF040F040, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000001A */ { 0x00000003, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000001B */ { 0x000003FF, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000001C */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000001D */ { 0x00004121, 0x01C0003F, 0x0000003F, 0x00000000 }, // [SL 00]
+  /* leaf 0x8000001D */ { 0x00004122, 0x00C0003F, 0x000000FF, 0x00000000 }, // [SL 01]
+  /* leaf 0x8000001D */ { 0x00004143, 0x01C0003F, 0x000003FF, 0x00000002 }, // [SL 02]
+  /* leaf 0x8000001D */ { 0x0001C163, 0x03C0003F, 0x00001FFF, 0x00000001 }, // [SL 03]
+  /* leaf 0x8000001E */ { 0x00000000, 0x00000100, 0x00000000, 0x00000000 },
+  /* leaf 0x8000001F */ { 0x00000007, 0x0000016F, 0x0000000F, 0x00000000 }
+};
+
 ryzen_t::ryzen_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
+  set_max_leaf(0xD, 0x8000001F);
+
+  cpuid_table = new bx_cpuid_table_t(max_std_leaf, max_ext_leaf);
+
+  cpuid_table->register_leaf(0x00000000, 1, std_leafs +  0);
+  cpuid_table->register_leaf(0x00000001, 1, std_leafs +  1);
+  cpuid_table->register_leaf(0x00000002, 1, std_leafs +  2);
+  cpuid_table->register_leaf(0x00000003, 1, std_leafs +  3);
+  cpuid_table->register_leaf(0x00000004, 1, std_leafs +  4);
+  cpuid_table->register_leaf(0x00000005, 1, std_leafs +  5);
+  cpuid_table->register_leaf(0x00000006, 1, std_leafs +  6);
+  cpuid_table->register_leaf(0x00000007, 1, std_leafs +  7);
+  cpuid_table->register_leaf(0x00000008, 1, std_leafs +  8);
+  cpuid_table->register_leaf(0x00000009, 1, std_leafs +  9);
+  cpuid_table->register_leaf(0x0000000A, 1, std_leafs + 10);
+  cpuid_table->register_leaf(0x0000000B, 1, std_leafs + 11);
+  cpuid_table->register_leaf(0x0000000C, 1, std_leafs + 12);
+  cpuid_table->register_leaf(0x0000000D, 3, std_leafs + 13);
+
+  cpuid_table->register_leaf(0x80000000, 1, ext_leafs +  0);
+  cpuid_table->register_leaf(0x80000001, 1, ext_leafs +  1);
+  cpuid_table->register_leaf(0x80000002, 1, ext_leafs +  2);
+  cpuid_table->register_leaf(0x80000003, 1, ext_leafs +  3);
+  cpuid_table->register_leaf(0x80000004, 1, ext_leafs +  4);
+  cpuid_table->register_leaf(0x80000005, 1, ext_leafs +  5);
+  cpuid_table->register_leaf(0x80000006, 1, ext_leafs +  6);
+  cpuid_table->register_leaf(0x80000007, 1, ext_leafs +  7);
+  cpuid_table->register_leaf(0x80000008, 1, ext_leafs +  8);
+  cpuid_table->register_leaf(0x80000009, 1, ext_leafs +  9);
+  cpuid_table->register_leaf(0x8000000A, 1, ext_leafs + 10);
+  cpuid_table->register_leaf(0x8000000B, 1, ext_leafs + 11);
+  cpuid_table->register_leaf(0x8000000C, 1, ext_leafs + 12);
+  cpuid_table->register_leaf(0x8000000D, 1, ext_leafs + 13);
+  cpuid_table->register_leaf(0x8000000E, 1, ext_leafs + 14);
+  cpuid_table->register_leaf(0x8000000F, 1, ext_leafs + 15);
+  cpuid_table->register_leaf(0x80000010, 1, ext_leafs + 16);
+  cpuid_table->register_leaf(0x80000011, 1, ext_leafs + 17);
+  cpuid_table->register_leaf(0x80000012, 1, ext_leafs + 18);
+  cpuid_table->register_leaf(0x80000013, 1, ext_leafs + 19);
+  cpuid_table->register_leaf(0x80000014, 1, ext_leafs + 20);
+  cpuid_table->register_leaf(0x80000015, 1, ext_leafs + 21);
+  cpuid_table->register_leaf(0x80000016, 1, ext_leafs + 22);
+  cpuid_table->register_leaf(0x80000017, 1, ext_leafs + 23);
+  cpuid_table->register_leaf(0x80000018, 1, ext_leafs + 24);
+  cpuid_table->register_leaf(0x80000019, 1, ext_leafs + 25);
+  cpuid_table->register_leaf(0x8000001A, 1, ext_leafs + 26);
+  cpuid_table->register_leaf(0x8000001B, 1, ext_leafs + 27);
+  cpuid_table->register_leaf(0x8000001C, 1, ext_leafs + 28);
+  cpuid_table->register_leaf(0x8000001D, 4, ext_leafs + 29);
+  cpuid_table->register_leaf(0x8000001E, 1, ext_leafs + 33);
+  cpuid_table->register_leaf(0x8000001F, 1, ext_leafs + 34);
+
   if (! BX_SUPPORT_SVM)
     BX_INFO(("WARNING: SVM support is not compiled in !"));
 
@@ -107,8 +217,6 @@ ryzen_t::ryzen_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 #if BX_SUPPORT_MONITOR_MWAIT
   enable_cpu_extension(BX_ISA_MONITORX_MWAITX);
 #endif
-
-  set_max_leaf(0xD, 0x8000001F);
 }
 
 void ryzen_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -131,14 +239,10 @@ void ryzen_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid
   case 0x80000004:
     get_ext_cpuid_brand_string_leaf(brand_string, function, leaf);
     return;
-  case 0x80000005:
-    get_ext_cpuid_leaf_5(leaf);
-    return;
-  case 0x80000006:
-    get_ext_cpuid_leaf_6(leaf);
-    return;
-  case 0x80000007:
-    get_ext_cpuid_leaf_7(leaf);
+  case 0x80000005: // CPUID leaf 0x80000005 - L1 Cache and TLB Identifiers
+  case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
+  case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management
+    cpuid_table->get_ext_leaf(function, 0, leaf);
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8_amd(leaf);
@@ -148,20 +252,14 @@ void ryzen_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid
     get_ext_cpuid_leaf_A(leaf);
     return;
 #endif
-  case 0x80000019:
-    get_ext_cpuid_leaf_19(leaf);
-    return;
+  case 0x80000019: // CPUID leaf 0x80000019 - 1G Page TLB Identifiers
   case 0x8000001A: // CPUID leaf 0x8000001A - Performance Optimization Identifiers
-    get_leaf(leaf, 0x00000003, 0x00000000, 0x00000000, 0x00000000);
+  case 0x8000001B: // CPUID leaf 0x8000001B - Instruction Based Sampling Identifiers
+  case 0x8000001C: // Lightweight Profiling Capabilities (not implemented)
+    cpuid_table->get_ext_leaf(function, 0, leaf);
     return;
-  case 0x8000001B:
-    get_ext_cpuid_leaf_1B(leaf);
-    return;
-  case 0x8000001C:
-    get_reserved_leaf(leaf); // Lightweight Profiling Capabilities (not implemented)
-    return;
-  case 0x8000001D:
-    get_ext_cpuid_leaf_1D(subfunction, leaf);
+  case 0x8000001D: // CPUID leaf 0x8000001D - Cache Properties
+    cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x8000001E:
     get_ext_cpuid_leaf_1E(leaf);
@@ -179,7 +277,7 @@ void ryzen_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid
     get_std_cpuid_monitor_mwait_leaf(leaf, 0);
     return;
   case 0x00000006: // CPUID leaf 0x00000006 - Thermal and Power Management Leaf
-    get_leaf(leaf, 0x00000004, 0x00000000, 0x00000001, 0x00000000);
+    cpuid_table->get_std_leaf(function, 0, leaf);
     return;
   case 0x00000007:
     get_std_cpuid_leaf_7(subfunction, leaf);
@@ -513,33 +611,8 @@ void ryzen_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000004 //
 
 // leaf 0x80000005 - L1 Cache and TLB Identifiers //
-void ryzen_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
-{
-  leaf->eax = 0xff40ff40;
-  leaf->ebx = 0xff40ff40;
-  leaf->ecx = 0x20080140;
-  leaf->edx = 0x40040140;
-}
-
 // leaf 0x80000006 - L2 Cache and TLB Identifiers //
-void ryzen_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
-{
-  leaf->eax = 0x26006400;
-  leaf->ebx = 0x66006400;
-  leaf->ecx = 0x02006140;
-  leaf->edx = 0x00808140;
-}
-
 // leaf 0x80000007 - Advanced Power Management //
-void ryzen_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x80000007 - Advanced Power Management
-  leaf->eax = 0;
-  leaf->ebx = 0x0000001b;
-  leaf->ecx = 0;
-  leaf->edx = 0x00006599;
-}
-
 #if BX_SUPPORT_SVM
 
 // leaf 0x8000000A : SVM //
@@ -555,64 +628,13 @@ void ryzen_t::get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const
 
 // leaf 0x8000000B - 0x80000018: Reserved //
 
-void ryzen_t::get_ext_cpuid_leaf_19(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x800000019 - 1G Page TLB Identifiers
-  leaf->eax = 0xf040f040;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-}
+// leaf 0x80000019 - 1G Page TLB Identifiers //
 
 // CPUID leaf 0x80000001A - Performance Optimization Identifiers
 
-void ryzen_t::get_ext_cpuid_leaf_1B(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x80000001B - Instruction Based Sampling Identifiers
-  leaf->eax = 0x3FF;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
+// leaf 0x8000001B - Instruction Based Sampling Identifiers //
 
-  BX_INFO(("WARNING: Instruction Based Sampling is not implemented"));
-}
-
-void ryzen_t::get_ext_cpuid_leaf_1D(Bit32u subfunction, cpuid_function_t *leaf) const
-{
-  // CPUID function 0x80000001D - Cache Properties
-  switch(subfunction) {
-  case 0:
-    leaf->eax = 0x00004121;
-    leaf->ebx = 0x01c0003f;
-    leaf->ecx = 0x0000003f;
-    leaf->edx = 0x00000000;
-    return;
-  case 1:
-    leaf->eax = 0x00004122;
-    leaf->ebx = 0x00c0003f;
-    leaf->ecx = 0x000000ff;
-    leaf->edx = 0x00000000;
-    return;
-  case 2:
-    leaf->eax = 0x00004143;
-    leaf->ebx = 0x01c0003f;
-    leaf->ecx = 0x000003FF;
-    leaf->edx = 0x00000002;
-    return;
-  case 3:
-    leaf->eax = 0x0001c163;
-    leaf->ebx = 0x03c0003f;
-    leaf->ecx = 0x00001fff;
-    leaf->edx = 0x00000001;
-    return;
-  default:
-    leaf->eax = 0;
-    leaf->ebx = 0;
-    leaf->ecx = 0;
-    leaf->edx = 0;
-    return;
-  }
-}
+// leaf 0x8000001D - Cache Properties //
 
 void ryzen_t::get_ext_cpuid_leaf_1F(cpuid_function_t *leaf) const
 {

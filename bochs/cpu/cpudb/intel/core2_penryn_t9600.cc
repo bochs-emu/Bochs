@@ -31,8 +31,70 @@
 
 #if BX_SUPPORT_X86_64
 
+// CPUID dump of the real CPU (taken from core2_penryn_t9600.txt), several rows of the same leaf are its subleafs
+static const cpuid_function_t std_leafs[] = {
+  /* leaf 0x00000000 */ { 0x0000000D, 0x756E6547, 0x6C65746E, 0x49656E69 },
+  /* leaf 0x00000001 */ { 0x0001067A, 0x00020800, 0x0C08E3FD, 0xBFEBFBFF },
+  /* leaf 0x00000002 */ { 0x05B0B101, 0x005657F0, 0x00000000, 0x2CB4304E },
+  /* leaf 0x00000003 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000004 */ { 0x04000121, 0x01C0003F, 0x0000003F, 0x00000001 }, // [SL 00]
+  /* leaf 0x00000004 */ { 0x04000122, 0x01C0003F, 0x0000003F, 0x00000001 }, // [SL 01]
+  /* leaf 0x00000004 */ { 0x04004143, 0x05C0003F, 0x00000FFF, 0x00000001 }, // [SL 02]
+  /* leaf 0x00000005 */ { 0x00000040, 0x00000040, 0x00000003, 0x03122220 },
+  /* leaf 0x00000006 */ { 0x00000003, 0x00000002, 0x00000003, 0x00000000 },
+  /* leaf 0x00000007 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000008 */ { 0x00000400, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000009 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000000A */ { 0x07280202, 0x00000000, 0x00000000, 0x00000503 },
+  /* leaf 0x0000000B */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // not in dump
+  /* leaf 0x0000000C */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000000D */ { 0x00000003, 0x00000240, 0x00000240, 0x00000000 }, // [SL 00]
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }  // [SL 01]
+};
+
+static const cpuid_function_t ext_leafs[] = {
+  /* leaf 0x80000000 */ { 0x80000008, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000001 */ { 0x00000000, 0x00000000, 0x00000001, 0x20000800 },
+  /* leaf 0x80000002 */ { 0x65746E49, 0x2952286C, 0x726F4320, 0x4D542865 },
+  /* leaf 0x80000003 */ { 0x44203229, 0x43206F75, 0x20205550, 0x54202020 },
+  /* leaf 0x80000004 */ { 0x30303639, 0x20402020, 0x30382E32, 0x007A4847 },
+  /* leaf 0x80000005 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000006 */ { 0x00000000, 0x00000000, 0x18008040, 0x00000000 },
+  /* leaf 0x80000007 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000008 */ { 0x00003024, 0x00000000, 0x00000000, 0x00000000 }
+};
+
 core2_penryn_t9600_t::core2_penryn_t9600_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
+  set_max_leaf(0xD, 0x80000008);
+
+  cpuid_table = new bx_cpuid_table_t(max_std_leaf, max_ext_leaf);
+
+  cpuid_table->register_leaf(0x00000000, 1, std_leafs +  0);
+  cpuid_table->register_leaf(0x00000001, 1, std_leafs +  1);
+  cpuid_table->register_leaf(0x00000002, 1, std_leafs +  2);
+  cpuid_table->register_leaf(0x00000003, 1, std_leafs +  3);
+  cpuid_table->register_leaf(0x00000004, 3, std_leafs +  4);
+  cpuid_table->register_leaf(0x00000005, 1, std_leafs +  7);
+  cpuid_table->register_leaf(0x00000006, 1, std_leafs +  8);
+  cpuid_table->register_leaf(0x00000007, 1, std_leafs +  9);
+  cpuid_table->register_leaf(0x00000008, 1, std_leafs + 10);
+  cpuid_table->register_leaf(0x00000009, 1, std_leafs + 11);
+  cpuid_table->register_leaf(0x0000000A, 1, std_leafs + 12);
+  cpuid_table->register_leaf(0x0000000B, 1, std_leafs + 13);
+  cpuid_table->register_leaf(0x0000000C, 1, std_leafs + 14);
+  cpuid_table->register_leaf(0x0000000D, 2, std_leafs + 15);
+
+  cpuid_table->register_leaf(0x80000000, 1, ext_leafs + 0);
+  cpuid_table->register_leaf(0x80000001, 1, ext_leafs + 1);
+  cpuid_table->register_leaf(0x80000002, 1, ext_leafs + 2);
+  cpuid_table->register_leaf(0x80000003, 1, ext_leafs + 3);
+  cpuid_table->register_leaf(0x80000004, 1, ext_leafs + 4);
+  cpuid_table->register_leaf(0x80000005, 1, ext_leafs + 5);
+  cpuid_table->register_leaf(0x80000006, 1, ext_leafs + 6);
+  cpuid_table->register_leaf(0x80000007, 1, ext_leafs + 7);
+  cpuid_table->register_leaf(0x80000008, 1, ext_leafs + 8);
+
   if (! BX_SUPPORT_MONITOR_MWAIT)
     BX_INFO(("WARNING: MONITOR/MWAIT support is not compiled in !"));
 
@@ -69,8 +131,6 @@ core2_penryn_t9600_t::core2_penryn_t9600_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_NX);
   enable_cpu_extension(BX_ISA_CMPXCHG16B);
   enable_cpu_extension(BX_ISA_XSAVE);
-
-  set_max_leaf(0xD, 0x80000008);
 }
 
 void core2_penryn_t9600_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -94,13 +154,9 @@ void core2_penryn_t9600_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfu
     get_ext_cpuid_brand_string_leaf(brand_string, function, leaf);
     return;
   case 0x80000005:
-    get_reserved_leaf(leaf);
-    return;
   case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
-    get_leaf(leaf, 0x00000000, 0x00000000, 0x18008040, 0x00000000);
-    return;
   case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management
-    get_reserved_leaf(leaf);
+    cpuid_table->get_ext_leaf(function, 0, leaf);
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8(leaf);
@@ -111,20 +167,18 @@ void core2_penryn_t9600_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfu
   case 0x00000001:
     get_std_cpuid_leaf_1(leaf);
     return;
-  case 0x00000002:
-    get_std_cpuid_leaf_2(leaf);
-    return;
+  case 0x00000002: // CPUID leaf 0x00000002 - Cache and TLB Descriptors
   case 0x00000003:
-    get_reserved_leaf(leaf);
+    cpuid_table->get_std_leaf(function, 0, leaf);
     return;
-  case 0x00000004:
-    get_std_cpuid_leaf_4(subfunction, leaf);
+  case 0x00000004: // CPUID leaf 0x00000004 - Deterministic Cache Parameters
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   case 0x00000005:
     get_std_cpuid_monitor_mwait_leaf(leaf, 0x03122220);
     return;
   case 0x00000006: // CPUID leaf 0x00000006 - Thermal and Power Management Leaf
-    get_leaf(leaf, 0x00000003, 0x00000002, 0x00000003, 0x00000000);
+    cpuid_table->get_std_leaf(function, 0, leaf);
     return;
   case 0x00000007:
   case 0x00000008:
@@ -132,11 +186,9 @@ void core2_penryn_t9600_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfu
     get_reserved_leaf(leaf);
     return;
   case 0x0000000A: // CPUID leaf 0x0000000A - Architectural Performance Monitoring Leaf
-    get_leaf(leaf, 0x07280202, 0x00000000, 0x00000000, 0x00000503);
-    return;
   case 0x0000000B:
   case 0x0000000C:
-    get_reserved_leaf(leaf);
+    cpuid_table->get_std_leaf(function, 0, leaf);
     return;
   case 0x0000000D:
   default:
@@ -283,74 +335,10 @@ void core2_penryn_t9600_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
                                        BX_CPUID_STD1_EDX_PBE);
 }
 
-// leaf 0x00000002 //
-void core2_penryn_t9600_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000002 - Cache and TLB Descriptors
-  leaf->eax = 0x05B0B101;
-  leaf->ebx = 0x005657F0;
-  leaf->ecx = 0x00000000;
-  leaf->edx = 0x2CB4304E;
-}
-
+// leaf 0x00000002 - Cache and TLB Descriptors //
 // leaf 0x00000003 - Processor Serial Number (not supported) //
 
-// leaf 0x00000004 //
-void core2_penryn_t9600_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000004 - Deterministic Cache Parameters
-
-  // EAX:
-  //   [04-00] - Cache Type Field
-  //             0 = No more caches
-  //             1 = Data Cache
-  //             2 = Instruction Cache
-  //             3 = Unified Cache
-  //   [07-05] - Cache Level (starts at 1)]
-  //      [08] - Self Initializing cache level (doesn't need software initialization)
-  //      [09] - Fully Associative cache
-  //   [13-10] - Reserved
-  //   [25-14] - Maximum number of addressable IDs for logical processors sharing this cache
-  //   [31-26] - Maximum number of addressable IDs for processor cores in the physical package - 1
-  // EBX:
-  //   [11-00] - L = System Coherency Line Size
-  //   [21-12] - P = Physical Line partitions
-  //   [31-22] - W = Ways of associativity
-  // ECX: Number of Sets
-  // EDX:
-  //      [00] - Writeback invalidate
-  //      [01] - Cache Inclusiveness
-  //      [02] - Complex Cache Indexing
-  //   [31-03] - Reserved
-
-  switch(subfunction) {
-  case 0:
-    leaf->eax = 0x04000121;
-    leaf->ebx = 0x01C0003F;
-    leaf->ecx = 0x0000003F;
-    leaf->edx = 0x00000001;
-    break;
-  case 1:
-    leaf->eax = 0x04000122;
-    leaf->ebx = 0x01C0003F;
-    leaf->ecx = 0x0000003F;
-    leaf->edx = 0x00000001;
-    break;
-  case 2:
-    leaf->eax = 0x04004143;
-    leaf->ebx = 0x05C0003F;
-    leaf->ecx = 0x00000FFF;
-    leaf->edx = 0x00000001;
-    break;
-  default:
-    leaf->eax = 0;
-    leaf->ebx = 0;
-    leaf->ecx = 0;
-    leaf->edx = 0;
-    return;
-  }
-}
-
+// leaf 0x00000004 - Deterministic Cache Parameters //
 // leaf 0x00000005 MONITOR/MWAIT Leaf                //
 // leaf 0x00000006 Thermal and Power Management Leaf //
 // leaf 0x00000007 not supported                     //

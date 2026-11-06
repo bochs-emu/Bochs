@@ -29,8 +29,37 @@
 
 #if BX_CPU_LEVEL >= 6
 
+// CPUID dump of the real CPU (taken from p4_willamette.txt), several rows of the same leaf are its subleafs
+static const cpuid_function_t std_leafs[] = {
+  /* leaf 0x00000000 */ { 0x00000002, 0x756E6547, 0x6C65746E, 0x49656E69 },
+  /* leaf 0x00000001 */ { 0x00000F12, 0x00010808, 0x00000000, 0x3FEBFBFF },
+  /* leaf 0x00000002 */ { 0x665B5001, 0x00000000, 0x00000000, 0x007A7040 }
+};
+
+static const cpuid_function_t ext_leafs[] = {
+  /* leaf 0x80000000 */ { 0x80000004, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000001 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000002 */ { 0x20202020, 0x20202020, 0x20202020, 0x6E492020 },
+  /* leaf 0x80000003 */ { 0x286C6574, 0x50202952, 0x69746E65, 0x52286D75 },
+  /* leaf 0x80000004 */ { 0x20342029, 0x20555043, 0x30382E31, 0x007A4847 }
+};
+
 p4_willamette_t::p4_willamette_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
+  set_max_leaf(0x2, 0x80000004);
+
+  cpuid_table = new bx_cpuid_table_t(max_std_leaf, max_ext_leaf);
+
+  cpuid_table->register_leaf(0x00000000, 1, std_leafs + 0);
+  cpuid_table->register_leaf(0x00000001, 1, std_leafs + 1);
+  cpuid_table->register_leaf(0x00000002, 1, std_leafs + 2);
+
+  cpuid_table->register_leaf(0x80000000, 1, ext_leafs + 0);
+  cpuid_table->register_leaf(0x80000001, 1, ext_leafs + 1);
+  cpuid_table->register_leaf(0x80000002, 1, ext_leafs + 2);
+  cpuid_table->register_leaf(0x80000003, 1, ext_leafs + 3);
+  cpuid_table->register_leaf(0x80000004, 1, ext_leafs + 4);
+
   enable_cpu_extension(BX_ISA_X87);
   enable_cpu_extension(BX_ISA_486);
   enable_cpu_extension(BX_ISA_PENTIUM);
@@ -49,8 +78,6 @@ p4_willamette_t::p4_willamette_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_MTRR);
   enable_cpu_extension(BX_ISA_PAT);
   enable_cpu_extension(BX_ISA_XAPIC);
-
-  set_max_leaf(0x2, 0x80000004);
 }
 
 void p4_willamette_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -63,7 +90,7 @@ void p4_willamette_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunctio
     get_leaf_0(max_ext_leaf, NULL, leaf); // highest extended function understood by CPUID
     return;
   case 0x80000001:
-    get_reserved_leaf(leaf);
+    cpuid_table->get_ext_leaf(function, 0, leaf);
     return;
   case 0x80000002:
   case 0x80000003:
@@ -78,7 +105,7 @@ void p4_willamette_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunctio
     return;
   case 0x00000002: // CPUID leaf 0x00000002 - Cache and TLB Descriptors
   default:
-    get_leaf(leaf, 0x665B5001, 0x00000000, 0x00000000, 0x007A7040);
+    cpuid_table->get_std_leaf(function, 0, leaf);
     return;
   }
 }

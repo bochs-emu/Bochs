@@ -33,6 +33,93 @@
 
 #define VMCS_REVISION_ID 0x04
 
+// CPUID dump of the real CPU (Intel Xeon w7-2475X), several rows of the same leaf are its subleafs
+static const cpuid_function_t std_leafs[] = {
+  /* leaf 0x00000000 */ { 0x00000020, 0x756E6547, 0x6C65746E, 0x49656E69 },
+  /* leaf 0x00000001 */ { 0x000806F8, 0x00800800, 0x7FFEFBFF, 0xBFEBFBFF },
+  /* leaf 0x00000002 */ { 0x00FEFF01, 0x000000F0, 0x00000000, 0x00000000 },
+  /* leaf 0x00000003 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000004 */ { 0xFC004121, 0x02C0003F, 0x0000003F, 0x00000000 }, // [SL 00] [L1D: 48 KB]
+  /* leaf 0x00000004 */ { 0xFC004122, 0x01C0003F, 0x0000003F, 0x00000000 }, // [SL 01] [L1I: 32 KB]
+  /* leaf 0x00000004 */ { 0xFC004143, 0x03C0003F, 0x000007FF, 0x00000000 }, // [SL 02] [L2U: 2 MB]
+  /* leaf 0x00000004 */ { 0xFC1FC163, 0x0380003F, 0x00009FFF, 0x00000004 }, // [SL 03] [L3U: 38400 KB]
+  /* leaf 0x00000005 */ { 0x00000040, 0x00000040, 0x00000003, 0x00001020 },
+  /* leaf 0x00000006 */ { 0x0045CEF7, 0x00000002, 0x00000009, 0x00000000 },
+  /* leaf 0x00000007 */ { 0x00000002, 0xF3BFBFFB, 0xBB417FEE, 0xFFDD4430 }, // [SL 00]
+  /* leaf 0x00000007 */ { 0x00001C30, 0x00000000, 0x00000000, 0x00000000 }, // [SL 01]
+  /* leaf 0x00000007 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000017 }, // [SL 02]
+  /* leaf 0x00000008 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000009 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000000A */ { 0x08300805, 0x00000000, 0x0000000F, 0x00008604 },
+  /* leaf 0x0000000B */ { 0x00000001, 0x00000002, 0x00000100, 0x00000000 }, // [SL 00]
+  /* leaf 0x0000000B */ { 0x00000007, 0x00000028, 0x00000201, 0x00000000 }, // [SL 01]
+  /* leaf 0x0000000C */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000000D */ { 0x000602E7, 0x00002B00, 0x00002B00, 0x00000000 }, // [SL 00] [x87]
+  /* leaf 0x0000000D */ { 0x0000001F, 0x00002A80, 0x0000DD00, 0x00000000 }, // [SL 01] [SSE]
+  /* leaf 0x0000000D */ { 0x00000100, 0x00000240, 0x00000000, 0x00000000 }, // [SL 02] [AVX]
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 03] not in dump
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 04] not in dump
+  /* leaf 0x0000000D */ { 0x00000040, 0x00000440, 0x00000000, 0x00000000 }, // [SL 05] [AVX-512 Opmask]
+  /* leaf 0x0000000D */ { 0x00000200, 0x00000480, 0x00000000, 0x00000000 }, // [SL 06] [AVX-512 Hi256]
+  /* leaf 0x0000000D */ { 0x00000400, 0x00000680, 0x00000000, 0x00000000 }, // [SL 07] [AVX-512 Hi16]
+  /* leaf 0x0000000D */ { 0x00000080, 0x00000000, 0x00000001, 0x00000000 }, // [SL 08] [PT]
+  /* leaf 0x0000000D */ { 0x00000008, 0x00000A80, 0x00000000, 0x00000000 }, // [SL 09] [PKRU]
+  /* leaf 0x0000000D */ { 0x00000008, 0x00000000, 0x00000001, 0x00000000 }, // [SL 0A]
+  /* leaf 0x0000000D */ { 0x00000010, 0x00000000, 0x00000001, 0x00000000 }, // [SL 0B]
+  /* leaf 0x0000000D */ { 0x00000018, 0x00000000, 0x00000001, 0x00000000 }, // [SL 0C]
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 0D] not in dump
+  /* leaf 0x0000000D */ { 0x00000030, 0x00000000, 0x00000001, 0x00000000 }, // [SL 0E]
+  /* leaf 0x0000000D */ { 0x00000328, 0x00000000, 0x00000001, 0x00000000 }, // [SL 0F]
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 10] not in dump
+  /* leaf 0x0000000D */ { 0x00000040, 0x00000AC0, 0x00000002, 0x00000000 }, // [SL 11]
+  /* leaf 0x0000000D */ { 0x00002000, 0x00000B00, 0x00000006, 0x00000000 }, // [SL 12]
+  /* leaf 0x0000000E */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000000F */ { 0x00000000, 0x0000009F, 0x00000000, 0x00000002 }, // [SL 00]
+  /* leaf 0x0000000F */ { 0x00000008, 0x0000A000, 0x0000009F, 0x00000007 }, // [SL 01]
+  /* leaf 0x00000010 */ { 0x00000000, 0x0000000E, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x00000010 */ { 0x0000000E, 0x00006000, 0x00000004, 0x0000000E }, // [SL 01]
+  /* leaf 0x00000011 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000012 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x00000012 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 01]
+  /* leaf 0x00000013 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000014 */ { 0x00000001, 0x0000005F, 0x00000007, 0x00000000 }, // [SL 00]
+  /* leaf 0x00000014 */ { 0x02490002, 0x003F003F, 0x00000000, 0x00000000 }, // [SL 01]
+  /* leaf 0x00000015 */ { 0x00000002, 0x000000D8, 0x016E3600, 0x00000000 },
+  /* leaf 0x00000016 */ { 0x00000A28, 0x000012C0, 0x00000064, 0x00000000 },
+  /* leaf 0x00000017 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x00000018 */ { 0x00000008, 0x00000000, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x00000018 */ { 0x00000000, 0x00080001, 0x00000020, 0x00004022 }, // [SL 01]
+  /* leaf 0x00000018 */ { 0x00000000, 0x00080006, 0x00000004, 0x00004022 }, // [SL 02]
+  /* leaf 0x00000018 */ { 0x00000000, 0x0010000F, 0x00000001, 0x00004125 }, // [SL 03]
+  /* leaf 0x00000018 */ { 0x00000000, 0x00040001, 0x00000010, 0x00004024 }, // [SL 04]
+  /* leaf 0x00000018 */ { 0x00000000, 0x00040006, 0x00000008, 0x00004024 }, // [SL 05]
+  /* leaf 0x00000018 */ { 0x00000000, 0x00080008, 0x00000001, 0x00004124 }, // [SL 06]
+  /* leaf 0x00000018 */ { 0x00000000, 0x00080007, 0x00000080, 0x00004043 }, // [SL 07]
+  /* leaf 0x00000018 */ { 0x00000000, 0x00080009, 0x00000080, 0x00004043 }, // [SL 08]
+  /* leaf 0x00000019 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000001A */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000001B */ { 0x00000001, 0x00000001, 0x00000000, 0x00000000 },
+  /* leaf 0x0000001C */ { 0x4000000B, 0x00000007, 0x00000007, 0x00000000 },
+  /* leaf 0x0000001D */ { 0x00000001, 0x00000000, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x0000001D */ { 0x04002000, 0x00080040, 0x00000010, 0x00000000 }, // [SL 01]
+  /* leaf 0x0000001E */ { 0x00000000, 0x00004010, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x0000001F */ { 0x00000001, 0x00000002, 0x00000100, 0x00000000 }, // [SL 00]
+  /* leaf 0x0000001F */ { 0x00000007, 0x00000028, 0x00000201, 0x00000000 }, // [SL 01]
+  /* leaf 0x00000020 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }  // [SL 00]
+};
+
+static const cpuid_function_t ext_leafs[] = {
+  /* leaf 0x80000000 */ { 0x80000008, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000001 */ { 0x00000000, 0x00000000, 0x00000121, 0x2C100000 },
+  /* leaf 0x80000002 */ { 0x65746E49, 0x2952286C, 0x6F655820, 0x2952286E },
+  /* leaf 0x80000003 */ { 0x2D377720, 0x35373432, 0x00000058, 0x00000000 },
+  /* leaf 0x80000004 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000005 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000006 */ { 0x00000000, 0x00000000, 0x08007040, 0x00000000 },
+  /* leaf 0x80000007 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000100 },
+  /* leaf 0x80000008 */ { 0x00003934, 0x00000200, 0x00000000, 0x00000000 }
+};
+
 sapphire_rapids_t::sapphire_rapids_t(BX_CPU_C *cpu):
 #if BX_SUPPORT_VMX
     bx_cpuid_t(cpu, VMCS_REVISION_ID)
@@ -40,6 +127,54 @@ sapphire_rapids_t::sapphire_rapids_t(BX_CPU_C *cpu):
     bx_cpuid_t(cpu)
 #endif
 {
+  set_max_leaf(0x20, 0x80000008);
+
+  cpuid_table = new bx_cpuid_table_t(max_std_leaf, max_ext_leaf);
+
+  cpuid_table->register_leaf(0x00000000,  1, std_leafs +  0);
+  cpuid_table->register_leaf(0x00000001,  1, std_leafs +  1);
+  cpuid_table->register_leaf(0x00000002,  1, std_leafs +  2);
+  cpuid_table->register_leaf(0x00000003,  1, std_leafs +  3);
+  cpuid_table->register_leaf(0x00000004,  4, std_leafs +  4);
+  cpuid_table->register_leaf(0x00000005,  1, std_leafs +  8);
+  cpuid_table->register_leaf(0x00000006,  1, std_leafs +  9);
+  cpuid_table->register_leaf(0x00000007,  3, std_leafs + 10);
+  cpuid_table->register_leaf(0x00000008,  1, std_leafs + 13);
+  cpuid_table->register_leaf(0x00000009,  1, std_leafs + 14);
+  cpuid_table->register_leaf(0x0000000A,  1, std_leafs + 15);
+  cpuid_table->register_leaf(0x0000000B,  2, std_leafs + 16);
+  cpuid_table->register_leaf(0x0000000C,  1, std_leafs + 18);
+  cpuid_table->register_leaf(0x0000000D, 19, std_leafs + 19);
+  cpuid_table->register_leaf(0x0000000E,  1, std_leafs + 38);
+  cpuid_table->register_leaf(0x0000000F,  2, std_leafs + 39);
+  cpuid_table->register_leaf(0x00000010,  2, std_leafs + 41);
+  cpuid_table->register_leaf(0x00000011,  1, std_leafs + 43);
+  cpuid_table->register_leaf(0x00000012,  2, std_leafs + 44);
+  cpuid_table->register_leaf(0x00000013,  1, std_leafs + 46);
+  cpuid_table->register_leaf(0x00000014,  2, std_leafs + 47);
+  cpuid_table->register_leaf(0x00000015,  1, std_leafs + 49);
+  cpuid_table->register_leaf(0x00000016,  1, std_leafs + 50);
+  cpuid_table->register_leaf(0x00000017,  1, std_leafs + 51);
+  cpuid_table->register_leaf(0x00000018,  9, std_leafs + 52);
+  cpuid_table->register_leaf(0x00000019,  1, std_leafs + 61);
+  cpuid_table->register_leaf(0x0000001A,  1, std_leafs + 62);
+  cpuid_table->register_leaf(0x0000001B,  1, std_leafs + 63);
+  cpuid_table->register_leaf(0x0000001C,  1, std_leafs + 64);
+  cpuid_table->register_leaf(0x0000001D,  2, std_leafs + 65);
+  cpuid_table->register_leaf(0x0000001E,  1, std_leafs + 67);
+  cpuid_table->register_leaf(0x0000001F,  2, std_leafs + 68);
+  cpuid_table->register_leaf(0x00000020,  1, std_leafs + 70);
+
+  cpuid_table->register_leaf(0x80000000, 1, ext_leafs + 0);
+  cpuid_table->register_leaf(0x80000001, 1, ext_leafs + 1);
+  cpuid_table->register_leaf(0x80000002, 1, ext_leafs + 2);
+  cpuid_table->register_leaf(0x80000003, 1, ext_leafs + 3);
+  cpuid_table->register_leaf(0x80000004, 1, ext_leafs + 4);
+  cpuid_table->register_leaf(0x80000005, 1, ext_leafs + 5);
+  cpuid_table->register_leaf(0x80000006, 1, ext_leafs + 6);
+  cpuid_table->register_leaf(0x80000007, 1, ext_leafs + 7);
+  cpuid_table->register_leaf(0x80000008, 1, ext_leafs + 8);
+
   if (BX_SUPPORT_VMX == 1)
     BX_INFO(("You must compile with --enable-vmx=2 for Intel Core Xeon Sapphire Rapids VMX configuration"));
 
@@ -154,8 +289,6 @@ sapphire_rapids_t::sapphire_rapids_t(BX_CPU_C *cpu):
   enable_cpu_extension(BX_ISA_UINTR);
 #endif
   enable_cpu_extension(BX_ISA_SPEC_CTRL);
-
-  set_max_leaf(0x20, 0x80000008);
 }
 
 void sapphire_rapids_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -178,13 +311,9 @@ void sapphire_rapids_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunct
     get_ext_cpuid_brand_string_leaf(brand_string, function, leaf);
     return;
   case 0x80000005:
-    get_reserved_leaf(leaf);
-    return;
   case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
-    get_leaf(leaf, 0x00000000, 0x00000000, 0x08007040, 0x00000000);
-    return;
-  case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management leaf
-    get_leaf(leaf, 0x00000000, 0x00000000, 0x00000000, 0x00000100); // EDX[8] - invariant TSC
+  case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management leaf, EDX[8] - invariant TSC
+    cpuid_table->get_ext_leaf(function, 0, leaf);
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8(leaf);
@@ -196,35 +325,31 @@ void sapphire_rapids_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunct
     get_std_cpuid_leaf_1(leaf);
     return;
   case 0x00000002: // CPUID leaf 0x00000002 - Cache and TLB Descriptors
-    get_leaf(leaf, 0x00feff01, 0x000000f0, 0x00000000, 0x00000000);
-    return;
   case 0x00000003:
-    get_reserved_leaf(leaf);
+    cpuid_table->get_std_leaf(function, 0, leaf);
     return;
-  case 0x00000004:
-    get_std_cpuid_leaf_4(subfunction, leaf);
+  case 0x00000004: // CPUID leaf 0x00000004 - Deterministic Cache Parameters
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   case 0x00000005: // CPUID leaf 0x00000005 - MONITOR/MWAIT leaf
     get_std_cpuid_monitor_mwait_leaf(leaf, 0x00001020);
     return;
   case 0x00000006: // CPUID leaf 0x00000006 - Thermal and Power Management Leaf
-    get_leaf(leaf, 0x0045cef7, 0x00000002, 0x00000009, 0x00000000);
+    cpuid_table->get_std_leaf(function, 0, leaf);
     return;
   case 0x00000007:
     get_std_cpuid_leaf_7(subfunction, leaf);
     return;
   case 0x00000008:
   case 0x00000009:
-    get_reserved_leaf(leaf);
-    return;
   case 0x0000000A: // CPUID leaf 0x0000000A - Architectural Performance Monitor
-    get_leaf(leaf, 0x08300805, 0x00000000, 0x0000000f, 0x00008604);
+    cpuid_table->get_std_leaf(function, 0, leaf);
     return;
   case 0x0000000B:
     get_std_cpuid_extended_topology_leaf(subfunction, leaf);
     return;
   case 0x0000000C:
-    get_reserved_leaf(leaf);
+    cpuid_table->get_std_leaf(function, 0, leaf);
     return;
   case 0x0000000D:
     get_std_cpuid_xsave_leaf(subfunction, leaf);
@@ -245,10 +370,10 @@ void sapphire_rapids_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunct
     get_freq_leaf_16(leaf, 0x00000898, 0x000012c0, 0x00000064);
     return;
   case 0x00000017:
-    get_reserved_leaf(leaf);
+    cpuid_table->get_std_leaf(function, 0, leaf);
     return;
   case 0x00000018: // TLB Descriptors
-    get_std_cpuid_leaf_18(subfunction, leaf);
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   case 0x00000019: // CPUID leaf 0x00000019 - Keylocker Leaf
   case 0x0000001A: // CPUID leaf 0x0000001A - native Model ID Enumeration leaf (for Hybrid)
@@ -274,7 +399,7 @@ void sapphire_rapids_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunct
     return;
   case 0x00000020: // HRESET Information
   default:
-    get_reserved_leaf(leaf);
+    cpuid_table->get_std_leaf(function, 0, leaf);
     return;
   }
 }
@@ -426,43 +551,7 @@ void sapphire_rapids_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 
 // leaf 0x00000003 - Processor Serial Number (not supported) //
 
-// leaf 0x00000004 //
-void sapphire_rapids_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000004 - Deterministic Cache Parameters
-  switch(subfunction) {
-  case 0:
-    leaf->eax = 0xfc004121;
-    leaf->ebx = 0x02c0003f;
-    leaf->ecx = 0x0000003f;
-    leaf->edx = 0x00000000;
-    return;
-  case 1:
-    leaf->eax = 0xfc004122;
-    leaf->ebx = 0x01c0003f;
-    leaf->ecx = 0x0000003f;
-    leaf->edx = 0x00000000;
-    return;
-  case 2:
-    leaf->eax = 0xfc004143;
-    leaf->ebx = 0x03c0003f;
-    leaf->ecx = 0x000007ff;
-    leaf->edx = 0x00000000;
-    return;
-  case 3:
-    leaf->eax = 0xfc1fc163;
-    leaf->ebx = 0x0380003f;
-    leaf->ecx = 0x00015fff;
-    leaf->edx = 0x00000004;
-    return;
-  default:
-    leaf->eax = 0;
-    leaf->ebx = 0;
-    leaf->ecx = 0;
-    leaf->edx = 0;
-  }
-}
-
+// leaf 0x00000004 - Deterministic Cache Parameters //
 // leaf 0x00000005 MONITOR/MWAIT Leaf                //
 // leaf 0x00000006 Thermal and Power Management Leaf //
 
@@ -655,73 +744,7 @@ void sapphire_rapids_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_
 // leaf 0x00000016 - Processor Frequency Information Leaf
 // leaf 0x00000017 - System-On-Chip Vendor Attribute Enumeration //
 
-// leaf 0x00000018
-void sapphire_rapids_t::get_std_cpuid_leaf_18(Bit32u subfunction, cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000018 - Deterministic Address Translation Parameters
-  switch(subfunction) {
-  case 0:
-    leaf->eax = 0x00000008;
-    leaf->ebx = 0x00000000;
-    leaf->ecx = 0x00000000;
-    leaf->edx = 0x00000000;
-    return;
-  case 1:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x00080001;
-    leaf->ecx = 0x00000020;
-    leaf->edx = 0x00004022;
-    return;
-  case 2:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x00080006;
-    leaf->ecx = 0x00000004;
-    leaf->edx = 0x00004022;
-    return;
-  case 3:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x0010000f;
-    leaf->ecx = 0x00000001;
-    leaf->edx = 0x00004125;
-    return;
-  case 4:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x00040001;
-    leaf->ecx = 0x00000010;
-    leaf->edx = 0x00004024;
-    return;
-  case 5:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x00040006;
-    leaf->ecx = 0x00000008;
-    leaf->edx = 0x00004024;
-    return;
-  case 6:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x00080008;
-    leaf->ecx = 0x00000001;
-    leaf->edx = 0x00004124;
-    return;
-  case 7:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x00080007;
-    leaf->ecx = 0x00000080;
-    leaf->edx = 0x00004043;
-    return;
-  case 8:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x00080009;
-    leaf->ecx = 0x00000080;
-    leaf->edx = 0x00004043;
-    return;
-  default:
-    leaf->eax = 0;
-    leaf->ebx = 0;
-    leaf->ecx = 0;
-    leaf->edx = 0;
-  }
-}
-
+// leaf 0x00000018 - Deterministic Address Translation Parameters //
 // leaf 0x80000000 //
 
 // leaf 0x80000001 //

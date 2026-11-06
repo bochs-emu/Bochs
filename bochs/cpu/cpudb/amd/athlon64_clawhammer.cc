@@ -29,8 +29,75 @@
 
 #if BX_SUPPORT_X86_64
 
+// CPUID dump of the real CPU (taken from athlon64_clawhammer.txt), several rows of the same leaf are its subleafs
+static const cpuid_function_t std_leafs[] = {
+  /* leaf 0x00000000 */ { 0x00000001, 0x68747541, 0x444D4163, 0x69746E65 },
+  /* leaf 0x00000001 */ { 0x00000F48, 0x00000800, 0x00000000, 0x078BFBFF }
+};
+
+static const cpuid_function_t ext_leafs[] = {
+  /* leaf 0x80000000 */ { 0x80000018, 0x68747541, 0x444D4163, 0x69746E65 },
+  /* leaf 0x80000001 */ { 0x00000F48, 0x00000106, 0x00000000, 0xE1D3FBFF },
+  /* leaf 0x80000002 */ { 0x20444D41, 0x6C687441, 0x74286E6F, 0x3620296D },
+  /* leaf 0x80000003 */ { 0x72502034, 0x7365636F, 0x20726F73, 0x30303832 },
+  /* leaf 0x80000004 */ { 0x0000002B, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000005 */ { 0xFF08FF08, 0xFF20FF20, 0x40020140, 0x40020140 },
+  /* leaf 0x80000006 */ { 0x00000000, 0x42004200, 0x02008140, 0x00000000 },
+  /* leaf 0x80000007 */ { 0x00000000, 0x00000000, 0x00000000, 0x0000000F },
+  /* leaf 0x80000008 */ { 0x00003028, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000009 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000A */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000B */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000C */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000E */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x8000000F */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000010 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000011 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000012 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000013 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000014 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000015 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000016 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000017 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000018 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }
+};
+
 athlon64_clawhammer_t::athlon64_clawhammer_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
+  set_max_leaf(0x1, 0x80000018);
+
+  cpuid_table = new bx_cpuid_table_t(max_std_leaf, max_ext_leaf);
+
+  cpuid_table->register_leaf(0x00000000, 1, std_leafs + 0);
+  cpuid_table->register_leaf(0x00000001, 1, std_leafs + 1);
+
+  cpuid_table->register_leaf(0x80000000, 1, ext_leafs +  0);
+  cpuid_table->register_leaf(0x80000001, 1, ext_leafs +  1);
+  cpuid_table->register_leaf(0x80000002, 1, ext_leafs +  2);
+  cpuid_table->register_leaf(0x80000003, 1, ext_leafs +  3);
+  cpuid_table->register_leaf(0x80000004, 1, ext_leafs +  4);
+  cpuid_table->register_leaf(0x80000005, 1, ext_leafs +  5);
+  cpuid_table->register_leaf(0x80000006, 1, ext_leafs +  6);
+  cpuid_table->register_leaf(0x80000007, 1, ext_leafs +  7);
+  cpuid_table->register_leaf(0x80000008, 1, ext_leafs +  8);
+  cpuid_table->register_leaf(0x80000009, 1, ext_leafs +  9);
+  cpuid_table->register_leaf(0x8000000A, 1, ext_leafs + 10);
+  cpuid_table->register_leaf(0x8000000B, 1, ext_leafs + 11);
+  cpuid_table->register_leaf(0x8000000C, 1, ext_leafs + 12);
+  cpuid_table->register_leaf(0x8000000D, 1, ext_leafs + 13);
+  cpuid_table->register_leaf(0x8000000E, 1, ext_leafs + 14);
+  cpuid_table->register_leaf(0x8000000F, 1, ext_leafs + 15);
+  cpuid_table->register_leaf(0x80000010, 1, ext_leafs + 16);
+  cpuid_table->register_leaf(0x80000011, 1, ext_leafs + 17);
+  cpuid_table->register_leaf(0x80000012, 1, ext_leafs + 18);
+  cpuid_table->register_leaf(0x80000013, 1, ext_leafs + 19);
+  cpuid_table->register_leaf(0x80000014, 1, ext_leafs + 20);
+  cpuid_table->register_leaf(0x80000015, 1, ext_leafs + 21);
+  cpuid_table->register_leaf(0x80000016, 1, ext_leafs + 22);
+  cpuid_table->register_leaf(0x80000017, 1, ext_leafs + 23);
+  cpuid_table->register_leaf(0x80000018, 1, ext_leafs + 24);
+
   enable_cpu_extension(BX_ISA_X87);
   enable_cpu_extension(BX_ISA_486);
   enable_cpu_extension(BX_ISA_PENTIUM);
@@ -58,8 +125,6 @@ athlon64_clawhammer_t::athlon64_clawhammer_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_LONG_MODE);
   enable_cpu_extension(BX_ISA_LM_LAHF_SAHF);
   enable_cpu_extension(BX_ISA_NX);
-
-  set_max_leaf(0x1, 0x80000018);
 }
 
 void athlon64_clawhammer_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -82,14 +147,10 @@ void athlon64_clawhammer_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subf
   case 0x80000004:
     get_ext_cpuid_brand_string_leaf(brand_string, function, leaf);
     return;
-  case 0x80000005:
-    get_ext_cpuid_leaf_5(leaf);
-    return;
-  case 0x80000006:
-    get_ext_cpuid_leaf_6(leaf);
-    return;
-  case 0x80000007:
-    get_ext_cpuid_leaf_7(leaf);
+  case 0x80000005: // CPUID leaf 0x80000005 - L1 Cache and TLB Identifiers
+  case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
+  case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management
+    cpuid_table->get_ext_leaf(function, 0, leaf);
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8(leaf);
@@ -233,33 +294,8 @@ void athlon64_clawhammer_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000004 //
 
 // leaf 0x80000005 - L1 Cache and TLB Identifiers //
-void athlon64_clawhammer_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
-{
-  leaf->eax = 0xFF08FF08;
-  leaf->ebx = 0xFF20FF20;
-  leaf->ecx = 0x40020140;
-  leaf->edx = 0x40020140;
-}
-
 // leaf 0x80000006 - L2 Cache and TLB Identifiers //
-void athlon64_clawhammer_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
-{
-  leaf->eax = 0x00000000;
-  leaf->ebx = 0x42004200;
-  leaf->ecx = 0x02008140;
-  leaf->edx = 0x00000000;
-}
-
 // leaf 0x80000007 - Advanced Power Management //
-void athlon64_clawhammer_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x80000007 - Advanced Power Management
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0x0000000F;
-}
-
 // leaf 0x80000008 //
 
 // leaf 0x80000009             : Reserved //
