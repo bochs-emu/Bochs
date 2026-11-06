@@ -3149,9 +3149,10 @@ void bx_geforce_c::d3d_clear_surface(gf_channel* ch)
   if (!d3d_scissor_clip(ch, &dx, &dy, &width, &height))
     return;
   if (ch->d3d_clear_surface & 0x000000F0) {
-    Bit32u pitch = ch->d3d_surface_pitch_a & 0xFFFF;
+    Bit32u pitch_color = ch->d3d_swizzled ?
+      ch->d3d_swz_width * ch->d3d_color_bytes : ch->d3d_surface_pitch_color;
     Bit32u draw_offset = ch->d3d_surface_color_offset +
-      dy * pitch + dx * ch->d3d_color_bytes;
+      dy * pitch_color + dx * ch->d3d_color_bytes;
     Bit32u redraw_offset = dma_lin_lookup(ch->d3d_color_obj, draw_offset) -
       BX_GEFORCE_THIS disp_offset;
     for (Bit32u y = 0; y < height; y++) {
@@ -3161,16 +3162,17 @@ void bx_geforce_c::d3d_clear_surface(gf_channel* ch)
         else
           dma_write32(ch->d3d_color_obj, draw_offset + x * 4, ch->d3d_color_clear_value);
       }
-      draw_offset += pitch;
+      draw_offset += pitch_color;
     }
     BX_GEFORCE_THIS redraw_area_nd(redraw_offset, width, height);
   }
   bool depth_clear = (ch->d3d_clear_surface & 0x00000001) != 0;
   bool stencil_clear = (ch->d3d_clear_surface & 0x00000002) != 0;
   if (depth_clear || stencil_clear) {
-    Bit32u pitch = d3d_get_surface_pitch_z(ch);
+    Bit32u pitch_zeta = ch->d3d_swizzled ?
+      ch->d3d_swz_width * ch->d3d_depth_bytes : ch->d3d_surface_pitch_zeta;
     Bit32u draw_offset = ch->d3d_surface_zeta_offset +
-      dy * pitch + dx * ch->d3d_depth_bytes;
+      dy * pitch_zeta + dx * ch->d3d_depth_bytes;
     for (Bit32u y = 0; y < height; y++) {
       for (Bit32u x = 0; x < width; x++) {
         if (ch->d3d_depth_bytes == 2) {
@@ -3188,7 +3190,7 @@ void bx_geforce_c::d3d_clear_surface(gf_channel* ch)
             dma_write8(ch->d3d_zeta_obj, draw_offset + x * 4, (Bit8u)ch->d3d_zstencil_clear_value);
         }
       }
-      draw_offset += pitch;
+      draw_offset += pitch_zeta;
     }
   }
 }
@@ -3301,12 +3303,17 @@ void texture_update_size(gf_texture* tex, Bit32u cls)
     tex->sizes[lod][1] = lh;
     tex->sizes[lod][2] = ld;
     Bit32u level_bytes;
-    if (tex->linear)
-      level_bytes = tex->pitch * lh * ld;
-    else if (tex->compressed)
-      level_bytes = tex->color_bytes * ALIGN(lw, 4) * ALIGN(lh, 4) / 16 * ld;
-    else
-      level_bytes = tex->color_bytes * lw * lh * ld;
+    if (tex->linear) {
+      if (tex->compressed)
+        level_bytes = tex->pitch * ALIGN(lh, 4) / 4 * ld;
+      else
+        level_bytes = tex->pitch * lh * ld;
+    } else {
+      if (tex->compressed)
+        level_bytes = tex->color_bytes * ALIGN(lw, 4) * ALIGN(lh, 4) / 16 * ld;
+      else
+        level_bytes = tex->color_bytes * lw * lh * ld;
+    }
     tex->level_offset[lod] = tex->face_bytes;
     tex->face_bytes += level_bytes;
     lw /= 2;
@@ -3540,7 +3547,7 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
   }
   Bit32u tex_ofs = tex->offset + tex->level_offset[lod] + face * tex->face_bytes;
   if (tex->compressed) {
-    Bit32u pitch = lodSize[0] * (tex->dxt_alpha_data ? 4 : 2);
+    Bit32u pitch = tex->linear ? tex->pitch : lodSize[0] * (tex->dxt_alpha_data ? 4 : 2);
     Bit32u bx = coords[0] >> 2;
     Bit32u by = coords[1] >> 2;
     tex_ofs += by * pitch + bx * tex->color_bytes;
@@ -5582,13 +5589,11 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
     return;
   if (!d3d_scissor_clip(ch, &draw_x1, &draw_y1, &draw_width, &draw_height))
     return;
-  Bit32u pitch = ch->d3d_surface_pitch_a & 0xFFFF;
-  Bit32u pitch_zeta = d3d_get_surface_pitch_z(ch);
-  Bit32u draw_offset_base = ch->d3d_surface_color_offset +
-    draw_y1 * pitch + draw_x1 * ch->d3d_color_bytes;
-  Bit32u draw_offset_zeta = ch->d3d_surface_zeta_offset +
-    draw_y1 * pitch_zeta + draw_x1 * ch->d3d_depth_bytes;
-  Bit32u redraw_offset = dma_lin_lookup(ch->d3d_color_obj, draw_offset_base) -
+  Bit32u draw_offset_color_base = ch->d3d_surface_color_offset +
+    draw_y1 * ch->d3d_surface_pitch_color + draw_x1 * ch->d3d_color_bytes;
+  Bit32u draw_offset_zeta_base = ch->d3d_surface_zeta_offset +
+    draw_y1 * ch->d3d_surface_pitch_zeta + draw_x1 * ch->d3d_depth_bytes;
+  Bit32u redraw_offset = dma_lin_lookup(ch->d3d_color_obj, draw_offset_color_base) -
     BX_GEFORCE_THIS disp_offset;
   bool interpolate[16];
   for (int a = 0; a < 16; a++) {
@@ -5665,16 +5670,20 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
         continue;
       Bit32u z_new[4];
       Bit8u stencils[4];
+      Bit32u draw_offset_zeta[4];
       for (Bit32u fi = 0; fi < 4; fi++) {
         Bit8u stencil = 0x00;
         if (zstencil_enable && !discard[fi]) {
           Bit32u z_prev;
           Bit32u x = qx + (fi & 1);
           Bit32u y = qy + (fi >> 1);
+          draw_offset_zeta[fi] = ch->d3d_swizzled ? ch->d3d_surface_zeta_offset +
+            swizzle(x + draw_x1, y + draw_y1, 0, ch->d3d_swz_width, ch->d3d_swz_height, 1) * ch->d3d_depth_bytes :
+            draw_offset_zeta_base + y * ch->d3d_surface_pitch_zeta + x * ch->d3d_depth_bytes;
           if (ch->d3d_depth_bytes == 2)
-            z_prev = dma_read16(ch->d3d_zeta_obj, draw_offset_zeta + y * pitch_zeta + x * 2);
+            z_prev = dma_read16(ch->d3d_zeta_obj, draw_offset_zeta[fi]);
           else {
-            Bit32u zstencil = dma_read32(ch->d3d_zeta_obj, draw_offset_zeta + y * pitch_zeta + x * 4);
+            Bit32u zstencil = dma_read32(ch->d3d_zeta_obj, draw_offset_zeta[fi]);
             z_prev = zstencil >> 8;
             stencil = (Bit8u)zstencil;
           }
@@ -5732,7 +5741,7 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
             }
             if (stencil_op != 0x1e00) {
               stencil &= ch->d3d_stencil_mask;
-              dma_write8(ch->d3d_zeta_obj, draw_offset_zeta + y * pitch_zeta + x * 4, stencil);
+              dma_write8(ch->d3d_zeta_obj, draw_offset_zeta[fi], stencil);
             }
             stencils[fi] = stencil;
             if (!stencil_test_pass)
@@ -5960,9 +5969,9 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
         }
         Bit32u x = qx + (fi & 1);
         Bit32u y = qy + (fi >> 1);
-        Bit32u draw_offset = ch->d3d_swizzled ? ch->d3d_surface_color_offset +
-          swizzle(x + draw_x1, y + draw_y1, 0, ch->swzs_width, ch->swzs_height, 1) * ch->d3d_color_bytes :
-          draw_offset_base + y * pitch + x * ch->d3d_color_bytes;
+        Bit32u draw_offset_color = ch->d3d_swizzled ? ch->d3d_surface_color_offset +
+          swizzle(x + draw_x1, y + draw_y1, 0, ch->d3d_swz_width, ch->d3d_swz_height, 1) * ch->d3d_color_bytes :
+          draw_offset_color_base + y * ch->d3d_surface_pitch_color + x * ch->d3d_color_bytes;
         float r = BX_MIN(BX_MAX(ps_tmp_regs_exp[fi][0][0], 0.0f), 1.0f);
         float g = BX_MIN(BX_MAX(ps_tmp_regs_exp[fi][0][1], 0.0f), 1.0f);
         float b = BX_MIN(BX_MAX(ps_tmp_regs_exp[fi][0][2], 0.0f), 1.0f);
@@ -5973,19 +5982,19 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
           float sa = a;
           float dr, dg, db, da;
           if (ch->d3d_color_bytes == 2) {
-            Bit16u color = dma_read16(ch->d3d_color_obj, draw_offset);
+            Bit16u color = dma_read16(ch->d3d_color_obj, draw_offset_color);
             dr = ((color >> 11) & 0x1f) / 31.0f;
             dg = ((color >> 5) & 0x3f) / 63.0f;
             db = ((color >> 0) & 0x1f) / 31.0f;
             da = 1.0f;
           } else if (ch->d3d_color_bytes == 4) {
-            Bit32u color = dma_read32(ch->d3d_color_obj, draw_offset);
+            Bit32u color = dma_read32(ch->d3d_color_obj, draw_offset_color);
             dr = ((color >> 16) & 0xff) / 255.0f;
             dg = ((color >> 8) & 0xff) / 255.0f;
             db = ((color >> 0) & 0xff) / 255.0f;
             da = ((color >> 24) & 0xff) / 255.0f;
           } else {
-            Bit8u color = dma_read8(ch->d3d_color_obj, draw_offset);
+            Bit8u color = dma_read8(ch->d3d_color_obj, draw_offset_color);
             dr = 0.0f;
             dg = 0.0f;
             db = color / 255.0f;
@@ -6023,12 +6032,12 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
             Bit8u b5 = b * 31.0f + 0.5f;
             Bit16u color = b5 << 0 | g6 << 5 | r5 << 11;
             if (ch->d3d_color_mask == 0x01010101) {
-              dma_write16(ch->d3d_color_obj, draw_offset, color);
+              dma_write16(ch->d3d_color_obj, draw_offset_color, color);
             } else {
-              Bit16u dstcolor = dma_read16(ch->d3d_color_obj, draw_offset);
+              Bit16u dstcolor = dma_read16(ch->d3d_color_obj, draw_offset_color);
               dstcolor &= ~ch->d3d_color_mask_565;
               dstcolor |= color & ch->d3d_color_mask_565;
-              dma_write16(ch->d3d_color_obj, draw_offset, dstcolor);
+              dma_write16(ch->d3d_color_obj, draw_offset_color, dstcolor);
             }
           } else if (ch->d3d_color_bytes == 4) {
             Bit8u r8 = r * 255.0f + 0.5f;
@@ -6037,23 +6046,23 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
             Bit8u a8 = a * 255.0f + 0.5f;
             Bit32u color = b8 << 0 | g8 << 8 | r8 << 16 | a8 << 24;
             if (ch->d3d_color_mask == 0x01010101) {
-              dma_write32(ch->d3d_color_obj, draw_offset, color);
+              dma_write32(ch->d3d_color_obj, draw_offset_color, color);
             } else {
-              Bit32u dstcolor = dma_read32(ch->d3d_color_obj, draw_offset);
+              Bit32u dstcolor = dma_read32(ch->d3d_color_obj, draw_offset_color);
               dstcolor &= ~ch->d3d_color_mask_8888;
               dstcolor |= color & ch->d3d_color_mask_8888;
-              dma_write32(ch->d3d_color_obj, draw_offset, dstcolor);
+              dma_write32(ch->d3d_color_obj, draw_offset_color, dstcolor);
             }
           } else {
             Bit8u color = b * 255.0f + 0.5f;
-            dma_write8(ch->d3d_color_obj, draw_offset, color);
+            dma_write8(ch->d3d_color_obj, draw_offset_color, color);
           }
         }
         if (ch->d3d_depth_test_enable && ch->d3d_depth_write_enable) {
           if (ch->d3d_depth_bytes == 2)
-            dma_write16(ch->d3d_zeta_obj, draw_offset_zeta + y * pitch_zeta + x * 2, z_new[fi]);
+            dma_write16(ch->d3d_zeta_obj, draw_offset_zeta[fi], z_new[fi]);
           else
-            dma_write32(ch->d3d_zeta_obj, draw_offset_zeta + y * pitch_zeta + x * 4, (z_new[fi] << 8) | stencils[fi]);
+            dma_write32(ch->d3d_zeta_obj, draw_offset_zeta[fi], (z_new[fi] << 8) | stencils[fi]);
         }
       }
     }
@@ -6192,14 +6201,6 @@ void bx_geforce_c::d3d_load_vertex(gf_channel* ch, Bit32u index)
     }
   }
   d3d_process_vertex(ch, false);
-}
-
-Bit32u bx_geforce_c::d3d_get_surface_pitch_z(gf_channel* ch)
-{
-  if (BX_GEFORCE_THIS card_type <= 0x35)
-    return ch->d3d_surface_pitch_a >> 16;
-  else
-    return ch->d3d_surface_pitch_z;
 }
 
 void bx_geforce_c::execute_clip(gf_channel* ch, Bit32u method, Bit32u param)
@@ -6977,6 +6978,8 @@ void bx_geforce_c::d3d_mh_surface_format(gf_channel* ch, Bit32u cls, Bit32u meth
 {
   ch->d3d_surface_format = param;
   ch->d3d_swizzled = ((param >> 8) & 0xf) == 2;
+  ch->d3d_swz_width = 1 << ((param >> 16) & 0xff);
+  ch->d3d_swz_height = 1 << ((param >> 24) & 0xff);
   Bit32u format_color;
   Bit32u format_depth;
   if (cls <= 0x0097) {
@@ -7010,7 +7013,13 @@ void bx_geforce_c::d3d_mh_surface_format(gf_channel* ch, Bit32u cls, Bit32u meth
 
 void bx_geforce_c::d3d_mh_surface_pitch_a(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
 {
-  ch->d3d_surface_pitch_a = param;
+  ch->d3d_surface_pitch_color = param & 0xFFFF;
+  ch->d3d_surface_pitch_zeta = param >> 16;
+}
+
+void bx_geforce_c::d3d_mh_surface_pitch_color(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
+{
+  ch->d3d_surface_pitch_color = param;
 }
 
 void bx_geforce_c::d3d_mh_surface_color_offset(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
@@ -7023,9 +7032,9 @@ void bx_geforce_c::d3d_mh_surface_zeta_offset(gf_channel* ch, Bit32u cls, Bit32u
   ch->d3d_surface_zeta_offset = param;
 }
 
-void bx_geforce_c::d3d_mh_surface_pitch_z(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
+void bx_geforce_c::d3d_mh_surface_pitch_zeta(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
 {
-  ch->d3d_surface_pitch_z = param;
+  ch->d3d_surface_pitch_zeta = param;
 }
 
 void bx_geforce_c::d3d_mh_combiner_alpha_icw(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
@@ -8221,10 +8230,11 @@ void bx_geforce_c::init_method_handlers()
   set_d3d_method_handler(1, 1, 1, 1, 0x080, &bx_geforce_c::d3d_mh_clip_horizontal);
   set_d3d_method_handler(1, 1, 1, 1, 0x081, &bx_geforce_c::d3d_mh_clip_vertical);
   set_d3d_method_handler(1, 1, 1, 1, 0x082, &bx_geforce_c::d3d_mh_surface_format);
-  set_d3d_method_handler(1, 1, 1, 1, 0x083, &bx_geforce_c::d3d_mh_surface_pitch_a);
+  set_d3d_method_handler(1, 1, 1, 0, 0x083, &bx_geforce_c::d3d_mh_surface_pitch_a);
+  set_d3d_method_handler(0, 0, 0, 1, 0x083, &bx_geforce_c::d3d_mh_surface_pitch_color);
   set_d3d_method_handler(1, 1, 1, 1, 0x084, &bx_geforce_c::d3d_mh_surface_color_offset);
   set_d3d_method_handler(1, 1, 1, 1, 0x085, &bx_geforce_c::d3d_mh_surface_zeta_offset);
-  set_d3d_method_handler(0, 0, 0, 1, 0x08b, &bx_geforce_c::d3d_mh_surface_pitch_z);
+  set_d3d_method_handler(0, 0, 0, 1, 0x08b, &bx_geforce_c::d3d_mh_surface_pitch_zeta);
   set_d3d_method_handler(1, 0, 0, 0, 0x098, 0x099, &bx_geforce_c::d3d_mh_combiner_alpha_icw);
   set_d3d_method_handler(0, 1, 0, 0, 0x098, 0x09f, &bx_geforce_c::d3d_mh_combiner_alpha_icw);
   set_d3d_method_handler(1, 1, 0, 0, 0x0a2, 0x0a3, &bx_geforce_c::d3d_mh_combiner_final);

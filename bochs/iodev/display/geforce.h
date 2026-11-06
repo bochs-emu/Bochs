@@ -236,8 +236,10 @@ struct gf_channel
   Bit32u d3d_color_bytes;
   Bit32u d3d_depth_bytes;
   bool d3d_swizzled;
-  Bit32u d3d_surface_pitch_a;
-  Bit32u d3d_surface_pitch_z;
+  Bit32u d3d_swz_width;
+  Bit32u d3d_swz_height;
+  Bit32u d3d_surface_pitch_color;
+  Bit32u d3d_surface_pitch_zeta;
   bool d3d_local_viewer;
   Bit32u d3d_color_material_emission;
   Bit32u d3d_color_material_ambient;
@@ -593,9 +595,10 @@ private:
   BX_GEFORCE_SMF void d3d_mh_clip_vertical(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void d3d_mh_surface_format(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void d3d_mh_surface_pitch_a(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_surface_pitch_color(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void d3d_mh_surface_color_offset(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void d3d_mh_surface_zeta_offset(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void d3d_mh_surface_pitch_z(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_surface_pitch_zeta(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void d3d_mh_combiner_alpha_icw(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void d3d_mh_combiner_final(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void d3d_mh_0096_0a5(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
@@ -755,7 +758,6 @@ private:
   BX_GEFORCE_SMF void d3d_clip_to_screen(gf_channel* ch, float pos_clip[4], float pos_screen[4]);
   BX_GEFORCE_SMF void d3d_process_vertex(gf_channel* ch, bool immediate);
   BX_GEFORCE_SMF void d3d_load_vertex(gf_channel* ch, Bit32u index);
-  BX_GEFORCE_SMF Bit32u d3d_get_surface_pitch_z(gf_channel* ch);
 
   struct {
     Bit8u index;
