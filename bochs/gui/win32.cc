@@ -2176,6 +2176,7 @@ void bx_win32_gui_c::exit(void)
       RegSetValueEx(hKey, "MainWinLeft", 0, REG_DWORD, (const BYTE *) &Left, sizeof(DWORD));
       RegSetValueEx(hKey, "MainWinTop", 0, REG_DWORD, (const BYTE *) &Top, sizeof(DWORD));
     }
+    RegCloseKey(hKey);
   }
 
   // kill thread first...
