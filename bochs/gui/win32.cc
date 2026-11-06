@@ -199,7 +199,7 @@ static char szMouseTooltip[64];
 
 static const char szAppName[] = "Bochs for Windows";
 static const char szWindowName[] = "Bochs for Windows - Display";
-static const char szRegLocation[] = "Software\\Bochs for Windows";
+static const char szRegLocation[] = "Software\\Bochs";
 
 typedef struct {
   HINSTANCE hInstance;
@@ -923,6 +923,55 @@ void resize_main_window(BOOL disable_fullscreen)
   }
 }
 
+// Look in the registry to see if we have the coord's of the last session
+// (This checks to make sure the new coord's are not outside of the physical display range)
+//
+// name -> 'Window Name' which will be appended with "Left" or "Top"
+// ipLeft and ipTop, if this function is successful, will be updated with
+//  the top left corner of the window.
+void SetWindowPositionFromLast(const char *name, int *ipLeft, int *ipTop) {
+  DWORD Left, LeftSize = sizeof(DWORD);
+  DWORD Top, TopSize = sizeof(DWORD);
+  char SubKey[128];
+
+  // read from the registry
+  sprintf(SubKey, "%sLeft", name);
+  LONG resLeft = RegGetValue(HKEY_CURRENT_USER, szRegLocation, SubKey, RRF_RT_DWORD, NULL, &Left, &LeftSize);
+  sprintf(SubKey, "%sTop", name);
+  LONG resTop = RegGetValue(HKEY_CURRENT_USER, szRegLocation, SubKey, RRF_RT_DWORD, NULL, &Top, &TopSize);
+  if ((resLeft == ERROR_SUCCESS) && (resTop == ERROR_SUCCESS)) {
+    // check to make sure we don't move clear off the screen
+    //  (this can happen if the user changes the Host screen size to a smaller size)
+    if (Left > (desktop_x - 25)) Left = (desktop_x - 25);
+    if (Top > (desktop_y - 25)) Top = (desktop_y - 25);
+    // send the new values
+    if (ipLeft) *ipLeft = (int) Left;
+    if (ipTop) *ipTop = (int) Top;
+  }
+}
+
+// Save the coord's of the specified window to the registry so that next time
+//  we can place the window in the same place
+void GetWindowPostitionForNext(HWND Wnd, const char *name) {
+  char SubKey[128];
+  HKEY hKey;
+  LONG result = RegCreateKeyEx(HKEY_CURRENT_USER, szRegLocation, 0, NULL,
+                               REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
+  if (result == ERROR_SUCCESS) {
+    RECT Rect;
+    if (GetWindowRect(Wnd, &Rect)) {
+      // LONG might not be the same size as DWORD
+      DWORD Left = (DWORD) Rect.left;
+      DWORD Top = (DWORD) Rect.top;
+      sprintf(SubKey, "%sLeft", name);
+      RegSetValueEx(hKey, SubKey, 0, REG_DWORD, (const BYTE *) &Left, sizeof(DWORD));
+      sprintf(SubKey, "%sTop", name);
+      RegSetValueEx(hKey, SubKey, 0, REG_DWORD, (const BYTE *) &Top, sizeof(DWORD));
+    }
+    RegCloseKey(hKey);
+  }
+}
+
 // This thread controls the GUI window.
 DWORD WINAPI UIThread(LPVOID)
 {
@@ -930,6 +979,8 @@ DWORD WINAPI UIThread(LPVOID)
   HDC hdc;
   WNDCLASS wndclass;
   RECT wndRect;
+  int left = CW_USEDEFAULT;
+  int top = CW_USEDEFAULT;
 
   workerThreadID = GetCurrentThreadId();
 
@@ -964,11 +1015,11 @@ DWORD WINAPI UIThread(LPVOID)
   AdjustWindowRectEx(&wndRect, sim_style, FALSE, sim_exstyle);
   DWORD main_style = WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
   AdjustWindowRect(&wndRect, main_style, FALSE);
+  SetWindowPositionFromLast("MainWin", &left, &top);
   stInfo.mainWnd = CreateWindow (szAppName,
                      szWindowName,
                      main_style,
-                     CW_USEDEFAULT,
-                     CW_USEDEFAULT,
+                     left, top,
                      wndRect.right - wndRect.left,
                      wndRect.bottom - wndRect.top,
                      NULL,
@@ -977,15 +1028,6 @@ DWORD WINAPI UIThread(LPVOID)
                      NULL);
 
   if (stInfo.mainWnd) {
-    // Look in the registry to see if we have the coord's of the last session
-    // If so, set this window to those coord's
-    DWORD Left, LeftSize = sizeof(DWORD);
-    DWORD Top, TopSize = sizeof(DWORD);
-    LONG resLeft = RegGetValue(HKEY_CURRENT_USER, szRegLocation, "MainWinLeft", RRF_RT_DWORD, NULL, &Left, &LeftSize);
-    LONG resTop = RegGetValue(HKEY_CURRENT_USER, szRegLocation, "MainWinTop", RRF_RT_DWORD, NULL, &Top, &TopSize);
-    if ((resLeft == ERROR_SUCCESS) && (resTop == ERROR_SUCCESS))
-      SetWindowPos(stInfo.mainWnd, HWND_TOP, Left, Top, 0, 0, SWP_NOSIZE | SWP_SHOWWINDOW);
-
     InitCommonControls();
     hwndTB = CreateWindowEx(0, TOOLBARCLASSNAME, (LPSTR) NULL,
                WS_CHILD | TBSTYLE_TOOLTIPS | TBSTYLE_FLAT, 0, 0, 0, 0, stInfo.mainWnd,
@@ -2161,23 +2203,9 @@ void bx_win32_gui_c::exit(void)
     close_debug_dialog();
   }
 #endif
-  
-  // Save the coord's of the current window to the registry so that next time
-  //  we can place the window in the same place
-  HKEY hKey;
-  LONG result = RegCreateKeyEx(HKEY_CURRENT_USER, szRegLocation, 0, NULL,
-                               REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
-  if (result == ERROR_SUCCESS) {
-    RECT Rect;
-    if (GetWindowRect(stInfo.mainWnd, &Rect)) {
-      // LONG might not be the same size as DWORD
-      DWORD Left = (DWORD) Rect.left;
-      DWORD Top = (DWORD) Rect.top;
-      RegSetValueEx(hKey, "MainWinLeft", 0, REG_DWORD, (const BYTE *) &Left, sizeof(DWORD));
-      RegSetValueEx(hKey, "MainWinTop", 0, REG_DWORD, (const BYTE *) &Top, sizeof(DWORD));
-    }
-    RegCloseKey(hKey);
-  }
+
+  // Save the coord's of the window for next time
+  GetWindowPostitionForNext(stInfo.mainWnd, "MainWin");
 
   // kill thread first...
   PostMessage(stInfo.mainWnd, WM_CLOSE, 0, 0);
