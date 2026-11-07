@@ -1199,6 +1199,11 @@ Bit32u BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_read_dword(unsigned s, bx_a
     }
   }
 
+  if (offset & 3) {
+    BX_ERROR(("shadow_stack_read_dword(): #GP misaligned access"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
   if (access_read_linear(offset, 4, curr_pl, BX_SHADOW_STACK_READ, 0, (void *) &data) < 0)
     exception(int_number(s), 0);
 
@@ -1247,6 +1252,11 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_write_dword(unsigned s, bx_ad
       WriteHostDWordToLittleEndian(hostAddr, data);
       return;
     }
+  }
+
+  if (offset & 3) {
+    BX_ERROR(("shadow_stack_write_dword(): #GP misaligned access"));
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   if (access_write_linear(offset, 4, curr_pl, BX_SHADOW_STACK_WRITE, 0, (void *) &data) < 0)

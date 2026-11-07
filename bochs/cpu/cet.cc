@@ -298,11 +298,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRSSD(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   bx_address laddr = agen_write_aligned(i->seg(), eaddr, 4);
-  if (laddr & 0x3) {
-    BX_ERROR(("%s: must be 4 bytes aligned", i->getIaOpcodeNameShort()));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-  shadow_stack_write_dword(i->seg(), laddr, CPL, BX_READ_32BIT_REG(i->src()));
+  shadow_stack_write_dword(i->seg(), laddr, CPL, BX_READ_32BIT_REG(i->src())); // #GP if not 4-byte aligned
 
   BX_NEXT_INSTR(i);
 }
@@ -339,11 +335,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRUSSD(bxInstruction_c *i)
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   bx_address laddr = agen_write_aligned(i->seg(), eaddr, 4);
-  if (laddr & 0x3) {
-    BX_ERROR(("%s: must be 4 bytes aligned", i->getIaOpcodeNameShort()));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-  shadow_stack_write_dword(i->seg(), laddr, 3, BX_READ_32BIT_REG(i->src()));
+  shadow_stack_write_dword(i->seg(), laddr, 3, BX_READ_32BIT_REG(i->src())); // #GP if not 4-byte aligned
 
   BX_NEXT_INSTR(i);
 }
