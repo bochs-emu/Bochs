@@ -67,9 +67,10 @@ these four paragraphs for those parts of this code that are retained.
 #include <stddef.h>
 
 #include "fpu_trans.h"
-#include "softfloat-helpers.h"
 #include "fpu_constant.h"
 #include "fsincos_constants.h"
+
+#include "../wide_int.h"
 
 extern float128_t f128_mul_67_chop(float128_t a, float128_t b, struct softfloat_status_t *status);
 extern float128_t f128_mul_e67   (float128_t a, float128_t b, struct softfloat_status_t *status);
@@ -151,6 +152,9 @@ static BX_CPP_INLINE float128_t f128_xorsign(float128_t v, int neg)
  *   |x| >= 2    : full remainder.  A restoring bit-serial division of
  *                 (aSig << expDiff) << 64  by pi/2 yields the quotient bits
  *                 (only the low ones matter) and the 128-bit remainder.
+ *                 The callers reject |x| >= 2^63, so  aSig << expDiff < 2^126
+ *                 is below pi/2: the upper 128 dividend bits produce no
+ *                 quotient bits and only the low 64 (zero) bits are iterated.
  *
  * Then the fold: the raw remainder is in [0, pi/2); if it exceeds pi/4 replace
  * it with pi/2 - remainder (now in (0, pi/4]), remember that r is negative,
@@ -161,7 +165,8 @@ static BX_CPP_INLINE float128_t f128_xorsign(float128_t v, int neg)
 static int sincos_reduce(Bit32s aExp, Bit64u aSig, float128_t &r, int &rNeg, softfloat_status_t &status)
 {
     Bit32s expDiff = aExp - FLOATX80_EXP_BIAS;
-    Bit64u rSig0, rSig1;
+    Bit128u pi2 = MAKE128U(SC_PI2_HI, SC_PI2_LO);
+    Bit128u rem;
     Bit64u q = 0;
 
     if (expDiff < -1) {
@@ -173,48 +178,38 @@ static int sincos_reduce(Bit32s aExp, Bit64u aSig, float128_t &r, int &rNeg, sof
 
     if (expDiff <= 0) {
         /* |x| in [1/2, 2) : at most one pi/2 to subtract */
-        Bit64u xHi, xLo;
-        shortShift128Right(aSig, 0, (expDiff == 0) ? 0 : 1, &xHi, &xLo);   /* x on the /2^127 scale */
-        rSig0 = xHi; rSig1 = xLo;
-        if (! softfloat_lt128(rSig0, rSig1, SC_PI2_HI, SC_PI2_LO)) {
-            sub128(rSig0, rSig1, SC_PI2_HI, SC_PI2_LO, &rSig0, &rSig1);
+        rem = MAKE128U(aSig, 0) >> ((expDiff == 0) ? 0 : 1);   /* x on the /2^127 scale */
+        if (rem >= pi2) {
+            rem -= pi2;
             q = 1;
         }
     }
     else {
         /* |x| >= 2 : bit-serial truncated remainder.  Dividend is
            (aSig << expDiff) << 64  (so that quotient = x / (pi/2) on the
-           /2^127 scale), divisor is pi/2. */
-        Bit64u y1, y0;
-        shortShift128Left(0, aSig, expDiff, &y1, &y0);   /* (y1:y0) = aSig << expDiff */
-        rSig0 = 0; rSig1 = 0;
-        for (int idx = 0; idx < 192; idx++) {
-            Bit64u dbit =
-                (idx < 64)  ? ((y1 >> (63 - idx)) & 1) :
-                (idx < 128) ? ((y0 >> (127 - idx)) & 1) : 0;
-            Bit64u carry = rSig0 >> 63;
-            rSig0 = (rSig0 << 1) | (rSig1 >> 63);
-            rSig1 = (rSig1 << 1) | dbit;
+           /2^127 scale), divisor is pi/2.  The upper 128 dividend bits
+           (aSig << expDiff) are below pi/2 and become the initial remainder. */
+        rem = (Bit128u) aSig << expDiff;
+        for (int idx = 0; idx < 64; idx++) {
+            Bit64u carry = GET128H(rem) >> 63;
+            rem <<= 1;
             q <<= 1;
-            if (carry || ! softfloat_lt128(rSig0, rSig1, SC_PI2_HI, SC_PI2_LO)) {
-                sub128(rSig0, rSig1, SC_PI2_HI, SC_PI2_LO, &rSig0, &rSig1);
+            if (carry || rem >= pi2) {
+                rem -= pi2;     /* modulo 2^128, exact when carry is set */
                 q |= 1;
             }
         }
     }
 
     /* fold to |r| <= pi/4 : if r > pi/4 then r := (pi/2) - r, rNeg, n++ */
-    Bit64u p4Sig0, p4Sig1;
-    shortShift128Right(SC_PI2_HI, SC_PI2_LO, 1, &p4Sig0, &p4Sig1);
-
     rNeg = 0;
-    if (softfloat_lt128(p4Sig0, p4Sig1, rSig0, rSig1)) {
-        sub128(SC_PI2_HI, SC_PI2_LO, rSig0, rSig1, &rSig0, &rSig1);
+    if (rem > (pi2 >> 1)) {
+        rem = pi2 - rem;
         rNeg = 1;
         q++;
     }
 
-    r = softfloat_normRoundPackToF128(0, FLOATX80_EXP_BIAS - 0x10, rSig0, rSig1, &status);
+    r = softfloat_normRoundPackToF128(0, FLOATX80_EXP_BIAS - 0x10, GET128H(rem), GET128L(rem), &status);
     return (int)(q & 3);
 }
 

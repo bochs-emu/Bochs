@@ -43,7 +43,6 @@ these four paragraphs for those parts of this code that are retained.
 #define FLOAT128
 
 #include "fpu_trans.h"
-#include "softfloat-helpers.h"
 #include "fyl2x_constants.h"
 
 extern float128_t f128_mul_67_chop(float128_t a, float128_t b, struct softfloat_status_t *status);

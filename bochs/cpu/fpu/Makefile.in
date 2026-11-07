@@ -108,7 +108,8 @@ fprem.o: fprem.@CPP_SUFFIX@ fpu_trans.h ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h softfloat-helpers.h \
  ../softfloat3e/include/primitives.h \
  ../softfloat3e/include/primitiveTypes.h \
- ../softfloat3e/include/specialize.h ../softfloat3e/include/softfloat.h
+ ../softfloat3e/include/specialize.h ../softfloat3e/include/softfloat.h \
+ ../wide_int.h
 fpu.o: fpu.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h ../../logio.h \
  ../../misc/bswap.h ../../cpu/cpu.h ../../cpu/decoder/decoder.h \
  ../../cpu/decoder/features.h ../../instrument/stubs/instrument.h \
@@ -216,9 +217,8 @@ fsincos.o: fsincos.@CPP_SUFFIX@ fpu_trans.h ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h ../../config.h \
  ../softfloat3e/include/softfloat-extra.h \
  ../softfloat3e/include/internals.h softfloat-specialize.h \
- ../softfloat3e/include/softfloat_types.h softfloat-helpers.h \
- ../softfloat3e/include/primitives.h \
- ../softfloat3e/include/primitiveTypes.h fpu_constant.h fsincos_constants.h
+ ../softfloat3e/include/softfloat_types.h fpu_constant.h \
+ fsincos_constants.h ../wide_int.h
 fyl2x.o: fyl2x.@CPP_SUFFIX@ fpu_trans.h ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h ../../config.h \
  ../softfloat3e/include/softfloat-extra.h \

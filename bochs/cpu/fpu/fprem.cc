@@ -29,31 +29,29 @@ these four paragraphs for those parts of this code that are retained.
 
 #include "../softfloat3e/include/specialize.h"  // for softfloat_propagateNaNExtF80UI
 
+#include "../wide_int.h"
+
 /* executes single exponent reduction cycle */
-static Bit64u remainder_kernel(Bit64u aSig0, Bit64u bSig, int expDiff, Bit64u *zSig0, Bit64u *zSig1)
+static Bit64u remainder_kernel(Bit64u aSig, Bit64u bSig, int expDiff, Bit64u *zSig)
 {
-    uint128 term, z;
-    Bit64u aSig1 = 0;
-    shortShift128Left(aSig1, aSig0, expDiff, &aSig1, &aSig0);
-    Bit64u q = estimateDiv128To64(aSig1, aSig0, bSig);
-    term = softfloat_mul64To128(bSig, q);
-    z = softfloat_sub128(aSig1, aSig0, term.v64, term.v0);
-    while ((int64_t) z.v64 < 0) {
+    Bit128u a = (Bit128u) aSig << expDiff;
+    Bit64u q = estimateDiv128To64(GET128H(a), GET128L(a), bSig);
+    Bit128u z = a - (Bit128u) q * bSig;
+    while ((Bit64s) GET128H(z) < 0) {
         --q;
-        z = softfloat_add128(z.v64, z.v0, 0, bSig);
+        z += bSig;
     }
-    *zSig0 = z.v0;
-    *zSig1 = z.v64;
+    *zSig = (Bit64u) z;
     return q;
 }
 
 static int do_fprem(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, int rounding_mode, struct softfloat_status_t *status)
 {
     Bit32s aExp, bExp, zExp, expDiff;
-    Bit64u aSig0, aSig1 = 0, bSig;
+    Bit64u aSig, bSig;
+    Bit128u rem;
     int aSign;
     struct exp32_sig64 normExpSig;
-    uint128 term;
 
     q = 0;
 
@@ -64,14 +62,14 @@ static int do_fprem(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, int rounding
         return -1;
     }
 
-    aSig0 = extF80_fraction(a);
+    aSig = extF80_fraction(a);
     aExp = extF80_exp(a);
     aSign = extF80_sign(a);
     bSig = extF80_fraction(b);
     bExp = extF80_exp(b);
 
     if (aExp == 0x7FFF) {
-        if ((aSig0<<1) || ((bExp == 0x7FFF) && (bSig<<1))) {
+        if ((aSig<<1) || ((bExp == 0x7FFF) && (bSig<<1))) {
             r = softfloat_propagateNaNExtF80UI(a.signExp, a.signif, b.signExp, b.signif, status);
             return -1;
         }
@@ -84,12 +82,12 @@ static int do_fprem(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, int rounding
             r = softfloat_propagateNaNExtF80UI(a.signExp, a.signif, b.signExp, b.signif, status);
             return -1;
         }
-        if (! aExp && aSig0) {
+        if (! aExp && aSig) {
             softfloat_raiseFlags(status, softfloat_flag_denormal);
-            normExpSig = softfloat_normSubnormalExtF80Sig(aSig0);
+            normExpSig = softfloat_normSubnormalExtF80Sig(aSig);
             aExp = normExpSig.exp + 1;
-            aSig0 = normExpSig.sig;
-            r = (a.signif & BX_CONST64(0x8000000000000000)) ? packToExtF80(aSign, aExp, aSig0) : a;
+            aSig = normExpSig.sig;
+            r = (a.signif & BX_CONST64(0x8000000000000000)) ? packToExtF80(aSign, aExp, aSig) : a;
             return 0;
         }
         r = a;
@@ -108,69 +106,65 @@ static int do_fprem(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, int rounding
         bSig = normExpSig.sig;
     }
     if (! aExp) {
-        if (! aSig0) {
+        if (! aSig) {
             r = a;
             return 0;
         }
         softfloat_raiseFlags(status, softfloat_flag_denormal);
-        normExpSig = softfloat_normSubnormalExtF80Sig(aSig0);
+        normExpSig = softfloat_normSubnormalExtF80Sig(aSig);
         aExp = normExpSig.exp + 1;
-        aSig0 = normExpSig.sig;
+        aSig = normExpSig.sig;
     }
 
     expDiff = aExp - bExp;
     int overflow = 0;
 
+    // the remainder is kept as 128-bit fixed point value, the integer part in the upper 64-bit
     if (expDiff >= 64) {
         int n = (expDiff & 0x1f) | 0x20;
-        remainder_kernel(aSig0, bSig, n, &aSig0, &aSig1);
+        remainder_kernel(aSig, bSig, n, &aSig);
+        rem = MAKE128U(aSig, 0);
         zExp = aExp - n;
         overflow = 1;
     }
     else {
         zExp = bExp;
 
+        Bit128u bSig128 = MAKE128U(bSig, 0);
+
         if (expDiff < 0) {
             if (expDiff < -1) {
-               r = softfloat_normRoundPackToExtF80(aSign, aExp, aSig0, 0, 80, status);
+               r = softfloat_normRoundPackToExtF80(aSign, aExp, aSig, 0, 80, status);
                return 0;
             }
-            shortShift128Right(aSig0, 0, 1, &aSig0, &aSig1);
-            expDiff = 0;
+            rem = MAKE128U(aSig, 0) >> 1;    // always less than bSig, the quotient is 0
         }
-
-        if (expDiff > 0) {
-            q = remainder_kernel(aSig0, bSig, expDiff, &aSig0, &aSig1);
+        else if (expDiff > 0) {
+            q = remainder_kernel(aSig, bSig, expDiff, &aSig);
+            rem = MAKE128U(aSig, 0);
         }
         else {
-            if (bSig <= aSig0) {
-               aSig0 -= bSig;
+            rem = MAKE128U(aSig, 0);
+            if (bSig128 <= rem) {
+               rem -= bSig128;
                q = 1;
             }
         }
 
         if (rounding_mode == softfloat_round_near_even) {
-            Bit64u term0, term1;
-            shortShift128Right(bSig, 0, 1, &term0, &term1);
+            Bit128u half = bSig128 >> 1;
 
-            if (! softfloat_lt128(aSig0, aSig1, term0, term1)) {
-                int lt = softfloat_lt128(term0, term1, aSig0, aSig1);
-                int eq = softfloat_eq128(aSig0, aSig1, term0, term1);
-
-                if ((eq && (q & 1)) || lt) {
-                    aSign = !aSign;
-                    ++q;
-                }
-                if (lt) {
-                    term = softfloat_sub128(bSig, 0, aSig0, aSig1);
-                    aSig0 = term.v64;
-                    aSig1 = term.v0;
-                }
+            if (rem > half || (rem == half && (q & 1))) {
+                aSign = !aSign;
+                ++q;
+            }
+            if (rem > half) {
+                rem = bSig128 - rem;
             }
         }
     }
 
-    r = softfloat_normRoundPackToExtF80(aSign, zExp, aSig0, aSig1, 80, status);
+    r = softfloat_normRoundPackToExtF80(aSign, zExp, GET128H(rem), GET128L(rem), 80, status);
     return overflow;
 }
 
