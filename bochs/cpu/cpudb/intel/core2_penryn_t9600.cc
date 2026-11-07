@@ -133,8 +133,6 @@ core2_penryn_t9600_t::core2_penryn_t9600_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 
 void core2_penryn_t9600_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  static const char* brand_string = "Intel(R) Core(TM)2 Duo CPU     T9600  @ 2.80GHz";
-
   switch(function) {
   case 0x80000000:
     get_leaf_0(max_ext_leaf, NULL, leaf);
@@ -145,12 +143,10 @@ void core2_penryn_t9600_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfu
   case 0x80000002:
   case 0x80000003:
   case 0x80000004:
-    get_ext_cpuid_brand_string_leaf(brand_string, function, leaf);
-    return;
   case 0x80000005:
   case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
   case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management
-    cpuid_table->get_ext_leaf(function, 0, leaf);
+    cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8(leaf);
@@ -163,16 +159,10 @@ void core2_penryn_t9600_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfu
     return;
   case 0x00000002: // CPUID leaf 0x00000002 - Cache and TLB Descriptors
   case 0x00000003:
-    cpuid_table->get_std_leaf(function, 0, leaf);
-    return;
   case 0x00000004: // CPUID leaf 0x00000004 - Deterministic Cache Parameters
-    cpuid_table->get_std_leaf(function, subfunction, leaf);
-    return;
   case 0x00000005:
-    get_std_cpuid_monitor_mwait_leaf(leaf, 0x03122220);
-    return;
   case 0x00000006: // CPUID leaf 0x00000006 - Thermal and Power Management Leaf
-    cpuid_table->get_std_leaf(function, 0, leaf);
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   case 0x00000007:
   case 0x00000008:
@@ -182,11 +172,9 @@ void core2_penryn_t9600_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfu
   case 0x0000000A: // CPUID leaf 0x0000000A - Architectural Performance Monitoring Leaf
   case 0x0000000B:
   case 0x0000000C:
-    cpuid_table->get_std_leaf(function, 0, leaf);
-    return;
   case 0x0000000D:
   default:
-    get_std_cpuid_xsave_leaf(subfunction, leaf);
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   }
 }

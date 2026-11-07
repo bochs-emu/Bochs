@@ -27,6 +27,7 @@ Changes after Bochs 3.1:
 - CPUID: CPUID.(EAX=0DH,ECX=1):EBX (XSAVES area size) ignored the 64-byte alignment of AMX TILECFG/TILEDATA and SCALEDATA components in the compacted format
 - CPUID: add std leaf 7 ECX/EDX calculation to CPUID models which support std leaf 7 but have nothing to report there (ECX/EDX reported=0), required for correct CET reporting after using add_features="cet"
 - CPUID: correctly report presence of subleaf=1 in CPUID Leaf 0x0000001E: AMX: TMUL Information Main leaf (when present)
+- CPUID: fixed CPUID 0x0000000B: Extended Topology leaf - core level must report total x2APIC ID shift, do not report reserved package domain type, report thread and core levels also in non-SMP build
 - AMX: TILELOADD/TILESTORED must #UD if memory operand is encoded without SIB byte, use zero stride when SIB has no index register (was using RSP)
 - GATHER: VGATHER*/VSCATTER* suspended by a fault: deliver data breakpoint #DB pending from already completed elements in lieu of the fault (with RF=1) instead of dropping it
 - GATHER: VEX encoded VGATHER* must clear mask register bits above VL before gathering any element (also when suspended by a fault)

@@ -291,7 +291,6 @@ sapphire_rapids_t::sapphire_rapids_t(BX_CPU_C *cpu):
 
 void sapphire_rapids_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  static const char* brand_string = "Intel(R) Xeon(R) w9-3475X\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
   switch(function) {
   case 0x80000000:
     get_leaf_0(max_ext_leaf, NULL, leaf); // highest extended function understood by CPUID
@@ -302,12 +301,10 @@ void sapphire_rapids_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunct
   case 0x80000002:
   case 0x80000003:
   case 0x80000004:
-    get_ext_cpuid_brand_string_leaf(brand_string, function, leaf);
-    return;
   case 0x80000005:
   case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
   case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management leaf, EDX[8] - invariant TSC
-    cpuid_table->get_ext_leaf(function, 0, leaf);
+    cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8(leaf);
@@ -320,16 +317,10 @@ void sapphire_rapids_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunct
     return;
   case 0x00000002: // CPUID leaf 0x00000002 - Cache and TLB Descriptors
   case 0x00000003:
-    cpuid_table->get_std_leaf(function, 0, leaf);
-    return;
   case 0x00000004: // CPUID leaf 0x00000004 - Deterministic Cache Parameters
-    cpuid_table->get_std_leaf(function, subfunction, leaf);
-    return;
   case 0x00000005: // CPUID leaf 0x00000005 - MONITOR/MWAIT leaf
-    get_std_cpuid_monitor_mwait_leaf(leaf, 0x00001020);
-    return;
   case 0x00000006: // CPUID leaf 0x00000006 - Thermal and Power Management Leaf
-    cpuid_table->get_std_leaf(function, 0, leaf);
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   case 0x00000007:
     get_std_cpuid_leaf_7(subfunction, leaf);
@@ -337,16 +328,10 @@ void sapphire_rapids_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunct
   case 0x00000008:
   case 0x00000009:
   case 0x0000000A: // CPUID leaf 0x0000000A - Architectural Performance Monitor
-    cpuid_table->get_std_leaf(function, 0, leaf);
-    return;
   case 0x0000000B:
-    get_std_cpuid_extended_topology_leaf(subfunction, leaf);
-    return;
   case 0x0000000C:
-    cpuid_table->get_std_leaf(function, 0, leaf);
-    return;
   case 0x0000000D:
-    get_std_cpuid_xsave_leaf(subfunction, leaf);
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   case 0x0000000E:
   case 0x0000000F: // CPUID leaf 0x0000000F - Intel Resource Director Technonology
@@ -358,14 +343,8 @@ void sapphire_rapids_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunct
     get_reserved_leaf(leaf);
     return;
   case 0x00000015: // CPUID leaf 0x00000015 - Time Stamp Counter and Core Crystal Clock Information Leaf
-    get_freq_leaf_15(leaf, 0x00000002, 0x000000b0, 0x017d7840);
-    return;
   case 0x00000016: // CPUID leaf 0x00000016 - Processor Frequency Information Leaf
-    get_freq_leaf_16(leaf, 0x00000898, 0x000012c0, 0x00000064);
-    return;
   case 0x00000017:
-    cpuid_table->get_std_leaf(function, 0, leaf);
-    return;
   case 0x00000018: // TLB Descriptors
     cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
@@ -375,25 +354,16 @@ void sapphire_rapids_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunct
   case 0x0000001C: // CPUID leaf 0x0000001C - Last Branch Record (Architectural LBR) leaf
     get_reserved_leaf(leaf);
     return;
-#if BX_SUPPORT_AMX
-  case 0x0000001D: // AMX
-    get_std_cpuid_amx_palette_info_leaf(subfunction, leaf);
-    return;
-  case 0x0000001E: // AMX: TMUL Information Main leaf
-    get_std_cpuid_amx_tmul_leaf(subfunction, leaf);
-    return;
-#else
   case 0x0000001D: // AMX
   case 0x0000001E: // AMX: TMUL Information Main leaf
-    get_reserved_leaf(leaf);
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
-#endif
   case 0x0000001F: // V2 Extended Topology Enumberation leaf
     get_reserved_leaf(leaf); // until figured it out
     return;
   case 0x00000020: // HRESET Information
   default:
-    cpuid_table->get_std_leaf(function, 0, leaf);
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   }
 }

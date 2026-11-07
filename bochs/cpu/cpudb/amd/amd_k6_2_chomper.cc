@@ -77,7 +77,6 @@ amd_k6_2_chomper_t::amd_k6_2_chomper_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 
 void amd_k6_2_chomper_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  static const char* brand_string = "AMD-K6(tm) 3D processor\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
   static const char* magic_string = "NexGenerationAMD";
 
   switch(function) {
@@ -93,10 +92,8 @@ void amd_k6_2_chomper_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunc
   case 0x80000002:
   case 0x80000003:
   case 0x80000004:
-    get_ext_cpuid_brand_string_leaf(brand_string, function, leaf);
-    return;
   case 0x80000005: // CPUID leaf 0x80000005 - L1 Cache and TLB Identifiers
-    cpuid_table->get_ext_leaf(function, 0, leaf);
+    cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x00000000:
     get_std_cpuid_leaf_0(leaf);

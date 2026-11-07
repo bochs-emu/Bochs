@@ -163,8 +163,6 @@ corei7_haswell_4770_t::corei7_haswell_4770_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 
 void corei7_haswell_4770_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  static const char* brand_string = "Intel(R) Core(TM) i7-4770 CPU @ 3.40GHz\0\0\0\0\0\0\0\0";
-
   switch(function) {
   case 0x80000000:
     get_leaf_0(max_ext_leaf, NULL, leaf); // highest extended function understood by CPUID
@@ -175,12 +173,10 @@ void corei7_haswell_4770_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subf
   case 0x80000002:
   case 0x80000003:
   case 0x80000004:
-    get_ext_cpuid_brand_string_leaf(brand_string, function, leaf);
-    return;
   case 0x80000005:
   case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
   case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management leaf, EDX[8] - invariant TSC
-    cpuid_table->get_ext_leaf(function, 0, leaf);
+    cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8(leaf);
@@ -193,16 +189,10 @@ void corei7_haswell_4770_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subf
     return;
   case 0x00000002: // CPUID leaf 0x00000002 - Cache and TLB Descriptors
   case 0x00000003:
-    cpuid_table->get_std_leaf(function, 0, leaf);
-    return;
   case 0x00000004: // CPUID leaf 0x00000004 - Deterministic Cache Parameters
-    cpuid_table->get_std_leaf(function, subfunction, leaf);
-    return;
   case 0x00000005:
-    get_std_cpuid_monitor_mwait_leaf(leaf, 0x00042120);
-    return;
   case 0x00000006: // CPUID leaf 0x00000006 - Thermal and Power Management Leaf
-    cpuid_table->get_std_leaf(function, 0, leaf);
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   case 0x00000007:
     get_std_cpuid_leaf_7(subfunction, leaf);
@@ -210,17 +200,11 @@ void corei7_haswell_4770_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subf
   case 0x00000008:
   case 0x00000009:
   case 0x0000000A: // CPUID leaf 0x0000000A - Architectural Performance Monitoring Leaf
-    cpuid_table->get_std_leaf(function, 0, leaf);
-    return;
   case 0x0000000B:
-    get_std_cpuid_extended_topology_leaf(subfunction, leaf);
-    return;
   case 0x0000000C:
-    cpuid_table->get_std_leaf(function, 0, leaf);
-    return;
   case 0x0000000D:
   default:
-    get_std_cpuid_xsave_leaf(subfunction, leaf);
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   }
 }

@@ -160,7 +160,7 @@ protected:
   virtual void get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const = 0;
 
   void get_leaf_0(unsigned max_leaf, const char *vendor_string, cpuid_function_t *leaf) const;
-  void get_ext_cpuid_brand_string_leaf(const char *brand_string, Bit32u function, cpuid_function_t *leaf) const;
+  void get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf) const;
   void get_cpuid_hidden_level(cpuid_function_t *leaf, const char *magic_string) const;
 
 #if BX_SUPPORT_APIC
@@ -178,7 +178,7 @@ protected:
 
   void get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
 
-  void get_std_cpuid_monitor_mwait_leaf(cpuid_function_t *leaf, Bit32u edx_power_states) const;
+  void get_std_cpuid_monitor_mwait_leaf(cpuid_function_t *leaf) const;
 
 #if BX_SUPPORT_APX
   void get_std_cpuid_apx_leaf(Bit32u subfunction, cpuid_function_t *leaf) const; // leaf 0x29
@@ -207,8 +207,8 @@ protected:
   // the CPU the model was dumped from, while the emulated TSC advances at the
   // 'ips' rate; the 'cpu: cpuid_freq=' option chooses how they are reported.
   // The eax/ebx/ecx arguments carry the hardware dump values of the model.
-  void get_freq_leaf_15(cpuid_function_t *leaf, Bit32u eax, Bit32u ebx, Bit32u ecx) const;
-  void get_freq_leaf_16(cpuid_function_t *leaf, Bit32u eax, Bit32u ebx, Bit32u ecx) const;
+  void get_freq_leaf_15(cpuid_function_t *leaf) const;
+  void get_freq_leaf_16(cpuid_function_t *leaf) const;
 
   BX_CPP_INLINE void get_leaf(cpuid_function_t *leaf, Bit32u eax, Bit32u ebx, Bit32u ecx, Bit32u edx) const
   {

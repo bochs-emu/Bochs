@@ -77,7 +77,7 @@ void p3_katmai_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, c
   case 0x00000002: // CPUID leaf 0x00000002 - Cache and TLB Descriptors
   case 0x00000003: // Processor Serial Number
   default:
-    cpuid_table->get_std_leaf(function, 0, leaf);
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   }
 }

@@ -131,7 +131,6 @@ athlon64_venice_t::athlon64_venice_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 
 void athlon64_venice_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  static const char* brand_string = "AMD Athlon(tm) 64 Processor 3000+\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
   static const char* magic_string = "IT'S HAMMER TIME";
 
   switch(function) {
@@ -147,12 +146,10 @@ void athlon64_venice_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunct
   case 0x80000002:
   case 0x80000003:
   case 0x80000004:
-    get_ext_cpuid_brand_string_leaf(brand_string, function, leaf);
-    return;
   case 0x80000005: // CPUID leaf 0x80000005 - L1 Cache and TLB Identifiers
   case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
   case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management
-    cpuid_table->get_ext_leaf(function, 0, leaf);
+    cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8(leaf);

@@ -104,8 +104,6 @@ p4_prescott_celeron_336_t::p4_prescott_celeron_336_t(BX_CPU_C *cpu): bx_cpuid_t(
 
 void p4_prescott_celeron_336_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  static const char* brand_string = "                Intel(R) Celeron(R) CPU 2.80GHz";
-
   switch(function) {
   case 0x80000000:
     get_leaf_0(max_ext_leaf, NULL, leaf); // highest extended function understood by CPUID
@@ -116,12 +114,10 @@ void p4_prescott_celeron_336_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u 
   case 0x80000002:
   case 0x80000003:
   case 0x80000004:
-    get_ext_cpuid_brand_string_leaf(brand_string, function, leaf);
-    return;
   case 0x80000005:
   case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
   case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management leaf
-    cpuid_table->get_ext_leaf(function, 0, leaf);
+    cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8(leaf);
@@ -135,7 +131,7 @@ void p4_prescott_celeron_336_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u 
   case 0x00000002: // CPUID leaf 0x00000002 - Cache and TLB Descriptors
   case 0x00000003: // Processor Serial Number
   default:
-    cpuid_table->get_std_leaf(function, 0, leaf);
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   }
 }

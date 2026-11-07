@@ -83,19 +83,16 @@ p4_willamette_t::p4_willamette_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 void p4_willamette_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   // CPUID function 0x80000002-0x80000004 - Processor Name String Identifier
-  static const char* brand_string = "              Intel(R) Pentium(R) 4 CPU 1.80GHz";
 
   switch(function) {
   case 0x80000000:
     get_leaf_0(max_ext_leaf, NULL, leaf); // highest extended function understood by CPUID
     return;
   case 0x80000001:
-    cpuid_table->get_ext_leaf(function, 0, leaf);
-    return;
   case 0x80000002:
   case 0x80000003:
   case 0x80000004:
-    get_ext_cpuid_brand_string_leaf(brand_string, function, leaf);
+    cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x00000000:
     get_leaf_0(max_std_leaf, "GenuineIntel", leaf);
@@ -105,7 +102,7 @@ void p4_willamette_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunctio
     return;
   case 0x00000002: // CPUID leaf 0x00000002 - Cache and TLB Descriptors
   default:
-    cpuid_table->get_std_leaf(function, 0, leaf);
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   }
 }

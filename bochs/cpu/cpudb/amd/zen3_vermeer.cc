@@ -260,8 +260,6 @@ zen3_vermeer_t::zen3_vermeer_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 
 void zen3_vermeer_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  static const char* brand_string = "AMD Ryzen 7 5800X 8-Core Processor             ";
-
   switch(function) {
   case 0x80000000:
     get_ext_cpuid_leaf_0(leaf);
@@ -272,12 +270,10 @@ void zen3_vermeer_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction
   case 0x80000002:
   case 0x80000003:
   case 0x80000004:
-    get_ext_cpuid_brand_string_leaf(brand_string, function, leaf);
-    return;
   case 0x80000005: // CPUID leaf 0x80000005 - L1 Cache and TLB Identifiers
   case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
   case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management
-    cpuid_table->get_ext_leaf(function, 0, leaf);
+    cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8(leaf);
@@ -291,16 +287,10 @@ void zen3_vermeer_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction
   case 0x8000001A: // CPUID leaf 0x8000001A - Performance Optimization Identifiers
   case 0x8000001B: // CPUID leaf 0x8000001B - Instruction Based Sampling Identifiers
   case 0x8000001C: // Lightweight Profiling Capabilities (not implemented)
-    cpuid_table->get_ext_leaf(function, 0, leaf);
-    return;
   case 0x8000001D: // CPUID leaf 0x8000001D - Cache Properties
-    cpuid_table->get_ext_leaf(function, subfunction, leaf);
-    return;
   case 0x8000001E:
-    get_ext_cpuid_leaf_1E(leaf);
-    return;
   case 0x8000001F:
-    get_ext_cpuid_leaf_1F(leaf);
+    cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x80000020: // PQOS Extended Features - not implemented
     get_reserved_leaf(leaf);
@@ -310,7 +300,7 @@ void zen3_vermeer_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction
     return;
   case 0x80000022: // Extended Performance Monitoring and Debug
   case 0x80000023: // Multi-Key Encrypted Memory Capabilities - not implemented
-    cpuid_table->get_ext_leaf(function, 0, leaf);
+    cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x00000000:
     get_std_cpuid_leaf_0(leaf);
@@ -319,19 +309,15 @@ void zen3_vermeer_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction
     get_std_cpuid_leaf_1(leaf);
     return;
   case 0x00000005:
-    get_std_cpuid_monitor_mwait_leaf(leaf, 0x11);
-    return;
   case 0x00000006: // CPUID leaf 0x00000006 - Thermal and Power Management Leaf
-    cpuid_table->get_std_leaf(function, 0, leaf);
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   case 0x00000007:
     get_std_cpuid_leaf_7(subfunction, leaf);
     return;
   case 0x0000000B:
-    get_std_cpuid_extended_topology_leaf(subfunction, leaf);
-    return;
   case 0x0000000D:
-    get_std_cpuid_xsave_leaf(subfunction, leaf);
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   default:
     get_reserved_leaf(leaf);
@@ -768,26 +754,10 @@ void zen3_vermeer_t::get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const
 #endif
 
 // leaf 0x8000000B - 0x80000018: Reserved //
-
 // leaf 0x80000019 - 1G Page TLB Identifiers //
-
-// CPUID leaf 0x80000001A - Performance Optimization Identifiers
-
+// leaf 0x8000001A - Performance Optimization Identifiers
 // leaf 0x8000001B - Instruction Based Sampling Identifiers //
-
 // leaf 0x8000001D - Cache Properties //
-
-void zen3_vermeer_t::get_ext_cpuid_leaf_1F(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x80000001F - SEV Capabilities (not implemented)
-
-  // zen3_vermeer reports: EAX = 0x0001780F
-  //                       EBX = 0x00000173
-  //                       ECX = 0x000001FD
-  //                       EDX = 0x00000001
-
-  get_reserved_leaf(leaf);
-}
 
 void zen3_vermeer_t::get_ext_cpuid_leaf_21(cpuid_function_t *leaf) const
 {

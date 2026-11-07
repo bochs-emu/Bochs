@@ -111,6 +111,12 @@ void bx_cpuid_table_t::get_std_leaf(Bit32u function, Bit32u subfunction, cpuid_f
   if (function > max_std_leaf)
     function = max_std_leaf;
 
+  // leaf without subleafs returns its single row regardless of the subleaf
+  if (std_leafs_num_subleafs[function] == 1) {
+    *leaf = std_leafs[function][0];
+    return;
+  }
+
   // subleaf beyond the last row of the leaf returns reserved (all zero)
   if (subfunction >= std_leafs_num_subleafs[function]) {
     *leaf = reserved_leaf;
@@ -129,6 +135,12 @@ void bx_cpuid_table_t::get_ext_leaf(Bit32u function, Bit32u subfunction, cpuid_f
   }
 
   Bit32u ext_leaf = function - 0x80000000;
+
+  // leaf without subleafs returns its single row regardless of the subleaf
+  if (ext_leafs_num_subleafs[ext_leaf] == 1) {
+    *leaf = ext_leafs[ext_leaf][0];
+    return;
+  }
 
   // subleaf beyond the last row of the leaf returns reserved (all zero)
   if (subfunction >= ext_leafs_num_subleafs[ext_leaf]) {
@@ -481,17 +493,20 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_edx(Bit32u extra) const
 }
 
 // CPUID function 0x00000005 - MONITOR/MWAIT Leaf
-void bx_cpuid_t::get_std_cpuid_monitor_mwait_leaf(cpuid_function_t *leaf, Bit32u edx_power_states) const
+void bx_cpuid_t::get_std_cpuid_monitor_mwait_leaf(cpuid_function_t *leaf) const
 {
 #if BX_SUPPORT_MONITOR_MWAIT
+  // EDX (MWAIT sub C-states) is taken from the hardware model
+  get_hardware_cpuid_leaf(0x00000005, 0, leaf);
+
   // EAX - Smallest monitor-line size in bytes (cache line size)
   // EBX - Largest  monitor-line size in bytes (cache line size)
   // ECX -
   //   [31:4] - reserved
   //    [3:3] - Monitorless MWAIT support
   //    [2:2] - reserved
-  //    [1:1] - exit MWAIT even with EFLAGS.IF = 0
-  //    [0:0] - MONITOR/MWAIT extensions are supported
+  //  * [1:1] - exit MWAIT even with EFLAGS.IF = 0
+  //  * [0:0] - MONITOR/MWAIT extensions are supported
   // EDX -
   //  [03-00] - number of C0 sub C-states supported using MWAIT
   //  [07-04] - number of C1 sub C-states supported using MWAIT
@@ -504,7 +519,6 @@ void bx_cpuid_t::get_std_cpuid_monitor_mwait_leaf(cpuid_function_t *leaf, Bit32u
   leaf->ecx = 0x3;
   if (is_cpu_extension_supported(BX_ISA_MONITORLESS_MWAIT))
     leaf->ecx |= (1<<3);
-  leaf->edx = edx_power_states;
 #else
   leaf->eax = 0;
   leaf->ebx = 0;
@@ -515,10 +529,9 @@ void bx_cpuid_t::get_std_cpuid_monitor_mwait_leaf(cpuid_function_t *leaf, Bit32u
 
 #if BX_SUPPORT_APIC
 
-// leaf 0x0000000B //
+// CPUID function 0x0000000B - Extended Topology Leaf
 void bx_cpuid_t::get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  // CPUID function 0x0000000B - Extended Topology Leaf
   leaf->eax = 0;
   leaf->ebx = 0;
   leaf->ecx = subfunction;
@@ -527,36 +540,31 @@ void bx_cpuid_t::get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_
   enum {
     BX_DOMAIN_TYPE_ID_VALUE_INVALID = 0,
     BX_DOMAIN_TYPE_ID_VALUE_SMT_THREAD = 1,
-    BX_DOMAIN_TYPE_ID_VALUE_CORE = 2,
-    BX_DOMAIN_TYPE_ID_VALUE_PROCESSOR = 3
+    BX_DOMAIN_TYPE_ID_VALUE_CORE = 2
   };
 
-#if BX_SUPPORT_SMP
+  // number of x2APIC ID bits allocated for threads and cores
+  Bit32u thread_bits = (nthreads > 1) ? (ilog2(nthreads-1)+1) : 0;
+  Bit32u core_bits = (ncores > 1) ? (ilog2(ncores-1)+1) : 0;
+
+  // logical processor and core domains are always enumerated,
+  // the package domain is never enumerated by leaf 0x0000000B
   switch(subfunction) {
   case 0:
-     leaf->eax = ilog2(nthreads-1)+1;
+     leaf->eax = thread_bits;
      leaf->ebx = nthreads;
      leaf->ecx |= (BX_DOMAIN_TYPE_ID_VALUE_SMT_THREAD<<8);
      break;
 
   case 1:
-     leaf->eax = ilog2(ncores-1)+1;
+     leaf->eax = thread_bits + core_bits;
      leaf->ebx = ncores * nthreads;
      leaf->ecx |= (BX_DOMAIN_TYPE_ID_VALUE_CORE<<8);
-     break;
-
-  case 2:
-     if (nprocessors > 1) {
-       leaf->eax = ilog2(nprocessors-1)+1;
-       leaf->ebx = nprocessors * ncores * nthreads;
-       leaf->ecx |= (BX_DOMAIN_TYPE_ID_VALUE_PROCESSOR<<8);
-     }
      break;
 
   default:
      break;
   }
-#endif
 }
 
 #endif
@@ -1399,7 +1407,7 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_edx(Bit32u extra) const
 }
 
 // leaf 0x00000015 - Time Stamp Counter and Nominal Core Crystal Clock Information
-void bx_cpuid_t::get_freq_leaf_15(cpuid_function_t *leaf, Bit32u eax, Bit32u ebx, Bit32u ecx) const
+void bx_cpuid_t::get_freq_leaf_15(cpuid_function_t *leaf) const
 {
   static unsigned cpuid_freq = SIM->get_param_enum(BXPN_CPUID_FREQ)->get();
 
@@ -1416,13 +1424,13 @@ void bx_cpuid_t::get_freq_leaf_15(cpuid_function_t *leaf, Bit32u eax, Bit32u ebx
     break;
   case BX_CPUID_FREQ_HARDWARE:
   default:
-    get_leaf(leaf, eax, ebx, ecx, 0);
+    get_hardware_cpuid_leaf(0x00000015, 0, leaf);
     break;
   }
 }
 
 // leaf 0x00000016 - Processor Frequency Information
-void bx_cpuid_t::get_freq_leaf_16(cpuid_function_t *leaf, Bit32u eax, Bit32u ebx, Bit32u ecx) const
+void bx_cpuid_t::get_freq_leaf_16(cpuid_function_t *leaf) const
 {
   static unsigned cpuid_freq = SIM->get_param_enum(BXPN_CPUID_FREQ)->get();
 
@@ -1440,7 +1448,7 @@ void bx_cpuid_t::get_freq_leaf_16(cpuid_function_t *leaf, Bit32u eax, Bit32u ebx
     break;
   case BX_CPUID_FREQ_HARDWARE:
   default:
-    get_leaf(leaf, eax, ebx, ecx, 0);
+    get_hardware_cpuid_leaf(0x00000016, 0, leaf);
     break;
   }
 }
@@ -1655,10 +1663,14 @@ Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_edx_amd(Bit32u extra) const
 }
 
 // leaf 0x80000002 - 0x80000004 //
-void bx_cpuid_t::get_ext_cpuid_brand_string_leaf(const char *brand_string, Bit32u function, cpuid_function_t *leaf) const
+void bx_cpuid_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf) const
 {
-  static const char *brand_string_ovr = (const char *)SIM->get_param_string(BXPN_BRAND_STRING)->getptr();
-  if (brand_string_ovr && *brand_string_ovr) brand_string = brand_string_ovr;
+  static const char *brand_string = (const char *)SIM->get_param_string(BXPN_BRAND_STRING)->getptr();
+  if (! brand_string || ! *brand_string) {
+    // no brand string override, report the brand string of the hardware model
+    get_hardware_cpuid_leaf(function, 0, leaf);
+    return;
+  }
 
   switch(function) {
   case 0x80000002:
@@ -1801,10 +1813,192 @@ void bx_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_funct
   // limit max std CPUID leaf to 2, do not limit extended CPUID leafs
   static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
   bool limit_winnt = cpuid_limit_winnt && max_std_leaf > 2;
-  if (limit_winnt && function > 2 && function < 0x80000000)
-    function = 2;
+  Bit32u max_leaf = limit_winnt ? 2 : max_std_leaf;
 
-  get_hardware_cpuid_leaf(function, subfunction, leaf);
+  // leafs above max leaf return data of max std leaf
+  if (function < 0x80000000) {
+    if (function > max_leaf) function = max_leaf;
+  }
+  else {
+    // magic leaf is not limited by max ext leaf
+    if (function > max_ext_leaf && function != 0x8FFFFFFF) function = max_leaf;
+  }
+
+  switch(function) {
+  case 0x00000000: // CPUID leaf 0x00000000 - Highest Basic Leaf and Vendor Identification
+  case 0x00000001: // CPUID leaf 0x00000001 - Version and Feature Information
+  case 0x00000002: // CPUID leaf 0x00000002 - Cache and TLB Descriptors
+  case 0x00000003: // CPUID leaf 0x00000003 - Processor Serial Number
+  case 0x00000004: // CPUID leaf 0x00000004 - Deterministic Cache Parameters
+    get_hardware_cpuid_leaf(function, subfunction, leaf);
+    break;
+  case 0x00000005: // CPUID leaf 0x00000005 - MONITOR/MWAIT Features
+    get_std_cpuid_monitor_mwait_leaf(leaf);
+    break;
+  case 0x00000006: // CPUID leaf 0x00000006 - Thermal and Power Management Features
+  case 0x00000007: // CPUID leaf 0x00000007 - Structured Extended Feature Enumeration
+    get_hardware_cpuid_leaf(function, subfunction, leaf);
+    break;
+  case 0x00000008: // CPUID leaf 0x00000008 - reserved
+  case 0x00000009: // CPUID leaf 0x00000009 - Direct Cache Access Information
+    get_reserved_leaf(leaf);
+    break;
+  case 0x0000000A: // CPUID leaf 0x0000000A - Architectural Performance Monitoring
+    get_hardware_cpuid_leaf(function, subfunction, leaf);
+    break;
+  case 0x0000000B: // CPUID leaf 0x0000000B - Extended Topology Enumeration
+    // the leaf is supported when hardware reports non-zero CPUID.0BH.00H:EBX,
+    // the topology itself is always computed
+    get_hardware_cpuid_leaf(0x0000000B, 0, leaf);
+#if BX_SUPPORT_APIC
+    if (leaf->ebx != 0)
+      get_std_cpuid_extended_topology_leaf(subfunction, leaf);
+    else
+#endif
+      get_reserved_leaf(leaf);
+    break;
+  case 0x0000000C: // CPUID leaf 0x0000000C - reserved
+    get_reserved_leaf(leaf);
+    break;
+  case 0x0000000D: // CPUID leaf 0x0000000D - Processor Extended States Enumeration
+#if BX_CPU_LEVEL >= 6
+    get_std_cpuid_xsave_leaf(subfunction, leaf);
+#else
+    get_reserved_leaf(leaf);
+#endif
+    break;
+  case 0x0000000E: // CPUID leaf 0x0000000E - reserved
+  case 0x0000000F: // CPUID leaf 0x0000000F - Intel Resource Director Technology Monitoring (not implemented)
+  case 0x00000010: // CPUID leaf 0x00000010 - Intel Resource Director Technology Allocation (not implemented)
+  case 0x00000011: // CPUID leaf 0x00000011 - reserved
+  case 0x00000012: // CPUID leaf 0x00000012 - Intel SGX Enumeration (not implemented)
+  case 0x00000013: // CPUID leaf 0x00000013 - reserved
+  case 0x00000014: // CPUID leaf 0x00000014 - Intel Processor Trace Enumeration (not implemented)
+    get_reserved_leaf(leaf);
+    break;
+  case 0x00000015: // CPUID leaf 0x00000015 - Time Stamp Counter and Nominal Core Crystal Clock
+    get_freq_leaf_15(leaf);
+    break;
+  case 0x00000016: // CPUID leaf 0x00000016 - Processor Frequency Information
+    get_freq_leaf_16(leaf);
+    break;
+  case 0x00000017: // CPUID leaf 0x00000017 - System-On-Chip Vendor Attribute Enumeration
+    get_reserved_leaf(leaf);
+    break;
+  case 0x00000018: // CPUID leaf 0x00000018 - Deterministic Address Translation Parameters
+    get_hardware_cpuid_leaf(function, subfunction, leaf);
+    break;
+  case 0x00000019: // CPUID leaf 0x00000019 - Key Locker (not implemented)
+  case 0x0000001A: // CPUID leaf 0x0000001A - Hybrid Information (Native Model ID)
+  case 0x0000001B: // CPUID leaf 0x0000001B - PCONFIG Information (not implemented)
+  case 0x0000001C: // CPUID leaf 0x0000001C - Architectural Last Branch Records (not implemented)
+    get_reserved_leaf(leaf);
+    break;
+#if BX_SUPPORT_AMX
+  case 0x0000001D: // CPUID leaf 0x0000001D - AMX Tile Information
+    get_std_cpuid_amx_palette_info_leaf(subfunction, leaf);
+    break;
+  case 0x0000001E: // CPUID leaf 0x0000001E - AMX TMUL Information
+    get_std_cpuid_amx_tmul_leaf(subfunction, leaf);
+    break;
+#else
+  case 0x0000001D: // CPUID leaf 0x0000001D - AMX Tile Information
+  case 0x0000001E: // CPUID leaf 0x0000001E - AMX TMUL Information
+    get_reserved_leaf(leaf);
+    break;
+#endif
+  case 0x0000001F: // CPUID leaf 0x0000001F - V2 Extended Topology Enumeration
+  case 0x00000020: // CPUID leaf 0x00000020 - Processor History Reset (HRESET)
+  case 0x00000021: // CPUID leaf 0x00000021 - reserved
+  case 0x00000022: // CPUID leaf 0x00000022 - reserved
+  case 0x00000023: // CPUID leaf 0x00000023 - Architectural Performance Monitoring Extended
+    get_reserved_leaf(leaf);
+    break;
+  case 0x00000024: // CPUID leaf 0x00000024 - Intel AVX10 Converged Vector ISA
+    get_std_cpuid_avx10_leaf(subfunction, leaf);
+    break;
+  case 0x00000025: // CPUID leaf 0x00000025 - reserved
+  case 0x00000026: // CPUID leaf 0x00000026 - reserved
+  case 0x00000027: // CPUID leaf 0x00000027 - Intel RDT Asymmetric Monitoring
+  case 0x00000028: // CPUID leaf 0x00000028 - Intel RDT Asymmetric Allocation
+    get_reserved_leaf(leaf);
+    break;
+
+  //
+  // extended CPUID leaves 0x80000000
+  //
+  case 0x80000000: // CPUID leaf 0x80000000 - Highest Extended Leaf and Vendor Identification
+  case 0x80000001: // CPUID leaf 0x80000001 - Extended Processor Signature and Feature Bits
+    get_hardware_cpuid_leaf(function, subfunction, leaf);
+    break;
+  case 0x80000002: // CPUID leaf 0x80000002 - Processor Brand String
+  case 0x80000003: // CPUID leaf 0x80000003 - Processor Brand String
+  case 0x80000004: // CPUID leaf 0x80000004 - Processor Brand String
+    get_ext_cpuid_brand_string_leaf(function, leaf);
+    break;
+  case 0x80000005: // CPUID leaf 0x80000005 - L1 Cache and TLB Identifiers
+  case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
+  case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management
+  case 0x80000008: // CPUID leaf 0x80000008 - Address Size and Processor Capacity
+    get_hardware_cpuid_leaf(function, subfunction, leaf);
+    break;
+  case 0x80000009: // CPUID leaf 0x80000009 - reserved
+    get_reserved_leaf(leaf);
+    break;
+  case 0x8000000A: // CPUID leaf 0x8000000A - SVM Revision and Feature Identification
+    get_hardware_cpuid_leaf(function, subfunction, leaf);
+    break;
+  case 0x8000000B: // CPUID leaf 0x8000000B - reserved
+  case 0x8000000C: // CPUID leaf 0x8000000C - reserved
+  case 0x8000000D: // CPUID leaf 0x8000000D - reserved
+  case 0x8000000E: // CPUID leaf 0x8000000E - reserved
+  case 0x8000000F: // CPUID leaf 0x8000000F - reserved
+  case 0x80000010: // CPUID leaf 0x80000010 - reserved
+  case 0x80000011: // CPUID leaf 0x80000011 - reserved
+  case 0x80000012: // CPUID leaf 0x80000012 - reserved
+  case 0x80000013: // CPUID leaf 0x80000013 - reserved
+  case 0x80000014: // CPUID leaf 0x80000014 - reserved
+  case 0x80000015: // CPUID leaf 0x80000015 - reserved
+  case 0x80000016: // CPUID leaf 0x80000016 - reserved
+  case 0x80000017: // CPUID leaf 0x80000017 - reserved
+  case 0x80000018: // CPUID leaf 0x80000018 - reserved
+    get_reserved_leaf(leaf);
+    break;
+  case 0x80000019: // CPUID leaf 0x80000019 - 1G Page TLB Identifiers
+  case 0x8000001A: // CPUID leaf 0x8000001A - Performance Optimization Identifiers
+  case 0x8000001B: // CPUID leaf 0x8000001B - Instruction Based Sampling Identifiers (not implemented)
+    get_hardware_cpuid_leaf(function, subfunction, leaf);
+    break;
+  case 0x8000001C: // CPUID leaf 0x8000001C - Lightweight Profiling Capabilities (not implemented)
+    get_reserved_leaf(leaf);
+    break;
+  case 0x8000001D: // CPUID leaf 0x8000001D - Cache Topology Information
+    get_hardware_cpuid_leaf(function, subfunction, leaf);
+    break;
+  case 0x8000001E: // CPUID leaf 0x8000001E - AMD Processor Topology Information
+    get_ext_cpuid_leaf_1E(leaf);
+    break;
+  case 0x8000001F: // CPUID leaf 0x8000001F - SEV Capabilities (not implemented)
+  case 0x80000020: // CPUID leaf 0x80000020 - PQOS Extended Features (not implemented)
+    get_reserved_leaf(leaf);
+    break;
+  case 0x80000021: // CPUID leaf 0x80000021 - Extended Feature Identification 2
+    get_hardware_cpuid_leaf(function, subfunction, leaf);
+    break;
+  case 0x80000022: // CPUID leaf 0x80000022 - Extended Performance Monitoring and Debug
+  case 0x80000023: // CPUID leaf 0x80000023 - Multi-Key Encrypted Memory Capabilities
+  case 0x80000024: // CPUID leaf 0x80000024 - reserved
+  case 0x80000025: // CPUID leaf 0x80000025 - SEV Capabilities 2
+  case 0x80000026: // CPUID leaf 0x80000026 - Extended CPU Topology
+    get_reserved_leaf(leaf);
+    break;
+  case 0x8FFFFFFF: // CPUID leaf 0x8FFFFFFF - AMD magic (hidden) leaf
+    get_hardware_cpuid_leaf(function, subfunction, leaf);
+    break;
+  default:         // not reachable: max_std_leaf <= 0x28 and max_ext_leaf <= 0x80000026 for all models
+    get_hardware_cpuid_leaf(function, subfunction, leaf);
+    break;
+  }
 
   if (limit_winnt && function == 0)
     leaf->eax = 2;

@@ -6118,7 +6118,7 @@ features enabled at compile time (3rd column).
   </row>
   <row>
     <entry>corei7_sandy_bridge_2600k</entry>
-    <entry>Intel(R) Core(TM) i7-2600K (Sandy Bridge)</entry>
+    <entry>Intel(R) Core(TM) i7-2600 (Sandy Bridge)</entry>
     <entry>cpu level 6, x86-64, avx</entry>
   </row>
   <row>
@@ -6128,7 +6128,7 @@ features enabled at compile time (3rd column).
   </row>
   <row>
     <entry>trinity_apu</entry>
-    <entry>AMD A8-5600K APU (Trinity)</entry>
+    <entry>AMD A10-5800K APU (Trinity)</entry>
     <entry>cpu level 6, x86-64, avx</entry>
   </row>
   <row>
@@ -6168,7 +6168,7 @@ features enabled at compile time (3rd column).
   </row>
   <row>
     <entry>corei7_icelake_u</entry>
-    <entry>QuadCore Intel Core i7-1065G7 (IceLake)</entry>
+    <entry>Intel(R) Core(TM) i7-1065G7 (IceLake)</entry>
     <entry>cpu level 6, x86-64, avx</entry>
   </row>
   <row>
@@ -6178,7 +6178,7 @@ features enabled at compile time (3rd column).
   </row>
   <row>
     <entry>sapphire_rapids</entry>
-    <entry>Intel(R) Xeon(R) w9-3475X (Sappire Rapids)</entry>
+    <entry>Intel(R) Xeon(R) w7-2475X (Sappire Rapids)</entry>
     <entry>cpu level 6, x86-64, avx</entry>
   </row>
   <row>

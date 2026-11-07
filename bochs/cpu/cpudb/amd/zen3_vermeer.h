@@ -55,7 +55,6 @@ private:
 #if BX_SUPPORT_SVM
   void get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const;
 #endif
-  void get_ext_cpuid_leaf_1F(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_21(cpuid_function_t *leaf) const;
 };
 

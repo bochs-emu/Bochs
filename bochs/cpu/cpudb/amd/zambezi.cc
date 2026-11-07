@@ -200,8 +200,6 @@ zambezi_t::zambezi_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 
 void zambezi_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  static const char* brand_string = "AMD FX(tm)-4100 Quad-Core Processor            ";
-
   switch(function) {
   case 0x80000000:
     get_ext_cpuid_leaf_0(leaf);
@@ -212,12 +210,10 @@ void zambezi_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpu
   case 0x80000002:
   case 0x80000003:
   case 0x80000004:
-    get_ext_cpuid_brand_string_leaf(brand_string, function, leaf);
-    return;
   case 0x80000005: // CPUID leaf 0x80000005 - L1 Cache and TLB Identifiers
   case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
   case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management
-    cpuid_table->get_ext_leaf(function, 0, leaf);
+    cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8_amd(leaf);
@@ -230,16 +226,14 @@ void zambezi_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpu
   case 0x80000019: // CPUID leaf 0x80000019 - 1G Page TLB Identifiers
   case 0x8000001A: // CPUID leaf 0x8000001A - Performance Optimization Identifiers
   case 0x8000001B: // CPUID leaf 0x8000001B - Instruction Based Sampling Identifiers
-    cpuid_table->get_ext_leaf(function, 0, leaf);
+    cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x8000001C:
     get_reserved_leaf(leaf); // Lightweight Profiling Capabilities (not implemented)
     return;
   case 0x8000001D: // CPUID leaf 0x8000001D - Cache Properties
-    cpuid_table->get_ext_leaf(function, subfunction, leaf);
-    return;
   case 0x8000001E:
-    get_ext_cpuid_leaf_1E(leaf);
+    cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x00000000:
     get_std_cpuid_leaf_0(leaf);
@@ -248,13 +242,9 @@ void zambezi_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpu
     get_std_cpuid_leaf_1(leaf);
     return;
   case 0x00000005:
-    get_std_cpuid_monitor_mwait_leaf(leaf, 0);
-    return;
   case 0x00000006: // CPUID leaf 0x00000006 - Thermal and Power Management Leaf
-    cpuid_table->get_std_leaf(function, 0, leaf);
-    return;
   case 0x0000000D:
-    get_std_cpuid_xsave_leaf(subfunction, leaf);
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   default:
     get_reserved_leaf(leaf);
@@ -538,13 +528,9 @@ void zambezi_t::get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const
 #endif
 
 // leaf 0x8000000B - 0x80000018: Reserved //
-
 // leaf 0x80000019 - 1G Page TLB Identifiers //
-
-// CPUID leaf 0x80000001A - Performance Optimization Identifiers
-
+// leaf 0x8000001A - Performance Optimization Identifiers
 // leaf 0x8000001B - Instruction Based Sampling Identifiers //
-
 // leaf 0x8000001D - Cache Properties //
 
 bx_cpuid_t *create_zambezi_cpuid(BX_CPU_C *cpu) { return new zambezi_t(cpu); }
