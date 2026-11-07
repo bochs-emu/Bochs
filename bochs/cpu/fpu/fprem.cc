@@ -132,7 +132,7 @@ static int do_fprem(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, int rounding
 
         if (expDiff < 0) {
             if (expDiff < -1) {
-               r = (a.signif & BX_CONST64(0x8000000000000000)) ? packToExtF80(aSign, aExp, aSig0) : a;
+               r = softfloat_normRoundPackToExtF80(aSign, aExp, aSig0, 0, 80, status);
                return 0;
             }
             shortShift128Right(aSig0, 0, 1, &aSig0, &aSig1);
