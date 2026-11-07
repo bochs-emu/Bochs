@@ -1402,22 +1402,25 @@ Bit32u bx_sb16_c::sb16_adc_handler(void *this_ptr, Bit32u buflen)
 
 Bit32u bx_sb16_c::dsp_adc_handler(Bit32u buflen)
 {
-  Bit32u len = DSP.dma.chunkcount - DSP.dma.chunkindex;
-  if (len > 0) {
-    memmove(DSP.dma.chunk, DSP.dma.chunk+DSP.dma.chunkindex, len);
-    DSP.dma.chunkcount = len;
+  // move the data not yet transferred to the start of the buffer
+  Bit32u left = DSP.dma.chunkcount - DSP.dma.chunkindex;
+  if ((left > 0) && (DSP.dma.chunkindex > 0)) {
+    memmove(DSP.dma.chunk, DSP.dma.chunk+DSP.dma.chunkindex, left);
   }
+  DSP.dma.chunkcount = left;
   DSP.dma.chunkindex = 0;
-  if ((DSP.dma.chunkcount + buflen) > BX_SOUNDLOW_WAVEPACKETSIZE) {
-    DSP.dma.chunkcount = BX_SOUNDLOW_WAVEPACKETSIZE;
-    len = DSP.dma.chunkcount + buflen - BX_SOUNDLOW_WAVEPACKETSIZE;
-    BX_DEBUG(("dsp_adc_handler(): unhandled len=%d", len));
-  } else {
-    DSP.dma.chunkcount += buflen;
-    len = 0;
+  // and append the new data
+  Bit32u len = buflen, dropped = 0;
+  if ((left + len) > BX_SOUNDLOW_WAVEPACKETSIZE) {
+    len = BX_SOUNDLOW_WAVEPACKETSIZE - left;
+    dropped = buflen - len;
+    BX_DEBUG(("dsp_adc_handler(): unhandled len=%d", dropped));
   }
-  BX_SB16_WAVEIN->getwavepacket(DSP.dma.chunkcount, DSP.dma.chunk);
-  return len;
+  if (len > 0) {
+    BX_SB16_WAVEIN->getwavepacket(len, DSP.dma.chunk + left);
+    DSP.dma.chunkcount += len;
+  }
+  return dropped;
 }
 
 // dsp_enabledma(): Start the DMA timer and thus the transfer
