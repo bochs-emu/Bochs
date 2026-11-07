@@ -72,6 +72,7 @@ Changes after Bochs 3.1:
 - REP_MOVSW/D/Q: Each MOVSD or MOVSQ iteration must read one complete source dword or qword before writing it to the destination. Do not allow copying partial words/dword/qwords.
 - AVX: Fixed order of unmasked exceptions handling in VDPPS instruction. VDPPS must determine SIMD floating-point exceptions separately for each multiply and add operation in execution order.
 - x86-64: implement ENTER and LEAVE instructions with OperandSize=16 and StackSize=64
+- x86-64: in 64-bit mode IRETD / IRET to the same level also pops SS:RSP
 - AES_AVX: Enforce AES feature flag in cpu to make sure these are disabled when AES gets disabled
 - AVX-512: VPBROADCASTMB2Q/VPBROADCASTMW2D instructions should require AVX512_CD
 - AVX-512: VPCMPB/VPCMPUB/VPCMPW/VPCMPUW instructions should require AVX512_BW
