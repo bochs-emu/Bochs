@@ -224,6 +224,7 @@ Changes after Bochs 3.1:
 - CET: 16-bit near RET must check CS limit (#GP) before shadow stack return address (#CP)
 - CET: RSTORSSP/CLRSSBSY/WRSS/WRUSS must raise #SS(0) instead of #GP(0) for non-canonical or LASS-violating memory operand referencing SS segment
 - CET: RSTORSSP and CLRSSBSY must #GP if memory operand is located in non-writable segment
+- SMM: RSM must shutdown if SMRAM state image has CR4.CET=1 with CR0.WP=0
 - CET: IRET to virtual-8086 mode never freed supervisor shadow stack token (shadow stack state was checked after entering v8086 mode)
 - CET: task switch to virtual-8086 mode task with user shadow stack or indirect branch tracking enabled must #TS(new TSS)
 - UINTR: user-interrupt notification must be identified when CR4.UINTR = IA32_EFER.LMA = 1 (also in compatibility mode), not only in 64-bit mode

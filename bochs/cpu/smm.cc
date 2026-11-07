@@ -755,6 +755,14 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
   }
 #endif
 
+#if BX_SUPPORT_CET
+  // cross-register check, cannot be done inside check_CR0()/check_CR4()
+  if (smm_state->cr4.get_CET() && !smm_state->cr0.get_WP()) {
+    BX_ERROR(("SMM restore: CR4.CET=1 with CR0.WP=0 !"));
+    return false;
+  }
+#endif
+
   BX_CPU_THIS_PTR cr0.set32(smm_state->cr0.get32());
 #if BX_CPU_LEVEL >= 4
   BX_CPU_THIS_PTR cr4.set(smm_state->cr4.get());
