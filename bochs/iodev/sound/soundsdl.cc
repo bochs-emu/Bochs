@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2021  The Bochs Project
+//  Copyright (C) 2012-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -123,7 +123,7 @@ int bx_soundlow_waveout_sdl_c::set_pcm_params(bx_pcm_param_t *param)
     WaveOutOpen = 0;
     return BX_SOUNDLOW_ERR;
   } else {
-    if (fmt.freq != param->samplerate) {
+    if ((Bit32u)fmt.freq != param->samplerate) {
       param->samplerate = fmt.freq;
       BX_INFO(("changed sample rate to %d", fmt.freq));
     }
@@ -252,7 +252,7 @@ int bx_soundlow_wavein_sdl2_c::startwaverecord(bx_pcm_param_t *param)
     WaveInOpen = 0;
     return BX_SOUNDLOW_ERR;
   } else {
-    if (fmt.freq != param->samplerate) {
+    if ((Bit32u)fmt.freq != param->samplerate) {
       param->samplerate = fmt.freq;
       BX_INFO(("changed sample rate to %d", fmt.freq));
     }

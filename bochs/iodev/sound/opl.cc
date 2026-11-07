@@ -1012,7 +1012,7 @@ static void OPL_INLINE clipit16(Bit32s ival, Bit16s* outval, Bit8u vol)
   opl_active = 1;
 #endif
 
-bool adlib_getsample(Bit16u rate, Bit16s* sndptr, Bits numsamples, Bit16u volume)
+bool adlib_getsample(Bit32u rate, Bit16s* sndptr, Bits numsamples, Bit16u volume)
 {
   Bits i, endsamples;
   op_type* cptr;
@@ -1033,7 +1033,7 @@ bool adlib_getsample(Bit16u rate, Bit16s* sndptr, Bits numsamples, Bit16u volume
   Bit8u rvol = (Bit8u)(volume >> 8);
   Bits samples_to_process = numsamples;
 
-  if (rate != (Bit16u)int_samplerate) {
+  if (rate != (Bit32u)int_samplerate) {
     // the output sample rate has changed: recalculate the rate dependent
     // values of all operators without resetting the register state
     adlib_set_samplerate(rate);

@@ -39,7 +39,7 @@
 #define BX_MAX_WAVE_CALLBACKS 3
 
 typedef struct {
-  Bit16u samplerate;
+  Bit32u samplerate;
   Bit8u  bits;
   Bit8u  channels;
   Bit8u  format;
@@ -49,7 +49,7 @@ typedef struct {
 const bx_pcm_param_t default_pcm_param = { 44100, 16, 2, 1, 0xffff };
 
 typedef Bit32u (*sound_record_handler_t)(void *arg, Bit32u len);
-typedef Bit32u (*get_wave_cb_t)(void *arg, Bit16u rate, Bit8u *buffer, Bit32u len);
+typedef Bit32u (*get_wave_cb_t)(void *arg, Bit32u rate, Bit8u *buffer, Bit32u len);
 
 // audio buffer support
 
@@ -82,7 +82,7 @@ private:
 };
 
 void convert_float_to_s16le(float *src, unsigned srcsize, Bit8u *dst);
-BOCHSAPI Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
+BOCHSAPI Bit32u pcm_callback(void *dev, Bit32u rate, Bit8u *buffer, Bit32u len);
 
 // the waveout class
 

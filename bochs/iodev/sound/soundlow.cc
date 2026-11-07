@@ -104,6 +104,8 @@ static void convert_to_float(Bit8u *src, unsigned srcsize, audio_buffer_t *audio
   bx_pcm_param_t *param = &audiobuf->param;
   bool issigned = (param->format & 1);
   bool setvol = (param->volume != BX_MAX_BIT16U);
+  // stereo: left / right volume for even / odd samples, mono: mean value
+  unsigned chmask = (param->channels == 2) ? 1 : 0;
   Bit16s val16s;
   Bit16u val16u;
   float volume[2];
@@ -112,20 +114,23 @@ static void convert_to_float(Bit8u *src, unsigned srcsize, audio_buffer_t *audio
   if (setvol) {
     volume[0] = ((float)(param->volume & 0xff)) / 255.0F;
     volume[1] = ((float)(param->volume >> 8)) / 255.0F;
+    if (chmask == 0) {
+      volume[0] = (volume[0] + volume[1]) / 2.0F;
+    }
   }
   if (param->bits == 8) {
     if (issigned) {
       for (i = 0; i < srcsize; i++) {
-        dst[i] = ((float)src[i]) / 128.0F;
+        dst[i] = ((float)(Bit8s)src[i]) / 128.0F;
         if (setvol) {
-          dst[i] *= volume[i & 1];
+          dst[i] *= volume[i & chmask];
         }
       }
     } else {
       for (i = 0; i < srcsize; i++) {
         dst[i] = (((float)src[i]) - 128.0F) / 128.0F;
         if (setvol) {
-          dst[i] *= volume[i & 1];
+          dst[i] *= volume[i & chmask];
         }
       }
     }
@@ -136,7 +141,7 @@ static void convert_to_float(Bit8u *src, unsigned srcsize, audio_buffer_t *audio
         val16s = (Bit16s)(src[i] | (src[i+1] << 8));
         dst[j] = ((float)val16s) / 32768.0F;
         if (setvol) {
-          dst[j] *= volume[i & 1];
+          dst[j] *= volume[j & chmask];
         }
         j++;
       }
@@ -145,7 +150,7 @@ static void convert_to_float(Bit8u *src, unsigned srcsize, audio_buffer_t *audio
         val16u = (Bit16u)(src[i] | (src[i+1] << 8));
         dst[j] = (((float)val16u) - 32768.0F) / 32768.0F;
         if (setvol) {
-          dst[j] *= volume[i & 1];
+          dst[j] *= volume[j & chmask];
         }
         j++;
       }
@@ -158,10 +163,17 @@ static void convert_to_float(Bit8u *src, unsigned srcsize, audio_buffer_t *audio
 void convert_float_to_s16le(float *src, unsigned srcsize, Bit8u *dst)
 {
   Bit16s val16s;
+  float fval;
   unsigned i, j = 0;
 
   for (i = 0; i < srcsize; i++) {
-    val16s = (Bit16s)(src[i] * 32768.0F);
+    fval = src[i] * 32768.0F;
+    if (fval > 32767.0F) {
+      fval = 32767.0F;
+    } else if (fval < -32768.0F) {
+      fval = -32768.0F;
+    }
+    val16s = (Bit16s)fval;
     dst[j++] =(Bit8u)(val16s & 0xff);
     dst[j++] = (Bit8u)(val16s >> 8);
   }
@@ -169,7 +181,7 @@ void convert_float_to_s16le(float *src, unsigned srcsize, Bit8u *dst)
 
 // audio buffer callback function
 
-Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len)
+Bit32u pcm_callback(void *dev, Bit32u rate, Bit8u *buffer, Bit32u len)
 {
   Bit32u copied = 0;
   UNUSED(rate);

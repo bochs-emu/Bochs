@@ -44,7 +44,7 @@
 
 bx_sb16_c *theSB16Device = NULL;
 
-Bit32u fmopl_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
+Bit32u fmopl_callback(void *dev, Bit32u rate, Bit8u *buffer, Bit32u len);
 
 // builtin configuration handling functions
 
@@ -2638,13 +2638,13 @@ void bx_sb16_c::opl_settimermask(int value, int chipid)
   }
 }
 
-Bit32u bx_sb16_c::fmopl_generator(Bit16u rate, Bit8u *buffer, Bit32u len)
+Bit32u bx_sb16_c::fmopl_generator(Bit32u rate, Bit8u *buffer, Bit32u len)
 {
   bool ret = adlib_getsample(rate, (Bit16s*)buffer, len / 4, BX_SB16_THIS fm_volume);
   return ret ? len : 0;
 }
 
-Bit32u fmopl_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len)
+Bit32u fmopl_callback(void *dev, Bit32u rate, Bit8u *buffer, Bit32u len)
 {
   return ((bx_sb16_c*)dev)->fmopl_generator(rate, buffer, len);
 }

@@ -146,7 +146,7 @@ public:
   static void runtime_config_handler(void *);
   void runtime_config(void);
 
-  BX_SB16_SMF Bit32u fmopl_generator(Bit16u rate, Bit8u *buffer, Bit32u len);
+  BX_SB16_SMF Bit32u fmopl_generator(Bit32u rate, Bit8u *buffer, Bit32u len);
 
 private:
 
