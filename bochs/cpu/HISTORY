@@ -26,6 +26,7 @@ Changes after Bochs 3.1:
 - CPUID: avoid reporting SVM LBR Virtualization CPUID 0x8000000A.EDX[1] - LBRs are not implemented yet, avoid reporting Data breakpoint extension for Ryzen - it is not implemented yet
 - CPUID: do not report SEV capabilities through CPUID leaf 0x8000001F on Ryzen, SEV is not supported
 - CPUID: CPUID.(EAX=0DH,ECX=1):EBX (XSAVES area size) ignored the 64-byte alignment of AMX TILECFG/TILEDATA and SCALEDATA components in the compacted format
++ CPUID: leaf 0x00000004 core and cache sharing fields follow the configured cores/threads instead of the real CPU dump (fixes macOS divide error in cpu_thread_alloc)
 - CPUID: add std leaf 7 ECX/EDX calculation to CPUID models which support std leaf 7 but have nothing to report there (ECX/EDX reported=0), required for correct CET reporting after using add_features="cet"
 - CPUID: correctly report presence of subleaf=1 in CPUID Leaf 0x0000001E: AMX: TMUL Information Main leaf (when present)
 - CPUID: fixed CPUID 0x0000000B: Extended Topology leaf - core level must report total x2APIC ID shift, do not report reserved package domain type, report thread and core levels also in non-SMP build

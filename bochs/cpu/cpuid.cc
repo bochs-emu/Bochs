@@ -527,6 +527,82 @@ void bx_cpuid_t::get_std_cpuid_monitor_mwait_leaf(cpuid_function_t *leaf) const
 #endif
 }
 
+// leaf 0x00000004 //
+void bx_cpuid_t::get_std_cpuid_deterministic_cache_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
+{
+  // CPUID function 0x00000004 - Deterministic Cache Parameters
+
+  // EAX:
+  //   [04-00] - Cache Type Field
+  //             0 = No more caches
+  //             1 = Data Cache
+  //             2 = Instruction Cache
+  //             3 = Unified Cache
+  //   [07-05] - Cache Level (starts at 1)
+  //      [08] - Self Initializing cache level (doesn't need software initialization)
+  //      [09] - Fully Associative cache
+  //   [13-10] - Reserved
+  //   [25-14] - Maximum number of addressable IDs for logical processors sharing this cache - 1
+  //   [31-26] - Maximum number of addressable IDs for processor cores in the physical package - 1
+  // EBX:
+  //   [11-00] - L = System Coherency Line Size - 1
+  //   [21-12] - P = Physical Line partitions - 1
+  //   [31-22] - W = Ways of associativity - 1
+  // ECX: Number of Sets - 1
+  // EDX:
+  //      [00] - Writeback invalidate
+  //      [01] - Cache Inclusiveness
+  //      [02] - Complex Cache Indexing
+  //   [31-03] - Reserved
+
+  get_hardware_cpuid_leaf(0x00000004, subfunction, leaf);
+
+  // no more caches: the terminating subleaf is all zeros
+  // (AMD reports the whole leaf as reserved zeros)
+  if (leaf->eax == 0) return;
+
+  // The model tables hold the values of the real CPU, which describe the
+  // real CPU topology (for example 4 cores with 2 threads each for the
+  // Core i7-4770), not the configured one. Only the two topology fields
+  // EAX[25-14] and EAX[31-26] are replaced, cache type, level, geometry
+  // (EBX, ECX) and EDX flags are kept from the real CPU.
+  //
+  // The fields must agree with leaf 0x00000001 EBX[23-16], which reports
+  // ncores * nthreads logical processors in the package. Guests divide one
+  // by the other: macOS computes threads per core as leaf 1 logical count
+  // divided by leaf 4 core count, and with the i7-4770 values (8 core IDs)
+  // and a single configured CPU (1 logical) gets 0 and later faults with a
+  // divide error in cpu_thread_alloc(). Exact counts are used instead of
+  // the power of 2 rounding real CPUs report, because leaf 1 is not rounded
+  // either (with 3 cores a rounded 4 would again give 3 / 4 = 0).
+  //
+  // EAX[31-26] (core IDs in the package - 1):
+  //   ncores - 1
+  //
+  // EAX[25-14] (logical processors sharing this cache - 1):
+  //   the sharing scope is taken from the real CPU. L1D (subleaf 0) is
+  //   always private to a core, so its sharing count is the real number of
+  //   threads per core. A cache shared by no more logical processors than
+  //   L1D is private to a core (L1, and L2 on Nehalem and later), a cache
+  //   shared by more is shared by the whole package (L3, and L2 on Core 2
+  //   and Core Duo). The configured count for the scope is used:
+  //     private to a core      -> nthreads - 1
+  //     shared by the package  -> ncores * nthreads - 1
+  //   Caches shared by a module of cores (some Atoms) are reported as
+  //   shared by the package.
+
+  cpuid_function_t l1d;
+  get_hardware_cpuid_leaf(0x00000004, 0, &l1d);
+
+  // compare the raw EAX[25-14] fields (both hold count - 1)
+  Bit32u hw_sharing = (leaf->eax >> 14) & 0xfff;
+  Bit32u hw_l1d_sharing = (l1d.eax >> 14) & 0xfff;
+
+  Bit32u sharing = (hw_sharing <= hw_l1d_sharing) ? nthreads : ncores * nthreads;
+
+  leaf->eax = (leaf->eax & 0x00003fff) | ((sharing - 1) << 14) | ((ncores - 1) << 26);
+}
+
 #if BX_SUPPORT_APIC
 
 // CPUID function 0x0000000B - Extended Topology Leaf
@@ -1744,12 +1820,12 @@ void bx_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
   // [30:30] IBPB_RET: IBPB clears return address predictor
   // [31:31] reserved
   leaf->ebx = 0;
-  if (is_cpu_extension_supported(BX_ISA_LONG_MODE))
-    leaf->ebx = BX_CPUID_EXT8_EBX_WBNOINVD; // I don't add CPUID feature for WBNOINVD but also don't want to report it for really old processors
   if (is_cpu_extension_supported(BX_ISA_CLZERO))
     leaf->ebx |= BX_CPUID_EXT8_EBX_CLZERO;
   if (is_cpu_extension_supported(BX_ISA_RDPRU))
     leaf->ebx |= BX_CPUID_EXT8_EBX_RDPRU;
+  if (is_cpu_extension_supported(BX_ISA_LONG_MODE))
+    leaf->ebx |= BX_CPUID_EXT8_EBX_WBNOINVD; // I don't add CPUID feature for WBNOINVD but also don't want to report it for really old processors
 
   leaf->ecx = 0; // Reserved, undefined for Intel
 
@@ -1833,8 +1909,10 @@ void bx_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_funct
   case 0x00000001: // CPUID leaf 0x00000001 - Version and Feature Information
   case 0x00000002: // CPUID leaf 0x00000002 - Cache and TLB Descriptors
   case 0x00000003: // CPUID leaf 0x00000003 - Processor Serial Number
-  case 0x00000004: // CPUID leaf 0x00000004 - Deterministic Cache Parameters
     get_hardware_cpuid_leaf(function, subfunction, leaf);
+    break;
+  case 0x00000004: // CPUID leaf 0x00000004 - Deterministic Cache Parameters
+    get_std_cpuid_deterministic_cache_leaf(subfunction, leaf);
     break;
   case 0x00000005: // CPUID leaf 0x00000005 - MONITOR/MWAIT Features
     get_std_cpuid_monitor_mwait_leaf(leaf);
