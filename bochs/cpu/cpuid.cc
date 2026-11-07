@@ -609,19 +609,26 @@ void bx_cpuid_t::get_std_cpuid_deterministic_cache_leaf(Bit32u subfunction, cpui
 // logical processor and core domains
 void bx_cpuid_t::get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  // Every sub-leaf (input ECX = sub-leaf index) describes one domain:
-  //   EAX[4:0]   - SHIFT_COUNT: number of bits the x2APIC ID must be shifted right
-  //                to address instances of the next higher-scoped domain
-  //   EAX[31:5]  - reserved
-  //   EBX[15:0]  - NEXT_LEVEL_NUM_LP: number of logical processors across all
-  //                instances of this domain within the next higher-scoped domain
-  //   EBX[31:16] - reserved
-  //   ECX[7:0]   - LEVEL_NUM: the input sub-leaf index
-  //   ECX[15:8]  - DOMAIN_TYPE: 0 - invalid, 1 - logical processor, 2 - core,
-  //                3 - module, 4 - tile, 5 - die, 6 - diegrp (leaf 0x1F only),
-  //                7..255 - reserved
-  //   ECX[31:16] - reserved
-  //   EDX[31:0]  - X2APIC_ID of the current logical processor (same for every sub-leaf)
+  // EAX:
+  //   [04-00] - SHIFT_COUNT: number of bits the x2APIC ID must be shifted right
+  //             to address instances of the next higher-scoped domain
+  //   [31-05] - Reserved
+  // EBX:
+  //   [15-00] - NEXT_LEVEL_NUM_LP: number of logical processors across all
+  //             instances of this domain within the next higher-scoped domain
+  //   [31-16] - Reserved
+  // ECX:
+  //   [07-00] - LEVEL_NUM: the input sub-leaf index
+  //   [15-08] - DOMAIN_TYPE:
+  //             0 = Invalid (no more domains)
+  //             1 = Logical Processor
+  //             2 = Core
+  //             3 = Module (leaf 0x1F only)
+  //             4 = Tile (leaf 0x1F only)
+  //             5 = Die (leaf 0x1F only)
+  //             6 = DieGrp (leaf 0x1F only)
+  //   [31-16] - Reserved
+  // EDX: x2APIC ID of the current logical processor (same for every sub-leaf)
   //
   // A sub-leaf with invalid domain type returns zero in EAX and EBX, all higher
   // sub-leaves are invalid as well
@@ -1894,6 +1901,87 @@ void bx_cpuid_t::get_ext_cpuid_leaf_1E(cpuid_function_t *leaf) const
 #endif
 }
 
+// CPUID function 0x80000026 - AMD Extended CPU Topology
+void bx_cpuid_t::get_ext_cpuid_leaf_26(Bit32u subfunction, cpuid_function_t *leaf) const
+{
+  // EAX:
+  //   [04-00] - MaskWidth: number of bits to shift Extended APIC ID right to get
+  //             a unique topology ID of the current hierarchy level
+  //   [28-05] - Reserved
+  //      [29] - EfficiencyRankingAvailable (Core level only)
+  //      [30] - HeterogeneousCores: components at this level have different core types
+  //      [31] - AsymmetricTopology: components at this level have different NumLogProc
+  // EBX:
+  //   [15-00] - NumLogProc: number of logical processors at the current hierarchy level
+  //   [23-16] - PwrEfficiencyRanking (Core level only)
+  //   [27-24] - NativeModelID (Core level only)
+  //   [31-28] - CoreType (Core level only)
+  // ECX:
+  //   [07-00] - InputEcx: input ECX[7:0]
+  //   [15-08] - LevelType: hierarchy level type
+  //             0 = Reserved (no more levels)
+  //             1 = Core
+  //             2 = Complex
+  //             3 = Die
+  //             4 = Socket
+  //   [31-16] - Reserved
+  // EDX: Extended APIC ID of the logical processor
+
+  leaf->eax = 0;
+  leaf->ebx = 0;
+  leaf->ecx = subfunction & 0xff;
+#if BX_SUPPORT_APIC
+  leaf->edx = cpu->get_apic_id();
+#else
+  leaf->edx = 0;
+#endif
+
+  enum {
+    BX_AMD_LEVEL_TYPE_INVALID = 0,
+    BX_AMD_LEVEL_TYPE_CORE = 1,
+    BX_AMD_LEVEL_TYPE_COMPLEX = 2,
+    BX_AMD_LEVEL_TYPE_DIE = 3,
+    BX_AMD_LEVEL_TYPE_SOCKET = 4
+  };
+
+  // number of APIC ID bits allocated for threads and cores
+  Bit32u thread_bits = (nthreads > 1) ? (ilog2(nthreads-1)+1) : 0;
+  Bit32u core_bits = (ncores > 1) ? (ilog2(ncores-1)+1) : 0;
+
+  // All four levels are enumerated like real hardware does. Bochs topology has
+  // a single complex per die and a single die per socket, so the complex, die
+  // and socket levels report the same values. The topology is symmetric and
+  // homogeneous, EAX[31-29] and EBX[31-16] are zero.
+  switch(subfunction) {
+  case 0:
+     leaf->eax = thread_bits;
+     leaf->ebx = nthreads;
+     leaf->ecx |= (BX_AMD_LEVEL_TYPE_CORE<<8);
+     break;
+
+  case 1:
+     leaf->eax = thread_bits + core_bits;
+     leaf->ebx = ncores * nthreads;
+     leaf->ecx |= (BX_AMD_LEVEL_TYPE_COMPLEX<<8);
+     break;
+
+  case 2:
+     leaf->eax = thread_bits + core_bits;
+     leaf->ebx = ncores * nthreads;
+     leaf->ecx |= (BX_AMD_LEVEL_TYPE_DIE<<8);
+     break;
+
+  case 3:
+     leaf->eax = thread_bits + core_bits;
+     leaf->ebx = ncores * nthreads;
+     leaf->ecx |= (BX_AMD_LEVEL_TYPE_SOCKET<<8);
+     break;
+
+  default:
+     break;
+  }
+}
+
 void bx_cpuid_t::get_cpuid_hidden_level(cpuid_function_t *leaf, const char *magic_string) const
 {
   memcpy(&(leaf->eax), magic_string     , 4);
@@ -2102,8 +2190,10 @@ void bx_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_funct
   case 0x80000023: // CPUID leaf 0x80000023 - Multi-Key Encrypted Memory Capabilities
   case 0x80000024: // CPUID leaf 0x80000024 - reserved
   case 0x80000025: // CPUID leaf 0x80000025 - SEV Capabilities 2
-  case 0x80000026: // CPUID leaf 0x80000026 - Extended CPU Topology
     get_reserved_leaf(leaf);
+    break;
+  case 0x80000026: // CPUID leaf 0x80000026 - Extended CPU Topology
+    get_ext_cpuid_leaf_26(subfunction, leaf);
     break;
   case 0x8FFFFFFF: // CPUID leaf 0x8FFFFFFF - AMD magic (hidden) leaf
     get_hardware_cpuid_leaf(function, subfunction, leaf);
