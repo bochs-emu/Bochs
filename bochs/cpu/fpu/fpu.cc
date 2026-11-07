@@ -24,6 +24,7 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu/cpu.h"
+#include "cpu/decoder/ia_opcodes.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #include "softfloat3e/include/softfloat.h"
@@ -65,7 +66,8 @@ Bit16u BX_CPU_C::x87_get_FDS(void)
 
 bx_address BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
 {
-    unsigned offset;
+    unsigned offset = (i->os32L() || i->os64L()) ? 0x1c : 0x0e;
+    bx_address asize_mask = i->asize_mask();
 
     /* read all registers in stack order and update x87 tag word */
     for(int n=0;n<8;n++) {
@@ -78,7 +80,14 @@ bx_address BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
 
     bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
-    bx_address asize_mask = i->asize_mask();
+    // check that we would not fault while attempting to write, check that we can write-access first and last bytes
+    // of the memory image to be written, touch the memory but no write actually occurs
+    tickle_write_virtual(i->seg(), eaddr, 1);
+
+    // FNSAVE memory image also includes 8 FPU data registers (80 bytes) following the environment
+    unsigned regs_size = (i->getIaOpcode() == BX_IA_FNSAVE) ? 80 : 0;
+
+    tickle_write_virtual(i->seg(), (eaddr + offset - 1 + regs_size) & asize_mask, 1);
 
     if (protected_mode())  /* Protected Mode */
     {
@@ -100,8 +109,6 @@ bx_address BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
             write_virtual_dword(i->seg(), (eaddr + 0x14) & asize_mask, tmp);
             tmp = 0xffff0000 | x87_get_FDS();
             write_virtual_dword(i->seg(), (eaddr + 0x18) & asize_mask, tmp);
-
-            offset = 0x1c;
         }
         else /* Protected Mode - 16 bit */
         {
@@ -121,8 +128,6 @@ bx_address BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
             write_virtual_word(i->seg(), (eaddr + 0x0a) & asize_mask, tmp);
             tmp = x87_get_FDS();
             write_virtual_word(i->seg(), (eaddr + 0x0c) & asize_mask, tmp);
-
-            offset = 0x0e;
         }
     }
     else   /* Real or V86 Mode */
@@ -150,8 +155,6 @@ bx_address BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
             write_virtual_dword(i->seg(), (eaddr + 0x14) & asize_mask, tmp);
             tmp = (fp_dp & 0xffff0000) >> 4;
             write_virtual_dword(i->seg(), (eaddr + 0x18) & asize_mask, tmp);
-
-            offset = 0x1c;
         }
         else  /* Real or V86 Mode - 16 bit */
         {
@@ -171,8 +174,6 @@ bx_address BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
             write_virtual_word(i->seg(), (eaddr + 0x0a) & asize_mask, tmp);
             tmp = (Bit16u)((fp_dp & 0xf0000) >> 4);
             write_virtual_word(i->seg(), (eaddr + 0x0c) & asize_mask, tmp);
-
-            offset = 0x0e;
         }
     }
 
@@ -181,11 +182,19 @@ bx_address BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
 
 bx_address BX_CPU_C::fpu_load_environment(bxInstruction_c *i)
 {
-    unsigned offset;
+    unsigned offset = (i->os32L() || i->os64L()) ? 0x1c : 0x0e;
+    bx_address asize_mask = i->asize_mask();
 
     bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
-    bx_address asize_mask = i->asize_mask();
+    // check that we would not fault while attempting to read, check that we can read-access first and last bytes
+    // of the memory image before anything is loaded
+    tickle_read_virtual(i->seg(), eaddr);
+
+    // FRSTOR memory image also includes 8 FPU data registers (80 bytes) following the environment
+    unsigned regs_size = (i->getIaOpcode() == BX_IA_FRSTOR) ? 80 : 0;
+
+    tickle_read_virtual(i->seg(), (eaddr + offset - 1 + regs_size) & asize_mask);
 
     if (protected_mode())  /* Protected Mode */
     {
@@ -209,7 +218,6 @@ bx_address BX_CPU_C::fpu_load_environment(bxInstruction_c *i)
             BX_CPU_THIS_PTR the_i387.tos = (tmp >> 11) & 0x7;
             tmp = read_virtual_dword(i->seg(), eaddr);
             BX_CPU_THIS_PTR the_i387.cwd = tmp & 0xffff;
-            offset = 0x1c;
         }
         else /* Protected Mode - 16 bit */
         {
@@ -232,7 +240,6 @@ bx_address BX_CPU_C::fpu_load_environment(bxInstruction_c *i)
             BX_CPU_THIS_PTR the_i387.cwd = tmp;
             /* opcode is defined to be zero */
             BX_CPU_THIS_PTR the_i387.foo = 0;
-            offset = 0x0e;
         }
     }
     else   /* Real or V86 Mode */
@@ -263,7 +270,6 @@ bx_address BX_CPU_C::fpu_load_environment(bxInstruction_c *i)
             BX_CPU_THIS_PTR the_i387.tos = (tmp >> 11) & 0x7;
             tmp = read_virtual_dword(i->seg(), eaddr);
             BX_CPU_THIS_PTR the_i387.cwd = tmp & 0xffff;
-            offset = 0x1c;
         }
         else  /* Real or V86 Mode - 16 bit */
         {
@@ -287,7 +293,6 @@ bx_address BX_CPU_C::fpu_load_environment(bxInstruction_c *i)
             BX_CPU_THIS_PTR the_i387.tos = (tmp >> 11) & 0x7;
             tmp = read_virtual_word(i->seg(), eaddr);
             BX_CPU_THIS_PTR the_i387.cwd = tmp;
-            offset = 0x0e;
         }
     }
 
