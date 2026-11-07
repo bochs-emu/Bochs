@@ -510,6 +510,7 @@ void bx_sb16_c::register_state(void)
   BXRS_PARAM_BOOL(mpu, irqpending, MPU.irqpending);
   BXRS_PARAM_BOOL(mpu, forceuartmode, MPU.forceuartmode);
   BXRS_PARAM_BOOL(mpu, singlecommand, MPU.singlecommand);
+  new bx_shadow_num_c(mpu, "runningstatus", &MPU.runningstatus, BASE_HEX);
   new bx_shadow_num_c(mpu, "current_timer", &MPU.current_timer);
   new bx_shadow_num_c(mpu, "last_delta_time", &MPU.last_delta_time);
   MPU_B.datain.register_state(mpu, "datain");
@@ -1809,10 +1810,11 @@ Bit16u bx_sb16_c::dma_write16(Bit16u *buffer, Bit16u maxlen)
 
 Bit16u bx_sb16_c::calc_output_volume(Bit8u reg1, Bit8u reg2, bool shift)
 {
+  // CT1745: bits 7..3 set the level in 2 dB steps (0 = -62 dB, 31 = 0 dB)
   Bit8u vol1 = (MIXER.reg[reg1] >> 3);
   Bit8u vol2 = (MIXER.reg[reg2] >> 3);
-  float fvol1 = (float)pow(10.0f, (float)(31-vol1)*-0.065f);
-  float fvol2 = (float)pow(10.0f, (float)(31-vol2)*-0.065f);
+  float fvol1 = (float)pow(10.0f, (float)(31-vol1)*-0.1f);
+  float fvol2 = (float)pow(10.0f, (float)(31-vol2)*-0.1f);
   Bit16u result = (Bit8u)(255 * fvol1 * fvol2);
   if (shift) result <<= 8;
   return result;
@@ -2133,6 +2135,15 @@ void bx_sb16_c::mpu_command(Bit32u value)
 {
   int i;
   int bytesneeded;
+  int answer = -1;
+  bool sendack = 1;
+
+  // in UART mode only the reset command is accepted
+  if ((MPU.uartmode != 0) && (value != 0xff))
+  {
+      writelog(MIDILOG(4), "MPU cmd: command %02x ignored in UART mode", value);
+      return;
+  }
 
   if (MPU_B.cmd.hascommand() == 1) // already a command pending, abort that one
   {
@@ -2172,8 +2183,12 @@ void bx_sb16_c::mpu_command(Bit32u value)
 
         case 0xff:
           writelog(MIDILOG(4), "MPU cmd: Master reset of device");
+          // leaving UART mode with reset doesn't send an MPU_ACK
+          if (MPU.uartmode != 0)
+            sendack = 0;
           MPU.uartmode=MPU.forceuartmode;
           MPU.singlecommand=0;
+          MPU.runningstatus=0;
           for (i=0; i<16; i++)
           {
              MPU.banklsb[i] = 0;
@@ -2191,6 +2206,12 @@ void bx_sb16_c::mpu_command(Bit32u value)
           writelog(MIDILOG(4), "MPU: prefix %02x received",
                   MPU_B.cmd.currentcommand());
           break;
+       case 0xac:  // request version
+          answer = 0x15;
+          break;
+       case 0xad:  // request revision
+          answer = 0x01;
+          break;
        default:
           writelog(MIDILOG(3), "MPU cmd: unknown command %02x ignored",
                   MPU_B.cmd.currentcommand());
@@ -2200,8 +2221,12 @@ void bx_sb16_c::mpu_command(Bit32u value)
      // Need to put an MPU_ACK into the data port if command successful
      // we'll fake it even if we didn't process the command, so as to
      // allow detection of the MPU 401.
-     if (MPU_B.dataout.put(0xfe) == 0)
-        writelog(MIDILOG(3), "MPU_ACK error - output buffer full");
+     if (sendack) {
+       if (MPU_B.dataout.put(0xfe) == 0)
+          writelog(MIDILOG(3), "MPU_ACK error - output buffer full");
+       if (answer >= 0)
+          MPU_B.dataout.put((Bit8u) answer);
+     }
      MPU_B.cmd.clearcommand(); // clear the command from the buffer
   }
 }
@@ -2267,6 +2292,20 @@ void bx_sb16_c::mpu_datawrite(Bit32u value)
 // A byte of midi data has been received
 void bx_sb16_c::mpu_mididata(Bit32u value)
 {
+  // number of arguments of channel messages 0x80..0xef (by high nibble)
+  // and system common messages 0xf0..0xf7 (by low nibble)
+  // note - length 255 commands have unknown length
+  static const int eventlength[] = { 2, 2, 2, 2, 1, 1, 2, 255};
+  static const int syslength[] = { 255, 1, 2, 1, 0, 0, 0, 0};
+
+  if (value >= 0xf8)
+  {  // system real-time messages are single bytes and may appear anywhere,
+     // even inside of other messages, without affecting them
+     Bit8u dummy = 0;
+     writemidicommand(value, 0, &dummy);
+     return;
+  }
+
   // first, find out if it is a midi command or midi data
   bool ismidicommand = 0;
   if (value >= 0x80)
@@ -2299,16 +2338,32 @@ void bx_sb16_c::mpu_mididata(Bit32u value)
       }
 
       // find the number of arguments to the command
-      static const signed eventlength[] = { 2, 2, 2, 2, 1, 1, 2, 255};
-      // note - length 255 commands have unknown length
-      MPU_B.midicmd.newcommand(value, eventlength[(value & 0x70) >> 4]);
+      if (value < 0xf0) {
+        MPU_B.midicmd.newcommand(value, eventlength[(value & 0x70) >> 4]);
+        MPU.runningstatus = value; // channel messages set the running status
+      } else {
+        MPU_B.midicmd.newcommand(value, syslength[value & 0x07]);
+        MPU.runningstatus = 0;     // system common messages clear it
+      }
+      if (MPU_B.midicmd.commanddone() == 1)
+      {  // message without arguments
+         processmidicommand(0);
+         MPU_B.midicmd.clearcommand();
+         MPU_B.midicmd.flush();
+      }
   }
   else  // no command, just arguments to the old command
   {
       if (MPU_B.midicmd.hascommand() == 0)
-      {  // no command pending, ignore the data
-         writelog(MIDILOG(3), "Midi data %02x received, but no command pending?", value);
-         return;
+      {
+         if (MPU.runningstatus == 0)
+         {  // no command pending, ignore the data
+            writelog(MIDILOG(3), "Midi data %02x received, but no command pending?", value);
+            return;
+         }
+         // running status: the data belongs to a message with the same
+         // status byte as the last channel message
+         MPU_B.midicmd.newcommand(MPU.runningstatus, eventlength[(MPU.runningstatus & 0x70) >> 4]);
       }
 
       // just some data to the command

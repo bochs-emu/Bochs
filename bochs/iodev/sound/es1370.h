@@ -111,7 +111,7 @@ private:
   BX_ES1370_SMF Bit32u run_channel(unsigned channel, int timer_id, Bit32u buflen);
   BX_ES1370_SMF void sendwavepacket(unsigned channel, Bit32u buflen, Bit8u *buffer);
   BX_ES1370_SMF void closewaveoutput();
-  BX_ES1370_SMF Bit16u calc_output_volume(Bit8u reg1, Bit8u reg2, bool shift);
+  BX_ES1370_SMF Bit16u calc_output_volume(Bit8u master_reg, Bit8u voice_reg, bool shift);
 
   BX_ES1370_SMF int currentdeltatime();
   BX_ES1370_SMF void writemidicommand(int command, int length, Bit8u data[]);

@@ -736,13 +736,19 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
   }
 }
 
-Bit16u bx_es1370_c::calc_output_volume(Bit8u reg1, Bit8u reg2, bool shift)
+// AK4531 CODEC: bit 7 mutes the channel, bits 4..0 set the level in 2 dB steps
+// master: 0 .. -62 dB, voice: +12 .. -50 dB (gain above 0 dB is not supported)
+Bit16u bx_es1370_c::calc_output_volume(Bit8u master_reg, Bit8u voice_reg, bool shift)
 {
-  Bit8u vol1 = (0x1f - (BX_ES1370_THIS s.codec_reg[reg1] & 0x1f));
-  Bit8u vol2 = (0x1f - (BX_ES1370_THIS s.codec_reg[reg2] & 0x1f));
-  float fvol1 = (float)pow(10.0f, (float)(31-vol1)*-0.065f);
-  float fvol2 = (float)pow(10.0f, (float)(31-vol2)*-0.065f);
-  Bit16u result = (Bit8u)(255 * fvol1 * fvol2);
+  Bit8u master = BX_ES1370_THIS s.codec_reg[master_reg];
+  Bit8u voice = BX_ES1370_THIS s.codec_reg[voice_reg];
+  Bit16u result = 0;
+
+  if (((master | voice) & 0x80) == 0) {
+    int level = 12 - 2 * (master & 0x1f) - 2 * (voice & 0x1f);
+    if (level > 0) level = 0;
+    result = (Bit8u)(255 * pow(10.0, (double)level / 20.0));
+  }
   if (shift) result <<= 8;
   return result;
 }

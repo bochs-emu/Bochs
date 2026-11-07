@@ -179,6 +179,7 @@ private:
 
       int timer_handle, current_timer;           // no. of delta times passed
       Bit32u last_delta_time;                    // timer value at last command
+      Bit8u runningstatus;                       // status of last channel message
       Bit8u outputinit;
     } d;
   } mpu401;

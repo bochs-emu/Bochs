@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 /*
  *  Copyright (C) 2002-2013  The DOSBox Team
- *  Copyright (C) 2015-2023  The Bochs Project
+ *  Copyright (C) 2015-2026  The Bochs Project
  *  OPL2/OPL3 emulation library
  *
  *  This library is free software; you can redistribute it and/or
@@ -503,13 +503,27 @@ void disable_operator(op_type* op_pt, Bit32u act_type)
   }
 }
 
+// set up the values depending on the output sample rate
+static void adlib_set_samplerate(Bit32u samplerate)
+{
+  int_samplerate = samplerate;
+
+  generator_add = (Bit32u)(INTFREQU*FIXEDPT/int_samplerate);
+
+  recipsamp = 1.0 / (fltype)int_samplerate;
+  for (int i=15;i>=0;i--) {
+    frqmul[i] = (fltype)(frqmul_tab[i]*INTFREQU/(fltype)WAVEPREC*(fltype)FIXEDPT*recipsamp);
+  }
+
+  vibtab_add = static_cast<Bit32u>(VIBTAB_SIZE*FIXEDPT_LFO/8192*INTFREQU/int_samplerate);
+  tremtab_add = (Bit32u)((fltype)TREMTAB_SIZE * TREM_FREQ * FIXEDPT_LFO / (fltype)int_samplerate);
+}
+
 void adlib_init(Bit32u samplerate)
 {
   Bits i, j, oct;
 
-  int_samplerate = samplerate;
-
-  generator_add = (Bit32u)(INTFREQU*FIXEDPT/int_samplerate);
+  adlib_set_samplerate(samplerate);
 
   memset((void *)adlibreg,0,sizeof(adlibreg));
   memset((void *)op,0,sizeof(op_type)*MAXOPERATORS);
@@ -545,11 +559,6 @@ void adlib_init(Bit32u samplerate)
 #endif
   }
 
-  recipsamp = 1.0 / (fltype)int_samplerate;
-  for (i=15;i>=0;i--) {
-    frqmul[i] = (fltype)(frqmul_tab[i]*INTFREQU/(fltype)WAVEPREC*(fltype)FIXEDPT*recipsamp);
-  }
-
   status = 0;
   opl_index = 0;
 
@@ -561,7 +570,6 @@ void adlib_init(Bit32u samplerate)
   for (i=4; i<VIBTAB_SIZE; i++) vib_table[i] = vib_table[i-4]*-1;
 
   // vibrato at ~6.1 ?? (opl3 docs say 6.1, opl4 docs say 6.0, y8950 docs say 6.4)
-  vibtab_add = static_cast<Bit32u>(VIBTAB_SIZE*FIXEDPT_LFO/8192*INTFREQU/int_samplerate);
   vibtab_pos = 0;
 
   for (i=0; i<BLOCKBUF_SIZE; i++) vibval_const[i] = 0;
@@ -583,7 +591,6 @@ void adlib_init(Bit32u samplerate)
   }
 
   // tremolo at 3.7hz
-  tremtab_add = (Bit32u)((fltype)TREMTAB_SIZE * TREM_FREQ * FIXEDPT_LFO / (fltype)int_samplerate);
   tremtab_pos = 0;
 
   for (i=0; i<BLOCKBUF_SIZE; i++) tremval_const[i] = FIXEDPT;
@@ -1027,7 +1034,16 @@ bool adlib_getsample(Bit16u rate, Bit16s* sndptr, Bits numsamples, Bit16u volume
   Bits samples_to_process = numsamples;
 
   if (rate != (Bit16u)int_samplerate) {
-    adlib_init(rate);
+    // the output sample rate has changed: recalculate the rate dependent
+    // values of all operators without resetting the register state
+    adlib_set_samplerate(rate);
+    for (Bitu idx = ARC_TVS_KSR_MUL; idx < (ARC_TVS_KSR_MUL + 0x20); idx++) {
+      adlib_write(idx, adlibreg[idx]);
+#if defined(OPLTYPE_IS_OPL3)
+      adlib_write(idx | ARC_SECONDSET, adlibreg[idx | ARC_SECONDSET]);
+#endif
+    }
+    adlib_write(ARC_PERC_MODE, adlibreg[ARC_PERC_MODE]);
   }
 
   for (Bits cursmp=0; cursmp<samples_to_process; cursmp+=endsamples) {
