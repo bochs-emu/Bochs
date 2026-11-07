@@ -24,6 +24,7 @@
 #include "bochs.h"
 #include "cpu.h"
 #include "cpuid.h"
+#include "msr.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 extern void flushICaches(void);
@@ -942,6 +943,45 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPID_Ed(bxInstruction_c *i)
 #endif
 
   BX_WRITE_32BIT_REGZ(i->dst(), BX_CPU_THIS_PTR msr.tsc_aux);
+#endif
+
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPRU(bxInstruction_c *i)
+{
+#if BX_CPU_LEVEL >= 6
+  // RDPRU is not allowed outside of CPL0 when CR4.TSD is set
+  if (BX_CPU_THIS_PTR cr4.get_TSD() && CPL != 0) {
+    BX_ERROR(("%s: not allowed to use instruction !", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest)
+    if (SVM_INTERCEPT(SVM_INTERCEPT1_RDPRU)) Svm_Vmexit(SVM_VMEXIT_RDPRU);
+#endif
+
+  // ECX selects the register: 0 - MPERF, 1 - APERF
+  // unsupported ECX values return zero and clear CF
+  Bit64u val = 0;
+  clearEFlagsOSZAPC();
+
+  switch(ECX) {
+  case 0:
+    rdmsr(BX_MSR_IA32_MPERF, &val);
+    assert_CF();
+    break;
+  case 1:
+    rdmsr(BX_MSR_IA32_APERF, &val);
+    assert_CF();
+    break;
+  default:
+    break;
+  }
+
+  RAX = GET32L(val);
+  RDX = GET32H(val);
 #endif
 
   BX_NEXT_INSTR(i);

@@ -163,3 +163,4 @@ x86_feature(BX_ISA_MOVRS, "movrs")                                         /* MO
 x86_feature(BX_ISA_FRED, "fred")                                           /* FRED: Flexible Return and Event Deivery support */
 x86_feature(BX_ISA_USER_MSR, "user_msr")                                   /* USER_MSR: Support URDMSR/UWRMSR instructions */
 x86_feature(BX_ISA_APX, "apx")                                             /* APX instructions support */
+x86_feature(BX_ISA_RDPRU, "rdpru")                                         /* RDPRU instruction support (AMD) */

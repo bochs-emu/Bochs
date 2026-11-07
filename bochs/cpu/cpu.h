@@ -1760,6 +1760,7 @@ public: // for now...
   BX_SMF void WBINVD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CLFLUSH(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CLZERO(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RDPRU(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void MOV_CR0Rd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_CR2Rd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

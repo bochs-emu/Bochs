@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2023 The Bochs Project
+# Copyright (C) 2001-2026 The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -594,7 +594,7 @@ proc_ctrl.o: proc_ctrl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h
  ../instrument/stubs/instrument.h i387.h \
  softfloat3e/include/softfloat_types.h ../config.h fpu/status_w.h \
  fpu/control_w.h crregs.h descriptor.h decoder/instr.h lazy_flags.h tlb.h \
- xmm.h vmx.h vmx_ctrls.h stack.h access.h cpuid.h svm.h ../pc_system.h \
+ xmm.h vmx.h vmx_ctrls.h stack.h access.h cpuid.h msr.h svm.h ../pc_system.h \
  ../gui/gui.h ../gui/siminterface.h ../gui/paramtree.h \
  ../bx_debug/debug.h ../osdep.h ../cpu/decoder/decoder.h \
  decoder/ia_opcodes.h decoder/ia_opcodes.def decoder/ia_opcodes_evex.def \

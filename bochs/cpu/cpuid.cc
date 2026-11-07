@@ -1748,9 +1748,13 @@ void bx_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
     leaf->ebx = BX_CPUID_EXT8_EBX_WBNOINVD; // I don't add CPUID feature for WBNOINVD but also don't want to report it for really old processors
   if (is_cpu_extension_supported(BX_ISA_CLZERO))
     leaf->ebx |= BX_CPUID_EXT8_EBX_CLZERO;
+  if (is_cpu_extension_supported(BX_ISA_RDPRU))
+    leaf->ebx |= BX_CPUID_EXT8_EBX_RDPRU;
 
   leaf->ecx = 0; // Reserved, undefined for Intel
-  leaf->edx = 0;
+
+  // EDX[31:16]: MaxRdpruID - maximum ECX value recognized by RDPRU (MPERF=0, APERF=1)
+  leaf->edx = is_cpu_extension_supported(BX_ISA_RDPRU) ? (1 << 16) : 0;
 }
 
 void bx_cpuid_t::get_ext_cpuid_leaf_8_amd(cpuid_function_t *leaf) const
@@ -1840,7 +1844,7 @@ void bx_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_funct
     get_hardware_cpuid_leaf(function, subfunction, leaf);
     break;
   case 0x00000008: // CPUID leaf 0x00000008 - reserved
-  case 0x00000009: // CPUID leaf 0x00000009 - Direct Cache Access Information
+  case 0x00000009: // CPUID leaf 0x00000009 - Direct Cache Access Information (not implemented)
     get_reserved_leaf(leaf);
     break;
   case 0x0000000A: // CPUID leaf 0x0000000A - Architectural Performance Monitoring

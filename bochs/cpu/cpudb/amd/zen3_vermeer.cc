@@ -252,6 +252,7 @@ zen3_vermeer_t::zen3_vermeer_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_XAPIC_EXT);
   enable_cpu_extension(BX_ISA_TCE);
   enable_cpu_extension(BX_ISA_CLZERO);
+  enable_cpu_extension(BX_ISA_RDPRU);
   enable_cpu_extension(BX_ISA_SPEC_CTRL_AMD);
 #if BX_SUPPORT_MONITOR_MWAIT
   enable_cpu_extension(BX_ISA_MONITORX_MWAITX);

@@ -956,6 +956,11 @@ BX_CPUID_STD7_SUBLEAF0_EBX_MPX;
  Enables CPUID[0x80000008].EBX[0]: CLZERO support flag.
  Enables CLZERO instruction (will #UD otherwise).
 
+- CPU Feature: rdpru
+
+ Enables CPUID[0x80000008].EBX[4]: RDPRU support flag and CPUID[0x80000008].EDX[31:16] MaxRdpruID.
+ Enables RDPRU instruction (will #UD otherwise).
+
 - CPU Feature: spec_ctrl
 
  Enables IA32_CORE_CAPABILITIES MSR (0xcf), IA32_ARCH_CAPABILITIES MSR (0x10a), IA32_SPEC_CTRL MSR (0x48), IA32_PRED_CMD MSR (0x48) and IA32_FLUSH_CMD MSR (0x10b).
