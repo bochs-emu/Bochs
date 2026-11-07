@@ -176,7 +176,7 @@ static floatx80 fyl2x_finish(float128_t z, floatx80 y, Bit32s extraExp, softfloa
         ySig = n.sig;
     }
     uint8_t roundingMode = softfloat_getRoundingMode(&status);
-    float128_t prod = f128_mul_by_extF80(z, packFloatx80(ySign, FLOATX80_EXP_BIAS, ySig), roundingMode, &status);
+    float128_t prod = f128_mul_by_extF80(z, packFloatx80(ySign, FLOATX80_EXP_BIAS, ySig), softfloat_round_odd, &status);
     return f128_to_extF80(prod, (yExp - FLOATX80_EXP_BIAS) + extraExp, roundingMode, &status);
 }
 
