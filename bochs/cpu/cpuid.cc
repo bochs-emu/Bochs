@@ -527,11 +527,9 @@ void bx_cpuid_t::get_std_cpuid_monitor_mwait_leaf(cpuid_function_t *leaf) const
 #endif
 }
 
-// leaf 0x00000004 //
+// CPUID function 0x00000004 - Deterministic Cache Parameters
 void bx_cpuid_t::get_std_cpuid_deterministic_cache_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  // CPUID function 0x00000004 - Deterministic Cache Parameters
-
   // EAX:
   //   [04-00] - Cache Type Field
   //             0 = No more caches
@@ -606,17 +604,40 @@ void bx_cpuid_t::get_std_cpuid_deterministic_cache_leaf(Bit32u subfunction, cpui
 #if BX_SUPPORT_APIC
 
 // CPUID function 0x0000000B - Extended Topology Leaf
+// CPUID function 0x0000001F - V2 Extended Topology Leaf
+// Bochs topology has no module/tile/die/diegrp domains, so both leaves report the same
+// logical processor and core domains
 void bx_cpuid_t::get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
 {
+  // Every sub-leaf (input ECX = sub-leaf index) describes one domain:
+  //   EAX[4:0]   - SHIFT_COUNT: number of bits the x2APIC ID must be shifted right
+  //                to address instances of the next higher-scoped domain
+  //   EAX[31:5]  - reserved
+  //   EBX[15:0]  - NEXT_LEVEL_NUM_LP: number of logical processors across all
+  //                instances of this domain within the next higher-scoped domain
+  //   EBX[31:16] - reserved
+  //   ECX[7:0]   - LEVEL_NUM: the input sub-leaf index
+  //   ECX[15:8]  - DOMAIN_TYPE: 0 - invalid, 1 - logical processor, 2 - core,
+  //                3 - module, 4 - tile, 5 - die, 6 - diegrp (leaf 0x1F only),
+  //                7..255 - reserved
+  //   ECX[31:16] - reserved
+  //   EDX[31:0]  - X2APIC_ID of the current logical processor (same for every sub-leaf)
+  //
+  // A sub-leaf with invalid domain type returns zero in EAX and EBX, all higher
+  // sub-leaves are invalid as well
   leaf->eax = 0;
   leaf->ebx = 0;
-  leaf->ecx = subfunction;
+  leaf->ecx = subfunction & 0xff; // ECX[7:0]: LEVEL_NUM, ECX[31:16] reserved
   leaf->edx = cpu->get_apic_id();
 
   enum {
     BX_DOMAIN_TYPE_ID_VALUE_INVALID = 0,
     BX_DOMAIN_TYPE_ID_VALUE_SMT_THREAD = 1,
-    BX_DOMAIN_TYPE_ID_VALUE_CORE = 2
+    BX_DOMAIN_TYPE_ID_VALUE_CORE = 2,
+    BX_DOMAIN_TYPE_ID_VALUE_MODULE = 3,
+    BX_DOMAIN_TYPE_ID_VALUE_TILE = 4,
+    BX_DOMAIN_TYPE_ID_VALUE_DIE = 5,
+    BX_DOMAIN_TYPE_ID_VALUE_DIEGRP = 6
   };
 
   // number of x2APIC ID bits allocated for threads and cores
@@ -624,7 +645,7 @@ void bx_cpuid_t::get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_
   Bit32u core_bits = (ncores > 1) ? (ilog2(ncores-1)+1) : 0;
 
   // logical processor and core domains are always enumerated,
-  // the package domain is never enumerated by leaf 0x0000000B
+  // the package domain is implied and never enumerated
   switch(subfunction) {
   case 0:
      leaf->eax = thread_bits;
@@ -1990,6 +2011,16 @@ void bx_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_funct
     break;
 #endif
   case 0x0000001F: // CPUID leaf 0x0000001F - V2 Extended Topology Enumeration
+    // the leaf is supported when hardware reports non-zero CPUID.1FH.00H:EBX,
+    // the topology itself is always computed
+    get_hardware_cpuid_leaf(0x0000001F, 0, leaf);
+#if BX_SUPPORT_APIC
+    if (leaf->ebx != 0)
+      get_std_cpuid_extended_topology_leaf(subfunction, leaf);
+    else
+#endif
+      get_reserved_leaf(leaf);
+    break;
   case 0x00000020: // CPUID leaf 0x00000020 - Processor History Reset (HRESET)
   case 0x00000021: // CPUID leaf 0x00000021 - reserved
   case 0x00000022: // CPUID leaf 0x00000022 - reserved

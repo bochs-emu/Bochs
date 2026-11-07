@@ -356,10 +356,8 @@ void arrow_lake_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, 
     return;
   case 0x0000001D: // AMX
   case 0x0000001E: // AMX: TMUL Information Main leaf
+  case 0x0000001F: // V2 Extended Topology Enumeration leaf
     cpuid_table->get_std_leaf(function, subfunction, leaf);
-    return;
-  case 0x0000001F: // V2 Extended Topology Enumberation leaf
-    get_reserved_leaf(leaf); // until figured it out
     return;
   case 0x00000020: // HRESET Information
   case 0x00000023: // Arch Perfmon Leaf Information (not supported)
