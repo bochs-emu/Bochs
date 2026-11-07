@@ -254,30 +254,14 @@ static void sincos_sincosd(float128_t d, float128_t &p, float128_t &q, softfloat
     q  = f128_mul_64_ne(e, q1, &status);
 }
 
-/* Round  a + b  to a 64-bit (extF80) significand honouring the FPU mode; this
-   is the closing step of every sin/cos reconstruction and is the only rounding
-   that reaches SW.C1 (magnitude rounded up), so the round-up state left by the
-   intermediate steps is cleared first.
-   Corner case: when |b| is more than ~112 bits below |a|, f128_add absorbs it
-   entirely (sum == a) and roundPackToF128 never flags a round-up - but the tiny
-   addend still decided the direction, so it is applied by hand here: opposite
-   signs mean |a+b| < |a| rounded up to |a|.  (This is what makes sin(tiny x)
-   report C1 the way the hardware does.) */
+/* Round a + b to a 64-bit (extF80) significand honouring the FPU mode.
+   Round to odd before conversion to avoid double rounding. Only the final
+   conversion determines C1, so discard round-up state from earlier steps. */
 static floatx80 sc_add_e64(float128_t a, float128_t b, softfloat_status_t &status)
 {
     softfloat_clearRoundingUp(&status);
 
-    float128_t sum = f128_add(a, b, &status);
-
-    if (sum.v64 == a.v64 && sum.v0 == a.v0 && ((b.v64 << 1) | b.v0) != 0) {
-        /* a + b == a to 113 bits : |b| < 1/2 ulp, result is 'a' */
-        softfloat_raiseFlags(&status, softfloat_flag_inexact);
-        floatx80 res = f128_to_extF80(a, &status);
-        if ((a.v64 ^ b.v64) & SC_SIGNBIT)          /* opposite signs -> |a+b| < |a|, rounded up */
-            softfloat_setRoundingUp(&status);
-        return res;
-    }
-    return f128_to_extF80(sum, &status);
+    return f128_to_extF80(f128_add(a, b, softfloat_round_odd, &status), &status);
 }
 
 static floatx80 sincos_finish(float128_t head, float128_t f, float128_t g, softfloat_status_t &status)
@@ -738,7 +722,7 @@ int fptan(floatx80 &a, softfloat_status_t &status)
     }
 
     softfloat_clearRoundingUp(&status);
-    float128_t z = f128_div(num, den, softfloat_getRoundingMode(&status), &status);
+    float128_t z = f128_div(num, den, softfloat_round_odd, &status);
     a = f128_to_extF80(z, &status);
 
     return 0;
