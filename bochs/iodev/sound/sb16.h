@@ -160,6 +160,7 @@ private:
   int currentirq;
   int currentdma8;
   int currentdma16;
+  bool irqdma_initialized;
   int fmopl_callback_id[2];
   int rt_conf_id;
   Bit16u fm_volume;
@@ -218,6 +219,7 @@ private:
         Bit16u blocklength;
       } dma;
       int timer_handle;   // handle for the DMA timer
+      int silence_timer_handle; // handle for the silence period timer
       Bit8u outputinit; // have the lowlevel output been initialized
       bool inputinit;  // have the lowlevel input been initialized
     } d;
@@ -290,6 +292,8 @@ private:
   BX_SB16_SMF void   dsp_dma_rearm_timer(Bit32u bytes); // set timer period for next burst
   static void dsp_dmatimer_handler(void *);
   void dsp_dmatimer(void);
+  static void dsp_silence_timer_handler(void *);
+  void dsp_silence_timer(void);
   static Bit32u sb16_adc_handler(void *, Bit32u len);
   Bit32u dsp_adc_handler(Bit32u len);
 

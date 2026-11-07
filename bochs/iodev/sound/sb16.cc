@@ -221,8 +221,10 @@ bx_sb16_c::bx_sb16_c(void)
   memset(&opl, 0, sizeof(opl));
   currentdma8 = 0;
   currentdma16 = 0;
+  irqdma_initialized = 0;
   mpu401.d.timer_handle = BX_NULL_TIMER_HANDLE;
   dsp.d.timer_handle = BX_NULL_TIMER_HANDLE;
+  dsp.d.silence_timer_handle = BX_NULL_TIMER_HANDLE;
   opl.timer_handle = BX_NULL_TIMER_HANDLE;
   waveout[0] = NULL;
   waveout[1] = NULL;
@@ -265,7 +267,7 @@ bx_sb16_c::~bx_sb16_c(void)
 
 void bx_sb16_c::init(void)
 {
-  unsigned addr, i;
+  unsigned addr;
 
   // Read in values from config interface
   bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16);
@@ -295,7 +297,9 @@ void bx_sb16_c::init(void)
     BX_SB16_WAVEOUT2 = DEV_sound_get_waveout(1);
     if (BX_SB16_WAVEOUT2 == NULL) {
       BX_PANIC(("Couldn't initialize wave file driver"));
-    } else {
+    } else if ((BX_SB16_THIS wavemode & 1) == 0) {
+      // There is only one OPL generator. Each output pulling samples from it
+      // advances its state, so it must be connected to one output only.
       BX_SB16_THIS fmopl_callback_id[1] = BX_SB16_WAVEOUT2->register_wave_callback(BX_SB16_THISP, fmopl_callback);
     }
   }
@@ -344,60 +348,11 @@ void bx_sb16_c::init(void)
   EMUL.datain.init((int) 64);            // the emulator ports
   EMUL.dataout.init((int) 64);           // for changing emulator settings
 
-  // reset all parts of the hardware by
-  // triggering their reset functions
-
-  // reset the Emulator port
-  emul_write(0x00);
-
-  // reset the MPU401
-  mpu_command(0xff);
-  MPU.last_delta_time = 0xffffffff;
-
-  // reset the DSP
-  DSP.dma.highspeed = 0;
-  DSP.dma.mode = 0;
-  DSP.irqpending = 0;
-  DSP.midiuartmode = 0;
-  DSP.nondma_mode = 0;
-  DSP.nondma_count = 0;
-  DSP.samplebyte = 0;
-  DSP.resetport = 1;  // so that one call to dsp_reset is sufficient
-  dsp_reset(0);       // (reset is 1 to 0 transition)
-  DSP.testreg = 0;
-
-  BX_SB16_IRQ = -1; // will be initialized later by the mixer reset
-
-  for (i=0; i<BX_SB16_MIX_REG; i++)
-    MIXER.reg[i] = 0xff;
-  MIXER.reg[0x00] = 0;  // reset register
+  BX_SB16_IRQ = -1; // will be initialized by set_irq_dma()
   MIXER.reg[0x80] = 2;  // IRQ 5
   MIXER.reg[0x81] = 2;  // 8-bit DMA 1, no 16-bit DMA
-  MIXER.reg[0x82] = 2 << 5;  // no IRQ pending
-  MIXER.reg[0xfd] = 16; // ???
-  MIXER.reg[0xfe] = 6;  // ???
-  set_irq_dma();        // set the IRQ and DMA
-
-  // call the mixer reset
-  mixer_writeregister(0x00);
-  mixer_writedata(0x00);
-
-  // reset the FM emulation
-  OPL.timer_running = 0;
-  for (i=0; i<2; i++) {
-    OPL.tmask[i] = 0;
-    OPL.tflag[i] = 0;
-  }
-  for (i=0; i<4; i++) {
-    OPL.timer[i] = 0;
-    OPL.timerinit[i] = 0;
-  }
-  adlib_init(44100);
-
-  // csp
-  memset(&BX_SB16_THIS csp_reg[0], 0, sizeof(BX_SB16_THIS csp_reg));
-  BX_SB16_THIS csp_reg[5] = 0x01;
-  BX_SB16_THIS csp_reg[9] = 0xf8;
+  set_irq_dma();        // register the IRQ and DMA
+  MPU.last_delta_time = 0xffffffff;
 
   // Allocate the IO addresses, 2x0..2xf, 3x0..3x4 and 388..38b
   for (addr=BX_SB16_IO; addr<BX_SB16_IO+BX_SB16_IOLEN; addr++) {
@@ -429,6 +384,12 @@ void bx_sb16_c::init(void)
     DSP.timer_handle = bx_virt_timer.register_timer
       (BX_SB16_THISP, dsp_dmatimer_handler, 1, 1, 0, dsp_realtime, "sb16.dsp");
     // dma timer: inactive, continuous, frequency variable
+  }
+
+  if (DSP.silence_timer_handle == BX_NULL_TIMER_HANDLE) {
+    DSP.silence_timer_handle = DEV_register_timer
+      (BX_SB16_THISP, dsp_silence_timer_handler, 1, 0, 0, "sb16.silence");
+    // silence timer (DSP command 0x80): inactive, one-shot, frequency variable
   }
 
   if (OPL.timer_handle == BX_NULL_TIMER_HANDLE) {
@@ -468,6 +429,74 @@ void bx_sb16_c::init(void)
 
 void bx_sb16_c::reset(unsigned type)
 {
+  unsigned i;
+
+  // reset all parts of the hardware by
+  // triggering their reset functions
+
+  if (BX_SB16_IRQ > 0) {
+    DEV_pic_lower_irq(BX_SB16_IRQ);
+  }
+
+  // reset the Emulator port
+  EMUL.dataout.reset();
+  emul_write(0x00);
+
+  // reset the MPU401
+  MPU.irqpending = 0;
+  mpu_command(0xff);
+  MPU_B.dataout.reset(); // no MPU_ACK pending after reset
+
+  // reset the DSP
+  bx_virt_timer.deactivate_timer(DSP.timer_handle);
+  if (DSP.inputinit) {
+    BX_SB16_WAVEIN->stopwaverecord();
+  }
+  DSP.dma.highspeed = 0;
+  DSP.dma.mode = 0;
+  DSP.irqpending = 0;
+  DSP.midiuartmode = 0;
+  DSP.nondma_mode = 0;
+  DSP.nondma_count = 0;
+  DSP.samplebyte = 0;
+  DSP.resetport = 1;  // so that one call to dsp_reset is sufficient
+  dsp_reset(0);       // (reset is 1 to 0 transition)
+  DSP.testreg = 0;
+
+  for (i=0; i<BX_SB16_MIX_REG; i++)
+    MIXER.reg[i] = 0xff;
+  MIXER.reg[0x00] = 0;  // reset register
+  MIXER.reg[0x80] = 2;  // IRQ 5
+  MIXER.reg[0x81] = 2;  // 8-bit DMA 1, no 16-bit DMA
+  MIXER.reg[0x82] = 2 << 5;  // no IRQ pending
+  MIXER.reg[0xfd] = 16; // ???
+  MIXER.reg[0xfe] = 6;  // ???
+  set_irq_dma();        // set the IRQ and DMA
+
+  // call the mixer reset
+  mixer_writeregister(0x00);
+  mixer_writedata(0x00);
+
+  // reset the FM emulation
+  if (OPL.timer_running) {
+    bx_pc_system.deactivate_timer(OPL.timer_handle);
+  }
+  OPL.timer_running = 0;
+  for (i=0; i<2; i++) {
+    OPL.index[i] = 0;
+    OPL.tmask[i] = 0;
+    OPL.tflag[i] = 0;
+  }
+  for (i=0; i<4; i++) {
+    OPL.timer[i] = 0;
+    OPL.timerinit[i] = 0;
+  }
+  adlib_init(44100);
+
+  // csp
+  memset(&BX_SB16_THIS csp_reg[0], 0, sizeof(BX_SB16_THIS csp_reg));
+  BX_SB16_THIS csp_reg[5] = 0x01;
+  BX_SB16_THIS csp_reg[9] = 0xf8;
 }
 
 void bx_sb16_c::register_state(void)
@@ -643,6 +672,19 @@ void bx_sb16_c::dsp_dmatimer(void)
   }
 }
 
+void bx_sb16_c::dsp_silence_timer_handler(void *this_ptr)
+{
+  ((bx_sb16_c *) this_ptr)->dsp_silence_timer();
+}
+
+void bx_sb16_c::dsp_silence_timer(void)
+{
+  writelog(WAVELOG(4), "DSP silence period done, triggering IRQ");
+  MIXER.reg[0x82] |= 1;
+  DSP.irqpending = 1;
+  DEV_pic_raise_irq(BX_SB16_IRQ);
+}
+
 void bx_sb16_c::opl_timer (void *this_ptr)
 {
   ((bx_sb16_c *) this_ptr)->opl_timerevent();
@@ -684,6 +726,10 @@ void bx_sb16_c::dsp_reset(Bit32u value)
 
       // do the reset
       writelog(WAVELOG(4), "DSP resetting...");
+
+      // abort a pending silence period (DSP command 0x80)
+      if (DSP.silence_timer_handle != BX_NULL_TIMER_HANDLE)
+        bx_pc_system.deactivate_timer(DSP.silence_timer_handle);
 
       if (DSP.irqpending != 0)
       {
@@ -750,11 +796,17 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
 
   writelog(WAVELOG(4), "DSP Data port write, value %x", value);
 
-  // in high speed mode, any data passed to DSP is a sample
+  // during a high speed DMA transfer the DSP doesn't accept any command,
+  // it can only be stopped with a reset
   if (DSP.dma.highspeed != 0)
   {
-    dsp_getsamplebyte(value);
-    return;
+    if (DSP.dma.mode != 0)
+    {
+      writelog(WAVELOG(3), "DSP data port write %02x ignored in high speed mode", value);
+      return;
+    }
+    // high speed single-cycle transfer done, back to normal mode
+    DSP.dma.highspeed = 0;
   }
 
   // route information to mpu401 part if in MIDI UART mode
@@ -1051,7 +1103,16 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
        case 0x80:
          // 1,2: lo(silence) hi(silence) (len in samples)
          DSP_B.datain.getw(&length);
-         // TODO
+         {
+           // no output, just raise the 8-bit IRQ after the silence period
+           Bit32u samplerate = DSP.dma.param.samplerate;
+           if (samplerate == 0)
+             samplerate = 10752;
+           Bit32u timer_val = (Bit32u)((Bit64u) BX_SB16_THIS dmatimer * ((Bit32u) length + 1) / samplerate);
+           if (timer_val == 0)
+             timer_val = 1;
+           bx_pc_system.activate_timer(DSP.silence_timer_handle, timer_val, 0);
+         }
          break;
 
           // 8-bit auto DAC DMA, highspeed
@@ -1939,7 +2000,7 @@ void bx_sb16_c::mixer_writeregister(Bit32u value)
 
 void bx_sb16_c::set_irq_dma()
 {
-  static bool isInitialized=0;
+  bool isInitialized = BX_SB16_THIS irqdma_initialized;
   int newirq;
   int oldDMA8, oldDMA16;
 
@@ -2037,7 +2098,7 @@ void bx_sb16_c::set_irq_dma()
 
   // If not already initialized
   if(!isInitialized) {
-    isInitialized=1;
+    BX_SB16_THIS irqdma_initialized = 1;
   } else {
     writelog(BOTHLOG(1), "Resources set to I%d D%d H%d",
              BX_SB16_IRQ, BX_SB16_DMAL, BX_SB16_DMAH);
