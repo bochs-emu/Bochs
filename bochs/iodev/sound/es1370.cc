@@ -51,7 +51,10 @@ const Bit8u es1370_iomask[64] = {7, 1, 3, 1, 4, 1, 0, 0, 7, 1, 1, 0, 7, 0, 0, 0,
                                  7, 1, 3, 1, 6, 0, 2, 0, 6, 0, 2, 0, 6, 0, 2, 0,
                                  4, 0, 0, 0, 6, 0, 2, 0, 4, 0, 0, 0, 6, 0, 2, 0};
 
+// number of arguments of channel messages 0x80..0xef (by high nibble)
+// and system common messages 0xf0..0xf7 (by low nibble)
 static const Bit8u midi_eventlength[] = { 2, 2, 2, 2, 1, 1, 2, 255};
+static const Bit8u midi_syslength[] = { 255, 1, 2, 1, 0, 0, 0, 0};
 
 #define ES1370_CTL            0x00
 #define ES1370_STATUS         0x04
@@ -527,7 +530,7 @@ Bit32u bx_es1370_c::read(Bit32u address, unsigned io_len)
         BX_ERROR(("reading from UART data register not supported yet"));
       } else if (offset == ES1370_UART_STATUS) {
         BX_DEBUG(("reading from UART status register"));
-        val = 0x03;
+        val = 0x02; // transmitter ready, no input data (MIDI input not supported)
       } else {
         BX_INFO(("reading from UART test register"));
       }
@@ -556,13 +559,13 @@ Bit32u bx_es1370_c::read(Bit32u address, unsigned io_len)
       }
       break;
     case ES1370_DAC1_FRAMEADR:
-      val = BX_ES1370_THIS s.chan[0].frame_addr;
+      val = BX_ES1370_THIS s.chan[0].frame_addr >> shift;
       break;
     case ES1370_DAC2_FRAMEADR:
-      val = BX_ES1370_THIS s.chan[1].frame_addr;
+      val = BX_ES1370_THIS s.chan[1].frame_addr >> shift;
       break;
     case ES1370_ADC_FRAMEADR:
-      val = BX_ES1370_THIS s.chan[2].frame_addr;
+      val = BX_ES1370_THIS s.chan[2].frame_addr >> shift;
       break;
     case ES1370_DAC1_FRAMECNT:
       val = BX_ES1370_THIS s.chan[0].frame_cnt >> shift;
@@ -630,10 +633,11 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
     offset |= (BX_ES1370_THIS s.mempage << 8);
   }
   Bit32u shift = (offset & 3) << 3;
+  // bits of the dword register written by this access
+  mask = (0xffffffff >> ((4 - io_len) << 3)) << shift;
 
   switch (offset & ~3) {
     case ES1370_CTL:
-      mask = (0xffffffff >> ((4 - io_len) << 3)) << shift;
       value = (BX_ES1370_THIS s.ctl & ~mask) | ((value << shift) & mask);
       if ((value ^ BX_ES1370_THIS s.ctl) & 0x04) {
         #ifndef __ANDROID__
@@ -650,26 +654,7 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case ES1370_UART_CTL:
     case ES1370_UART_TEST:
       if (offset == ES1370_UART_DATA) {
-        if (value > 0x80) {
-          if (BX_ES1370_THIS s.midi_command != 0x00) {
-            BX_ERROR(("received new MIDI command while another one is pending"));
-          }
-          BX_ES1370_THIS s.midi_command = (Bit8u)value;
-          BX_ES1370_THIS s.midicmd_len = midi_eventlength[(value & 0x70) >> 4];
-          BX_ES1370_THIS s.midicmd_index = 0;
-        } else {
-          if (BX_ES1370_THIS s.midi_command != 0x00) {
-            BX_ES1370_THIS s.midi_buffer[BX_ES1370_THIS s.midicmd_index++] = (Bit8u)value;
-            if (BX_ES1370_THIS s.midicmd_index >= BX_ES1370_THIS s.midicmd_len) {
-              BX_ES1370_THIS writemidicommand(BX_ES1370_THIS s.midi_command,
-                                              BX_ES1370_THIS s.midicmd_len,
-                                              BX_ES1370_THIS s.midi_buffer);
-              BX_ES1370_THIS s.midi_command = 0x00;
-            }
-          } else {
-            BX_ERROR(("ignoring MIDI data without command pending"));
-          }
-        }
+        BX_ES1370_THIS uart_mididata((Bit8u)value);
       } else if (offset == ES1370_UART_CTL) {
         BX_ERROR(("writing to UART control register not supported yet (value=0x%02x)", value & 0xff));
       } else {
@@ -691,7 +676,6 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
       }
       break;
     case ES1370_SCTL:
-      mask = (0xffffffff >> ((4 - io_len) << 3)) << shift;
       value = (BX_ES1370_THIS s.sctl & ~mask) | ((value << shift) & mask);
       BX_ES1370_THIS check_lower_irq(value);
       BX_ES1370_THIS update_voices(BX_ES1370_THIS s.ctl, value, 0);
@@ -700,23 +684,29 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case ES1370_DAC2_SCOUNT:
     case ES1370_ADC_SCOUNT:
       i = (offset - ES1370_DAC1_SCOUNT) >> 2;
-      value &= 0xffff;
-      BX_ES1370_THIS s.chan[i].scount = value | (value << 16);
+      // only the sample count (low word) is writable, it also reloads
+      // the current count (high word)
+      mask &= 0xffff;
+      if (mask != 0) {
+        value = (BX_ES1370_THIS s.chan[i].scount & ~mask) | ((value << shift) & mask);
+        value &= 0xffff;
+        BX_ES1370_THIS s.chan[i].scount = value | (value << 16);
+      }
       break;
     case ES1370_ADC_FRAMEADR:
       d++;
     case ES1370_DAC2_FRAMEADR:
       d++;
     case ES1370_DAC1_FRAMEADR:
-      d->frame_addr = value;
+      d->frame_addr = (d->frame_addr & ~mask) | ((value << shift) & mask);
       break;
     case ES1370_ADC_FRAMECNT:
       d++;
     case ES1370_DAC2_FRAMECNT:
       d++;
     case ES1370_DAC1_FRAMECNT:
+      d->frame_cnt = (d->frame_cnt & ~mask) | ((value << shift) & mask);
       if ((offset & 3) == 0) {
-        d->frame_cnt = value;
         d->leftover = 0;
       }
       break;
@@ -801,6 +791,10 @@ Bit32u bx_es1370_c::run_channel(unsigned chan, int timer_id, Bit32u buflen)
   Bit32u csc_bytes = ((d->scount >> 16) + 1) << d->shift;
   Bit32u cnt = d->frame_cnt >> 16;
   Bit32u size = d->frame_cnt & 0xffff;
+  if (size < cnt) {
+    // current count beyond the buffer size (guest programmed an invalid value)
+    return 0;
+  }
   Bit32u left = ((size - cnt + 1) << 2) + d->leftover;
   Bit32u transfered = 0;
   Bit32u temp = BX_MIN(buflen, BX_MIN(left, csc_bytes));
@@ -956,7 +950,7 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bool force)
             }
           }
         } else {
-          if (BX_ES1370_THIS s.dac_nr_active == -1) {
+          if ((BX_ES1370_THIS s.dac_nr_active == -1) || (BX_ES1370_THIS s.dac_nr_active == (int)i)) {
             if (BX_ES1370_THIS wavemode & 2) {
               if ((BX_ES1370_THIS s.dac_outputinit & 2) == 0) {
                 bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_SOUND_ES1370);
@@ -991,7 +985,14 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bool force)
             BX_ES1370_WAVEIN->stopwaverecord();
           }
         } else {
-          BX_ES1370_THIS s.dac_nr_active = -1;
+          if (BX_ES1370_THIS s.dac_nr_active == (int)i) {
+            BX_ES1370_THIS s.dac_nr_active = -1;
+            // the other DAC continues the output if it is still running
+            unsigned j = i ^ 1;
+            if ((ctl & ctl_ch_en[j]) && !(sctl & sctl_ch_pause[j])) {
+              BX_ES1370_THIS s.dac_nr_active = j;
+            }
+          }
           bx_virt_timer.deactivate_timer(timer_id);
         }
       }
@@ -1069,6 +1070,57 @@ void bx_es1370_c::writemidicommand(int command, int length, Bit8u data[])
     if (BX_ES1370_THIS midimode & 2) {
       BX_ES1370_MIDIOUT2->sendmidicommand(deltatime, command, length, data);
     }
+  }
+}
+
+// handle a byte of the MIDI stream written to the UART
+void bx_es1370_c::uart_mididata(Bit8u value)
+{
+  if (value >= 0xf8) {
+    // system real-time messages are single bytes and may appear anywhere,
+    // even inside of other messages, without affecting them
+    BX_ES1370_THIS writemidicommand(value, 0, BX_ES1370_THIS s.midi_buffer);
+  } else if ((value == 0xf7) && (BX_ES1370_THIS s.midi_command == 0xf0)) {
+    // end of a system exclusive message
+    if (BX_ES1370_THIS s.midicmd_index < 255) {
+      BX_ES1370_THIS s.midi_buffer[BX_ES1370_THIS s.midicmd_index++] = value;
+    }
+    BX_ES1370_THIS writemidicommand(0xf0, BX_ES1370_THIS s.midicmd_index,
+                                    BX_ES1370_THIS s.midi_buffer);
+    BX_ES1370_THIS s.midi_command = 0x00;
+    BX_ES1370_THIS s.midicmd_index = 0;
+  } else if (value >= 0x80) {
+    if (BX_ES1370_THIS s.midicmd_index > 0) {
+      BX_ERROR(("received new MIDI command while another one is pending"));
+    }
+    BX_ES1370_THIS s.midi_command = value;
+    BX_ES1370_THIS s.midicmd_index = 0;
+    if (value < 0xf0) {
+      BX_ES1370_THIS s.midicmd_len = midi_eventlength[(value & 0x70) >> 4];
+    } else {
+      BX_ES1370_THIS s.midicmd_len = midi_syslength[value & 0x07];
+      if (BX_ES1370_THIS s.midicmd_len == 0) {
+        BX_ES1370_THIS writemidicommand(value, 0, BX_ES1370_THIS s.midi_buffer);
+        BX_ES1370_THIS s.midi_command = 0x00;
+      }
+    }
+  } else if (BX_ES1370_THIS s.midi_command != 0x00) {
+    BX_ES1370_THIS s.midi_buffer[BX_ES1370_THIS s.midicmd_index++] = value;
+    if (BX_ES1370_THIS s.midicmd_index >= BX_ES1370_THIS s.midicmd_len) {
+      if (BX_ES1370_THIS s.midi_command == 0xf0) {
+        BX_ERROR(("MIDI system exclusive message too long - truncated"));
+      }
+      BX_ES1370_THIS writemidicommand(BX_ES1370_THIS s.midi_command,
+                                      BX_ES1370_THIS s.midicmd_index,
+                                      BX_ES1370_THIS s.midi_buffer);
+      BX_ES1370_THIS s.midicmd_index = 0;
+      // keep the status of channel messages for running status
+      if (BX_ES1370_THIS s.midi_command >= 0xf0) {
+        BX_ES1370_THIS s.midi_command = 0x00;
+      }
+    }
+  } else {
+    BX_ERROR(("ignoring MIDI data without command pending"));
   }
 }
 

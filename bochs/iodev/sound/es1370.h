@@ -5,7 +5,7 @@
 // ES1370 soundcard support (ported from QEMU)
 //
 // Copyright (c) 2005  Vassili Karpov (malc)
-// Copyright (C) 2011-2021  The Bochs Project
+// Copyright (C) 2011-2026  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -115,6 +115,7 @@ private:
 
   BX_ES1370_SMF int currentdeltatime();
   BX_ES1370_SMF void writemidicommand(int command, int length, Bit8u data[]);
+  BX_ES1370_SMF void uart_mididata(Bit8u value);
   BX_ES1370_SMF void closemidioutput();
 
   static void es1370_timer_handler(void *);
