@@ -80,7 +80,8 @@ Changes after Bochs 3.1:
 + AVX-512: Fix boundary conditions of load mask calculation for VPEXPANDB/VPEXPANDW instructions, VPEXPANDB was completely broken with load mask > 32 bit
 + AVX512_GATHER: Fix 512-bit qword-indexed VGATHERQPS zero upper
 + AVX-512: Fix VRANGE* output when both arguments are different sign same magnitude and ABS_MIN and ABS_MAX is requested
-- Legacy: added missing #AC check in tickle_write_linear, used for ENTER and XSAVE instructions
+- Legacy: Added missing #AC check in tickle_write_linear, used for ENTER and XSAVE instructions
+- Legacy: Write pre-check (tickle_write_virtual) used segment read checks instead of write and could have missed segment write access violation
 + x87: improved implementation of x87 transcendental instructions (F2XM1/FYL2X/FYL2XP1/FPATAN/FSIN/FCOS/FSINCOS/FPTAN) to match HW
 + x87: fixed unmasked underflow/overflow corner cases for FSCALE x87 instruction
 - x87: FPREM/FPREM1 must raise #U when the remainder is the unchanged denormal dividend (|ST0| < |ST1|/2) and UM is unmasked

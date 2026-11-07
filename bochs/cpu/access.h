@@ -108,7 +108,7 @@ BX_CPU_C::tickle_read_virtual_32(unsigned s, Bit32u offset)
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::tickle_write_virtual_32(unsigned s, Bit32u offset, unsigned len)
 {
-  Bit32u laddr = agen_read32(s, offset, len);
+  Bit32u laddr = agen_write32(s, offset, len);
   tickle_write_linear(s, laddr, len);
 }
 
@@ -270,7 +270,7 @@ BX_CPU_C::tickle_read_virtual(unsigned s, bx_address offset)
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::tickle_write_virtual(unsigned s, bx_address offset, unsigned len)
 {
-  bx_address laddr = agen_read(s, offset, len);
+  bx_address laddr = agen_write(s, offset, len);
   tickle_write_linear(s, laddr, len);
 }
 
