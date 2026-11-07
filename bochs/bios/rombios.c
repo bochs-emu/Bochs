@@ -10913,6 +10913,29 @@ block_count_rounded:
   mov  es, ax
   lea  di, pnpbios_structure
 
+#if BX_PCIBIOS
+  ;; PCI Firmware Specification: a PCI expansion ROM's init entry is
+  ;; called with the bus/device/function of its device in AX (AH = bus,
+  ;; AL = devfn). The ROM at 0xc0000 belongs to the PCI VGA-compatible
+  ;; controller (rombios32 copied it there); look that device up. ROMs
+  ;; that were not found (or no PCI) get AX = 0.
+  xor  ax, ax
+  cmp  cx, #0xc000
+  jne  rom_scan_no_pci_addr
+  push ecx
+  push di
+  mov  ax, #0xb103      ;; find PCI class code
+  mov  ecx, #0x00030000 ;; VGA compatible controller
+  xor  si, si
+  call pcibios_real
+  pop  di
+  pop  ecx
+  mov  ax, bx           ;; BH = bus, BL = devfn
+  jnc  rom_scan_no_pci_addr
+  xor  ax, ax
+rom_scan_no_pci_addr:
+#endif
+
   mov  bp, sp   ;; Call ROM init routine using seg:off on stack
   db   0xff     ;; call_far ss:[bp+0]
   db   0x5e
