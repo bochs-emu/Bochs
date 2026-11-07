@@ -744,13 +744,13 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
 
   // check CR0 conditions for entering to shutdown state
   if (!check_CR0(smm_state->cr0.get32())) {
-    BX_PANIC(("SMM restore: CR0 consistency check failed !"));
+    BX_ERROR(("SMM restore: CR0 consistency check failed !"));
     return false;
   }
 
 #if BX_CPU_LEVEL >= 4
   if (!check_CR4(smm_state->cr4.get())) {
-    BX_PANIC(("SMM restore: CR4 consistency check failed !"));
+    BX_ERROR(("SMM restore: CR4 consistency check failed !"));
     return false;
   }
 #endif
@@ -764,25 +764,25 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR efer.get_LMA()) {
     if (smm_state->eflags & EFlagsVMMask) {
-      BX_PANIC(("SMM restore: If EFER.LMA = 1 => RFLAGS.VM=0 !"));
+      BX_ERROR(("SMM restore: If EFER.LMA = 1 => RFLAGS.VM=0 !"));
       return false;
     }
 
     if (!BX_CPU_THIS_PTR cr4.get_PAE() || !BX_CPU_THIS_PTR cr0.get_PG() || !BX_CPU_THIS_PTR cr0.get_PE() || !BX_CPU_THIS_PTR efer.get_LME()) {
-      BX_PANIC(("SMM restore: If EFER.LMA = 1 <=> CR4.PAE, CR0.PG, CR0.PE, EFER.LME=1 !"));
+      BX_ERROR(("SMM restore: If EFER.LMA = 1 <=> CR4.PAE, CR0.PG, CR0.PE, EFER.LME=1 !"));
       return false;
     }
   }
   else {
     if (BX_CPU_THIS_PTR cr4.get_PCIDE()) {
-      BX_PANIC(("SMM restore: CR4.PCIDE must be clear when not in long mode !"));
+      BX_ERROR(("SMM restore: CR4.PCIDE must be clear when not in long mode !"));
       return false;
     }
   }
 
   if (BX_CPU_THIS_PTR cr4.get_PAE() && BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr0.get_PE() && BX_CPU_THIS_PTR efer.get_LME()) {
     if (! BX_CPU_THIS_PTR efer.get_LMA()) {
-      BX_PANIC(("SMM restore: If EFER.LMA = 1 <=> CR4.PAE, CR0.PG, CR0.PE, EFER.LME=1 !"));
+      BX_ERROR(("SMM restore: If EFER.LMA = 1 <=> CR4.PAE, CR0.PG, CR0.PE, EFER.LME=1 !"));
       return false;
     }
   }
