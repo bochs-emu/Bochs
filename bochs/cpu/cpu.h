@@ -5803,17 +5803,17 @@ public: // for now...
   BX_SMF void inhibit_interrupts(unsigned mask);
   BX_SMF bool interrupts_inhibited(unsigned mask);
   BX_SMF const char *strseg(bx_segment_reg_t *seg);
-  BX_SMF void interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u error_code);
+  BX_SMF void interrupt(Bit8u vector, unsigned type, bool push_error, Bit32u error_code);
 #if BX_SUPPORT_FRED
   BX_SMF void FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code, bool sti_blocking = false);
   BX_SMF void set_fred_event_info_and_data(Bit8u vector, unsigned type, bool nested_exception, unsigned ilen);
   BX_SMF Bit64u get_fred_event_data(Bit8u vector, unsigned type) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit32u get_fred_event_info(Bit8u vector, unsigned type, bool nested_exception, unsigned ilen);
 #endif
-  BX_SMF void real_mode_int(Bit8u vector, bool push_error, Bit16u error_code);
-  BX_SMF void protected_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16u error_code);
+  BX_SMF void real_mode_int(Bit8u vector, bool push_error, Bit32u error_code);
+  BX_SMF void protected_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit32u error_code);
 #if BX_SUPPORT_X86_64
-  BX_SMF void long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16u error_code);
+  BX_SMF void long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit32u error_code);
 #endif
   BX_SMF bool exception_push_error(unsigned vector);
   BX_SMF int  get_exception_type(unsigned vector);
@@ -6477,7 +6477,7 @@ public: // for now...
   BX_SMF void vmcb_write64(unsigned offset, Bit64u val_64);
   BX_SMF void svm_segment_read(bx_segment_reg_t *seg, unsigned offset);
   BX_SMF void svm_segment_write(bx_segment_reg_t *seg, unsigned offset);
-  BX_SMF void SvmRecordExitIntInfo(unsigned type, unsigned vector, bool push_error, Bit16u error_code);
+  BX_SMF void SvmRecordExitIntInfo(unsigned type, unsigned vector, bool push_error, Bit32u error_code);
   BX_SMF void SvmInterceptException(unsigned type, unsigned vector,
        Bit16u errcode, bool errcode_valid, Bit64u qualification = 0);
   BX_SMF void SvmInterceptIO(bxInstruction_c *i, unsigned port, unsigned len);

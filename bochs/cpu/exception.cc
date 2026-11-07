@@ -42,7 +42,7 @@
 #endif
 
 #if BX_SUPPORT_X86_64
-void BX_CPU_C::long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16u error_code)
+void BX_CPU_C::long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit32u error_code)
 {
   bx_descriptor_t gate_descriptor, cs_descriptor;
   bx_selector_t cs_selector;
@@ -297,7 +297,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16
 }
 #endif
 
-void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16u error_code)
+void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit32u error_code)
 {
   bx_descriptor_t gate_descriptor, cs_descriptor;
   bx_selector_t cs_selector;
@@ -719,7 +719,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, 
   }
 }
 
-void BX_CPU_C::real_mode_int(Bit8u vector, bool push_error, Bit16u error_code)
+void BX_CPU_C::real_mode_int(Bit8u vector, bool push_error, Bit32u error_code)
 {
   if ((vector*4+3) > BX_CPU_THIS_PTR idtr.limit) {
     BX_ERROR(("interrupt(real mode) vector > idtr.limit"));
@@ -750,7 +750,7 @@ void BX_CPU_C::real_mode_int(Bit8u vector, bool push_error, Bit16u error_code)
   BX_CPU_THIS_PTR clear_RF();
 }
 
-void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u error_code)
+void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit32u error_code)
 {
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_intsig;

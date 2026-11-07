@@ -1095,7 +1095,7 @@ bool BX_CPU_C::SvmInjectEvents(void)
   return true;
 }
 
-void BX_CPU_C::SvmRecordExitIntInfo(unsigned type, unsigned vector, bool push_error, Bit16u error_code)
+void BX_CPU_C::SvmRecordExitIntInfo(unsigned type, unsigned vector, bool push_error, Bit32u error_code)
 {
   if (! BX_CPU_THIS_PTR in_svm_guest) return;
 
