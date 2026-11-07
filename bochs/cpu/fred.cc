@@ -152,11 +152,11 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
 #if BX_SUPPORT_CET
   if (ShadowStackEnabled(0)) {
     if (CPL == 0) {
-      shadow_stack_write_dword(new_SSP - 4,  CPL, 0); // store 4 bytes of zeros to SSP-4
+      shadow_stack_write_dword(BX_SEG_REG_NULL, new_SSP - 4,  CPL, 0); // store 4 bytes of zeros to SSP-4
       new_SSP &= ~BX_CONST64(0x7);
-      shadow_stack_write_qword(new_SSP - 8,  CPL, old_CS);
-      shadow_stack_write_qword(new_SSP - 16, CPL, old_RIP);
-      shadow_stack_write_qword(new_SSP - 24, CPL, old_SSP);
+      shadow_stack_write_qword(BX_SEG_REG_NULL, new_SSP - 8,  CPL, old_CS);
+      shadow_stack_write_qword(BX_SEG_REG_NULL, new_SSP - 16, CPL, old_RIP);
+      shadow_stack_write_qword(BX_SEG_REG_NULL, new_SSP - 24, CPL, old_SSP);
       new_SSP -= 24;
     }
     SSP = new_SSP;

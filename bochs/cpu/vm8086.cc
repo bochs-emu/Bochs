@@ -122,7 +122,7 @@ void BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector, Bit32
 #if BX_SUPPORT_CET
   // now past all faulting points, free the supervisor shadow stack token
   if (shadow_stack_enabled)
-    shadow_stack_atomic_clear_busy(SSP, 0);
+    shadow_stack_atomic_clear_busy(BX_SEG_REG_NULL, SSP, 0);
 #endif
 }
 

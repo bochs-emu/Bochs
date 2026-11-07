@@ -229,7 +229,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
       SSP = new_SSP;
     }
     if (ShadowStackEnabled(prev_cpl)) {
-      shadow_stack_atomic_clear_busy(old_SSP, prev_cpl);
+      shadow_stack_atomic_clear_busy(BX_SEG_REG_NULL, old_SSP, prev_cpl);
     }
 #endif
 

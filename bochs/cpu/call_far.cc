@@ -661,7 +661,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_switch(bx_address new_SSP, un
     BX_ERROR(("shadow_stack_switch: 64-bit SSP not in 64-bit mode"));
     exception(BX_GP_EXCEPTION, 0);
   }
-  if (!shadow_stack_atomic_set_busy(SSP, cpl, long64)) {
+  if (!shadow_stack_atomic_set_busy(BX_SEG_REG_NULL, SSP, cpl, long64)) {
     BX_ERROR(("shadow_stack_switch: failure to set busy bit"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -671,13 +671,13 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_switch(bx_address new_SSP, un
 void BX_CPP_AttrRegparmN(4) BX_CPU_C::call_far_shadow_stack_push(Bit16u cs, bx_address lip, bx_address old_ssp, unsigned cpl)
 {
   if (SSP & 0x7) {
-    shadow_stack_write_dword(SSP-4, cpl, 0);
+    shadow_stack_write_dword(BX_SEG_REG_NULL, SSP-4, cpl, 0);
     SSP &= ~BX_CONST64(0x7);
   }
 
-  shadow_stack_write_qword(SSP-8,  cpl, cs);
-  shadow_stack_write_qword(SSP-16, cpl, lip);
-  shadow_stack_write_qword(SSP-24, cpl, old_ssp);
+  shadow_stack_write_qword(BX_SEG_REG_NULL, SSP-8,  cpl, cs);
+  shadow_stack_write_qword(BX_SEG_REG_NULL, SSP-16, cpl, lip);
+  shadow_stack_write_qword(BX_SEG_REG_NULL, SSP-24, cpl, old_ssp);
   SSP -= 24;
 }
 

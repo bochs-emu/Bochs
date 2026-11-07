@@ -300,7 +300,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       SSP = new_SSP;
     }
     if (ShadowStackEnabled(prev_cpl)) {
-      shadow_stack_atomic_clear_busy(old_SSP, prev_cpl);
+      shadow_stack_atomic_clear_busy(BX_SEG_REG_NULL, old_SSP, prev_cpl);
     }
 #endif
 
@@ -427,7 +427,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
       // SSP now points above the popped shadow stack frame. If restored SSP is not the same stack (stack switch
       // happened) free the supervisor shadow stack token located at current SSP.
       if (new_SSP != SSP)
-        shadow_stack_atomic_clear_busy(SSP, CPL);
+        shadow_stack_atomic_clear_busy(BX_SEG_REG_NULL, SSP, CPL);
       SSP = new_SSP;
     }
 #endif
@@ -560,7 +560,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
       // same privilege IRETQ frees the token only if there was a stack switch (interrupt delivered through IST),
       // i.e. the restored SSP is not the same stack as SSP above the popped shadow stack frame
       if (! same_privilege || new_SSP != old_SSP)
-        shadow_stack_atomic_clear_busy(old_SSP, prev_cpl);
+        shadow_stack_atomic_clear_busy(BX_SEG_REG_NULL, old_SSP, prev_cpl);
     }
 #endif
 

@@ -147,8 +147,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INCSSPD(bxInstruction_c *i)
   Bit32u src = BX_READ_32BIT_REG(i->dst()) & 0xff;
   Bit32u tmpsrc = (src == 0) ? 1 : src;
 
-  shadow_stack_read_dword(SSP, CPL);
-  shadow_stack_read_dword(SSP + (tmpsrc-1) * 4, CPL);
+  shadow_stack_read_dword(BX_SEG_REG_NULL, SSP, CPL);
+  shadow_stack_read_dword(BX_SEG_REG_NULL, SSP + (tmpsrc-1) * 4, CPL);
   SSP += src*4;
 
   BX_NEXT_INSTR(i);
@@ -164,8 +164,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INCSSPQ(bxInstruction_c *i)
   Bit32u src = BX_READ_32BIT_REG(i->dst()) & 0xff;
   Bit32u tmpsrc = (src == 0) ? 1 : src;
 
-  shadow_stack_read_qword(SSP, CPL);
-  shadow_stack_read_qword(SSP + (tmpsrc-1) * 8, CPL);
+  shadow_stack_read_qword(BX_SEG_REG_NULL, SSP, CPL);
+  shadow_stack_read_qword(BX_SEG_REG_NULL, SSP + (tmpsrc-1) * 8, CPL);
   SSP += src*8;
 
   BX_NEXT_INSTR(i);
@@ -202,7 +202,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAVEPREVSSP(bxInstruction_c *i)
   }
 
   // pop the "previous-ssp" token from current shadow stack (SSP is updated only after all checks passed)
-  Bit64u previous_ssp_token = shadow_stack_read_qword(SSP, CPL);
+  Bit64u previous_ssp_token = shadow_stack_read_qword(BX_SEG_REG_NULL, SSP, CPL);
   unsigned pop_bytes = 8;
 
   // If the CF flag indicates there was a alignment hole on current shadow stack then pop that alignment hole
@@ -214,7 +214,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAVEPREVSSP(bxInstruction_c *i)
     }
     else {
       // pop the alignment hole located right after the previous-ssp token
-      if (shadow_stack_read_dword(SSP + 8, CPL) != 0) {
+      if (shadow_stack_read_dword(BX_SEG_REG_NULL, SSP + 8, CPL) != 0) {
         BX_ERROR(("%s: shadow stack alignment hole must be zero", i->getIaOpcodeNameShort()));
         exception(BX_GP_EXCEPTION, 0);
       }
@@ -235,9 +235,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAVEPREVSSP(bxInstruction_c *i)
   // Save Prev SSP from previous_ssp_token to the old shadow stack at next 8 byte aligned address
   Bit64u old_ssp = previous_ssp_token & ~BX_CONST64(0x03);
   Bit64u tmp = old_ssp | (int) long64_mode();
-  shadow_stack_write_dword(old_ssp - 4, CPL, 0);
+  shadow_stack_write_dword(BX_SEG_REG_NULL, old_ssp - 4, CPL, 0);
   old_ssp = old_ssp & ~BX_CONST64(0x07);
-  shadow_stack_write_qword(old_ssp - 8, CPL, tmp);
+  shadow_stack_write_qword(BX_SEG_REG_NULL, old_ssp - 8, CPL, tmp);
 
   SSP += pop_bytes;
 
@@ -261,7 +261,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSTORSSP(bxInstruction_c *i)
   Bit64u previous_ssp_token = SSP | (int) long64_mode() | 0x02;
 
 // should be done atomically using RMW
-  Bit64u SSP_tmp = shadow_stack_read_qword(laddr, CPL); // should be LWSI
+  Bit64u SSP_tmp = shadow_stack_read_qword(i->seg(), laddr, CPL); // should be LWSI
   if ((SSP_tmp & 0x03) != (int) long64_mode()) {
     BX_ERROR(("%s: CS.L of shadow stack token doesn't match or bit1 is not 0", i->getIaOpcodeNameShort()));
     exception(BX_CP_EXCEPTION, BX_CP_RSTORSSP);
@@ -277,7 +277,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSTORSSP(bxInstruction_c *i)
     BX_ERROR(("%s: address in SSP token doesn't match requested top of stack", i->getIaOpcodeNameShort()));
     exception(BX_CP_EXCEPTION, BX_CP_RSTORSSP);
   }
-  shadow_stack_write_qword(laddr, CPL, previous_ssp_token);
+  shadow_stack_write_qword(i->seg(), laddr, CPL, previous_ssp_token);
 // should be done atomically using RMW
 
   SSP = laddr;
@@ -302,7 +302,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRSSD(bxInstruction_c *i)
     BX_ERROR(("%s: must be 4 bytes aligned", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
-  shadow_stack_write_dword(laddr, CPL, BX_READ_32BIT_REG(i->src()));
+  shadow_stack_write_dword(i->seg(), laddr, CPL, BX_READ_32BIT_REG(i->src()));
 
   BX_NEXT_INSTR(i);
 }
@@ -320,7 +320,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRSSQ(bxInstruction_c *i)
     BX_ERROR(("%s: must be 8 bytes aligned", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
-  shadow_stack_write_qword(laddr, CPL, BX_READ_64BIT_REG(i->src()));
+  shadow_stack_write_qword(i->seg(), laddr, CPL, BX_READ_64BIT_REG(i->src()));
 
   BX_NEXT_INSTR(i);
 }
@@ -343,7 +343,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRUSSD(bxInstruction_c *i)
     BX_ERROR(("%s: must be 4 bytes aligned", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
-  shadow_stack_write_dword(laddr, 3, BX_READ_32BIT_REG(i->src()));
+  shadow_stack_write_dword(i->seg(), laddr, 3, BX_READ_32BIT_REG(i->src()));
 
   BX_NEXT_INSTR(i);
 }
@@ -366,7 +366,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRUSSQ(bxInstruction_c *i)
     BX_ERROR(("%s: must be 8 bytes aligned", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
-  shadow_stack_write_qword(laddr, 3, BX_READ_64BIT_REG(i->src()));
+  shadow_stack_write_qword(i->seg(), laddr, 3, BX_READ_64BIT_REG(i->src()));
 
   BX_NEXT_INSTR(i);
 }
@@ -396,7 +396,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SETSSBSY(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  if (!shadow_stack_atomic_set_busy(ssp_laddr, CPL, long64_mode())) {
+  if (!shadow_stack_atomic_set_busy(BX_SEG_REG_NULL, ssp_laddr, CPL, long64_mode())) {
     BX_ERROR(("%s: failed to set SSP busy bit", i->getIaOpcodeNameShort()));
     exception(BX_CP_EXCEPTION, BX_CP_SETSSBSY);
   }
@@ -432,7 +432,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLRSSBSY(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  bool invalid_token = shadow_stack_atomic_clear_busy(laddr, CPL);
+  bool invalid_token = shadow_stack_atomic_clear_busy(i->seg(), laddr, CPL);
   clearEFlagsOSZAPC();
   if (invalid_token) assert_CF();
   SSP = 0;

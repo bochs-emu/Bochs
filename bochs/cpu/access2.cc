@@ -1178,7 +1178,9 @@ accessOK:
 }
 
 #if BX_SUPPORT_CET
-Bit32u BX_CPP_AttrRegparmN(2) BX_CPU_C::shadow_stack_read_dword(bx_address offset, unsigned curr_pl)
+// Shadow stack accesses: 's' is the segment of explicit memory operand (canonical or LASS failure
+// referencing SS segment is #SS), implicit shadow stack accesses pass BX_SEG_REG_NULL (#GP)
+Bit32u BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_read_dword(unsigned s, bx_address offset, unsigned curr_pl)
 {
   Bit32u data;
 
@@ -1198,12 +1200,12 @@ Bit32u BX_CPP_AttrRegparmN(2) BX_CPU_C::shadow_stack_read_dword(bx_address offse
   }
 
   if (access_read_linear(offset, 4, curr_pl, BX_SHADOW_STACK_READ, 0, (void *) &data) < 0)
-    exception(BX_GP_EXCEPTION, 0);
+    exception(int_number(s), 0);
 
   return data;
 }
 
-Bit64u BX_CPP_AttrRegparmN(2) BX_CPU_C::shadow_stack_read_qword(bx_address offset, unsigned curr_pl)
+Bit64u BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_read_qword(unsigned s, bx_address offset, unsigned curr_pl)
 {
   Bit64u data;
 
@@ -1223,12 +1225,12 @@ Bit64u BX_CPP_AttrRegparmN(2) BX_CPU_C::shadow_stack_read_qword(bx_address offse
   }
 
   if (access_read_linear(offset, 8, curr_pl, BX_SHADOW_STACK_READ, 0, (void *) &data) < 0)
-    exception(BX_GP_EXCEPTION, 0);
+    exception(int_number(s), 0);
 
   return data;
 }
 
-void BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_write_dword(bx_address offset, unsigned curr_pl, Bit32u data)
+void BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_write_dword(unsigned s, bx_address offset, unsigned curr_pl, Bit32u data)
 {
   bool user = (curr_pl == 3);
   bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(offset, 3);
@@ -1248,10 +1250,10 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_write_dword(bx_address offset
   }
 
   if (access_write_linear(offset, 4, curr_pl, BX_SHADOW_STACK_WRITE, 0, (void *) &data) < 0)
-    exception(BX_GP_EXCEPTION, 0);
+    exception(int_number(s), 0);
 }
 
-void BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_write_qword(bx_address offset, unsigned curr_pl, Bit64u data)
+void BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_write_qword(unsigned s, bx_address offset, unsigned curr_pl, Bit64u data)
 {
   bool user = (curr_pl == 3);
   bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(offset, 7);
@@ -1271,30 +1273,30 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_write_qword(bx_address offset
   }
 
   if (access_write_linear(offset, 8, curr_pl, BX_SHADOW_STACK_WRITE, 0, (void *) &data) < 0)
-    exception(BX_GP_EXCEPTION, 0);
+    exception(int_number(s), 0);
 }
 
-bool BX_CPP_AttrRegparmN(4) BX_CPU_C::shadow_stack_lock_cmpxchg8b(bx_address offset, unsigned curr_pl, Bit64u data, Bit64u expected_data)
+bool BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_lock_cmpxchg8b(unsigned s, bx_address offset, unsigned curr_pl, Bit64u data, Bit64u expected_data)
 {
-  Bit64u val64 = shadow_stack_read_qword(offset, curr_pl); // should be locked and RMW
+  Bit64u val64 = shadow_stack_read_qword(s, offset, curr_pl); // should be locked and RMW
   if (val64 == expected_data) {
-    shadow_stack_write_qword(offset, curr_pl, data);
+    shadow_stack_write_qword(s, offset, curr_pl, data);
     return true;
   }
   else {
-    shadow_stack_write_qword(offset, curr_pl, val64);
+    shadow_stack_write_qword(s, offset, curr_pl, val64);
     return false;
   }
 }
 
-bool BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_atomic_set_busy(bx_address offset, unsigned curr_pl, bool long64)
+bool BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_atomic_set_busy(unsigned s, bx_address offset, unsigned curr_pl, bool long64)
 {
   // set busy fail if address in the token is above 4GB while in compatibility mode
-  return shadow_stack_lock_cmpxchg8b(offset, curr_pl, offset | 0x1, long64 ? offset : GET32L(offset));
+  return shadow_stack_lock_cmpxchg8b(s, offset, curr_pl, offset | 0x1, long64 ? offset : GET32L(offset));
 }
 
-bool BX_CPP_AttrRegparmN(2) BX_CPU_C::shadow_stack_atomic_clear_busy(bx_address offset, unsigned curr_pl)
+bool BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_atomic_clear_busy(unsigned s, bx_address offset, unsigned curr_pl)
 {
-  return shadow_stack_lock_cmpxchg8b(offset, curr_pl, offset, offset | 0x1);
+  return shadow_stack_lock_cmpxchg8b(s, offset, curr_pl, offset, offset | 0x1);
 }
 #endif

@@ -452,7 +452,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
       }
       // clear busy flag on current shadow stack only if SSP is 8-byte aligned
       if ((SSP & 0x7) == 0)
-        shadow_stack_atomic_clear_busy(SSP, CPL);
+        shadow_stack_atomic_clear_busy(BX_SEG_REG_NULL, SSP, CPL);
       SSP = 0;
     }
   }
@@ -801,7 +801,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
       }
       SSP = newSSP;
       // failure to set the busy flag in the new shadow stack token causes #TS(new TSS)
-      if (!shadow_stack_atomic_set_busy(SSP, CPL, long64_mode())) {
+      if (!shadow_stack_atomic_set_busy(BX_SEG_REG_NULL, SSP, CPL, long64_mode())) {
         BX_ERROR(("task_switch: failure to set busy bit in new shadow stack token"));
         exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc);
       }

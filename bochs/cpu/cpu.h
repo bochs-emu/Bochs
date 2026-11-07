@@ -5676,15 +5676,15 @@ public: // for now...
   BX_SMF Bit64u stack_read_qword(bx_address offset) BX_CPP_AttrRegparmN(1);
 
 #if BX_SUPPORT_CET
-  BX_SMF void shadow_stack_write_dword(bx_address offset, unsigned curr_pl, Bit32u data) BX_CPP_AttrRegparmN(3);
-  BX_SMF void shadow_stack_write_qword(bx_address offset, unsigned curr_pl, Bit64u data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void shadow_stack_write_dword(unsigned seg, bx_address offset, unsigned curr_pl, Bit32u data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void shadow_stack_write_qword(unsigned seg, bx_address offset, unsigned curr_pl, Bit64u data) BX_CPP_AttrRegparmN(3);
 
-  BX_SMF Bit32u shadow_stack_read_dword(bx_address offset, unsigned curr_pl) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit64u shadow_stack_read_qword(bx_address offset, unsigned curr_pl) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit32u shadow_stack_read_dword(unsigned seg, bx_address offset, unsigned curr_pl) BX_CPP_AttrRegparmN(3);
+  BX_SMF Bit64u shadow_stack_read_qword(unsigned seg, bx_address offset, unsigned curr_pl) BX_CPP_AttrRegparmN(3);
 
-  BX_SMF bool shadow_stack_lock_cmpxchg8b(bx_address offset, unsigned curr_pl, Bit64u data, Bit64u expected_data) BX_CPP_AttrRegparmN(4);
-  BX_SMF bool shadow_stack_atomic_set_busy(bx_address offset, unsigned curr_pl, bool long64) BX_CPP_AttrRegparmN(3);
-  BX_SMF bool shadow_stack_atomic_clear_busy(bx_address offset, unsigned curr_pl) BX_CPP_AttrRegparmN(2);
+  BX_SMF bool shadow_stack_lock_cmpxchg8b(unsigned seg, bx_address offset, unsigned curr_pl, Bit64u data, Bit64u expected_data) BX_CPP_AttrRegparmN(3);
+  BX_SMF bool shadow_stack_atomic_set_busy(unsigned seg, bx_address offset, unsigned curr_pl, bool long64) BX_CPP_AttrRegparmN(3);
+  BX_SMF bool shadow_stack_atomic_clear_busy(unsigned seg, bx_address offset, unsigned curr_pl) BX_CPP_AttrRegparmN(3);
 #endif
 
   BX_SMF void stackPrefetch(bx_address offset, unsigned len) BX_CPP_AttrRegparmN(2);

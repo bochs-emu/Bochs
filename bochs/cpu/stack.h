@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2007-2012 Stanislav Shwartsman
+//   Copyright (c) 2007-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -139,26 +139,26 @@ BX_CPP_INLINE Bit64u BX_CPU_C::pop_64(void)
 #if BX_SUPPORT_CET
 BX_CPP_INLINE void BX_CPP_AttrRegparmN(1) BX_CPU_C::shadow_stack_push_32(Bit32u value32)
 {
-  shadow_stack_write_dword(SSP-4, CPL, value32);
+  shadow_stack_write_dword(BX_SEG_REG_NULL, SSP-4, CPL, value32);
   SSP -= 4;
 }
 
 BX_CPP_INLINE void BX_CPP_AttrRegparmN(1) BX_CPU_C::shadow_stack_push_64(Bit64u value64)
 {
-  shadow_stack_write_qword(SSP-8, CPL, value64);
+  shadow_stack_write_qword(BX_SEG_REG_NULL, SSP-8, CPL, value64);
   SSP -= 8;
 }
 
 BX_CPP_INLINE Bit32u BX_CPU_C::shadow_stack_pop_32(void)
 {
-  Bit32u value32 = shadow_stack_read_dword(SSP, CPL);
+  Bit32u value32 = shadow_stack_read_dword(BX_SEG_REG_NULL, SSP, CPL);
   SSP += 4;
   return value32;
 }
 
 BX_CPP_INLINE Bit64u BX_CPU_C::shadow_stack_pop_64(void)
 {
-  Bit64u value64 = shadow_stack_read_qword(SSP, CPL);
+  Bit64u value64 = shadow_stack_read_qword(BX_SEG_REG_NULL, SSP, CPL);
   SSP += 8;
   return value64;
 }
