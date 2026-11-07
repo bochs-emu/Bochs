@@ -156,13 +156,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STMXCSR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  unsigned index;
   BxPackedXmmRegister xmm;
 
   BX_DEBUG(("FXSAVE: save FPU/MMX/SSE state"));
 
   if (BX_CPU_THIS_PTR cr0.get_EM() || BX_CPU_THIS_PTR cr0.get_TS())
     exception(BX_NM_EXCEPTION, 0);
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+  bx_address asize_mask = i->asize_mask();
+
+  // check that we would not fault while attempting to write, check that we can write-access byte 511 of the
+  // FXSAVE image (the first byte is checked by the very first write), touch the memory but no write actually occurs
+  tickle_write_virtual(i->seg(), (eaddr + 511) & asize_mask, 1);
 
   xmm.xmm16u(0) = BX_CPU_THIS_PTR the_i387.get_control_word();
   xmm.xmm16u(1) = BX_CPU_THIS_PTR the_i387.get_status_word();
@@ -194,11 +200,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
     xmm.xmm32u(3) = x87_get_FCS();
   }
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-
   write_virtual_xmmword_aligned(i->seg(), eaddr, &xmm);
-
-  bx_address asize_mask = i->asize_mask();
 
   /*
    * x87 FPU Instruction Operand (Data) Pointer Offset (32/64 bits)
@@ -234,7 +236,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
   write_virtual_xmmword(i->seg(), (eaddr + 16) & asize_mask, &xmm);
 
   /* store i387 register file */
-  for(index=0; index < 8; index++)
+  for(unsigned index=0; index < 8; index++)
   {
     const floatx80 &fp = BX_READ_FPU_REG(index);
 
@@ -268,7 +270,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister xmm;
-  unsigned index;
 
   BX_DEBUG(("FXRSTOR: restore FPU/MMX/SSE state"));
 
@@ -276,8 +277,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
     exception(BX_NM_EXCEPTION, 0);
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  read_virtual_xmmword_aligned(i->seg(), eaddr, &xmm);
   bx_address asize_mask = i->asize_mask();
+
+  read_virtual_xmmword_aligned(i->seg(), eaddr, &xmm);
+
+  // check that we would not fault while attempting to read, check that we can read-access byte 511 of the
+  // FXRSTOR image (the first byte is checked by the very first read)
+  tickle_read_virtual(i->seg(), (eaddr + 511) & asize_mask);
 
   i387_t restore_i387;
 
@@ -331,7 +337,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   }
 
   /* load i387 register file */
-  for(index=0; index < 8; index++)
+  for(unsigned index=0; index < 8; index++)
   {
     floatx80 reg;
     reg.signif  = read_virtual_qword(i->seg(), (eaddr+index*16+32) & asize_mask);
