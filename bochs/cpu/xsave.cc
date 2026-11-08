@@ -123,17 +123,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   bx_address laddr = get_laddr(i->seg(), eaddr);
 
-#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  if (BX_CPU_THIS_PTR alignment_check()) {
-    if (laddr & 0x3) {
-      BX_ERROR(("%s: access not aligned to 4-byte cause model specific #AC(0)", i->getIaOpcodeNameShort()));
-      exception(BX_AC_EXCEPTION, 0);
-    }
-  }
-#endif
-
   if (laddr & 0x3f) {
-    BX_ERROR(("%s: access not aligned to 64-byte", i->getIaOpcodeNameShort()));
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+    if (BX_CPU_THIS_PTR alignment_check()) {
+      if (laddr & 0x3) {
+        BX_ERROR(("%s: access not aligned to 4-byte cause model specific #AC(0)", i->getIaOpcodeNameShort()));
+        exception(BX_AC_EXCEPTION, 0);
+      }
+    }
+#endif
+    BX_ERROR(("%s: access not aligned to 64-byte boundary", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -224,17 +223,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   bx_address laddr = get_laddr(i->seg(), eaddr);
 
-#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  if (BX_CPU_THIS_PTR alignment_check()) {
-    if (laddr & 0x3) {
-      BX_ERROR(("%s: access not aligned to 4-byte cause model specific #AC(0)", i->getIaOpcodeNameShort()));
-      exception(BX_AC_EXCEPTION, 0);
-    }
-  }
-#endif
-
   if (laddr & 0x3f) {
-    BX_ERROR(("%s: access not aligned to 64-byte", i->getIaOpcodeNameShort()));
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+    if (BX_CPU_THIS_PTR alignment_check()) {
+      if (laddr & 0x3) {
+        BX_ERROR(("%s: access not aligned to 4-byte cause model specific #AC(0)", i->getIaOpcodeNameShort()));
+        exception(BX_AC_EXCEPTION, 0);
+      }
+    }
+#endif
+    BX_ERROR(("%s: access not aligned to 64-byte boundary", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 

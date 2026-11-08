@@ -163,8 +163,23 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR cr0.get_EM() || BX_CPU_THIS_PTR cr0.get_TS())
     exception(BX_NM_EXCEPTION, 0);
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   bx_address asize_mask = i->asize_mask();
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+  bx_address laddr = get_laddr(i->seg(), eaddr);
+
+  if (laddr & 15) {
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+    if (BX_CPU_THIS_PTR alignment_check()) {
+      if (laddr & 0x3) {
+        BX_ERROR(("%s: access not aligned to 4-byte cause model specific #AC(0)", i->getIaOpcodeNameShort()));
+        exception(BX_AC_EXCEPTION, 0);
+      }
+    }
+#endif
+    BX_ERROR(("%s: access not aligned to 16-byte boundary", i->getIaOpcodeNameShort()));
+    exception(BX_GP_EXCEPTION, 0);
+  }
 
   // check that we would not fault while attempting to write, check that we can write-access byte 511 of the
   // FXSAVE image (the first byte is checked by the very first write), touch the memory but no write actually occurs
@@ -276,14 +291,29 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR cr0.get_EM() || BX_CPU_THIS_PTR cr0.get_TS())
     exception(BX_NM_EXCEPTION, 0);
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   bx_address asize_mask = i->asize_mask();
 
-  read_virtual_xmmword_aligned(i->seg(), eaddr, &xmm);
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+  bx_address laddr = get_laddr(i->seg(), eaddr);
+
+  if (laddr & 15) {
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+    if (BX_CPU_THIS_PTR alignment_check()) {
+      if (laddr & 0x3) {
+        BX_ERROR(("%s: access not aligned to 4-byte cause model specific #AC(0)", i->getIaOpcodeNameShort()));
+        exception(BX_AC_EXCEPTION, 0);
+      }
+    }
+#endif
+    BX_ERROR(("%s: access not aligned to 16-byte boundary", i->getIaOpcodeNameShort()));
+    exception(BX_GP_EXCEPTION, 0);
+  }
 
   // check that we would not fault while attempting to read, check that we can read-access byte 511 of the
   // FXRSTOR image (the first byte is checked by the very first read)
   tickle_read_virtual(i->seg(), (eaddr + 511) & asize_mask);
+
+  read_virtual_xmmword_aligned(i->seg(), eaddr, &xmm);
 
   i387_t restore_i387;
 

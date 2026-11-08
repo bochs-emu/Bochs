@@ -85,7 +85,8 @@ Changes after Bochs 3.1:
 + x87: improved implementation of x87 transcendental instructions (F2XM1/FYL2X/FYL2XP1/FPATAN/FSIN/FCOS/FSINCOS/FPTAN) to match HW
 + x87: fixed unmasked underflow/overflow corner cases for FSCALE x87 instruction
 - x87: FPREM/FPREM1 must raise #U when the remainder is the unchanged denormal dividend (|ST0| < |ST1|/2) and UM is unmasked
-- x87/SSE: check faulting conditions in FNSTENV/FNSAVE/FLDENV/FRSTOR/FXSAVE/FXRSTOR before partially updating register state or the save area
+- x87/FXSAVE: check faulting conditions in FNSTENV/FNSAVE/FLDENV/FRSTOR/FXSAVE/FXRSTOR before partially updating register state or the save area
+- FXSAVE: FXSAVE/FXRSTOR which is not 4-byte aligned cause model specific #AC(0) instead of #GP(0) when alignment check is enabled
 - Legacy: fixed broken CR2 register initialization in reset() method, CR2 contained garbage value at the beginning instead of being initialized to 0
 - Legacy: swap order of memory accesses in CMPSB/CMPSW/CMPSD/CMPSQ instructions to match real HW: access ES:EDI first and seg:ESI later
 + 3DNow: PFRCP and PFRSQRT of zero must return maximum normal value with the sign of the source (returned 1.9999999 instead)
@@ -669,7 +670,7 @@ Changes in Bochs 2.6.5 (June 1, 2014)
 + VMX/SVM: fixed possible RSP corruption after VMEXIT with speculative_rsp set (speculative_rsp was not cleared properly)
 - SSE/AVX: fixed DPPS/DPPD instructions to match HSW implementation (NaN handling for DPPS, intermediate unmasked exceptions for DPPS and DPPD)
 - VMX, RESET: Do not clear IA32_FEATURE_CTRL MSR on INIT (will clear the VMX lock bit)
-- XSAVE: XSAVE/XRSTOR which is not 4-byte aligned cause #AC(0) instead of #GP(0) when alignment check is enabled
+- XSAVE: XSAVE/XRSTOR which is not 4-byte aligned cause model specific #AC(0) instead of #GP(0) when alignment check is enabled
 - CPUDB: AMD Zambezi CPU doesn't support TBM and XSAVEOPT instructions
 - XSAVE: Fixed check of condition when a processor state component is not enabled in XCR0 but the corresponding save mask bit in XSAVE.HEADER.XSTATE_BV is 1 (an attempt to execute XRSTOR should cause a #GP(0) exception)
 + XSAVE: Implemented XINUSE vector (as ideal XINUSE); when executing XSAVE, the XSTATE_BV[i] is set to the value of XINUSE[i] for all XSAVE'ed features.
