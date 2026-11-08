@@ -1008,7 +1008,8 @@ static void pci_bios_init_pcirom(PCIDevice *d, uint32_t paddr)
 {
     PCIDevice d1, *i440fx = &d1;
     uint32_t tmpaddr, size;
-    uint8_t cmd, reg, v;
+    uint8_t reg, v;
+    uint16_t cmd;
     int copied, shift, tmpsize;
 
     i440fx->bus = 0;
