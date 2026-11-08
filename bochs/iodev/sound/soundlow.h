@@ -108,6 +108,8 @@ public:
 
   virtual bool mixer_common(Bit8u *buffer, int len);
 
+  void stop_threads(void);
+
   bool resampler_running() {return res_thread_start;}
   bool mixer_running() {return mix_thread_start;}
   void lock_resampler() {BX_LOCK(resampler_mutex);}

@@ -281,19 +281,12 @@ bx_soundlow_waveout_c::bx_soundlow_waveout_c()
 
 bx_soundlow_waveout_c::~bx_soundlow_waveout_c()
 {
+  stop_threads();
   if (pcm_callback_id >= 0) {
 #if BX_HAVE_LIBSAMPLERATE || BX_HAVE_SOXR_LSR
     src_delete(src_state);
 #endif
     unregister_wave_callback(pcm_callback_id);
-    if (res_thread_start) {
-      res_thread_start = 0;
-      BX_MSLEEP(20);
-    }
-    if (mix_thread_start) {
-      mix_thread_start = 0;
-      BX_MSLEEP(30);
-    }
     if (audio_buffers[0] != NULL) {
       delete audio_buffers[0];
       delete audio_buffers[1];
@@ -531,6 +524,18 @@ void bx_soundlow_waveout_c::start_mixer_thread()
   BX_THREAD_CREATE(mixer_thread, this, mix_thread_var);
 }
 
+void bx_soundlow_waveout_c::stop_threads()
+{
+  if (res_thread_start) {
+    res_thread_start = 0;
+    BX_THREAD_JOIN(res_thread_var);
+  }
+  if (mix_thread_start) {
+    mix_thread_start = 0;
+    BX_THREAD_JOIN(mix_thread_var);
+  }
+}
+
 // bx_soundlow_wavein_c class implementation
 // The dummy input method returns silence.
 
@@ -716,6 +721,17 @@ bx_sound_lowlevel_c* bx_sound_lowlevel_c::get_module(const char *type)
 
 void bx_sound_lowlevel_c::cleanup()
 {
+  bx_sound_lowlevel_c *ptr;
+
+  // Stop the waveout threads while the objects are still complete. The
+  // driver objects are static objects of the plugins: their destructors
+  // run inside dlclose() / FreeLibrary() with the loader lock held, and
+  // joining a thread there deadlocks (an exiting thread may need it).
+  for (ptr = all; ptr != NULL; ptr = ptr->next) {
+    if (ptr->waveout != NULL) {
+      ptr->waveout->stop_threads();
+    }
+  }
 #if BX_PLUGINS
   while (all != NULL) {
     PLUG_unload_plugin_type(all->type, PLUGTYPE_SND);
