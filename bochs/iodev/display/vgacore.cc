@@ -984,6 +984,8 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bool no_
     case 0x03c7: // PEL address, read mode
       BX_VGA_THIS s.pel.read_data_register = value;
       BX_VGA_THIS s.pel.read_data_cycle    = 0;
+      BX_VGA_THIS s.pel.write_data_register = (Bit8u)(value + 1);   // the VGA also points the write index at the next entry
+      BX_VGA_THIS s.pel.write_data_cycle    = 0;
       BX_VGA_THIS s.pel.dac_state = 0x03;
       break;
 
