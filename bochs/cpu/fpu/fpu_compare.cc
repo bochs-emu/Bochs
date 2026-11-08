@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2018 Stanislav Shwartsman
+//   Copyright (c) 2003-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -124,8 +124,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOMI_ST0_STj(bxInstruction_c *i)
 
   int pop_stack = i->b1() & 4;
 
-  clear_C1();
-
+  // C1 is not modified (unlike SDM says), only stack underflow clears it
   if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->src()))
   {
       FPU_exception(i, FPU_EX_Stack_Underflow);
@@ -160,8 +159,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOMI_ST0_STj(bxInstruction_c *i)
 
   int pop_stack = i->b1() & 4;
 
-  clear_C1();
-
+  // C1 is not modified (unlike SDM says), only stack underflow clears it
   if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(i->src()))
   {
       FPU_exception(i, FPU_EX_Stack_Underflow);

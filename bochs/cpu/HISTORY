@@ -85,6 +85,7 @@ Changes after Bochs 3.1:
 + x87: improved implementation of x87 transcendental instructions (F2XM1/FYL2X/FYL2XP1/FPATAN/FSIN/FCOS/FSINCOS/FPTAN) to match HW
 + x87: fixed unmasked underflow/overflow corner cases for FSCALE x87 instruction
 - x87: FPREM/FPREM1 must raise #U when the remainder is the unchanged denormal dividend (|ST0| < |ST1|/2) and UM is unmasked
+- x87: FCOMI/FCOMIP/FUCOMI/FUCOMIP must leave C1 unchanged (only stack underflow clears it), matching HW
 - x87/FXSAVE: check faulting conditions in FNSTENV/FNSAVE/FLDENV/FRSTOR/FXSAVE/FXRSTOR before partially updating register state or the save area
 - FXSAVE: FXSAVE/FXRSTOR which is not 4-byte aligned cause model specific #AC(0) instead of #GP(0) when alignment check is enabled
 - Legacy: fixed broken CR2 register initialization in reset() method, CR2 contained garbage value at the beginning instead of being initialized to 0
