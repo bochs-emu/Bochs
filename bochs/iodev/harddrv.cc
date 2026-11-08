@@ -719,6 +719,14 @@ void bx_hard_drive_c::register_state(void)
         new bx_shadow_num_c(drive, "hob_lcyl", &BX_CONTROLLER(i, j).hob.lcyl, BASE_HEX);
         new bx_shadow_num_c(drive, "hob_hcyl", &BX_CONTROLLER(i, j).hob.hcyl, BASE_HEX);
         new bx_shadow_num_c(drive, "num_sectors", &BX_CONTROLLER(i, j).num_sectors, BASE_HEX);
+        // the rest of a transfer in progress (an LBA48 command needs lba48), and the guest-visible caches
+        BXRS_PARAM_BOOL(drive, lba48, BX_CONTROLLER(i, j).lba48);
+        BXRS_PARAM_BOOL(drive, identify_set, BX_HD_THIS channels[i].drives[j].identify_set);
+        new bx_shadow_data_c(drive, "id_drive", (Bit8u *) BX_HD_THIS channels[i].drives[j].id_drive,
+                             sizeof(BX_HD_THIS channels[i].drives[j].id_drive));
+        new bx_shadow_num_c(drive, "status_changed", (Bit32s *) &BX_HD_THIS channels[i].drives[j].status_changed);
+        new bx_shadow_data_c(drive, "sense", (Bit8u *) &BX_HD_THIS channels[i].drives[j].sense,
+                             sizeof(BX_HD_THIS channels[i].drives[j].sense));
       }
     }
     new bx_shadow_num_c(chan, "drive_select", &BX_HD_THIS channels[i].drive_select);
