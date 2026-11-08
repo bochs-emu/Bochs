@@ -491,7 +491,9 @@ void bx_sb16_c::reset(unsigned type)
     OPL.timer[i] = 0;
     OPL.timerinit[i] = 0;
   }
+  opl_lock(1);
   adlib_init(44100);
+  opl_lock(0);
 
   // csp
   memset(&BX_SB16_THIS csp_reg[0], 0, sizeof(BX_SB16_THIS csp_reg));
@@ -593,7 +595,9 @@ void bx_sb16_c::register_state(void)
 void bx_sb16_c::after_restore_state(void)
 {
   set_irq_dma();
+  opl_lock(1);
   adlib_after_restore_state();
+  opl_lock(0);
 }
 
 void bx_sb16_c::runtime_config_handler(void *this_ptr)
@@ -2639,6 +2643,26 @@ void bx_sb16_c::opl_settimermask(int value, int chipid)
   }
 }
 
+// The OPL generator is called from the mixer thread of the wave output,
+// so the OPL state must be locked when the emulation thread changes it.
+void bx_sb16_c::opl_lock(bool lock)
+{
+  bx_soundlow_waveout_c *waveout = NULL;
+
+  if (BX_SB16_THIS fmopl_callback_id[0] >= 0) {
+    waveout = BX_SB16_WAVEOUT1;
+  } else if (BX_SB16_THIS fmopl_callback_id[1] >= 0) {
+    waveout = BX_SB16_WAVEOUT2;
+  }
+  if (waveout != NULL) {
+    if (lock) {
+      waveout->lock_mixer();
+    } else {
+      waveout->unlock_mixer();
+    }
+  }
+}
+
 Bit32u bx_sb16_c::fmopl_generator(Bit32u rate, Bit8u *buffer, Bit32u len)
 {
   bool ret = adlib_getsample(rate, (Bit16s*)buffer, len / 4, BX_SB16_THIS fm_volume);
@@ -3000,7 +3024,9 @@ void bx_sb16_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case BX_SB16_IO + 0x09:
     case BX_SB16_IOADLIB + 0x01:
       opl_data(value, 0);
+      opl_lock(1);
       adlib_write(opl_index, value);
+      opl_lock(0);
       return;
 
     // 2x2: Advanced FM Music Register Port
@@ -3018,7 +3044,9 @@ void bx_sb16_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case BX_SB16_IO + 0x03:
     case BX_SB16_IOADLIB + 0x03:
       opl_data(value, 1);
+      opl_lock(1);
       adlib_write(opl_index, value);
+      opl_lock(0);
       return;
 
     // 2x4: Mixer Register Port

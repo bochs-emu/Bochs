@@ -112,6 +112,9 @@ public:
   bool mixer_running() {return mix_thread_start;}
   void lock_resampler() {BX_LOCK(resampler_mutex);}
   void unlock_resampler() {BX_UNLOCK(resampler_mutex);}
+  // protect data used by the wave callbacks (mixer thread)
+  virtual void lock_mixer() {BX_LOCK(mixer_mutex);}
+  virtual void unlock_mixer() {BX_UNLOCK(mixer_mutex);}
 
   bx_audio_buffer_c *get_audio_buffer(int n) {return audio_buffers[n];}
 

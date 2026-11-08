@@ -313,6 +313,7 @@ private:
   BX_SB16_SMF Bit32u opl_status(int chipid);
   BX_SB16_SMF void   opl_data(Bit32u value, int chipid);
   BX_SB16_SMF void   opl_settimermask(int value, int chipid);
+  BX_SB16_SMF void   opl_lock(bool lock);
   static void   opl_timer(void *);
   BX_SB16_SMF void   opl_timerevent(void);
 
