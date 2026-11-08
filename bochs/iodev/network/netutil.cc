@@ -818,8 +818,7 @@ void vnet_server_c::process_tcpipv4(Bit8u clientid, Bit8u srv_id,
     tcprhdr->window = 0;
     BX_ERROR(("tcp - port %u unhandled or in use", tcp_dst_port));
   }
-  host_to_guest_tcpipv4(clientid, srv_id, tcp_dst_port, tcp_src_port, replybuf, 0,
-                        tcprhdr_len);
+  host_to_guest_tcpipv4(clientid, srv_id, tcp_dst_port, tcp_src_port, replybuf, 0, tcprhdr_len);
 }
 
 void vnet_server_c::host_to_guest_tcpipv4(Bit8u clientid, Bit8u srv_id,
@@ -1169,7 +1168,9 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
             if (fs->data_xfer_fd >= 0) {
               close(fs->data_xfer_fd);
               fs->data_xfer_fd = -1;
-              tcpipv4_send_fin(tcpc_data, 1);
+              if (tcpc_data != NULL) {
+                tcpipv4_send_fin(tcpc_data, 1);
+              }
               ftp_send_reply(tcpc_cmd, "426 Transfer aborted.");
               ftp_send_reply(tcpc_cmd, "226 Transfer abort complete.");
             } else {
@@ -1360,8 +1361,9 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
     // FTP data port
     tcpc_data = tcp_conn;
     fs = ftp_find_cmd_session(tcpc_data->dst_port);
-    tcpc_cmd = tcp_find_connection(tcpc_data->clientid, fs->client_cmd_port,
-                                   INET_PORT_FTP);
+    if (fs != NULL) {
+      tcpc_cmd = tcp_find_connection(tcpc_data->clientid, fs->client_cmd_port, INET_PORT_FTP);
+    }
     if ((fs == NULL) || (tcpc_cmd == NULL)) {
       BX_ERROR(("FTP command connection not found"));
       return;
@@ -1403,8 +1405,7 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
   }
 }
 
-bool vnet_server_c::ftp_file_exists(tcp_conn_t *tcpc_cmd, const char *arg,
-                                       char *path, unsigned *size)
+bool vnet_server_c::ftp_file_exists(tcp_conn_t *tcpc_cmd, const char *arg, char *path, unsigned *size)
 {
   ftp_session_t *fs = (ftp_session_t*)tcpc_cmd->data;
   bool exists = 0, notfile = 1;
@@ -1715,8 +1716,7 @@ void vnet_server_c::ftp_list_directory(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_da
               sprintf(tmptime, "%s %d %02d:%02d", month[systime.wMonth-1], systime.wDay,
                       systime.wHour, systime.wMinute);
             } else {
-              sprintf(tmptime, "%s %d %d", month[systime.wMonth-1], systime.wDay,
-                      systime.wYear);
+              sprintf(tmptime, "%s %d %d", month[systime.wMonth-1], systime.wDay, systime.wYear);
             }
             if (finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
               sprintf(linebuf, "drwxrwxr-x 1 ftp ftp %ld %s %s%c%c", 0, tmptime,
@@ -1742,8 +1742,7 @@ void vnet_server_c::ftp_list_directory(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_da
   ftp_send_data_prep(tcpc_cmd, tcpc_data, fs->dirlist_tmp, size);
 }
 
-void vnet_server_c::ftp_recv_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
-                                  const char *fname)
+void vnet_server_c::ftp_recv_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data, const char *fname)
 {
   char path[BX_PATHNAME_LEN], tmp_path[BX_PATHNAME_LEN+4], *cptr, reply[80];
   ftp_session_t *fs = (ftp_session_t*)tcpc_cmd->data;
@@ -2389,18 +2388,23 @@ int tftp_send_optack(Bit8u *buffer, tftp_session_t *s)
 void vnet_server_c::tftp_parse_options(const char *mode, const Bit8u *data,
                                        unsigned data_len, tftp_session_t *s)
 {
-  while (mode < (const char*)data + data_len) {
-    if (memcmp(mode, "octet\0", 6) == 0) {
+  const char *end = (const char*)data + data_len;
+
+  // the request ends with a NUL byte (checked by the caller), so strlen()
+  // and atoi() stay inside the packet
+  while (mode < end) {
+    size_t left = end - mode;
+    if ((left >= 6) && (memcmp(mode, "octet\0", 6) == 0)) {
       s->options |= TFTP_OPTION_OCTET;
       mode += 6;
-    } else if (memcmp(mode, "tsize\0", 6) == 0) {
+    } else if ((left >= 6) && (memcmp(mode, "tsize\0", 6) == 0)) {
       s->options |= TFTP_OPTION_TSIZE;             // size needed
       mode += 6;
       if (s->iswrite) {
         s->tsize_val = atoi(mode);
       }
       mode += strlen(mode)+1;
-    } else if (memcmp(mode, "blksize\0", 8) == 0) {
+    } else if ((left >= 8) && (memcmp(mode, "blksize\0", 8) == 0)) {
       s->options |= TFTP_OPTION_BLKSIZE;
       mode += 8;
       s->blksize_val = atoi(mode);
@@ -2410,7 +2414,7 @@ void vnet_server_c::tftp_parse_options(const char *mode, const Bit8u *data,
         s->blksize_val = TFTP_BUFFER_SIZE;
       }
       mode += strlen(mode)+1;
-    } else if (memcmp(mode, "timeout\0", 8) == 0) {
+    } else if ((left >= 8) && (memcmp(mode, "timeout\0", 8) == 0)) {
       s->options |= TFTP_OPTION_TIMEOUT;
       mode += 8;
       s->timeout_val = atoi(mode);
@@ -2446,6 +2450,11 @@ int vnet_server_c::udpipv4_tftp_handler_ns(const Bit8u *ipheader,
   tftp_session_t *s;
   char msg[BX_PATHNAME_LEN + 16];
 
+  // opcode + 2 bytes is the shortest valid TFTP packet
+  if (data_len < 4) {
+    BX_ERROR(("tftp: packet too short (%u bytes)", data_len));
+    return 0;
+  }
   tftp_timeout_check();
   s = tftp_find_session(req_tid);
   switch (get_net2(data)) {
@@ -2453,6 +2462,9 @@ int vnet_server_c::udpipv4_tftp_handler_ns(const Bit8u *ipheader,
       {
         if (s != NULL) {
           tftp_remove_session(s);
+        }
+        if (data[data_len - 1] != 0) {
+          return tftp_send_error(reply, 4, "Illegal request", NULL);
         }
         strncpy((char*)reply, (const char*)data + 2, data_len - 2);
         reply[data_len - 4] = 0;
@@ -2497,6 +2509,9 @@ int vnet_server_c::udpipv4_tftp_handler_ns(const Bit8u *ipheader,
       {
         if (s != NULL) {
           tftp_remove_session(s);
+        }
+        if (data[data_len - 1] != 0) {
+          return tftp_send_error(reply, 4, "Illegal request", NULL);
         }
         strncpy((char*)reply, (const char*)data + 2, data_len - 2);
         reply[data_len - 4] = 0;
