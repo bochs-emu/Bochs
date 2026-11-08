@@ -658,7 +658,8 @@ void bx_sb16_c::dsp_dmatimer(void)
   // or if buffer is empty in input mode.
 
   if (!DSP.nondma_mode) {
-    if ((DSP.dma.chunkindex + 1 < BX_SOUNDLOW_WAVEPACKETSIZE) && (DSP.dma.count > 0)) {
+    // DRQ while a transfer is in progress: count holds bytes - 1, so the last byte is requested at count 0
+    if ((DSP.dma.chunkindex + 1 < BX_SOUNDLOW_WAVEPACKETSIZE) && (DSP.dma.mode != 0)) {
       if (((DSP.dma.output == 0) && (DSP.dma.chunkcount > 0)) || (DSP.dma.output == 1)) {
         dsp_set_drq(1);
       }
