@@ -387,6 +387,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
   if ((raw_selector & 0xfffc) == 0) {
     BX_CPU_THIS_PTR ldtr.selector.value = raw_selector;
     BX_CPU_THIS_PTR ldtr.cache.valid = 0;
+    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AMD)) {
+      // AMD clears a null LDTR's base and limit, the hidden state is visible through SVM VMSAVE
+      BX_CPU_THIS_PTR ldtr.cache.u.segment.base         = 0;
+      BX_CPU_THIS_PTR ldtr.cache.u.segment.limit_scaled = 0;
+    }
     BX_NEXT_INSTR(i);
   }
 
