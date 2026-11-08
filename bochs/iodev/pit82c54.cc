@@ -415,6 +415,8 @@ void BX_CPP_AttrRegparmN(1) pit_82C54::clock(Bit8u cnum)
             set_count(thisctr, thisctr.inlatch);
             thisctr.next_change_time=(thisctr.count_binary-1) & 0xFFFF;
             thisctr.null_count=0;
+            if (thisctr.inlatch == 0 && thisctr.bcd_mode)   // BCD count 0 means 10000
+              thisctr.next_change_time = 9999;
             if (thisctr.inlatch==1) {
               BX_ERROR(("ERROR: count of 1 is invalid in pit mode 2."));
             }
@@ -450,13 +452,19 @@ void BX_CPP_AttrRegparmN(1) pit_82C54::clock(Bit8u cnum)
             set_count(thisctr, thisctr.inlatch & 0xFFFE);
             thisctr.state_bit_1=thisctr.inlatch & 0x1;
             if (!thisctr.OUTpin || !thisctr.state_bit_1) {
-              if (((thisctr.count_binary/2)-1)==0) {
+              if (thisctr.inlatch == 0) {
+                // count 0 means 65536 (10000 in BCD): each half of the square wave is 32768 (5000) clocks
+                thisctr.next_change_time = thisctr.bcd_mode ? 4999 : 0x7FFF;
+              } else if (((thisctr.count_binary/2)-1)==0) {
                 thisctr.next_change_time=1;
               } else {
                 thisctr.next_change_time=((thisctr.count_binary/2)-1) & 0xFFFF;
               }
             } else {
-              if ((thisctr.count_binary/2)==0) {
+              if (!thisctr.first_pass && thisctr.count_binary >= 4) {
+                // odd count N: high for (N+1)/2 clocks, low for (N-1)/2
+                thisctr.next_change_time = (thisctr.count_binary/2) - 1;
+              } else if ((thisctr.count_binary/2)==0) {
                 thisctr.next_change_time=1;
               } else {
                 thisctr.next_change_time=(thisctr.count_binary/2) & 0xFFFF;
