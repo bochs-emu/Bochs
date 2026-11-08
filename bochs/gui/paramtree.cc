@@ -367,7 +367,8 @@ int bx_param_num_c::dump_param(char *buf, int len, bool dquotes)
         snprintf(buf, len, "%u", (Bit32u) value);
       }
     } else {
-      snprintf(buf, len, "%d", (Bit32s) value);
+      if (get_max() > BX_MAX_BIT32S) snprintf(buf, len, FMT_LL "d", value);
+      else snprintf(buf, len, "%d", (Bit32s) value);
     }
   } else {
     if (get_format()) {
@@ -395,7 +396,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
 {
   this->varsize = 64;
   this->lowbit = lowbit;
-  this->mask = ((BX_MAX_BIT64S >> (63 - (highbit - lowbit))) << lowbit);
+  this->mask = ((BX_MAX_BIT64U >> (63 - (highbit - lowbit))) << lowbit);
   val.p64bit = ptr_to_real_val;
   if (base == BASE_HEX) {
     this->base = base;
@@ -433,7 +434,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
 {
   this->varsize = 32;
   this->lowbit = lowbit;
-  this->mask = ((BX_MAX_BIT32S >> (31 - (highbit - lowbit))) << lowbit);
+  this->mask = ((BX_MAX_BIT32U >> (31 - (highbit - lowbit))) << lowbit);
   val.p32bit = ptr_to_real_val;
   if (base == BASE_HEX) {
     this->base = base;
@@ -471,7 +472,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
 {
   this->varsize = 16;
   this->lowbit = lowbit;
-  this->mask = ((BX_MAX_BIT16S >> (15 - (highbit - lowbit))) << lowbit);
+  this->mask = ((BX_MAX_BIT16U >> (15 - (highbit - lowbit))) << lowbit);
   val.p16bit = ptr_to_real_val;
   if (base == BASE_HEX) {
     this->base = base;
@@ -509,7 +510,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
 {
   this->varsize = 8;
   this->lowbit = lowbit;
-  this->mask = ((BX_MAX_BIT8S >> (7 - (highbit - lowbit))) << lowbit);
+  this->mask = ((BX_MAX_BIT8U >> (7 - (highbit - lowbit))) << lowbit);
   this->mask = (1 << (highbit - lowbit)) - 1;
   val.p8bit = ptr_to_real_val;
   if (base == BASE_HEX) {
