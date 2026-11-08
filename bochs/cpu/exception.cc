@@ -1020,6 +1020,21 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
   if (vector == BX_DB_EXCEPTION && is_cpu_extension_supported(BX_ISA_AMD))
     BX_CPU_THIS_PTR clear_RF();
 
+  if (vector == BX_DB_EXCEPTION) {
+    // Commit debug events to DR6: B0-B3 are replaced, preserve DR6.BD, DR6.BS and DR6.BT values,
+    // only software can clear them
+    BX_CPU_THIS_PTR dr6.val = (BX_CPU_THIS_PTR dr6.val    & 0xffffeff0) |
+                              (BX_CPU_THIS_PTR debug_trap & 0x0000e00f);
+
+    // clear GD flag in the DR7 prior entering debug exception handler
+    BX_CPU_THIS_PTR dr7.set_GD(0);
+  }
+
+#if BX_SUPPORT_SVM
+  // an intercepted #DB has already updated DR6, an intercepted fault leaves RF as it was
+  SvmInterceptException(BX_HARDWARE_EXCEPTION, vector, error_code, push_error);
+#endif
+
   if (exception_class == BX_EXCEPTION_CLASS_FAULT)
   {
     // restore RIP/RSP to value before error occurred
@@ -1065,21 +1080,6 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
       longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
     }
   }
-
-  if (vector == BX_DB_EXCEPTION) {
-    // Commit debug events to DR6: B0-B3 are replaced, preserve DR6.BD, DR6.BS and DR6.BT values,
-    // only software can clear them
-    BX_CPU_THIS_PTR dr6.val = (BX_CPU_THIS_PTR dr6.val    & 0xffffeff0) |
-                              (BX_CPU_THIS_PTR debug_trap & 0x0000e00f);
-
-    // clear GD flag in the DR7 prior entering debug exception handler
-    BX_CPU_THIS_PTR dr7.set_GD(0);
-  }
-
-#if BX_SUPPORT_SVM
-  // an intercepted #DB has already updated DR6 and leaves RF clear
-  SvmInterceptException(BX_HARDWARE_EXCEPTION, vector, error_code, push_error);
-#endif
 
   BX_CPU_THIS_PTR EXT = 1;
 

@@ -131,17 +131,17 @@ Changes after Bochs 3.1:
 - VMX: VMLAUNCH/VMRESUME must VMfailInvalid when the current VMCS is a shadow VMCS
 - VMX: EPT violation on guest paging-structure access with EPT A/D enabled must report both data read and data write in exit qualification bits 0 and 1
 - VMX: WRMSR to IA32_SPEC_CTRL with "virtualize IA32_SPEC_CTRL" control set must store the source operand in the IA32_SPEC_CTRL shadow (RDMSR returned stale value)
-+ SVM: Fixed VMRUN consistency checks
-+ SVM: LMSW must treat the selective CR0 write intercept as non-selective (intercept regardless of the value written)
-+ SVM: RSM intercept must be checked before #UD for RSM executed outside of SMM (SMM containerization)
-+ SVM: host EFLAGS.TF on VMRUN must cause #DB trap on the host side right after #VMEXIT (was taken one instruction later) and must not leak into the guest, VMRUN completion clears host EFLAGS.RF
-+ SVM: with V_INTR_MASKING physical interrupts must be masked by the host EFLAGS.IF regardless of the guest EFLAGS.IF, HLT with EFLAGS.IF=0 must be woken up by such unmasked interrupt (also for VMX guest with external-interrupt exiting)
+- SVM: Fixed VMRUN consistency checks
+- SVM: LMSW must treat the selective CR0 write intercept as non-selective (intercept regardless of the value written)
+- SVM: RSM intercept must be checked before #UD for RSM executed outside of SMM (SMM containerization)
+- SVM: host EFLAGS.TF on VMRUN must cause #DB trap on the host side right after #VMEXIT (was taken one instruction later) and must not leak into the guest, VMRUN completion clears host EFLAGS.RF
+- SVM: with V_INTR_MASKING physical interrupts must be masked by the host EFLAGS.IF regardless of the guest EFLAGS.IF, HLT with EFLAGS.IF=0 must be woken up by such unmasked interrupt (also for VMX guest with external-interrupt exiting)
 + SVM: VMRUN didn't not load the guest CR2 from the VMCB (Debian 12 amd64 running KVM (kvm_amd) failed inside Bochs)
-+ SVM: SVM VMEXIT loading host state should reset debug_trap and inhibit_mask
-+ SVM: interrupt shadow lost at a #DB intercept, after STI in the guest a #DB intercept at the next boundary saved VMCB INTERRUPT_SHADOW = 0 in Bochs, 1 on real Zen 4
+- SVM: SVM VMEXIT loading host state should reset debug_trap and inhibit_mask
+- SVM: interrupt shadow lost at a #DB intercept, after STI in the guest a #DB intercept at the next boundary saved VMCB INTERRUPT_SHADOW = 0 in Bochs, 1 on real Zen 4
 + SVM: V_IRQ never taken when the guest is entered with IF = 1 (VMRUN loads the guest RFLAGS before in_svm_guest = true, so handleInterruptMaskChange() evaluated the masks as the host)
 + SVM: AMD hardware doesn't enforce TSS386 to enter long mode (Debian 12 amd64 running kvm_amd with npt=1 fails: kvm_amd leaves TR = TSS286_BUSY and its 64-bit guest triple-faults while booting)
-+ SVM: An intercepted #DB has already updated DR6 and leaves RF clear (AMD APM vol. 2, 15.12)
+- SVM: an intercepted exception must save the guest's RFLAGS.RF unchanged, and an intercepted #DB must also find DR6 already updated
 - SVM: EXITINTINFO was not recorded for INTn, ICEBP, external/virtual interrupt and NMI delivery (stale value reported) and recorded 2nd exception instead of prior event on intercepted #DF
 - SVM: task switch intercept must be checked before new TSS limit checks (Zen 5 takes the intercept with TSS limit 0x67 and CR4.CET=1)
 - SVM: PAUSE filter threshold of zero must select count only PAUSE filter mode (was resetting the PAUSE filter count on every PAUSE)
