@@ -81,10 +81,10 @@ void bx_instr_before_execution(unsigned cpu, const bxInstruction_c *i);
 #define BX_INSTR_REPEAT_ITERATION(cpu_id, i)
 
 /* linear memory access */
-#define BX_INSTR_LIN_ACCESS(cpu_id, lin, phy, len, memtype, rw)
+#define BX_INSTR_LIN_ACCESS(cpu_id, lin, phy, len, memtype, rw, data)
 
 /* physical memory access */
-#define BX_INSTR_PHY_ACCESS(cpu_id, phy, len, memtype, rw)
+#define BX_INSTR_PHY_ACCESS(cpu_id, phy, len, memtype, rw, data)
 
 /* feedback from device units */
 #define BX_INSTR_INP(addr, len)
@@ -143,10 +143,10 @@ void bx_instr_before_execution(unsigned cpu, const bxInstruction_c *i);
 #define BX_INSTR_REPEAT_ITERATION(cpu_id, i)
 
 /* linear memory access */
-#define BX_INSTR_LIN_ACCESS(cpu_id, lin, phy, len, memtype, rw)
+#define BX_INSTR_LIN_ACCESS(cpu_id, lin, phy, len, memtype, rw, data)
 
 /* physical memory access */
-#define BX_INSTR_PHY_ACCESS(cpu_id, phy, len, memtype, rw)
+#define BX_INSTR_PHY_ACCESS(cpu_id, phy, len, memtype, rw, data)
 
 /* feedback from device units */
 #define BX_INSTR_INP(addr, len)

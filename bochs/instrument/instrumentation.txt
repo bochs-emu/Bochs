@@ -216,7 +216,7 @@ instruction execution. In case of repeat instruction the callback will
 be called only once after all repeat iterations. 
 
 
-	void bx_instr_lin_access(unsigned cpu, bx_address lin, bx_address phy, unsigned len, unsigned memtype, unsigned rw);
+	void bx_instr_lin_access(unsigned cpu, bx_address lin, bx_address phy, unsigned len, unsigned memtype, unsigned rw, const Bit8u *data);
 
 The  callback  is  called  each  time,  when Bochs simulator executes a linear
 memory  access.  Note  that  no  page split accesses will be generated because
@@ -224,13 +224,21 @@ Bochs  splits  page split accesses to two different memory accesses during its
 execution  flow.  The  callback  also  will not be generated in case of direct
 physical memory access like page walks, SMM, VMM or SVM operations.
 
-Possible access types are: BX_READ, BX_WRITE and BX_RW. 
+Possible access types are: BX_READ, BX_WRITE and BX_RW. When CET support is
+compiled in, shadow stack accesses are reported with access types
+BX_SHADOW_STACK_READ, BX_SHADOW_STACK_WRITE and BX_SHADOW_STACK_RW. Test the
+access type using bits: (rw & 1) for write and (rw & 4) for shadow stack.
+
+The 'data' argument points to 'len' bytes of the accessed data in host byte
+order: the value read from memory for BX_READ and BX_RW (and shadow stack
+read and RW) accesses, the value being written for write accesses. The
+pointer is valid only during the callback and the data must not be modified.
 
 Currently  the  callback is not supported when repeat-speedups optimization is
 enabled.
 
 
-	void bx_instr_phy_access(unsigned cpu, bx_address lin, bx_address phy, unsigned len, unsigned memtype, unsigned rw);
+	void bx_instr_phy_access(unsigned cpu, bx_address phy, unsigned len, unsigned memtype, unsigned rw, const Bit8u *data);
 
 The  callback  is called  each  time, when Bochs simulator executes a physical
 memory  access.  Physical  accesses include memory  accesses generated  by the
@@ -238,7 +246,9 @@ CPU during  page walks, SMM, VMM or SVM  operations. Note that  no  page split
 accesses will be  generated because  Bochs splits  page split accesses  to two
 different memory accesses during its execution flow.
 
-Possible access types are: BX_READ, BX_WRITE and BX_RW. 
+Possible access types are: BX_READ and BX_WRITE.
+
+The 'data' argument has the same meaning as for bx_instr_lin_access.
 
 
 	void bx_instr_inp(Bit16u addr, unsigned len);
