@@ -42,6 +42,7 @@
 
 #if BX_SUPPORT_SB16
 
+static bool initialized = false;
 Bit16u opl_index;
 
 static fltype recipsamp;            // inverse of sampling rate
@@ -628,6 +629,7 @@ void adlib_init(Bit32u samplerate)
       }
     }
   }
+  initialized = true;
 }
 
 void adlib_write(Bitu idx, Bit8u val)
@@ -1032,6 +1034,9 @@ bool adlib_getsample(Bit32u rate, Bit16s* sndptr, Bits numsamples, Bit16u volume
   Bit8u lvol = (Bit8u)(volume & 0xff);
   Bit8u rvol = (Bit8u)(volume >> 8);
   Bits samples_to_process = numsamples;
+
+  if (!initialized)
+    return false;
 
   if (rate != (Bit32u)int_samplerate) {
     // the output sample rate has changed: recalculate the rate dependent
