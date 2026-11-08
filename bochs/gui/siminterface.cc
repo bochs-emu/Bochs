@@ -1462,6 +1462,9 @@ bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path, co
                           return 0;
                         }
                         fclose(fp2);
+                      } else {
+                        fclose(fp);
+                        return 0;
                       }
                     } else if (!strcmp(ptr, "[")) {
                       i = 0;
@@ -1505,6 +1508,9 @@ bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path, co
                     }
                     ((bx_shadow_filedata_c*)param)->restore(fp2);
                     fclose(fp2);
+                  } else {
+                    fclose(fp);
+                    return 0;
                   }
                   break;
                 case BXT_LIST:
