@@ -616,6 +616,7 @@ void bx_dbg_exit(int code)
 void bx_dbg_quit_command(void)
 {
   BX_INFO(("dbg: Quit"));
+  bx_user_quit = 1;     // the user asked to quit, do not wait for ENTER on exit (see main.cc)
   bx_dbg_exit(0);
 }
 
