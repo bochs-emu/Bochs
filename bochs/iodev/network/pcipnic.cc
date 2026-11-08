@@ -302,9 +302,11 @@ Bit32u bx_pcipnic_c::read(Bit32u address, unsigned io_len)
     break;
 
   case PNIC_REG_DATA:
-    if (BX_PNIC_THIS s.rDataCursor >= BX_PNIC_THIS s.rLength)
+    if (BX_PNIC_THIS s.rDataCursor >= BX_PNIC_THIS s.rLength) {
       BX_PANIC(("PNIC read at %u, beyond end of data register array",
 		BX_PNIC_THIS s.rDataCursor));
+      break;
+    }
     val = BX_PNIC_THIS s.rData[BX_PNIC_THIS s.rDataCursor++];
     break;
 
@@ -348,17 +350,21 @@ void bx_pcipnic_c::write(Bit32u address, Bit32u value, unsigned io_len)
     break;
 
   case PNIC_REG_LEN:
-    if (value > PNIC_DATA_SIZE)
+    if (value > PNIC_DATA_SIZE) {
       BX_PANIC(("PNIC bad length %u written to length register, max is %u",
 		value, PNIC_DATA_SIZE));
+      value = PNIC_DATA_SIZE;
+    }
     BX_PNIC_THIS s.rLength = value;
     BX_PNIC_THIS s.rDataCursor = 0;
     break;
 
   case PNIC_REG_DATA:
-    if (BX_PNIC_THIS s.rDataCursor >= BX_PNIC_THIS s.rLength)
+    if (BX_PNIC_THIS s.rDataCursor >= BX_PNIC_THIS s.rLength) {
       BX_PANIC(("PNIC write at %u, beyond end of data register array",
 		BX_PNIC_THIS s.rDataCursor));
+      break;
+    }
     BX_PNIC_THIS s.rData[BX_PNIC_THIS s.rDataCursor++] = value;
     break;
 

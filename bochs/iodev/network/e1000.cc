@@ -814,6 +814,7 @@ bool bx_e1000_c::mem_read(bx_phy_address addr, unsigned len, void *data)
     *data8_ptr = (Bit8u)value;
   } else {
     BX_DEBUG(("mem read from offset 0x%08x with len %d not implemented", offset, len));
+    memset(data, 0, len);
   }
   return 1;
 }
