@@ -1,6 +1,6 @@
 Changes after Bochs 3.1 release:
 
-(up to date with commits done till 5 Nov 2026)
+(up to date with commits done till 8 Nov 2026)
 
 - CPU emulation and instrumentation
   ! CPUDB: Added AMD Zen3 (Vermeer) CPUID model (features X2APIC, CLWB, UMIP, PKU, CET, VAES, RDPID + introduces CPUID 0x80000021: AMD Extended Feature Identification 2)
@@ -93,6 +93,7 @@ Changes after Bochs 3.1 release:
     - Fixed division by zero in Input Status 1 read with very short horizontal total
     - Fixed vertical timer stall when vertical retrace end is beyond vertical total
     - Fixed 256-color word mode screen update address calculation
+    - Writing the DAC read index (3C7h) also sets the write index (wrong palette colors in Star Control II) (#974)
   - Voodoo
     - Fixed crash when the screen is redrawn (e.g. by the debugger) before a display mode is set (#666)
   - Banshee
@@ -102,6 +103,7 @@ Changes after Bochs 3.1 release:
     - Fixed guest-to-host stack buffer overflow in color expand video-to-video BitBLT
     - Reject BitBLT operations crossing the video memory boundaries
     - Fixed division by zero in SVGA memory write with zero pitch
+    - Wide I/O port accesses are split into byte accesses (PANIC "SVGA write: io_len != 1") (#981)
   - GeForce
     - Continue to improve GeForce model
       - #846: Add volume texture support
@@ -118,6 +120,7 @@ Changes after Bochs 3.1 release:
       - #948: Fix uninitialized BAR2 size (PANIC on BAR2 write)
       - #955: Implement DOT_PRODUCT_TEXTURE_2D_NV texture shader operation (bump mapping with NV20)
       - #956: Fix texture filtering with NV15
+      - #958: Implement depth buffer swizzling (missing geometry in render to texture demos)
   - Hard drive / HD image
     - VVFAT: Fixed LongName handling in vvfat disks
     - VVFAT: Adding path prefix "fat32:" forces using FAT32 file system
@@ -132,6 +135,7 @@ Changes after Bochs 3.1 release:
     - CONCAT: fixed uninitialized number of parts, lseek(SEEK_END), a memory leak and split read/write at
       part boundaries (data corruption on requests spanning two parts)
     - VVFAT: do not crash on blank or malformed lines in vvfat_attr.cfg
+    - IDE: save/restore the LBA48 flag (disk corruption after restoring a state saved during an LBA48 transfer) (#963)
   - CD-ROM
     - Model parameter now supports format "VENDOR:PRODUCT:REV" for ATAPI inquiry
     - Fixed MODE SENSE(6) header and response lengths and GET PERFORMANCE maximum number of descriptors
@@ -173,6 +177,8 @@ Changes after Bochs 3.1 release:
     - HPET: interrupt routes >= 16 are delivered to the IOAPIC only (were aliased onto PIC IRQs 8-15)
     - HPET: fixed main counter and comparator state after save/restore
     - PIT: schedule events of counters 1/2 also when counter 0 has no pending event (counter 1/2 events were lost)
+    - PIT: fixed mode 3 with count 0 or an odd count and mode 2 with BCD count 0 (IRQ0 at half rate with the
+      standard DOS timer setup, guest clock ran at half speed) (#965, #967, #968)
     - Slowdown timer synchronization works again after restoring a saved state
     - IOAPIC, HPET: misaligned, odd sized or undefined guest MMIO accesses are reported as errors instead of PANIC
   - DMA
@@ -222,8 +228,18 @@ Changes after Bochs 3.1 release:
     - SB16: pace the DSP DMA timer by the size of each DMA burst (playback too slow for blocks not multiple of
       512 bytes, 2x too fast for small 16-bit DMA blocks)
     - SB16: convert direct mode DAC (DSP command 0x10) samples to signed (distorted sound)
+    - SB16: request the last byte of a DMA transfer (1-byte DMA raised no IRQ, IRQ detection failed) (#978)
+    - SB16: machine reset resets the DSP, MPU-401, mixer and OPL state (DMA timer kept running after reboot)
+    - SB16: fixed recording buffer handling (lost and duplicated recorded data)
+    - MPU-401, ES1370 UART: support MIDI running status, SysEx and real-time messages (missing notes)
+    - MIDI SysEx output fixed on Windows and implemented for ALSA
+    - OPL: keep the FM register state when the output sample rate changes (FM music silenced mid-song)
+    - Convert signed 8-bit samples as signed and clamp converted samples (garbled 8-bit sound, clicks)
+    - SB16, ES1370: mixer volume uses 2 dB steps, ES1370 honors the mute bit (muting had no effect)
+    - Join the sound threads on shutdown (fixed crash on exit)
     - SB16, ES1370: fixed host crash (division by zero) and out of bounds reads triggered by the guest
-    - ES1370: DMA channels are stopped on reset (no sound after reboot when the guest used the other DAC)
+    - ES1370: DMA channels are stopped on reset (no sound after reboot when the guest used the other DAC),
+      stopping the inactive DAC keeps the active one playing
   - Networking
     - VDE: fix networking on FreeBSD
   - CMOS
@@ -231,7 +247,9 @@ Changes after Bochs 3.1 release:
     - Report an error instead of PANIC when the CMOS image file cannot be written on exit
   - General
     - Set Windows system timer resolution to 1ms. This help to reduce artefacts (clicking noises) during sound playback
-    - Save/restore: failures while saving the simulation state are reported instead of being ignored
+    - Save/restore: failures while saving the simulation state are reported instead of being ignored, restore
+      fails if a data file is missing (guest resumed with zeroed RAM) (#985)
+    - Save/restore: negative signed values keep their sign bit (guest TSC jumped by 2^63, older Linux hang) (#964)
 
 - GUI and display libraries
   - win32 gui
@@ -276,6 +294,7 @@ Changes after Bochs 3.1 release:
     in 'romimage' option (e.g. address=0xfffe0000) and Bochs compiled with 64-bit physical address support
   - rombios32: do not write IA32_FEATURE_CONTROL MSR when it is already locked (fixed guest triple fault and
     reset on every restart) (#954)
+  - rombios: PCI BIOS function B10Eh reads the route buffer pointer from the right offset (Windows 2000 Setup hang) (#982)
 
 -------------------------------------------------------------------------
 Changes in 3.1 (August 23, 2026):
