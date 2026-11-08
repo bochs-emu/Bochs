@@ -309,6 +309,16 @@ bool BX_CPU_C::mergeTraces(bxTraceCacheEntry_c *entry, bxInstruction_c *i, bx_ph
   return false;
 }
 
+// Page split trace is found by the physical address of its 1st page, the 2nd
+// page was translated only once by boundaryFetch() with the CPL of that time.
+// Called when CPL changes to or from 3, so the 2nd page will be translated
+// again with the new CPL. Links into the invalidated traces are safe, they
+// are replaced by dummy EndOfTrace opcodes.
+void BX_CPU_C::invalidatePageSplitTraces(void)
+{
+  BX_CPU_THIS_PTR traceCache->invalidatePageSplitTraceCacheEntries();
+}
+
 void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *i)
 {
   unsigned j, k;

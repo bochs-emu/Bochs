@@ -310,7 +310,8 @@ Changes in Bochs 3.1 (August 23, 2026):
 + CET: As long as CR0.WP = 1, no processor that supports CET will ever set the dirty flag in a paging-structure entry in which the R/W flag is 0. The CR0.WP check was missing in the PANIC logic.
 + VMX: Posted-Interrupt Descriptor Address (PID_ADDR) VMX field must be only 64-byte aligned and not 4K-aligned
 - APIC: Unaligned apic reads should not cause PANIC (correct behavior might be still not implemented, any bytes read beyond memory mapped register boundary should simply return zero)
-+ ICache: Missing page split fetch #PF due to failed ICache invalidation occur when 2nd page of the page split access was remapped and TLB invalidated, the page split trace survived in ICache and got hit.
++ ICache: Missing page split fetch #PF due to failed ICache invalidation occur when 2nd page of the page split access was remapped and TLB invalidated, the page split trace survived in ICache and got hit
++ ICache: instruction crossing page boundary cached as page split trace must be re-fetched when CPL changes (2nd page access rights were checked with old CPL)
 + VMX: Bochs didn't not protect from clearing CR0 fixed bits (PE/PG) by guest when Unrestricted Guest = 0
 - VMX: Fixed VMX Abort error codes to be written into VMCS_VMX_ABORT_FIELD
 - VMX: Implement VMX Abort condition for exiting to 32-bit host from 64-bit guest

@@ -5517,6 +5517,7 @@ public: // for now...
   BX_SMF bxICacheEntry_c *fillICacheEntry(const Bit8u *fetchPtr, unsigned remainingInPage, bx_phy_address pAddr);
   BX_SMF bxICacheEntry_c* getICacheEntry(void);
   BX_SMF bool mergeTraces(bxTraceCacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr);
+  BX_SMF void invalidatePageSplitTraces(void);
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS && BX_ENABLE_TRACE_LINKING
   BX_SMF void linkTrace(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 #endif
@@ -6662,11 +6663,17 @@ BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
 #endif
      unsigned(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b);    // typecast to keep MSVC warnings silent
 
-  BX_CPU_THIS_PTR user_pl = // CPL == 3
+  bool user_pl = // CPL == 3
      (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl == 3);
 
+  if (BX_CPU_THIS_PTR user_pl != user_pl) {
+    BX_CPU_THIS_PTR user_pl = user_pl;
+    // the 2nd page of a page split trace was cached with old CPL
+    invalidatePageSplitTraces();
+  }
+
 #if BX_SUPPORT_UINTR
-  uintr_control(); // CPL changes
+  uintr_control(); // CPL or long64 mode changes
 #endif
 }
 
