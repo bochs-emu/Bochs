@@ -417,12 +417,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   // before any state is modified, touch the memory but no read actually occurs
   // in compacted format the components layout is defined by XCOMP_BV, not by RFBM
   if (compaction) {
-    tickle_read_virtual(i->seg(), (eaddr + xsave_area_last_byte_compaction((Bit32u) xcomp_bv, requested_feature_bitmap) - 1) & asize_mask);
-    tickle_read_virtual(i->seg(), (eaddr + xsave_area_first_byte(requested_feature_bitmap & (Bit32u) xcomp_bv, true)) & asize_mask);
+    tickle_read_virtual(i->seg(), (eaddr + xsave_area_last_byte_compaction((Bit32u) xcomp_bv, requested_feature_bitmap) - 1) & asize_mask, 1);
+    tickle_read_virtual(i->seg(), (eaddr + xsave_area_first_byte(requested_feature_bitmap & (Bit32u) xcomp_bv, true)) & asize_mask, 1);
   }
   else {
-    tickle_read_virtual(i->seg(), (eaddr + xsave_area_last_byte(requested_feature_bitmap) - 1) & asize_mask);
-    tickle_read_virtual(i->seg(), (eaddr + xsave_area_first_byte(requested_feature_bitmap, false)) & asize_mask);
+    tickle_read_virtual(i->seg(), (eaddr + xsave_area_last_byte(requested_feature_bitmap) - 1) & asize_mask, 1);
+    tickle_read_virtual(i->seg(), (eaddr + xsave_area_first_byte(requested_feature_bitmap, false)) & asize_mask, 1);
   }
 
   /////////////////////////////////////////////////////////////////////////////

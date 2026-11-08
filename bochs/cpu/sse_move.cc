@@ -311,7 +311,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 
   // check that we would not fault while attempting to read, check that we can read-access byte 511 of the
   // FXRSTOR image (the first byte is checked by the very first read)
-  tickle_read_virtual(i->seg(), (eaddr + 511) & asize_mask);
+  tickle_read_virtual(i->seg(), (eaddr + 511) & asize_mask, 1);
 
   read_virtual_xmmword_aligned(i->seg(), eaddr, &xmm);
 

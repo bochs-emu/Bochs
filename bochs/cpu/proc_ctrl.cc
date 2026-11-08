@@ -315,7 +315,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 #endif
     laddr = agen_read_execute32(i->seg(), (Bit32u)eaddr, 1);
 
-  tickle_read_linear(i->seg(), laddr);
+  tickle_read_linear(i->seg(), laddr, 1);
 
   BX_INSTR_CLFLUSH(BX_CPU_ID, laddr, BX_CPU_THIS_PTR address_xlation.paddress1);
 

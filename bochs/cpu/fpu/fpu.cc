@@ -182,62 +182,61 @@ bx_address BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
 
 bx_address BX_CPU_C::fpu_load_environment(bxInstruction_c *i)
 {
-    unsigned offset = (i->os32L() || i->os64L()) ? 0x1c : 0x0e;
     bx_address asize_mask = i->asize_mask();
 
     bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
-    // check that we would not fault while attempting to read, check that we can read-access first and last bytes
-    // of the memory image before anything is loaded
-    tickle_read_virtual(i->seg(), eaddr);
-
     // FRSTOR memory image also includes 8 FPU data registers (80 bytes) following the environment
     unsigned regs_size = (i->getIaOpcode() == BX_IA_FRSTOR) ? 80 : 0;
-
-    tickle_read_virtual(i->seg(), (eaddr + offset - 1 + regs_size) & asize_mask);
+    unsigned offset;
 
     if (protected_mode())  /* Protected Mode */
     {
         if (i->os32L() || i->os64L())
         {
-            Bit32u tmp;
+            offset = 0x1c;
 
-            tmp = read_virtual_dword(i->seg(), (eaddr + 0x18) & asize_mask);
-            BX_CPU_THIS_PTR the_i387.fds = tmp & 0xffff;
-            tmp = read_virtual_dword(i->seg(), (eaddr + 0x14) & asize_mask);
-            BX_CPU_THIS_PTR the_i387.fdp = tmp;
-            tmp = read_virtual_dword(i->seg(), (eaddr + 0x10) & asize_mask);
-            BX_CPU_THIS_PTR the_i387.fcs = tmp & 0xffff;
-            BX_CPU_THIS_PTR the_i387.foo = (tmp >> 16) & 0x07ff;
-            tmp = read_virtual_dword(i->seg(), (eaddr + 0x0c) & asize_mask);
-            BX_CPU_THIS_PTR the_i387.fip = tmp;
-            tmp = read_virtual_dword(i->seg(), (eaddr + 0x08) & asize_mask);
-            BX_CPU_THIS_PTR the_i387.twd = tmp & 0xffff;
+            Bit32u tmp = read_virtual_dword(i->seg(), eaddr);
+            // check that we would not fault while attempting to read, attempt to read-access last byte of the memory image
+            tickle_read_virtual(i->seg(), (eaddr + offset - 1 + regs_size) & asize_mask, 1);
+            BX_CPU_THIS_PTR the_i387.cwd = tmp & 0xffff;
             tmp = read_virtual_dword(i->seg(), (eaddr + 0x04) & asize_mask);
             BX_CPU_THIS_PTR the_i387.swd = tmp & 0xffff;
             BX_CPU_THIS_PTR the_i387.tos = (tmp >> 11) & 0x7;
-            tmp = read_virtual_dword(i->seg(), eaddr);
-            BX_CPU_THIS_PTR the_i387.cwd = tmp & 0xffff;
+            tmp = read_virtual_dword(i->seg(), (eaddr + 0x08) & asize_mask);
+            BX_CPU_THIS_PTR the_i387.twd = tmp & 0xffff;
+            tmp = read_virtual_dword(i->seg(), (eaddr + 0x0c) & asize_mask);
+            BX_CPU_THIS_PTR the_i387.fip = tmp;
+            tmp = read_virtual_dword(i->seg(), (eaddr + 0x10) & asize_mask);
+            BX_CPU_THIS_PTR the_i387.fcs = tmp & 0xffff;
+            BX_CPU_THIS_PTR the_i387.foo = (tmp >> 16) & 0x07ff;
+            tmp = read_virtual_dword(i->seg(), (eaddr + 0x14) & asize_mask);
+            BX_CPU_THIS_PTR the_i387.fdp = tmp;
+            tmp = read_virtual_dword(i->seg(), (eaddr + 0x18) & asize_mask);
+            BX_CPU_THIS_PTR the_i387.fds = tmp & 0xffff;
         }
         else /* Protected Mode - 16 bit */
         {
-            Bit16u tmp;
+            offset = 0x0e;
 
-            tmp = read_virtual_word(i->seg(), (eaddr + 0x0c)  & asize_mask);
-            BX_CPU_THIS_PTR the_i387.fds = tmp;
-            tmp = read_virtual_word(i->seg(), (eaddr + 0x0a)  & asize_mask);
-            BX_CPU_THIS_PTR the_i387.fdp = tmp;
-            tmp = read_virtual_word(i->seg(), (eaddr + 0x08)  & asize_mask);
-            BX_CPU_THIS_PTR the_i387.fcs = tmp;
-            tmp = read_virtual_word(i->seg(), (eaddr + 0x06) & asize_mask);
-            BX_CPU_THIS_PTR the_i387.fip = tmp;
-            tmp = read_virtual_word(i->seg(), (eaddr + 0x04) & asize_mask);
-            BX_CPU_THIS_PTR the_i387.twd = tmp;
+            Bit16u tmp = read_virtual_word(i->seg(), eaddr);
+            // check that we would not fault while attempting to read, attempt to read-access last byte of the memory image
+            tickle_read_virtual(i->seg(), (eaddr + offset - 1 + regs_size) & asize_mask, 1);
+            BX_CPU_THIS_PTR the_i387.cwd = tmp;
             tmp = read_virtual_word(i->seg(), (eaddr + 0x02) & asize_mask);
             BX_CPU_THIS_PTR the_i387.swd = tmp;
             BX_CPU_THIS_PTR the_i387.tos = (tmp >> 11) & 0x7;
-            tmp = read_virtual_word(i->seg(), eaddr);
-            BX_CPU_THIS_PTR the_i387.cwd = tmp;
+            tmp = read_virtual_word(i->seg(), (eaddr + 0x04) & asize_mask);
+            BX_CPU_THIS_PTR the_i387.twd = tmp;
+            tmp = read_virtual_word(i->seg(), (eaddr + 0x06) & asize_mask);
+            BX_CPU_THIS_PTR the_i387.fip = tmp;
+            tmp = read_virtual_word(i->seg(), (eaddr + 0x08)  & asize_mask);
+            BX_CPU_THIS_PTR the_i387.fcs = tmp;
+            tmp = read_virtual_word(i->seg(), (eaddr + 0x0a)  & asize_mask);
+            BX_CPU_THIS_PTR the_i387.fdp = tmp;
+            tmp = read_virtual_word(i->seg(), (eaddr + 0x0c)  & asize_mask);
+            BX_CPU_THIS_PTR the_i387.fds = tmp;
+
             /* opcode is defined to be zero */
             BX_CPU_THIS_PTR the_i387.foo = 0;
         }
@@ -248,52 +247,53 @@ bx_address BX_CPU_C::fpu_load_environment(bxInstruction_c *i)
 
         if (i->os32L())
         {
-            Bit32u tmp;
+            offset = 0x1c;
 
-            tmp = read_virtual_dword(i->seg(), (eaddr + 0x18) & asize_mask);
-            fp_dp = (tmp & 0x0ffff000) << 4;
-            tmp = read_virtual_dword(i->seg(), (eaddr + 0x14) & asize_mask);
-            fp_dp |= tmp & 0xffff;
-            BX_CPU_THIS_PTR the_i387.fdp = fp_dp;
-            BX_CPU_THIS_PTR the_i387.fds = 0;
-            tmp = read_virtual_dword(i->seg(), (eaddr + 0x10) & asize_mask);
-            BX_CPU_THIS_PTR the_i387.foo = tmp & 0x07ff;
-            fp_ip = (tmp & 0x0ffff000) << 4;
-            tmp = read_virtual_dword(i->seg(), (eaddr + 0x0c) & asize_mask);
-            fp_ip |= tmp & 0xffff;
-            BX_CPU_THIS_PTR the_i387.fip = fp_ip;
-            BX_CPU_THIS_PTR the_i387.fcs = 0;
-            tmp = read_virtual_dword(i->seg(), (eaddr + 0x08) & asize_mask);
-            BX_CPU_THIS_PTR the_i387.twd = tmp & 0xffff;
+            Bit32u tmp = read_virtual_dword(i->seg(), eaddr);
+            // check that we would not fault while attempting to read, attempt to read-access last byte of the memory image
+            tickle_read_virtual(i->seg(), (eaddr + offset - 1 + regs_size) & asize_mask, 1);
+            BX_CPU_THIS_PTR the_i387.cwd = tmp & 0xffff;
             tmp = read_virtual_dword(i->seg(), (eaddr + 0x04) & asize_mask);
             BX_CPU_THIS_PTR the_i387.swd = tmp & 0xffff;
             BX_CPU_THIS_PTR the_i387.tos = (tmp >> 11) & 0x7;
-            tmp = read_virtual_dword(i->seg(), eaddr);
-            BX_CPU_THIS_PTR the_i387.cwd = tmp & 0xffff;
+            tmp = read_virtual_dword(i->seg(), (eaddr + 0x08) & asize_mask);
+            BX_CPU_THIS_PTR the_i387.twd = tmp & 0xffff;
+            tmp = read_virtual_dword(i->seg(), (eaddr + 0x0c) & asize_mask);
+            fp_ip = tmp & 0xffff;
+            tmp = read_virtual_dword(i->seg(), (eaddr + 0x10) & asize_mask);
+            BX_CPU_THIS_PTR the_i387.foo = tmp & 0x07ff;
+            fp_ip |= (tmp & 0x0ffff000) << 4;
+            tmp = read_virtual_dword(i->seg(), (eaddr + 0x14) & asize_mask);
+            fp_dp = tmp & 0xffff;
+            tmp = read_virtual_dword(i->seg(), (eaddr + 0x18) & asize_mask);
+            fp_dp |= (tmp & 0x0ffff000) << 4;
         }
         else  /* Real or V86 Mode - 16 bit */
         {
-            Bit16u tmp;
+            offset = 0x0e;
 
-            tmp = read_virtual_word(i->seg(), (eaddr + 0x0c) & asize_mask);
-            fp_dp = (tmp & 0xf000) << 4;
-            tmp = read_virtual_word(i->seg(), (eaddr + 0x0a) & asize_mask);
-            BX_CPU_THIS_PTR the_i387.fdp = fp_dp | tmp;
-            BX_CPU_THIS_PTR the_i387.fds = 0;
-            tmp = read_virtual_word(i->seg(), (eaddr + 0x08) & asize_mask);
-            BX_CPU_THIS_PTR the_i387.foo = tmp & 0x07ff;
-            fp_ip = (tmp & 0xf000) << 4;
-            tmp = read_virtual_word(i->seg(), (eaddr + 0x06) & asize_mask);
-            BX_CPU_THIS_PTR the_i387.fip = fp_ip | tmp;
-            BX_CPU_THIS_PTR the_i387.fcs = 0;
-            tmp = read_virtual_word(i->seg(), (eaddr + 0x04) & asize_mask);
-            BX_CPU_THIS_PTR the_i387.twd = tmp;
+            Bit16u tmp = read_virtual_word(i->seg(), eaddr);
+            // check that we would not fault while attempting to read, attempt to read-access last byte of the memory image
+            tickle_read_virtual(i->seg(), (eaddr + offset - 1 + regs_size) & asize_mask, 1);
+            BX_CPU_THIS_PTR the_i387.cwd = tmp;
             tmp = read_virtual_word(i->seg(), (eaddr + 0x02) & asize_mask);
             BX_CPU_THIS_PTR the_i387.swd = tmp;
             BX_CPU_THIS_PTR the_i387.tos = (tmp >> 11) & 0x7;
-            tmp = read_virtual_word(i->seg(), eaddr);
-            BX_CPU_THIS_PTR the_i387.cwd = tmp;
+            tmp = read_virtual_word(i->seg(), (eaddr + 0x04) & asize_mask);
+            BX_CPU_THIS_PTR the_i387.twd = tmp;
+            fp_ip = read_virtual_word(i->seg(), (eaddr + 0x06) & asize_mask);
+            tmp = read_virtual_word(i->seg(), (eaddr + 0x08) & asize_mask);
+            BX_CPU_THIS_PTR the_i387.foo = tmp & 0x07ff;
+            fp_ip |= (tmp & 0xf000) << 4;
+            fp_dp = read_virtual_word(i->seg(), (eaddr + 0x0a) & asize_mask);
+            tmp = read_virtual_word(i->seg(), (eaddr + 0x0c) & asize_mask);
+            fp_dp |= (tmp & 0xf000) << 4;
         }
+
+        BX_CPU_THIS_PTR the_i387.fip = fp_ip;
+        BX_CPU_THIS_PTR the_i387.fcs = 0;
+        BX_CPU_THIS_PTR the_i387.fdp = fp_dp;
+        BX_CPU_THIS_PTR the_i387.fds = 0;
     }
 
     /* always set bit 6 as '1 */

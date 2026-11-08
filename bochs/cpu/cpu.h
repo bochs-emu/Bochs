@@ -5571,9 +5571,9 @@ public: // for now...
   BX_SMF void write_linear_zmmword_aligned(unsigned seg, bx_address off, const BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
 #endif
 
-  BX_SMF void tickle_read_linear(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
-  BX_SMF void tickle_read_virtual_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
-  BX_SMF void tickle_read_virtual(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF void tickle_read_linear(unsigned seg, bx_address offset, unsigned len) BX_CPP_AttrRegparmN(3);
+  BX_SMF void tickle_read_virtual_32(unsigned seg, Bit32u offset, unsigned len) BX_CPP_AttrRegparmN(3);
+  BX_SMF void tickle_read_virtual(unsigned seg, bx_address offset, unsigned len) BX_CPP_AttrRegparmN(3);
 
   BX_SMF void tickle_write_linear(unsigned seg, bx_address offset, unsigned len) BX_CPP_AttrRegparmN(3);
   BX_SMF void tickle_write_virtual_32(unsigned seg, Bit32u offset, unsigned len) BX_CPP_AttrRegparmN(3);

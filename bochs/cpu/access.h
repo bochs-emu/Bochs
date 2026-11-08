@@ -98,11 +98,11 @@ BX_CPU_C::write_virtual_zmmword_aligned_32(unsigned s, Bit32u offset, const BxPa
 
 #endif // BX_CPU_LEVEL >= 6
 
-  BX_CPP_INLINE void BX_CPP_AttrRegparmN(2)
-BX_CPU_C::tickle_read_virtual_32(unsigned s, Bit32u offset)
+  BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
+BX_CPU_C::tickle_read_virtual_32(unsigned s, Bit32u offset, unsigned len)
 {
-  Bit32u laddr = agen_read32(s, offset, 1);
-  tickle_read_linear(s, laddr);
+  Bit32u laddr = agen_read32(s, offset, len);
+  tickle_read_linear(s, laddr, len);
 }
 
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
@@ -260,11 +260,11 @@ BX_CPU_C::write_virtual_zmmword_aligned(unsigned s, bx_address offset, const BxP
 
 #endif // BX_CPU_LEVEL >= 6
 
-  BX_CPP_INLINE void BX_CPP_AttrRegparmN(2)
-BX_CPU_C::tickle_read_virtual(unsigned s, bx_address offset)
+  BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
+BX_CPU_C::tickle_read_virtual(unsigned s, bx_address offset, unsigned len)
 {
-  bx_address laddr = agen_read(s, offset, 1);
-  tickle_read_linear(s, laddr);
+  bx_address laddr = agen_read(s, offset, len);
+  tickle_read_linear(s, laddr, len);
 }
 
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)

@@ -106,7 +106,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
   bx_address eaddr = RAX & i->asize_mask();
 
   // MONITOR/MONITORX performs the same segmentation and paging checks as a 1-byte read
-  tickle_read_virtual(i->seg(), eaddr);
+  tickle_read_virtual(i->seg(), eaddr, 1);
 
 #if BX_SUPPORT_SVM
   // MONITOR intercept is checked after all exceptions (APM Table 15-7)
@@ -283,7 +283,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMONITOR_Eq(bxInstruction_c *i)
 #endif
 
   // UMONITOR performs the same segmentation and paging checks as a 1-byte read
-  tickle_read_virtual(i->seg(), eaddr);
+  tickle_read_virtual(i->seg(), eaddr, 1);
 
   bx_phy_address paddr = BX_CPU_THIS_PTR address_xlation.paddress1;
 #if BX_SUPPORT_MEMTYPE

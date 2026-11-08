@@ -298,15 +298,23 @@ BX_CPU_C::write_linear_zmmword_aligned(unsigned s, bx_address laddr, const BxPac
 
 #endif
 
-  void BX_CPP_AttrRegparmN(2)
-BX_CPU_C::tickle_read_linear(unsigned s, bx_address laddr)
+  void BX_CPP_AttrRegparmN(3)
+BX_CPU_C::tickle_read_linear(unsigned s, bx_address laddr, unsigned len)
 {
+  len--;
+
+  bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr, len);
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+  bx_address lpf = AlignedAccessLPFOf(laddr, (len & BX_CPU_THIS_PTR alignment_check_mask));
+#else
   bx_address lpf = LPFOf(laddr);
-  bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr, 0);
+#endif
+  Bit32u pageOffset = PAGE_OFFSET(laddr);
+
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us read access from this CPL
     if (isReadOK(tlbEntry, USER_PL)) {
-      BX_CPU_THIS_PTR address_xlation.paddress1 = tlbEntry->ppf | PAGE_OFFSET(laddr);
+      BX_CPU_THIS_PTR address_xlation.paddress1 = tlbEntry->ppf | pageOffset;
       BX_CPU_THIS_PTR address_xlation.pages     = 1;
 #if BX_SUPPORT_MEMTYPE
       BX_CPU_THIS_PTR address_xlation.memtype1  = tlbEntry->get_memtype();
@@ -316,18 +324,39 @@ BX_CPU_C::tickle_read_linear(unsigned s, bx_address laddr)
   }
 
 #if BX_SUPPORT_X86_64
-  if (! IsCanonicalAccess(laddr, BX_READ, USER_PL)) {
+  if (! IsCanonicalAccess(laddr, BX_READ, USER_PL) || ! IsCanonicalAccess(laddr+len, BX_READ, USER_PL)) {
     BX_ERROR(("tickle_read_linear(): canonical failure"));
     exception(int_number(s), 0);
   }
 #endif
 
-  // Access within single page
-  BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, USER_PL, BX_READ);
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  if (BX_CPU_THIS_PTR alignment_check() && USER_PL) {
+    if (pageOffset & len) {
+      BX_ERROR(("tickle_read_linear(): #AC misaligned access"));
+      exception(BX_AC_EXCEPTION, 0);
+    }
+  }
+#endif
+
+  // access spans across two pages
+  tlbEntry = BX_DTLB_ENTRY_OF(laddr, 0);
   BX_CPU_THIS_PTR address_xlation.pages     = 1;
+  BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, USER_PL, BX_READ);
 #if BX_SUPPORT_MEMTYPE
   BX_CPU_THIS_PTR address_xlation.memtype1  = tlbEntry->get_memtype();
 #endif
+
+  if ((laddr>>12) != (laddr + len) >> 12) {
+    bx_address laddr2 = LPFOf(laddr + len);
+    bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr2, 1);
+
+    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry, laddr2, USER_PL, BX_READ);
+    BX_CPU_THIS_PTR address_xlation.pages     = 2;
+#if BX_SUPPORT_MEMTYPE
+    BX_CPU_THIS_PTR address_xlation.memtype2  = tlbEntry->get_memtype();
+#endif
+  }
 }
 
   void BX_CPP_AttrRegparmN(3)
@@ -371,7 +400,8 @@ BX_CPU_C::tickle_write_linear(unsigned s, bx_address laddr, unsigned len)
   }
 #endif
 
-  // access spans accross two pages
+  // access spans across two pages
+  tlbEntry = BX_DTLB_ENTRY_OF(laddr, 0);
   BX_CPU_THIS_PTR address_xlation.pages     = 1;
   BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, USER_PL, BX_WRITE);
 #if BX_SUPPORT_MEMTYPE
@@ -379,8 +409,11 @@ BX_CPU_C::tickle_write_linear(unsigned s, bx_address laddr, unsigned len)
 #endif
 
   if ((laddr>>12) != (laddr + len) >> 12) {
+    bx_address laddr2 = LPFOf(laddr + len);
+    bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr2, 1);
+
+    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry, laddr2, USER_PL, BX_WRITE);
     BX_CPU_THIS_PTR address_xlation.pages     = 2;
-    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry, laddr+len, USER_PL, BX_WRITE);
 #if BX_SUPPORT_MEMTYPE
     BX_CPU_THIS_PTR address_xlation.memtype2  = tlbEntry->get_memtype();
 #endif
