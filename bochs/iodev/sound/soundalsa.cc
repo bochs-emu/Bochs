@@ -418,6 +418,7 @@ int bx_soundlow_midiout_alsa_c::alsa_seq_output(int delta, int command, int leng
 {
   int cmd, chan, value;
   snd_seq_event_t ev;
+  Bit8u sysex[257];
 
   snd_seq_ev_clear(&ev);
   snd_seq_ev_set_source(&ev, alsa_seq.source_port);
@@ -470,8 +471,51 @@ int bx_soundlow_midiout_alsa_c::alsa_seq_output(int delta, int command, int leng
       ev.data.control.value = value;
       break;
     case 0xf0:
-      BX_ERROR(("alsa_seq_output(): SYSEX not implemented, length=%d", length));
-      return BX_SOUNDLOW_ERR;
+      // system messages
+      switch (command) {
+        case 0xf0:
+          if (length > 256) {
+            BX_ERROR(("alsa_seq_output(): SYSEX too long, length=%d", length));
+            return BX_SOUNDLOW_ERR;
+          }
+          sysex[0] = 0xf0;
+          memcpy(&sysex[1], data, length);
+          snd_seq_ev_set_sysex(&ev, length + 1, sysex);
+          break;
+        case 0xf2:
+          ev.type = SND_SEQ_EVENT_SONGPOS;
+          ev.data.control.value = data[0] | (data[1] << 7);
+          break;
+        case 0xf3:
+          ev.type = SND_SEQ_EVENT_SONGSEL;
+          ev.data.control.value = data[0];
+          break;
+        case 0xf6:
+          ev.type = SND_SEQ_EVENT_TUNE_REQUEST;
+          break;
+        case 0xf8:
+          ev.type = SND_SEQ_EVENT_CLOCK;
+          break;
+        case 0xfa:
+          ev.type = SND_SEQ_EVENT_START;
+          break;
+        case 0xfb:
+          ev.type = SND_SEQ_EVENT_CONTINUE;
+          break;
+        case 0xfc:
+          ev.type = SND_SEQ_EVENT_STOP;
+          break;
+        case 0xfe:
+          ev.type = SND_SEQ_EVENT_SENSING;
+          break;
+        case 0xff:
+          ev.type = SND_SEQ_EVENT_RESET;
+          break;
+        default:
+          BX_DEBUG(("alsa_seq_output(): system message 0x%02x ignored", command));
+          return BX_SOUNDLOW_OK;
+      }
+      break;
     default:
       BX_ERROR(("alsa_seq_output(): unknown command 0x%02x, length=%d", command, length));
       return BX_SOUNDLOW_ERR;

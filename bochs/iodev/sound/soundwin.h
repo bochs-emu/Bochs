@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -201,6 +201,7 @@ private:
 
   LPWAVEHDR WaveInHdr;
   LPSTR WaveInData;
+  HANDLE WaveInEvent;     // signaled by the driver when a buffer is done
   bool recording;
 
   int recordnextpacket();

@@ -150,13 +150,14 @@ int bx_soundlow_waveout_win_c::set_pcm_params(bx_pcm_param_t *param)
   }
 
   BX_LOCK(waveout_mutex);
+  // The mixer always produces 16-bit stereo data, so only the frequency
+  // can be changed if the device doesn't support the requested format.
+  int frequency = real_pcm_param.samplerate;
+  bool stereo = real_pcm_param.channels == 2;
+  int bits = real_pcm_param.bits;
+  int bps = (bits / 8) * (stereo + 1);
   // try three times to find a suitable format
   for (int tries = 0; tries < 3; tries++) {
-    int frequency = real_pcm_param.samplerate;
-    bool stereo = real_pcm_param.channels == 2;
-    int bits = real_pcm_param.bits;
-    int bps = (bits / 8) * (stereo + 1);
-
     waveformat.wf.wFormatTag = WAVE_FORMAT_PCM;
     waveformat.wf.nChannels = stereo + 1;
     waveformat.wf.nSamplesPerSec = frequency;
@@ -182,13 +183,10 @@ int bx_soundlow_waveout_win_c::set_pcm_params(bx_pcm_param_t *param)
           BX_DEBUG(("Couldn't open wave device (error %d), trying frequency %d", ret, frequency));
           break;
 
-        case 1:        // or something else
-          frequency = 11025;
-          stereo = 0;
-          bits = 8;
-          bps = 1;
+        case 1:        // or the most common one
+          frequency = 44100;
 
-          BX_DEBUG(("Couldn't open wave device again (error %d), trying 11KHz, mono, 8bit", ret));
+          BX_DEBUG(("Couldn't open wave device again (error %d), trying frequency %d", ret, frequency));
           break;
 
         case 2:        // nope, doesn't work
@@ -202,6 +200,10 @@ int bx_soundlow_waveout_win_c::set_pcm_params(bx_pcm_param_t *param)
       BX_DEBUG(("                nAvgBytesPerSec=%d, nBlockAlign=%d, wBitsPerSample=%d",
                 waveformat.wf.nAvgBytesPerSec, waveformat.wf.nBlockAlign, waveformat.wBitsPerSample));
     } else {
+      if ((Bit32u)frequency != real_pcm_param.samplerate) {
+        BX_INFO(("changed sample rate to %d", frequency));
+        real_pcm_param.samplerate = frequency;
+      }
       WaveOutOpen = true;
       for (int i = 0; i < 2; i++) {
         LPWAVEHDR waveOutHdr = WaveOutHdrs[i];
@@ -301,6 +303,8 @@ bx_soundlow_wavein_win_c::bx_soundlow_wavein_win_c()
     :bx_soundlow_wavein_c()
 {
   WaveInOpen = 0;
+  recording = 0;
+  WaveInEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
   WaveInHdr = (LPWAVEHDR) newbuffer(sizeof(WAVEHDR));
   WaveInData = (LPSTR) newbuffer(BX_SOUNDLOW_WAVEPACKETSIZE+64);
   if (WaveInData == NULL)
@@ -310,8 +314,10 @@ bx_soundlow_wavein_win_c::bx_soundlow_wavein_win_c()
 bx_soundlow_wavein_win_c::~bx_soundlow_wavein_win_c()
 {
   if (WaveInOpen == 1) {
+    stopwaverecord();
     waveInClose(hWaveIn);
   }
+  CloseHandle(WaveInEvent);
 }
 
 int bx_soundlow_wavein_win_c::openwaveinput(const char *wavedev, sound_record_handler_t rh)
@@ -375,7 +381,13 @@ int bx_soundlow_wavein_win_c::startwaverecord(bx_pcm_param_t *param)
     wavein_param = *param;
 
     if (WaveInOpen) {
+      if (recording) {
+        waveInReset(hWaveIn);
+        waveInUnprepareHeader(hWaveIn, WaveInHdr, sizeof(WAVEHDR));
+        recording = 0;
+      }
       waveInClose(hWaveIn);
+      WaveInOpen = 0;
     }
 
     // Specify recording parameters
@@ -387,7 +399,8 @@ int bx_soundlow_wavein_win_c::startwaverecord(bx_pcm_param_t *param)
     pFormat.nBlockAlign = 1 << shift;
     pFormat.wBitsPerSample = param->bits;
     pFormat.cbSize = 0;
-    result = waveInOpen(&hWaveIn, WAVEMAPPER, &pFormat, 0L, 0L, WAVE_FORMAT_DIRECT);
+    result = waveInOpen(&hWaveIn, WAVEMAPPER, &pFormat, (DWORD_PTR)WaveInEvent, 0L,
+                        CALLBACK_EVENT | WAVE_FORMAT_DIRECT);
     if (result) {
       BX_ERROR(("Couldn't open wave device for recording (error = %d)", result));
       return BX_SOUNDLOW_ERR;
@@ -395,14 +408,30 @@ int bx_soundlow_wavein_win_c::startwaverecord(bx_pcm_param_t *param)
       WaveInOpen = 1;
     }
   }
+  if (recording) {
+    return BX_SOUNDLOW_OK; // buffer already queued
+  }
   return recordnextpacket();
 }
 
 int bx_soundlow_wavein_win_c::getwavepacket(int length, Bit8u data[])
 {
   if (WaveInOpen && recording) {
-    do {} while (waveInUnprepareHeader(hWaveIn, WaveInHdr, sizeof(WAVEHDR)) == WAVERR_STILLPLAYING);
-    memcpy(data, WaveInData, length);
+    // wait (max. 1 sec) until the driver has filled the buffer
+    for (int i = 0; (i < 10) && ((WaveInHdr->dwFlags & WHDR_DONE) == 0); i++) {
+      WaitForSingleObject(WaveInEvent, 100);
+    }
+    if ((WaveInHdr->dwFlags & WHDR_DONE) == 0) {
+      BX_ERROR(("wave input timeout"));
+      waveInReset(hWaveIn); // returns the buffer
+    }
+    waveInUnprepareHeader(hWaveIn, WaveInHdr, sizeof(WAVEHDR));
+    int recorded = (int)WaveInHdr->dwBytesRecorded;
+    if (recorded > length) recorded = length;
+    memcpy(data, WaveInData, recorded);
+    if (recorded < length) {
+      memset(data + recorded, 0, length - recorded);
+    }
     return recordnextpacket();
   } else {
     memset(data, 0, length);
@@ -416,7 +445,8 @@ int bx_soundlow_wavein_win_c::stopwaverecord()
     bx_pc_system.deactivate_timer(record_timer_index);
   }
   if (WaveInOpen && recording) {
-    do {} while (waveInUnprepareHeader(hWaveIn, WaveInHdr, sizeof(WAVEHDR)) == WAVERR_STILLPLAYING);
+    waveInReset(hWaveIn); // stop recording, returns the buffer
+    waveInUnprepareHeader(hWaveIn, WaveInHdr, sizeof(WAVEHDR));
     recording = 0;
   }
   return BX_SOUNDLOW_OK;
@@ -498,10 +528,26 @@ int bx_soundlow_midiout_win_c::sendmidicommand(int delta, int command, int lengt
   if ((command == 0xf0) || (command == 0xf7) || (length > 3))
   {
     BX_DEBUG(("SYSEX started, length %d", length));
+    // the header can't be reused before the previous SYSEX has been sent
+    for (int i = 0; (ismidiready == 0) && (i < 1000); i++) {
+      checkmidiready();
+      if (ismidiready == 0)
+        BX_MSLEEP(1);
+    }
+    if (ismidiready == 0) {
+      BX_ERROR(("previous SYSEX message still pending - message dropped"));
+      return BX_SOUNDLOW_ERR;
+    }
+    if ((length + 1) > BX_SOUND_WINDOWS_MAXSYSEXLEN) {
+      BX_ERROR(("SYSEX message too long (%d bytes) - truncated", length + 1));
+      length = BX_SOUND_WINDOWS_MAXSYSEXLEN - 1;
+    }
     ismidiready = 0;   // until the buffer is done
-    memcpy(MidiData, data, length);
+    // the long message buffer must start with the status byte
+    MidiData[0] = (char)command;
+    memcpy(MidiData + 1, data, length);
     MidiHeader->lpData = MidiData;
-    MidiHeader->dwBufferLength = BX_SOUND_WINDOWS_MAXSYSEXLEN;
+    MidiHeader->dwBufferLength = length + 1;
     MidiHeader->dwBytesRecorded = 0;
     MidiHeader->dwUser = 0;
     MidiHeader->dwFlags = 0;
