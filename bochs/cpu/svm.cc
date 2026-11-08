@@ -1050,10 +1050,11 @@ bool BX_CPU_C::SvmInjectEvents(void)
       if (vector == BX_BP_EXCEPTION || vector == BX_OF_EXCEPTION) {
         type = BX_SOFTWARE_EXCEPTION;
       }
-      BX_CPU_THIS_PTR EXT = 1;
+      BX_CPU_THIS_PTR EXT = (type != BX_SOFTWARE_EXCEPTION);   // #BP / #OF injected as INT3 / INTO: EXT clear
       break;
 
     case BX_SOFTWARE_INTERRUPT:
+      BX_CPU_THIS_PTR EXT = 0;   // INT n injected: EXT clear, as the guest's own INT n
       break;
 
     default:
