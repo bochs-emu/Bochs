@@ -1145,6 +1145,14 @@ bx_devices_c::inp(Bit16u addr, unsigned io_len)
   io_read_handler = read_port_to_handler[addr];
   if (io_read_handler->mask & io_len) {
     ret = ((bx_read_handler_t)io_read_handler->funct)(io_read_handler->this_ptr, (Bit32u)addr, io_len);
+  } else if (io_len > 1 && (io_read_handler->mask & 1)) {
+    // a word / dword IN from a device that registered byte access only: the bus splits it into byte reads, low byte first
+    ret = 0;
+    for (unsigned i = 0; i < io_len; i++) {
+      struct io_handler_struct *h = read_port_to_handler[(Bit16u)(addr + i)];
+      Bit32u b = (h->mask & 1) ? ((bx_read_handler_t)h->funct)(h->this_ptr, (Bit32u)(Bit16u)(addr + i), 1) : 0xff;
+      ret |= (b & 0xff) << (8 * i);
+    }
   } else {
     switch (io_len) {
       case 1: ret = 0xff; break;
@@ -1178,6 +1186,12 @@ bx_devices_c::outp(Bit16u addr, Bit32u value, unsigned io_len)
   io_write_handler = write_port_to_handler[addr];
   if (io_write_handler->mask & io_len) {
     ((bx_write_handler_t)io_write_handler->funct)(io_write_handler->this_ptr, (Bit32u)addr, value, io_len);
+  } else if (io_len > 1 && (io_write_handler->mask & 1)) {
+    // a word / dword OUT to a device that registered byte access only: the bus splits it into byte writes, low byte first
+    for (unsigned i = 0; i < io_len; i++) {
+      struct io_handler_struct *h = write_port_to_handler[(Bit16u)(addr + i)];
+      if (h->mask & 1) ((bx_write_handler_t)h->funct)(h->this_ptr, (Bit32u)(Bit16u)(addr + i), (value >> (8 * i)) & 0xff, 1);
+    }
   } else if (addr != 0x0cf8) { // don't flood the logfile when probing PCI
     BX_ERROR(("write to port 0x%04x with len %d ignored", addr, io_len));
   }
