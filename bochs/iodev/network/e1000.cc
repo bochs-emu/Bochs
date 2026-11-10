@@ -250,6 +250,9 @@ struct e1000_context_desc {
 
 #define MIN_BUF_SIZE 60
 
+// tx.data has 0x10000 bytes and tx.size is 16-bit
+#define E1000_TX_DATA_MAX 0xffffU
+
 #define	defreg(x) x = (E1000_##x>>2)
 enum {
   defreg(CTRL),  defreg(EECD),  defreg(EERD),   defreg(GPRC),
@@ -1107,7 +1110,8 @@ void bx_e1000_c::putsum(Bit8u *data, Bit32u n, Bit32u sloc, Bit32u css, Bit32u c
 
   if (cse && cse < n)
     n = cse + 1;
-  if (sloc < n-1) {
+  // the checksum start is guest-controlled and may be beyond the data
+  if ((sloc < n-1) && (css < n)) {
     sum = net_checksum_add(data+css, n-css);
     put_net2(data + sloc, net_checksum_finish(sum));
   }
@@ -1256,8 +1260,13 @@ void bx_e1000_c::process_tx_desc(struct e1000_tx_desc *dp)
     msh = hdr + tp->mss;
     do {
       bytes = split_size;
+      // no room left in the segment (e.g. MSS = 0)
+      if (tp->size >= msh)
+        break;
       if (tp->size + bytes > msh)
         bytes = msh - tp->size;
+      if (bytes > (E1000_TX_DATA_MAX - tp->size))
+        bytes = E1000_TX_DATA_MAX - tp->size;
       DEV_MEM_READ_PHYSICAL_DMA(addr, bytes, tp->data + tp->size);
       if ((sz = tp->size + bytes) >= hdr && tp->size < hdr)
         memmove(tp->header, tp->data, hdr);
@@ -1268,11 +1277,16 @@ void bx_e1000_c::process_tx_desc(struct e1000_tx_desc *dp)
         memmove(tp->data, tp->header, hdr);
         tp->size = hdr;
       }
-    } while (split_size -= bytes);
+      split_size -= bytes;
+    } while (bytes && split_size);
   } else if (!tp->tse && tp->cptse) {
     // context descriptor TSE is not set, while data descriptor TSE is set
     BX_DEBUG(("TCP segmentaion Error"));
   } else {
+    if (split_size > (E1000_TX_DATA_MAX - tp->size)) {
+      BX_ERROR(("TX packet longer than %u bytes, truncated", E1000_TX_DATA_MAX));
+      split_size = E1000_TX_DATA_MAX - tp->size;
+    }
     DEV_MEM_READ_PHYSICAL_DMA(addr, split_size, tp->data + tp->size);
     tp->size += split_size;
   }
@@ -1338,8 +1352,10 @@ void bx_e1000_c::start_xmit()
      * the following could happen only if guest sw assigns
      * bogus values to TDT/TDLEN.
      * there's nothing too intelligent we could do about this.
+     * A start index outside of the ring is never reached again.
      */
-    if (BX_E1000_THIS s.mac_reg[TDH] == tdh_start) {
+    if ((BX_E1000_THIS s.mac_reg[TDH] == tdh_start) ||
+        (tdh_start >= (BX_E1000_THIS s.mac_reg[TDLEN] / sizeof(desc)))) {
       BX_ERROR(("TDH wraparound @%x, TDT %x, TDLEN %x", tdh_start,
                 BX_E1000_THIS s.mac_reg[TDT], BX_E1000_THIS s.mac_reg[TDLEN]));
       break;
@@ -1542,7 +1558,8 @@ void bx_e1000_c::rx_frame(const void *buf, unsigned buf_size)
         BX_E1000_THIS s.mac_reg[RDH] = 0;
     BX_E1000_THIS s.check_rxov = 1;
     /* see comment in start_xmit; same here */
-    if (BX_E1000_THIS s.mac_reg[RDH] == rdh_start) {
+    if ((BX_E1000_THIS s.mac_reg[RDH] == rdh_start) ||
+        (rdh_start >= (BX_E1000_THIS s.mac_reg[RDLEN] / sizeof(desc)))) {
         BX_DEBUG(("RDH wraparound @%x, RDT %x, RDLEN %x",
                   rdh_start, BX_E1000_THIS s.mac_reg[RDT], BX_E1000_THIS s.mac_reg[RDLEN]));
         set_ics(E1000_ICS_RXO);
