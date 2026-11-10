@@ -224,7 +224,6 @@ bx_sb16_c::bx_sb16_c(void)
   irqdma_initialized = 0;
   dsp.d.timer_handle = BX_NULL_TIMER_HANDLE;
   dsp.d.silence_timer_handle = BX_NULL_TIMER_HANDLE;
-  opl.timer_handle = BX_NULL_TIMER_HANDLE;
   waveout[0] = NULL;
   waveout[1] = NULL;
   fmopl_callback_id[0] = -1;
@@ -385,14 +384,8 @@ void bx_sb16_c::init(void)
     // silence timer (DSP command 0x80): inactive, one-shot, frequency variable
   }
 
-  if (OPL.timer_handle == BX_NULL_TIMER_HANDLE) {
-    OPL.timer_handle = DEV_register_timer
-      (BX_SB16_THISP, opl_timer, 80, 1, 0, "sb16.opl");
-    // opl timer: inactive, continuous, frequency 80us
-  }
-
-  writelog(MIDILOG(4), "Timers initialized, dma %d, opl %d",
-          DSP.timer_handle, OPL.timer_handle);
+  writelog(MIDILOG(4), "Timers initialized, dma %d, silence %d", 
+           DSP.timer_handle, DSP.silence_timer_handle);
 
   // init runtime parameters
   bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_SOUND);
@@ -470,10 +463,6 @@ void bx_sb16_c::reset(unsigned type)
   mixer_writedata(0x00);
 
   // reset the FM emulation
-  if (OPL.timer_running) {
-    bx_pc_system.deactivate_timer(OPL.timer_handle);
-  }
-  OPL.timer_running = 0;
   for (i=0; i<2; i++) {
     OPL.index[i] = 0;
     OPL.tmask[i] = 0;
@@ -551,7 +540,7 @@ void bx_sb16_c::register_state(void)
   new bx_shadow_data_c(list, "chunk", DSP.dma.chunk, BX_SOUNDLOW_WAVEPACKETSIZE);
   new bx_shadow_data_c(list, "csp_reg", BX_SB16_THIS csp_reg, 256, 1);
   bx_list_c *opl = new bx_list_c(list, "opl");
-  new bx_shadow_num_c(opl, "timer_running", &OPL.timer_running);
+  new bx_shadow_num_c(opl, "timer_usec", &OPL.timer_usec);
   for (i=0; i<2; i++) {
     sprintf(name, "chip%d", i+1);
     bx_list_c *chip = new bx_list_c(opl, name);
@@ -675,11 +664,6 @@ void bx_sb16_c::dsp_silence_timer(void)
   MIXER.reg[0x82] |= 1;
   DSP.irqpending = 1;
   DEV_pic_raise_irq(BX_SB16_IRQ);
-}
-
-void bx_sb16_c::opl_timer (void *this_ptr)
-{
-  ((bx_sb16_c *) this_ptr)->opl_timerevent();
 }
 
 // the various IO handlers
@@ -2542,10 +2526,24 @@ void bx_sb16_c::emul_write(Bit32u value)
 
 // and finally the OPL (FM emulation) part
 
-// this is called whenever one of the timer elapses
-void bx_sb16_c::opl_timerevent()
+// The OPL timers count in steps of 80 usec. Instead of a timer callback for
+// every step, the counters are advanced to the current emulated time before
+// any access that reads or changes the timer state.
+void bx_sb16_c::opl_timer_sync()
 {
+  Bit64u now = bx_pc_system.time_usec();
+  Bit64u ticks;
+  Bit32u steps, period;
   Bit16u mask;
+
+  if (((OPL.tmask[0] | OPL.tmask[1]) & 0x03) == 0) {
+    OPL.timer_usec = now; // no timer running, counting starts from now
+    return;
+  }
+  ticks = (now - OPL.timer_usec) / 80;
+  if (ticks == 0)
+    return;
+  OPL.timer_usec += ticks * 80;
 
   for (int i=0; i<4; i++) {
     if ((OPL.tmask[i/2] & (1 << (i % 2))) != 0) { // only running timers
@@ -2554,8 +2552,13 @@ void bx_sb16_c::opl_timerevent()
       } else {
         mask = 0x3ff;
       }
-      if (((++OPL.timer[i]) & mask) == 0) { // overflow occurred, set flags accordingly
-        OPL.timer[i] = OPL.timerinit[i];      // reset the counter
+      steps = (mask + 1) - (OPL.timer[i] & mask); // steps until the next overflow
+      if (ticks < steps) {
+        OPL.timer[i] += (Bit16u) ticks;
+      } else { // overflow occurred, set flags accordingly
+        // reload the counter and count the remaining steps
+        period = (mask + 1) - OPL.timerinit[i];
+        OPL.timer[i] = OPL.timerinit[i] + (Bit16u)((ticks - steps) % period);
         if ((OPL.tmask[i/2] & (1 << (6 - (i % 2)))) == 0) { // set flags only if unmasked
           writelog(MIDILOG(5), "OPL Timer Interrupt: Chip %d, Timer %d", i/2, 1 << (i % 2));
           OPL.tflag[i/2] |= 1 << (6 - (i % 2));   // set the overflow flag
@@ -2570,6 +2573,8 @@ void bx_sb16_c::opl_timerevent()
 // base status of the OPL3
 Bit32u bx_sb16_c::opl_status(int chipid)
 {
+  opl_timer_sync();
+
   Bit32u status = OPL.tflag[chipid];
   writelog(MIDILOG(5), "OPL status of chip %d is %02x", chipid, status);
   return status;
@@ -2586,9 +2591,11 @@ void bx_sb16_c::opl_data(Bit32u value, int chipid)
   switch (index & 0xff) {
     // the two timer counts
     case 0x02:
+      opl_timer_sync();
       OPL.timerinit[chipid * 2] = OPL.timer[chipid * 2] = value;
       break;
     case 0x03:
+      opl_timer_sync();
       OPL.timerinit[chipid * 2 + 1] = OPL.timer[chipid * 2 + 1] = (value << 2);
       break;
 
@@ -2604,6 +2611,9 @@ void bx_sb16_c::opl_data(Bit32u value, int chipid)
 // called for a write to port 4 of either chip
 void bx_sb16_c::opl_settimermask(int value, int chipid)
 {
+  // overflows up to now are flagged with the old mask
+  opl_timer_sync();
+
   if ((value & 0x80) != 0) {  // reset IRQ and timer flags
                               // all other bits ignored!
       writelog(MIDILOG(5), "IRQ Reset called");
@@ -2611,22 +2621,10 @@ void bx_sb16_c::opl_settimermask(int value, int chipid)
       return;
   }
 
+  // if no timer was running, opl_timer_sync() started counting from now
   OPL.tmask[chipid] = value & 0x63;
   writelog(MIDILOG(5), "New timer mask for chip %d is %02x",
            chipid, OPL.tmask[chipid]);
-
-  // do we have to activate or deactivate the timer?
-  if (((value & 0x03) != 0) ^ (OPL.timer_running != 0)) {
-    if ((value & 0x03) != 0) {  // yes, it's different. Start or stop?
-       writelog(MIDILOG(5), "Starting timers");
-       bx_pc_system.activate_timer(OPL.timer_handle, 80, 1);
-       OPL.timer_running = 1;
-    } else {
-       writelog(MIDILOG(5), "Stopping timers");
-       bx_pc_system.deactivate_timer(OPL.timer_handle);
-       OPL.timer_running = 0;
-    }
-  }
 }
 
 // The OPL generator is called from the mixer thread of the wave output,

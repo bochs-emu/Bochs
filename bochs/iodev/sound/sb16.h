@@ -232,8 +232,7 @@ private:
   struct bx_sb16_opl_struct;
   friend struct bx_sb16_opl_struct;
   struct bx_sb16_opl_struct {
-    int timer_handle;
-    int timer_running;
+    Bit64u timer_usec;            // emulated time of the last timer update
     int index[2];                 // index register for the two chips
     Bit16u timer[4];              // two timers on each chip
     Bit16u timerinit[4];          // initial timer counts
@@ -313,8 +312,7 @@ private:
   BX_SB16_SMF void   opl_data(Bit32u value, int chipid);
   BX_SB16_SMF void   opl_settimermask(int value, int chipid);
   BX_SB16_SMF void   opl_lock(bool lock);
-  static void   opl_timer(void *);
-  BX_SB16_SMF void   opl_timerevent(void);
+  BX_SB16_SMF void   opl_timer_sync(void);
 
       /* several high level sound handlers */
   BX_SB16_SMF int    currentdeltatime();
