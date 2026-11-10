@@ -177,8 +177,7 @@ private:
       int bankmsb[16];   // current patch lists
       int program[16];
 
-      int timer_handle, current_timer;           // no. of delta times passed
-      Bit32u last_delta_time;                    // timer value at last command
+      Bit32u last_delta_time;                    // delta time count at last command
       Bit8u runningstatus;                       // status of last channel message
       Bit8u outputinit;
     } d;
@@ -271,7 +270,7 @@ private:
   BX_SB16_SMF Bit32u mpu_dataread();                 // read data port     3x0
   BX_SB16_SMF void   mpu_datawrite(Bit32u value);    // write data port    3x0
   BX_SB16_SMF void   mpu_mididata(Bit32u value);     // get a midi byte
-  static void   mpu_timer (void *);
+  BX_SB16_SMF Bit32u mpu_current_timer();            // no. of delta times passed
 
       /* The DSP part */
   BX_SB16_SMF void   dsp_reset(Bit32u value);        // write to reset port 2x6

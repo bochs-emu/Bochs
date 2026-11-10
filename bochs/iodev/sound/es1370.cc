@@ -229,7 +229,6 @@ bx_es1370_c::bx_es1370_c()
   memset(&s, 0, sizeof(bx_es1370_t));
   s.dac1_timer_index = BX_NULL_TIMER_HANDLE;
   s.dac2_timer_index = BX_NULL_TIMER_HANDLE;
-  s.mpu_timer_index = BX_NULL_TIMER_HANDLE;
   waveout[0] = NULL;
   waveout[1] = NULL;
   wavein = NULL;
@@ -319,12 +318,6 @@ void bx_es1370_c::init(void)
     // DAC2 timer: inactive, continuous, frequency variable
     bx_virt_timer.setTimerParam(BX_ES1370_THIS s.dac2_timer_index, 1);
   }
-  if (BX_ES1370_THIS s.mpu_timer_index == BX_NULL_TIMER_HANDLE) {
-    BX_ES1370_THIS s.mpu_timer_index = DEV_register_timer
-      (BX_ES1370_THIS_PTR, mpu_timer_handler, 500000 / 384, 1, 1, "es1370.mpu");
-    // midi timer: active, continuous, 500000 / 384 seconds (384 = delta time, 500000 = sec per beat at 120 bpm. Don't change this!)
-  }
-  BX_ES1370_THIS s.mpu_current_timer = 0;
   BX_ES1370_THIS s.last_delta_time = 0xffffffff;
   BX_ES1370_THIS s.midi_command = 0x00;
   BX_ES1370_THIS s.midicmd_len = 0;
@@ -430,7 +423,6 @@ void bx_es1370_c::register_state(void)
   BXRS_HEX_PARAM_FIELD(list, sctl, BX_ES1370_THIS s.sctl);
   BXRS_HEX_PARAM_FIELD(list, legacy1B, BX_ES1370_THIS s.legacy1B);
   BXRS_HEX_PARAM_FIELD(list, wave_vol, BX_ES1370_THIS s.wave_vol);
-  BXRS_DEC_PARAM_FIELD(list, mpu_current_timer, BX_ES1370_THIS s.mpu_current_timer);
   BXRS_DEC_PARAM_FIELD(list, last_delta_time, BX_ES1370_THIS s.last_delta_time);
   BXRS_DEC_PARAM_FIELD(list, midi_command, BX_ES1370_THIS s.midi_command);
   BXRS_DEC_PARAM_FIELD(list, midicmd_len, BX_ES1370_THIS s.midicmd_len);
@@ -768,11 +760,6 @@ void bx_es1370_c::es1370_timer(void)
     Bit64u timer_val = (Bit64u)BX_ES1370_THIS s.dac_timer_val[i] * ret / BX_ES1370_THIS s.dac_packet_size[i];
     bx_virt_timer.activate_timer(timer_id, (Bit32u)timer_val, 1);
   }
-}
-
-void bx_es1370_c::mpu_timer_handler(void *this_ptr)
-{
-  ((bx_es1370_c *) this_ptr)->s.mpu_current_timer++;
 }
 
 Bit32u bx_es1370_c::run_channel(unsigned chan, int timer_id, Bit32u buflen)
@@ -1130,14 +1117,23 @@ void bx_es1370_c::uart_mididata(Bit8u value)
   }
 }
 
+// the MIDI delta time counter, derived from the emulated time:
+// 384 delta times per beat, 500000 usec per beat at 120 bpm. Don't change this!
+Bit32u bx_es1370_c::mpu_current_timer()
+{
+  return (Bit32u)(bx_pc_system.time_usec() * 384 / 500000);
+}
+
 int bx_es1370_c::currentdeltatime()
 {
+  Bit32u current_timer = mpu_current_timer();
+
   // counting starts at first access
   if (BX_ES1370_THIS s.last_delta_time == 0xffffffff)
-    BX_ES1370_THIS s.last_delta_time = BX_ES1370_THIS s.mpu_current_timer;
+    BX_ES1370_THIS s.last_delta_time = current_timer;
 
-  int deltatime = BX_ES1370_THIS s.mpu_current_timer - BX_ES1370_THIS s.last_delta_time;
-  BX_ES1370_THIS s.last_delta_time = BX_ES1370_THIS s.mpu_current_timer;
+  int deltatime = current_timer - BX_ES1370_THIS s.last_delta_time;
+  BX_ES1370_THIS s.last_delta_time = current_timer;
 
   return deltatime;
 }

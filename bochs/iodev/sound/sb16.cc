@@ -222,7 +222,6 @@ bx_sb16_c::bx_sb16_c(void)
   currentdma8 = 0;
   currentdma16 = 0;
   irqdma_initialized = 0;
-  mpu401.d.timer_handle = BX_NULL_TIMER_HANDLE;
   dsp.d.timer_handle = BX_NULL_TIMER_HANDLE;
   dsp.d.silence_timer_handle = BX_NULL_TIMER_HANDLE;
   opl.timer_handle = BX_NULL_TIMER_HANDLE;
@@ -374,12 +373,6 @@ void bx_sb16_c::init(void)
           BX_SB16_DMAL, BX_SB16_DMAH);
 
   // initialize the timers
-  if (MPU.timer_handle == BX_NULL_TIMER_HANDLE) {
-    MPU.timer_handle = DEV_register_timer
-      (BX_SB16_THISP, mpu_timer, 500000 / 384, 1, 1, "sb16.mpu");
-    // midi timer: active, continuous, 500000 / 384 seconds (384 = delta time, 500000 = sec per beat at 120 bpm. Don't change this!)
-  }
-
   if (DSP.timer_handle == BX_NULL_TIMER_HANDLE) {
     DSP.timer_handle = bx_virt_timer.register_timer
       (BX_SB16_THISP, dsp_dmatimer_handler, 1, 1, 0, dsp_realtime, "sb16.dsp");
@@ -398,9 +391,8 @@ void bx_sb16_c::init(void)
     // opl timer: inactive, continuous, frequency 80us
   }
 
-  writelog(MIDILOG(4), "Timers initialized, midi %d, dma %d, opl %d",
-          MPU.timer_handle, DSP.timer_handle, OPL.timer_handle);
-  MPU.current_timer = 0;
+  writelog(MIDILOG(4), "Timers initialized, dma %d, opl %d",
+          DSP.timer_handle, OPL.timer_handle);
 
   // init runtime parameters
   bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_SOUND);
@@ -513,7 +505,6 @@ void bx_sb16_c::register_state(void)
   BXRS_PARAM_BOOL(mpu, forceuartmode, MPU.forceuartmode);
   BXRS_PARAM_BOOL(mpu, singlecommand, MPU.singlecommand);
   new bx_shadow_num_c(mpu, "runningstatus", &MPU.runningstatus, BASE_HEX);
-  new bx_shadow_num_c(mpu, "current_timer", &MPU.current_timer);
   new bx_shadow_num_c(mpu, "last_delta_time", &MPU.last_delta_time);
   MPU_B.datain.register_state(mpu, "datain");
   MPU_B.dataout.register_state(mpu, "dataout");
@@ -643,11 +634,6 @@ void bx_sb16_c::runtime_config(void)
 }
 
 // the timer functions
-void bx_sb16_c::mpu_timer (void *this_ptr)
-{
-  ((bx_sb16_c *) this_ptr)->mpu401.d.current_timer++;
-}
-
 void bx_sb16_c::dsp_dmatimer_handler(void *this_ptr)
 {
   ((bx_sb16_c *) this_ptr)->dsp_dmatimer();
@@ -2507,7 +2493,7 @@ void bx_sb16_c::emul_write(Bit32u value)
                             MPU.uartmode, MPU.forceuartmode);
              break;
            case 2:
-             EMUL.datain.puts("timer=%d\n", MPU.current_timer);
+             EMUL.datain.puts("timer=%d\n", mpu_current_timer());
              break;
            case 3:
              EMUL.datain.puts("%d remappings active\n", EMUL.remaps);
@@ -2719,17 +2705,26 @@ void bx_sb16_c::writemidicommand(int command, int length, Bit8u data[])
   }
 }
 
+// the MIDI delta time counter, derived from the emulated time:
+// 384 delta times per beat, 500000 usec per beat at 120 bpm. Don't change this!
+Bit32u bx_sb16_c::mpu_current_timer()
+{
+  return (Bit32u)(bx_pc_system.time_usec() * 384 / 500000);
+}
+
 // determine how many delta times have passed since
 // this function was called last
 
 int bx_sb16_c::currentdeltatime()
 {
+  Bit32u current_timer = mpu_current_timer();
+
   // counting starts at first access
   if (MPU.last_delta_time == 0xffffffff)
-    MPU.last_delta_time = MPU.current_timer;
+    MPU.last_delta_time = current_timer;
 
-  int deltatime = MPU.current_timer - MPU.last_delta_time;
-  MPU.last_delta_time = MPU.current_timer;
+  int deltatime = current_timer - MPU.last_delta_time;
+  MPU.last_delta_time = current_timer;
 
   return deltatime;
 }

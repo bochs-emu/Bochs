@@ -68,9 +68,7 @@ typedef struct {
   Bit16u dac_packet_size[2];
   Bit32u dac_timer_val[2];
 
-  int mpu_timer_index;
   Bit8u mpu_outputinit;
-  int mpu_current_timer;
   Bit32u last_delta_time;
   Bit8u midi_command;
   Bit8u midicmd_len;
@@ -113,6 +111,7 @@ private:
   BX_ES1370_SMF void closewaveoutput();
   BX_ES1370_SMF Bit16u calc_output_volume(Bit8u master_reg, Bit8u voice_reg, bool shift);
 
+  BX_ES1370_SMF Bit32u mpu_current_timer();
   BX_ES1370_SMF int currentdeltatime();
   BX_ES1370_SMF void writemidicommand(int command, int length, Bit8u data[]);
   BX_ES1370_SMF void uart_mididata(Bit8u value);
@@ -122,7 +121,6 @@ private:
   void es1370_timer(void);
 
   static Bit32u es1370_adc_handler(void *, Bit32u len);
-  static void mpu_timer_handler(void *);
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
