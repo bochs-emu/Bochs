@@ -643,7 +643,14 @@ void bx_ne2k_c::write_cr(Bit32u value)
     if (BX_NE2K_THIS s.TCR.loop_cntl != 1) {
       BX_INFO(("Loop mode %d not supported.", BX_NE2K_THIS s.TCR.loop_cntl));
     } else {
-      rx_frame (& BX_NE2K_THIS s.mem[BX_NE2K_THIS s.tx_page_start*256 - BX_NE2K_MEMSTART],
+      Bit32u lb_start_ofs = BX_NE2K_THIS s.tx_page_start*256;
+      if ((lb_start_ofs < BX_NE2K_MEMSTART) ||
+          ((lb_start_ofs + BX_NE2K_THIS s.tx_bytes) > BX_NE2K_MEMEND)) {
+        BX_PANIC(("loopback tx with start offset %u and byte count %u is outside of memory",
+                  lb_start_ofs, BX_NE2K_THIS s.tx_bytes));
+        return;
+      }
+      rx_frame (& BX_NE2K_THIS s.mem[lb_start_ofs - BX_NE2K_MEMSTART],
                 BX_NE2K_THIS s.tx_bytes);
     }
   } else if (value & 0x04) {
@@ -656,8 +663,6 @@ void bx_ne2k_c::write_cr(Bit32u value)
     if (BX_NE2K_THIS s.tx_bytes == 0)
       BX_PANIC(("CR write - tx start, tx bytes == 0"));
 
-    // Send the packet to the system driver
-    BX_NE2K_THIS s.CR.tx_packet = 1;
     Bit16u tx_start_ofs = BX_NE2K_THIS s.tx_page_start*256;
     // The following test and decrement is required for Novell Netware
     // 3.11-3.12, see
@@ -665,9 +670,15 @@ void bx_ne2k_c::write_cr(Bit32u value)
     // for the corresponding change in QEMU.
     if (tx_start_ofs >= BX_NE2K_MEMEND)
       tx_start_ofs -= BX_NE2K_MEMSIZ;
-    if (tx_start_ofs + BX_NE2K_THIS s.tx_bytes > BX_NE2K_MEMEND)
-      BX_PANIC(("tx start with start offset %d and byte count %d would overrun memory",
+    if ((tx_start_ofs < BX_NE2K_MEMSTART) ||
+        (tx_start_ofs + BX_NE2K_THIS s.tx_bytes > BX_NE2K_MEMEND)) {
+      BX_PANIC(("tx start with start offset %d and byte count %d is outside of memory",
                 tx_start_ofs, BX_NE2K_THIS s.tx_bytes));
+      return;
+    }
+
+    // Send the packet to the system driver
+    BX_NE2K_THIS s.CR.tx_packet = 1;
     BX_NE2K_THIS ethdev->sendpkt(& BX_NE2K_THIS s.mem[tx_start_ofs - BX_NE2K_MEMSTART], BX_NE2K_THIS s.tx_bytes);
 
     // some more debug
@@ -1653,11 +1664,26 @@ Bit32u bx_ne2k_c::rx_status_handler(void *arg)
   return class_ptr->rx_status();
 }
 
+/*
+ * The receive ring registers are guest-controlled: the ring and the
+ * current/boundary pointers must lie inside the packet memory
+ */
+bool bx_ne2k_c::rx_ring_valid(void)
+{
+  return ((BX_NE2K_THIS s.page_start >= (BX_NE2K_MEMSTART >> 8)) &&
+          (BX_NE2K_THIS s.page_stop <= (BX_NE2K_MEMEND >> 8)) &&
+          (BX_NE2K_THIS s.page_start < BX_NE2K_THIS s.page_stop) &&
+          (BX_NE2K_THIS s.curr_page >= BX_NE2K_THIS s.page_start) &&
+          (BX_NE2K_THIS s.curr_page < BX_NE2K_THIS s.page_stop) &&
+          (BX_NE2K_THIS s.bound_ptr >= BX_NE2K_THIS s.page_start) &&
+          (BX_NE2K_THIS s.bound_ptr < BX_NE2K_THIS s.page_stop));
+}
+
 Bit32u bx_ne2k_c::rx_status()
 {
   Bit32u status = BX_NETDEV_10MBIT;
   if ((BX_NE2K_THIS s.CR.stop == 0) &&
-      (BX_NE2K_THIS s.page_start != 0) &&
+      rx_ring_valid() &&
       (BX_NE2K_THIS s.DCR.loop ||
        (BX_NE2K_THIS s.TCR.loop_cntl == 0))) {
     status |= BX_NETDEV_RXREADY;
@@ -1698,10 +1724,16 @@ void bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 
 
   if ((BX_NE2K_THIS s.CR.stop != 0) ||
-      (BX_NE2K_THIS s.page_start == 0) ||
       (!BX_NE2K_THIS s.DCR.loop &&
        (BX_NE2K_THIS s.TCR.loop_cntl != 0))) {
 
+    return;
+  }
+
+  if (!rx_ring_valid()) {
+    BX_DEBUG(("rx ring outside of packet memory (PSTART=0x%02x PSTOP=0x%02x CURR=0x%02x BNRY=0x%02x), frame dropped",
+              BX_NE2K_THIS s.page_start, BX_NE2K_THIS s.page_stop,
+              BX_NE2K_THIS s.curr_page, BX_NE2K_THIS s.bound_ptr));
     return;
   }
 

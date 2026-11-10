@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2023  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -250,6 +250,7 @@ private:
   Bit32u rx_status(void);
   static void rx_handler(void *arg, const void *buf, unsigned len);
   unsigned mcast_index(const void *dst);
+  bool rx_ring_valid(void);
   void rx_frame(const void *buf, unsigned io_len);
 
 #if BX_SUPPORT_PCI
