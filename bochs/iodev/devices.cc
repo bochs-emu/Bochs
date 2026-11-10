@@ -1950,3 +1950,56 @@ Bit32u bx_pci_device_c::pci_read_handler(Bit8u address, unsigned io_len)
   return value;
 }
 #endif
+
+// memory stub has an assumption that there are no memory accesses splitting 4K page
+void DEV_MEM_READ_PHYSICAL(bx_phy_address phy_addr, unsigned len, Bit8u *ptr)
+{
+  while(len > 0) {
+    unsigned remainingInPage = 0x1000 - (phy_addr & 0xfff);
+    if (len < remainingInPage) remainingInPage = len;
+    BX_MEM(0)->readPhysicalPage(NULL, phy_addr, remainingInPage, ptr);
+    BX_INSTR_DEV_ACCESS(phy_addr, remainingInPage, BX_READ, ptr);
+    ptr += remainingInPage;
+    phy_addr += remainingInPage;
+    len -= remainingInPage;
+  }
+}
+
+void DEV_MEM_READ_PHYSICAL_DMA(bx_phy_address phy_addr, unsigned len, Bit8u *ptr)
+{
+  while(len > 0) {
+    unsigned remainingInPage = 0x1000 - (phy_addr & 0xfff);
+    if (len < remainingInPage) remainingInPage = len;
+    BX_MEM(0)->dmaReadPhysicalPage(phy_addr, remainingInPage, ptr);
+    BX_INSTR_DEV_ACCESS(phy_addr, remainingInPage, BX_READ, ptr);
+    ptr += remainingInPage;
+    phy_addr += remainingInPage;
+    len -= remainingInPage;
+  }
+}
+
+void DEV_MEM_WRITE_PHYSICAL(bx_phy_address phy_addr, unsigned len, Bit8u *ptr)
+{
+  while(len > 0) {
+    unsigned remainingInPage = 0x1000 - (phy_addr & 0xfff);
+    if (len < remainingInPage) remainingInPage = len;
+    BX_MEM(0)->writePhysicalPage(NULL, phy_addr, remainingInPage, ptr);
+    BX_INSTR_DEV_ACCESS(phy_addr, remainingInPage, BX_WRITE, ptr);
+    ptr += remainingInPage;
+    phy_addr += remainingInPage;
+    len -= remainingInPage;
+  }
+}
+
+void DEV_MEM_WRITE_PHYSICAL_DMA(bx_phy_address phy_addr, unsigned len, Bit8u *ptr)
+{
+  while(len > 0) {
+    unsigned remainingInPage = 0x1000 - (phy_addr & 0xfff);
+    if (len < remainingInPage) remainingInPage = len;
+    BX_MEM(0)->dmaWritePhysicalPage(phy_addr, remainingInPage, ptr);
+    BX_INSTR_DEV_ACCESS(phy_addr, remainingInPage, BX_WRITE, ptr);
+    ptr += remainingInPage;
+    phy_addr += remainingInPage;
+    len -= remainingInPage;
+  }
+}

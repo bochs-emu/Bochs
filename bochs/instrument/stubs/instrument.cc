@@ -60,6 +60,7 @@ void bx_instr_repeat_iteration(unsigned cpu, const bxInstruction_c *i) {}
 void bx_instr_inp(Bit16u addr, unsigned len) {}
 void bx_instr_inp2(Bit16u addr, unsigned len, unsigned val) {}
 void bx_instr_outp(Bit16u addr, unsigned len, unsigned val) {}
+void bx_instr_dev_access(bx_phy_address phy, unsigned len, unsigned rw, const Bit8u *data) {}
 
 void bx_instr_lin_access(unsigned cpu, bx_address lin, bx_address phy, unsigned len, unsigned memtype, unsigned rw, const Bit8u *data) {}
 void bx_instr_phy_access(unsigned cpu,                 bx_address phy, unsigned len, unsigned memtype, unsigned rw, const Bit8u *data) {}

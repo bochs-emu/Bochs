@@ -257,6 +257,25 @@ The 'data' argument has the same meaning as for bx_instr_lin_access.
 
 These callback functions are a feedback from various system devices.
 
+
+	void bx_instr_dev_access(bx_phy_address phy, unsigned len, unsigned rw, const Bit8u *data);
+
+The callback is called each time, when a device reads or writes guest physical
+memory  (bus  master DMA, the 8237 DMA controller,  USB host controllers  data
+structures etc.). Such accesses are not reported by bx_instr_lin_access or
+bx_instr_phy_access because they are not executed by any CPU. Note that no
+page split accesses will be generated, a device access crossing 4K page
+boundary is reported as separate access for every page.
+
+Possible access types are: BX_READ and BX_WRITE.
+
+The 'data' argument points to 'len' bytes of the accessed data: the bytes read
+from memory for BX_READ, the bytes written for BX_WRITE. The pointer is valid
+only during the callback and the data must not be modified.
+
+The memory views of the USB debugger dialogs also access guest memory through
+the device interface and are reported by this callback as well.
+
 -----------------------------------------------------------------------------
 Known problems:
 

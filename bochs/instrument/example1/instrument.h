@@ -150,6 +150,7 @@ extern bxInstrumentation *icpu;
 #define BX_INSTR_INP(addr, len)
 #define BX_INSTR_INP2(addr, len, val)
 #define BX_INSTR_OUTP(addr, len, val)
+#define BX_INSTR_DEV_ACCESS(phy, len, rw, data)
 
 /* cpuid callback */
 #define BX_INSTR_CPUID(cpu_id)
@@ -211,6 +212,7 @@ extern bxInstrumentation *icpu;
 #define BX_INSTR_INP(addr, len)
 #define BX_INSTR_INP2(addr, len, val)
 #define BX_INSTR_OUTP(addr, len, val)
+#define BX_INSTR_DEV_ACCESS(phy, len, rw, data)
 
 /* cpuid callback */
 #define BX_INSTR_CPUID(cpu_id)

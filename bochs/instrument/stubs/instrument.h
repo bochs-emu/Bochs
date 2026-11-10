@@ -63,6 +63,7 @@ void bx_instr_repeat_iteration(unsigned cpu, const bxInstruction_c *i);
 void bx_instr_inp(Bit16u addr, unsigned len);
 void bx_instr_inp2(Bit16u addr, unsigned len, unsigned val);
 void bx_instr_outp(Bit16u addr, unsigned len, unsigned val);
+void bx_instr_dev_access(bx_phy_address phy, unsigned len, unsigned rw, const Bit8u *data);
 
 void bx_instr_lin_access(unsigned cpu, bx_address lin, bx_address phy, unsigned len, unsigned memtype, unsigned rw, const Bit8u *data);
 void bx_instr_phy_access(unsigned cpu, bx_address phy, unsigned len, unsigned memtype, unsigned rw, const Bit8u *data);
@@ -124,9 +125,10 @@ void bx_instr_vmexit(unsigned cpu, Bit32u reason, Bit64u qualification);
 #define BX_INSTR_PHY_ACCESS(cpu_id, phy, len, memtype, rw, data)  bx_instr_phy_access(cpu_id, phy, len, memtype, rw, data)
 
 /* feedback from device units */
-#define BX_INSTR_INP(addr, len)               bx_instr_inp(addr, len)
-#define BX_INSTR_INP2(addr, len, val)         bx_instr_inp2(addr, len, val)
-#define BX_INSTR_OUTP(addr, len, val)         bx_instr_outp(addr, len, val)
+#define BX_INSTR_INP(addr, len)                 bx_instr_inp(addr, len)
+#define BX_INSTR_INP2(addr, len, val)           bx_instr_inp2(addr, len, val)
+#define BX_INSTR_OUTP(addr, len, val)           bx_instr_outp(addr, len, val)
+#define BX_INSTR_DEV_ACCESS(phy, len, rw, data) bx_instr_dev_access(phy, len, rw, data)
 
 /* cpuid callback */
 #define BX_INSTR_CPUID(cpu_id) bx_instr_cpuid(cpu_id)
@@ -188,6 +190,7 @@ void bx_instr_vmexit(unsigned cpu, Bit32u reason, Bit64u qualification);
 #define BX_INSTR_INP(addr, len)
 #define BX_INSTR_INP2(addr, len, val)
 #define BX_INSTR_OUTP(addr, len, val)
+#define BX_INSTR_DEV_ACCESS(phy, len, rw, data)
 
 /* cpuid callback */
 #define BX_INSTR_CPUID(cpu_id)
