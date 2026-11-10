@@ -8498,6 +8498,15 @@ void bx_geforce_c::object_save(gf_channel* ch, Bit32u subc)
         // should be stored somewhere else
         ramin_write32(object + 0x10, ch->iifc_color_fmt);
       }
+    } else if (cls8 == 0x89) {
+      ramin_write32(object + 0x8, ch->sifm_src >> 4);
+      Bit32u cls12 = word0 & 0x00000FFF;
+      bool swizzled = cls12 == 0x389 ? ch->sifm_swizzled_0389 : ch->sifm_swizzled;
+      if (BX_GEFORCE_THIS card_type < 0x40)
+        word0 = (word0 & 0xFFFFBFFF) | (swizzled << 14);
+      else
+        word0 = (word0 & 0xFFFBFFFF) | (swizzled << 18);
+      ramin_write32(object, word0);
     }
     ramin_write32(object + 0x4, word1);
   }
@@ -8560,6 +8569,15 @@ void bx_geforce_c::object_load(gf_channel* ch, Bit32u subc)
         ch->iifc_color_fmt = 1;
     }
     update_color_bytes_iifc(ch);
+  } else if (cls8 == 0x89) {
+    ch->sifm_src = ramin_read32(object + 0x8) << 4;
+    Bit32u shift = BX_GEFORCE_THIS card_type < 0x40 ? 14 : 18;
+    bool swizzled = (word0 >> shift) & 1;
+    Bit32u cls12 = word0 & 0x00000FFF;
+    if (cls12 == 0x389)
+      ch->sifm_swizzled_0389 = swizzled;
+    else
+      ch->sifm_swizzled = swizzled;
   } else if (cls8 == 0x96 || cls8 == 0x97) {
     execute_d3d(ch, word0 & BX_GEFORCE_THIS class_mask, 0, 0);
   }
