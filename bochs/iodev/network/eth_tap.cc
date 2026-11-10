@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -326,10 +326,14 @@ bx_tap_pktmover_c::~bx_tap_pktmover_c()
 
 void bx_tap_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
-  Bit8u txbuf[BX_PACKET_BUFSIZE];
+  Bit8u txbuf[BX_PACKET_BUFSIZE + 4 + 2]; // + VLAN tag + 2 byte pad
   txbuf[0] = 0;
   txbuf[1] = 0;
   unsigned int size;
+  if (io_len > (sizeof(txbuf) - 2)) {
+    BX_ERROR(("sendpkt: frame length %u too large, dropped", io_len));
+    return;
+  }
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || \
    defined(__APPLE__)  || defined(__OpenBSD__) || defined(__sun__) // Should be fixed for other *BSD
   memcpy(txbuf, buf, io_len);
