@@ -1,4 +1,4 @@
-# Copyright (C) 2017  The Bochs Project
+# Copyright (C) 2017-2026  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -69,6 +69,7 @@ AVX_OBJS = \
 	avx512_mask32.o \
 	avx512_mask64.o \
 	avx512_bitalg.o \
+	avx512_vbmm.o \
 	avx512_bf16.o \
 	avx512_helpers.o \
 	gather.o \
@@ -278,6 +279,14 @@ avx512_bitalg.o: avx512_bitalg.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../xmm.h ../vmx.h \
  ../vmx_ctrls.h ../stack.h ../access.h ../simd_int.h ../scalar_arith.h
+avx512_vbmm.o: avx512_vbmm.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
+ ../../osdep.h ../../logio.h ../../misc/bswap.h ../cpu.h \
+ ../decoder/decoder.h ../decoder/features.h \
+ ../../instrument/stubs/instrument.h ../i387.h \
+ ../softfloat3e/include/softfloat_types.h ../../config.h \
+ ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
+ ../decoder/instr.h ../lazy_flags.h ../tlb.h ../xmm.h ../vmx.h \
+ ../vmx_ctrls.h ../stack.h ../access.h
 avx512_broadcast.o: avx512_broadcast.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../logio.h ../../misc/bswap.h ../cpu.h \
  ../decoder/decoder.h ../decoder/features.h \

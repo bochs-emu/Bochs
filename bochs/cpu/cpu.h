@@ -3804,6 +3804,10 @@ public: // for now...
 
   BX_SMF void VPSHUFBITQMB_MASK_KGqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
+  BX_SMF void VBMACOR16X16X16_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VBMACXOR16X16X16_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VBITREV_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   BX_SMF void VP2INTERSECTD_KGqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VP2INTERSECTQ_KGqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 

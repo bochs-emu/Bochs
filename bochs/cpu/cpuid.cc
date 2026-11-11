@@ -904,7 +904,7 @@ void bx_cpuid_t::get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *
     //   [31:00]: reserved
     // EDX:
     //   [31:00]: reserved
-    if (is_cpu_extension_supported(BX_ISA_ACE))
+    if (is_cpu_extension_supported(BX_ISA_ACE) || is_cpu_extension_supported(BX_ISA_AVX512_BMM))
       leaf->eax = 1;
     else
       leaf->eax = 0;
@@ -917,6 +917,7 @@ void bx_cpuid_t::get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *
     // EAX:
     // EBX:
     // ECX:
+    //   [1] AVX10_BMM: Bit Matrix Multiply instructions support (optional, ACE v2)
     //   [2] AVX10_VNNI_INT instructions support, also known as AVX10_V1_AUX, part of AVX10.2
     //   [3] AVX10_V2_AUX, part of ACE v1
     // EDX:
@@ -927,6 +928,8 @@ void bx_cpuid_t::get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *
       leaf->ecx |= (1<<3);
       leaf->edx = 0;
     }
+    if (is_cpu_extension_supported(BX_ISA_AVX512_BMM))
+      leaf->ecx |= (1<<1);
     break;
 
   default:
@@ -2326,7 +2329,8 @@ void bx_cpuid_t::sanity_checks() const
         is_cpu_extension_supported(BX_ISA_AVX512_BITALG) ||
         is_cpu_extension_supported(BX_ISA_AVX512_VP2INTERSECT) ||
         is_cpu_extension_supported(BX_ISA_AVX512_BF16) ||
-        is_cpu_extension_supported(BX_ISA_AVX512_FP16)) 
+        is_cpu_extension_supported(BX_ISA_AVX512_FP16) ||
+        is_cpu_extension_supported(BX_ISA_AVX512_BMM))
     {
       BX_FATAL(("PANIC: AVX-512 extensions must be disabled if AVX-512 is not supported !"));
     }

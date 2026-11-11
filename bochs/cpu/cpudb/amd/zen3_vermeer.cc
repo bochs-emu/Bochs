@@ -800,6 +800,11 @@ void zen3_vermeer_t::get_ext_cpuid_leaf_21(cpuid_function_t *leaf) const
               BX_CPUID_EXT21_EAX_LFENCE_ALWAYS_SERIALIZING |
               BX_CPUID_EXT21_EAX_SMM_PG_CFG_LOCK |
               BX_CPUID_EXT21_EAX_NULL_SELECT_CLEARS_BASE;
+
+  // not supported by Zen3 hardware, could be enabled through add_features
+  if (is_cpu_extension_supported(BX_ISA_AVX512_BMM))
+    leaf->eax |= BX_CPUID_EXT21_EAX_AVX512_BMM;
+
   leaf->ebx = 0;
   leaf->ecx = 0;
   leaf->edx = 0;

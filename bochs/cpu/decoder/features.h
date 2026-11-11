@@ -116,6 +116,7 @@ x86_feature(BX_ISA_AVX512_BITALG, "avx512bitalg")                          /* AV
 x86_feature(BX_ISA_AVX512_VP2INTERSECT, "avx512vp2intersect")              /* AVX-512 VP2INTERSECT Instructions */
 x86_feature(BX_ISA_AVX512_BF16, "avx512bf16")                              /* AVX-512 BF16 Instructions */
 x86_feature(BX_ISA_AVX512_FP16, "avx512fp16")                              /* AVX-512 FP16 Instructions */
+x86_feature(BX_ISA_AVX512_BMM, "avx512bmm")                                /* AVX-512 BMM: Bit Matrix Multiply and Bit Reversal Instructions (AMD) */
 x86_feature(BX_ISA_AMX, "amx")                                             /* AMX Instructions */
 x86_feature(BX_ISA_AMX_INT8, "amx_int8")                                   /* AMX-INT8 Instructions */
 x86_feature(BX_ISA_AMX_BF16, "amx_bf16")                                   /* AMX-BF16 Instructions */

@@ -757,6 +757,14 @@ BX_CPUID_STD7_SUBLEAF0_EBX_MPX;
 
  Dependency: avx512
 
+- CPU Feature: avx512bmm
+
+ Enables CPUID[0x80000021].EAX[23]: AVX512 BMM instructions (AMD).
+ Enables CPUID[0x00000024].subleaf[1].ECX[1]: AVX10_BMM instructions (when AVX10 is supported).
+ Enables AVX512 BMM instructions VBMACOR16X16X16, VBMACXOR16X16X16 and VBITREV (will #UD otherwise).
+
+ Dependency: avx512
+
 - CPU Feature: amx
 
  Enables CPUID[0x00000007].subleaf[0].EDX[24]: AMX_TILE architecture flag.

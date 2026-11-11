@@ -2584,6 +2584,14 @@ static const Bit64u BxOpcodeGroup_EVEX_MAP6_57[] = {
   last_opcode(ATTR_VEX_W0 | ATTR_SSE_PREFIX_F2, BX_IA_EVEX_VFCMADDCSH_VshHphWsh_Kmask)
 };
 
+// AVX512 BMM: no masking/zeroing and VL256/VL512 only for VBMAC* (ATTR_MASK_K0 | ATTR_VL256_512)
+static const Bit64u BxOpcodeGroup_EVEX_MAP6_80[] = {
+  form_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0 | ATTR_MASK_K0 | ATTR_VL256_512, BX_IA_EVEX_VBMACOR16X16X16_VdqHdqWdq),
+  last_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W1 | ATTR_MASK_K0 | ATTR_VL256_512, BX_IA_EVEX_VBMACXOR16X16X16_VdqHdqWdq)
+};
+
+static const Bit64u BxOpcodeGroup_EVEX_MAP6_81[] = { last_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0, BX_IA_EVEX_VBITREV_VdqWdq_Kmask) };
+
 #if BX_SUPPORT_AMX
 // ACE v1 Section 13: Block Scale Register (BSR) Operations. No masking or
 // zeroing support (spec Sections 13.1.6/13.2.6/13.3.6) -> ATTR_MASK_K0.
@@ -4261,8 +4269,8 @@ const Bit64u *BxOpcodeTableEVEX[256*5 + (BX_SUPPORT_APX ? 512 : 0)] = {
   /* 7D */ BxOpcodeGroup_ERR,
   /* 7E */ BxOpcodeGroup_ERR,
   /* 7F */ BxOpcodeGroup_ERR,
-  /* 80 */ BxOpcodeGroup_ERR,
-  /* 81 */ BxOpcodeGroup_ERR,
+  /* 80 */ BxOpcodeGroup_EVEX_MAP6_80,
+  /* 81 */ BxOpcodeGroup_EVEX_MAP6_81,
   /* 82 */ BxOpcodeGroup_ERR,
   /* 83 */ BxOpcodeGroup_ERR,
   /* 84 */ BxOpcodeGroup_ERR,

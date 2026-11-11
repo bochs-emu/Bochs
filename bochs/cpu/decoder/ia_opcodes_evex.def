@@ -1267,6 +1267,11 @@ bx_define_opcode(BX_IA_EVEX_VPSHRDVW_VdqHdqWdq_Kmask, "vpshrdvw", "vpshrdvw", &B
 bx_define_opcode(BX_IA_EVEX_VPSHLDW_VdqHdqWdqIb_Kmask, "vpshldw", "vpshldw", &BX_CPU_C::LOAD_MASK_VectorW, &BX_CPU_C::VPSHLDW_MASK_VdqHdqWdqIbR, BX_ISA_AVX512_VBMI2, OP_Vdq, OP_Hdq, OP_mVdq, OP_Ib, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 bx_define_opcode(BX_IA_EVEX_VPSHLDVW_VdqHdqWdq_Kmask, "vpshldvw", "vpshldvw", &BX_CPU_C::LOAD_MASK_VectorW, &BX_CPU_C::VPSHLDVW_MASK_VdqHdqWdqR, BX_ISA_AVX512_VBMI2, OP_Vdq, OP_Hdq, OP_mVdq, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 
+// AVX512 BMM instructions (AMD)
+bx_define_opcode(BX_IA_EVEX_VBMACOR16X16X16_VdqHdqWdq, "vbmacor16x16x16", "vbmacor16x16x16", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VBMACOR16X16X16_VdqHdqWdqR, BX_ISA_AVX512_BMM, OP_Vdq, OP_Hdq, OP_mVdq, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_VBMACXOR16X16X16_VdqHdqWdq, "vbmacxor16x16x16", "vbmacxor16x16x16", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VBMACXOR16X16X16_VdqHdqWdqR, BX_ISA_AVX512_BMM, OP_Vdq, OP_Hdq, OP_mVdq, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_VBITREV_VdqWdq_Kmask, "vbitrev", "vbitrev", &BX_CPU_C::LOAD_MASK_VectorB, &BX_CPU_C::VBITREV_MASK_VdqWdqR, BX_ISA_AVX512_BMM, OP_Vdq, OP_mVdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+
 // AVX512 FP16 instructions
 bx_define_opcode(BX_IA_EVEX_VADDSH_VshHphWsh, "vaddsh", "vaddsh", &BX_CPU_C::LOAD_Ww, &BX_CPU_C::VADDSH_VshHphWshR, BX_ISA_AVX512_FP16, OP_Vsh, OP_Hph, OP_mVsh, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST)
 bx_define_opcode(BX_IA_EVEX_VADDSH_VshHphWsh_Kmask, "vaddsh", "vaddsh", &BX_CPU_C::LOAD_MASK_Ww, &BX_CPU_C::VADDSH_MASK_VshHphWshR, BX_ISA_AVX512_FP16, OP_Vsh, OP_Hph, OP_mVsh, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST)
