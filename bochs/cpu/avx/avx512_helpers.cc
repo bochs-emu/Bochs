@@ -380,6 +380,12 @@ void BX_CPU_C::avx_masked_store64(bxInstruction_c *i, bx_address eaddr, const Bx
 
 void BX_CPU_C::avx512_write_regb_masked(bxInstruction_c *i, const BxPackedAvxRegister *op, unsigned len, Bit64u opmask)
 {
+  Bit64u all_elements = vector_elements_mask(BYTE_ELEMENTS(len));
+  if ((opmask & all_elements) == all_elements) { // all elements selected, the write is not masked
+    BX_WRITE_AVX_REGZ(i->dst(), (*op), len);
+    return;
+  }
+
   if (i->isZeroMasking())
     simd_zero_pblendb(&BX_READ_AVX_REG(i->dst()), op, opmask, BYTE_ELEMENTS(len));
   else
@@ -390,6 +396,12 @@ void BX_CPU_C::avx512_write_regb_masked(bxInstruction_c *i, const BxPackedAvxReg
 
 void BX_CPU_C::avx512_write_regw_masked(bxInstruction_c *i, const BxPackedAvxRegister *op, unsigned len, Bit32u opmask)
 {
+  Bit32u all_elements = (Bit32u) vector_elements_mask(WORD_ELEMENTS(len));
+  if ((opmask & all_elements) == all_elements) { // all elements selected, the write is not masked
+    BX_WRITE_AVX_REGZ(i->dst(), (*op), len);
+    return;
+  }
+
   if (i->isZeroMasking())
     simd_zero_pblendw(&BX_READ_AVX_REG(i->dst()), op, opmask, WORD_ELEMENTS(len));
   else
@@ -400,6 +412,12 @@ void BX_CPU_C::avx512_write_regw_masked(bxInstruction_c *i, const BxPackedAvxReg
 
 void BX_CPU_C::avx512_write_regd_masked(bxInstruction_c *i, const BxPackedAvxRegister *op, unsigned len, Bit32u opmask)
 {
+  Bit32u all_elements = (Bit32u) vector_elements_mask(DWORD_ELEMENTS(len));
+  if ((opmask & all_elements) == all_elements) { // all elements selected, the write is not masked
+    BX_WRITE_AVX_REGZ(i->dst(), (*op), len);
+    return;
+  }
+
   if (i->isZeroMasking())
     simd_zero_blendps(&BX_READ_AVX_REG(i->dst()), op, opmask, DWORD_ELEMENTS(len));
   else
@@ -410,6 +428,12 @@ void BX_CPU_C::avx512_write_regd_masked(bxInstruction_c *i, const BxPackedAvxReg
 
 void BX_CPU_C::avx512_write_regq_masked(bxInstruction_c *i, const BxPackedAvxRegister *op, unsigned len, Bit32u opmask)
 {
+  Bit32u all_elements = (Bit32u) vector_elements_mask(QWORD_ELEMENTS(len));
+  if ((opmask & all_elements) == all_elements) { // all elements selected, the write is not masked
+    BX_WRITE_AVX_REGZ(i->dst(), (*op), len);
+    return;
+  }
+
   if (i->isZeroMasking())
     simd_zero_blendpd(&BX_READ_AVX_REG(i->dst()), op, opmask, QWORD_ELEMENTS(len));
   else
