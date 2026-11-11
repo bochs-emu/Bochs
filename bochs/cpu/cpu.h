@@ -5621,6 +5621,9 @@ public: // for now...
   BX_SMF void read_virtual_zmmword(unsigned seg, bx_address off, BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_virtual_zmmword_aligned(unsigned seg, bx_address off, BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
 #endif
+#if BX_SUPPORT_AVX
+  BX_SMF void read_virtual_vector(unsigned seg, bx_address off, BxPackedAvxRegister *data, unsigned vlen);
+#endif
 
   BX_SMF void write_virtual_byte(unsigned seg, bx_address offset, Bit8u data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_word(unsigned seg, bx_address offset, Bit16u data) BX_CPP_AttrRegparmN(3);
@@ -5633,6 +5636,9 @@ public: // for now...
   BX_SMF void write_virtual_ymmword_aligned(unsigned seg, bx_address off, const BxPackedYmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_zmmword(unsigned seg, bx_address off, const BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_zmmword_aligned(unsigned seg, bx_address off, const BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
+#endif
+#if BX_SUPPORT_AVX
+  BX_SMF void write_virtual_vector(unsigned seg, bx_address off, const BxPackedAvxRegister *data, unsigned vlen);
 #endif
 
   BX_SMF Bit8u read_RMW_linear_byte(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2015-2018 Stanislav Shwartsman
+//   Copyright (c) 2015-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -258,6 +258,29 @@ BX_CPU_C::write_virtual_zmmword_aligned(unsigned s, bx_address offset, const BxP
   write_linear_zmmword_aligned(s, laddr, data);
 }
 
+#if BX_SUPPORT_AVX
+
+// write vector of length vlen (128/256/512-bit), rest of the data is ignored
+  BX_CPP_INLINE void
+BX_CPU_C::write_virtual_vector(unsigned s, bx_address offset, const BxPackedAvxRegister *data, unsigned vlen)
+{
+#if BX_SUPPORT_EVEX
+  if (vlen == BX_VL512)
+    write_virtual_zmmword(s, offset, data);
+  else if (vlen == BX_VL256)
+    write_virtual_ymmword(s, offset, &data->vmm256(0));
+  else
+    write_virtual_xmmword(s, offset, &data->vmm128(0));
+#else
+  if (vlen == BX_VL256)
+    write_virtual_ymmword(s, offset, data);
+  else
+    write_virtual_xmmword(s, offset, &data->vmm128(0));
+#endif
+}
+
+#endif // BX_SUPPORT_AVX
+
 #endif // BX_CPU_LEVEL >= 6
 
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
@@ -345,6 +368,29 @@ BX_CPU_C::read_virtual_zmmword_aligned(unsigned s, bx_address offset, BxPackedZm
   bx_address laddr = agen_read_aligned(s, offset, 64);
   read_linear_zmmword_aligned(s, laddr, data);
 }
+
+#if BX_SUPPORT_AVX
+
+// read vector of length vlen (128/256/512-bit), rest of the register is not modified
+  BX_CPP_INLINE void
+BX_CPU_C::read_virtual_vector(unsigned s, bx_address offset, BxPackedAvxRegister *data, unsigned vlen)
+{
+#if BX_SUPPORT_EVEX
+  if (vlen == BX_VL512)
+    read_virtual_zmmword(s, offset, data);
+  else if (vlen == BX_VL256)
+    read_virtual_ymmword(s, offset, &data->vmm256(0));
+  else
+    read_virtual_xmmword(s, offset, &data->vmm128(0));
+#else
+  if (vlen == BX_VL256)
+    read_virtual_ymmword(s, offset, data);
+  else
+    read_virtual_xmmword(s, offset, &data->vmm128(0));
+#endif
+}
+
+#endif // BX_SUPPORT_AVX
 
 #endif // BX_CPU_LEVEL >= 6
 
