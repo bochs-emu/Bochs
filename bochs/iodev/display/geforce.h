@@ -223,6 +223,7 @@ struct gf_channel
   Bit32u m2mf_format;
   Bit32u m2mf_buffer_notify;
 
+  Bit32u d3d_card_type;
   Bit32u d3d_a_obj;
   Bit32u d3d_b_obj;
   Bit32u d3d_color_obj;
