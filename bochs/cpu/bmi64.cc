@@ -232,13 +232,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXT_GqBqEqR(bxInstruction_c *i)
 
   Bit64u wr_mask = 0x1;
 
-  for (; op2_64 != 0; op2_64 >>= 1)
+  // walk over set bits of the mask only, test source bit at position of the lowest set mask bit
+  for (; op2_64 != 0; op2_64 &= op2_64 - 1, wr_mask <<= 1)
   {
-    if (op2_64 & 0x1) {
-      if (op1_64 & 0x1) result_64 |= wr_mask;
-      wr_mask <<= 1;
-    }
-    op1_64 >>= 1;
+    if (op1_64 & op2_64 & -op2_64)
+      result_64 |= wr_mask;
   }
 
   BX_WRITE_64BIT_REG(i->dst(), result_64);
@@ -251,15 +249,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PDEP_GqBqEqR(bxInstruction_c *i)
   Bit64u op1_64 = BX_READ_64BIT_REG(i->src1());
   Bit64u op2_64 = BX_READ_64BIT_REG(i->src2()), result_64 = 0;
 
-  Bit64u wr_mask = 0x1;
-
-  for (; op2_64 != 0; op2_64 >>= 1)
+  // walk over set bits of the mask only, deposit next source bit at position of the lowest set mask bit
+  for (; op2_64 != 0; op2_64 &= op2_64 - 1, op1_64 >>= 1)
   {
-    if (op2_64 & 0x1) {
-      if (op1_64 & 0x1) result_64 |= wr_mask;
-      op1_64 >>= 1;
-    }
-    wr_mask <<= 1;
+    result_64 |= (op2_64 & -op2_64) & -(op1_64 & 0x1);
   }
 
   BX_WRITE_64BIT_REG(i->dst(), result_64);

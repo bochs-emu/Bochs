@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2018 Stanislav Shwartsman
+//   Copyright (c) 2011-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -229,13 +229,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXT_GdBdEdR(bxInstruction_c *i)
 
   Bit32u wr_mask = 0x1;
 
-  for (; op2_32 != 0; op2_32 >>= 1)
+  // walk over set bits of the mask only, test source bit at position of the lowest set mask bit
+  for (; op2_32 != 0; op2_32 &= op2_32 - 1, wr_mask <<= 1)
   {
-    if (op2_32 & 0x1) {
-      if (op1_32 & 0x1) result_32 |= wr_mask;
-      wr_mask <<= 1;
-    }
-    op1_32 >>= 1;
+    if (op1_32 & op2_32 & -op2_32)
+      result_32 |= wr_mask;
   }
 
   BX_WRITE_32BIT_REGZ(i->dst(), result_32);
@@ -248,15 +246,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PDEP_GdBdEdR(bxInstruction_c *i)
   Bit32u op1_32 = BX_READ_32BIT_REG(i->src1());
   Bit32u op2_32 = BX_READ_32BIT_REG(i->src2()), result_32 = 0;
 
-  Bit32u wr_mask = 0x1;
-
-  for (; op2_32 != 0; op2_32 >>= 1)
+  // walk over set bits of the mask only, deposit next source bit at position of the lowest set mask bit
+  for (; op2_32 != 0; op2_32 &= op2_32 - 1, op1_32 >>= 1)
   {
-    if (op2_32 & 0x1) {
-      if (op1_32 & 0x1) result_32 |= wr_mask;
-      op1_32 >>= 1;
-    }
-    wr_mask <<= 1;
+    result_32 |= (op2_32 & -op2_32) & -(op1_32 & 0x1);
   }
 
   BX_WRITE_32BIT_REGZ(i->dst(), result_32);
