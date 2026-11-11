@@ -99,7 +99,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_MASK_VpsWpsM(bxInstruction_c *i)
       BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
 
-
   BX_NEXT_INSTR(i);
 }
 

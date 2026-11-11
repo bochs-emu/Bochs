@@ -332,7 +332,8 @@ BX_CPU_C::tickle_read_linear(unsigned s, bx_address laddr, unsigned len)
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   if (BX_CPU_THIS_PTR alignment_check() && USER_PL) {
-    if (pageOffset & len) {
+    // 16/32/64-byte accesses never generate #AC, same as the vector read that follows
+    if (len < 8 && (pageOffset & len)) {
       BX_ERROR(("tickle_read_linear(): #AC misaligned access"));
       exception(BX_AC_EXCEPTION, 0);
     }
@@ -393,7 +394,8 @@ BX_CPU_C::tickle_write_linear(unsigned s, bx_address laddr, unsigned len)
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   if (BX_CPU_THIS_PTR alignment_check() && USER_PL) {
-    if (pageOffset & len) {
+    // 16/32/64-byte accesses never generate #AC, same as the vector write that follows
+    if (len < 8 && (pageOffset & len)) {
       BX_ERROR(("tickle_write_linear(): #AC misaligned access"));
       exception(BX_AC_EXCEPTION, 0);
     }
