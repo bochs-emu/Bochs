@@ -440,9 +440,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVDQU_VdqUdq(bxInstruction_c *i)
     BX_NEXT_INSTR(i);
   }
 
-  for(unsigned j=0; j<16; j++) {
-    if(mask.xmmubyte(j) & 0x80) temp.xmmubyte(j) = op.xmmubyte(j);
-  }
+  // select bytes from op where the sign bit of the corresponding mask byte is set
+  xmm_pblendvb(&temp, &op, &mask);
 
   // and write result back to the memory
   write_RMW_linear_qword(temp.xmm64u(1));

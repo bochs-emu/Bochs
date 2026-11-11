@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2002-2018 Stanislav Shwartsman
+//   Copyright (c) 2002-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -2380,14 +2380,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVQ_PqNq(bxInstruction_c *i)
     BX_NEXT_INSTR(i);
   }
 
-  if(MMXUB0(mask) & 0x80) MMXUB0(tmp) = MMXUB0(op);
-  if(MMXUB1(mask) & 0x80) MMXUB1(tmp) = MMXUB1(op);
-  if(MMXUB2(mask) & 0x80) MMXUB2(tmp) = MMXUB2(op);
-  if(MMXUB3(mask) & 0x80) MMXUB3(tmp) = MMXUB3(op);
-  if(MMXUB4(mask) & 0x80) MMXUB4(tmp) = MMXUB4(op);
-  if(MMXUB5(mask) & 0x80) MMXUB5(tmp) = MMXUB5(op);
-  if(MMXUB6(mask) & 0x80) MMXUB6(tmp) = MMXUB6(op);
-  if(MMXUB7(mask) & 0x80) MMXUB7(tmp) = MMXUB7(op);
+  // expand the sign bit of every mask byte to the whole byte and select bytes from op
+  Bit64u select = ((MMXUQ(mask) & BX_CONST64(0x8080808080808080)) >> 7) * 0xff;
+  MMXUQ(tmp) = (MMXUQ(tmp) & ~select) | (MMXUQ(op) & select);
 
   write_RMW_linear_qword(MMXUQ(tmp));
 #endif
