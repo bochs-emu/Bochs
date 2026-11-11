@@ -1475,7 +1475,7 @@ BX_CPP_INLINE void xmm_prord(BxPackedXmmRegister *op, Bit64u shift_ctrl)
   int shift = shift_ctrl & 0x1f;
 
   for(unsigned n=0;n<4;n++) {
-    op->xmm32u(n) = (op->xmm32u(n) >> shift) | (op->xmm32u(n) << (32 - shift));
+    op->xmm32u(n) = (op->xmm32u(n) >> shift) | (op->xmm32u(n) << ((32 - shift) & 31));
   }
 }
 
@@ -1484,7 +1484,7 @@ BX_CPP_INLINE void xmm_prorq(BxPackedXmmRegister *op, Bit64u shift_ctrl)
   int shift = shift_ctrl & 0x3f;
 
   for(unsigned n=0;n<2;n++) {
-    op->xmm64u(n) = (op->xmm64u(n) >> shift) | (op->xmm64u(n) << (64 - shift));
+    op->xmm64u(n) = (op->xmm64u(n) >> shift) | (op->xmm64u(n) << ((64 - shift) & 63));
   }
 }
 
@@ -1492,7 +1492,7 @@ BX_CPP_INLINE void xmm_prorvd(BxPackedXmmRegister *op1, const BxPackedXmmRegiste
 {
   for(unsigned n=0;n<4;n++) {
     int shift = op2->xmm32u(n) & 0x1f;
-    op1->xmm32u(n) = (op1->xmm32u(n) >> shift) | (op1->xmm32u(n) << (32 - shift));
+    op1->xmm32u(n) = (op1->xmm32u(n) >> shift) | (op1->xmm32u(n) << ((32 - shift) & 31));
   }
 }
 
@@ -1500,7 +1500,7 @@ BX_CPP_INLINE void xmm_prorvq(BxPackedXmmRegister *op1, const BxPackedXmmRegiste
 {
   for(unsigned n=0;n<2;n++) {
     int shift = op2->xmm64u(n) & 0x3f;
-    op1->xmm64u(n) = (op1->xmm64u(n) >> shift) | (op1->xmm64u(n) << (64 - shift));
+    op1->xmm64u(n) = (op1->xmm64u(n) >> shift) | (op1->xmm64u(n) << ((64 - shift) & 63));
   }
 }
 
@@ -1529,7 +1529,7 @@ BX_CPP_INLINE void xmm_prold(BxPackedXmmRegister *op, Bit64u shift_ctrl)
   int shift = shift_ctrl & 0x1f;
 
   for(unsigned n=0;n<4;n++) {
-    op->xmm32u(n) = (op->xmm32u(n) << shift) | (op->xmm32u(n) >> (32 - shift));
+    op->xmm32u(n) = (op->xmm32u(n) << shift) | (op->xmm32u(n) >> ((32 - shift) & 31));
   }
 }
 
@@ -1538,7 +1538,7 @@ BX_CPP_INLINE void xmm_prolq(BxPackedXmmRegister *op, Bit64u shift_ctrl)
   int shift = shift_ctrl & 0x3f;
 
   for(unsigned n=0;n<2;n++) {
-    op->xmm64u(n) = (op->xmm64u(n) << shift) | (op->xmm64u(n) >> (64 - shift));
+    op->xmm64u(n) = (op->xmm64u(n) << shift) | (op->xmm64u(n) >> ((64 - shift) & 63));
   }
 }
 
@@ -1546,7 +1546,7 @@ BX_CPP_INLINE void xmm_prolvd(BxPackedXmmRegister *op1, const BxPackedXmmRegiste
 {
   for(unsigned n=0;n<4;n++) {
     int shift = op2->xmm32u(n) & 0x1f;
-    op1->xmm32u(n) = (op1->xmm32u(n) << shift) | (op1->xmm32u(n) >> (32 - shift));
+    op1->xmm32u(n) = (op1->xmm32u(n) << shift) | (op1->xmm32u(n) >> ((32 - shift) & 31));
   }
 }
 
@@ -1554,7 +1554,7 @@ BX_CPP_INLINE void xmm_prolvq(BxPackedXmmRegister *op1, const BxPackedXmmRegiste
 {
   for(unsigned n=0;n<2;n++) {
     int shift = op2->xmm64u(n) & 0x3f;
-    op1->xmm64u(n) = (op1->xmm64u(n) << shift) | (op1->xmm64u(n) >> (64 - shift));
+    op1->xmm64u(n) = (op1->xmm64u(n) << shift) | (op1->xmm64u(n) >> ((64 - shift) & 63));
   }
 }
 
@@ -1601,12 +1601,12 @@ BX_CPP_INLINE void xmm_protd(BxPackedXmmRegister *op1, const BxPackedXmmRegister
     if (shift > 0) {
       // rotate left
       shift &= 0x1f;
-      op1->xmm32u(n) = (op1->xmm32u(n) << shift) | (op1->xmm32u(n) >> (32 - shift));
+      op1->xmm32u(n) = (op1->xmm32u(n) << shift) | (op1->xmm32u(n) >> ((32 - shift) & 31));
     }
     else if (shift < 0) {
       // rotate right
       shift = -shift & 0x1f;
-      op1->xmm32u(n) = (op1->xmm32u(n) >> shift) | (op1->xmm32u(n) << (32 - shift));
+      op1->xmm32u(n) = (op1->xmm32u(n) >> shift) | (op1->xmm32u(n) << ((32 - shift) & 31));
     }
   }
 }
@@ -1618,12 +1618,12 @@ BX_CPP_INLINE void xmm_protq(BxPackedXmmRegister *op1, const BxPackedXmmRegister
     if (shift > 0) {
       // rotate left
       shift &= 0x3f;
-      op1->xmm64u(n) = (op1->xmm64u(n) << shift) | (op1->xmm64u(n) >> (64 - shift));
+      op1->xmm64u(n) = (op1->xmm64u(n) << shift) | (op1->xmm64u(n) >> ((64 - shift) & 63));
     }
     else if (shift < 0) {
       // rotate right
       shift = -shift & 0x3f;
-      op1->xmm64u(n) = (op1->xmm64u(n) >> shift) | (op1->xmm64u(n) << (64 - shift));
+      op1->xmm64u(n) = (op1->xmm64u(n) >> shift) | (op1->xmm64u(n) << ((64 - shift) & 63));
     }
   }
 }
