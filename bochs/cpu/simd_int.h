@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2017 Stanislav Shwartsman
+//   Copyright (c) 2011-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -674,14 +674,16 @@ BX_CPP_INLINE void simd_zero_blendpd(BxPackedAvxRegister *dst, const BxPackedAvx
 BX_CPP_INLINE void xmm_pblendvb(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, const BxPackedXmmRegister *mask)
 {
   for(unsigned n=0; n<16; n++) {
-    if (mask->xmmsbyte(n) < 0) op1->xmmubyte(n) = op2->xmmubyte(n);
+    Bit8u m = (Bit8u)(mask->xmmsbyte(n) >> 7);  // sign bit expanded to the whole byte
+    op1->xmmubyte(n) = (op1->xmmubyte(n) & ~m) | (op2->xmmubyte(n) & m);
   }
 }
 
 BX_CPP_INLINE void xmm_pblendvw(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, const BxPackedXmmRegister *mask)
 {
   for(unsigned n=0; n<8; n++) {
-    if (mask->xmm16s(n) < 0) op1->xmm16u(n) = op2->xmm16u(n);
+    Bit16u m = (Bit16u)(mask->xmm16s(n) >> 15); // sign bit expanded to the whole word
+    op1->xmm16u(n) = (op1->xmm16u(n) & ~m) | (op2->xmm16u(n) & m);
   }
 }
 
