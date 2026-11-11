@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2007-2018 Stanislav Shwartsman
+//   Copyright (c) 2007-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -38,86 +38,64 @@ static void compare_strings(Bit8u BoolRes[16][16], const BxPackedXmmRegister &op
   // results of those comparisons are referred by
   //        BoolRes[op2 element index, op1 element index]
 
-  switch (imm & 3) {
-  case 0: /* unsigned bytes compare */
-    for (i=0;i<16;i++) {
+  if (aggregation_operation == 1) { /* 'ranges' comparison */
+    // even op1 elements are lower bounds, odd op1 elements are upper bounds
+    switch (imm & 3) {
+    case 0: /* unsigned bytes compare */
       for (j=0;j<16;j++) {
-        switch (aggregation_operation) {
-        case 0: /* 'equal' comparison */
-        case 2:
-        case 3:
+        for (i=0;i<16;i+=2) {
+          BoolRes[j][i]   = (op1.xmmubyte(i)   <= op2.xmmubyte(j));
+          BoolRes[j][i+1] = (op1.xmmubyte(i+1) >= op2.xmmubyte(j));
+        }
+      }
+      break;
+
+    case 1: /* unsigned words compare */
+      for (i=0;i<8;i++) {
+        for (j=0;j<8;j++) {
+          BoolRes[j][i] = (i & 1) ? (op1.xmm16u(i) >= op2.xmm16u(j)) : (op1.xmm16u(i) <= op2.xmm16u(j));
+        }
+      }
+      break;
+
+    case 2: /*   signed bytes compare */
+      for (j=0;j<16;j++) {
+        for (i=0;i<16;i+=2) {
+          BoolRes[j][i]   = (op1.xmmsbyte(i)   <= op2.xmmsbyte(j));
+          BoolRes[j][i+1] = (op1.xmmsbyte(i+1) >= op2.xmmsbyte(j));
+        }
+      }
+      break;
+
+    case 3: /*   signed words compare */
+      for (i=0;i<8;i++) {
+        for (j=0;j<8;j++) {
+          BoolRes[j][i] = (i & 1) ? (op1.xmm16s(i) >= op2.xmm16s(j)) : (op1.xmm16s(i) <= op2.xmm16s(j));
+        }
+      }
+      break;
+    }
+  }
+  else { /* 'equal' comparison: equality does not depend on signedness */
+    switch (imm & 3) {
+    case 0: /* unsigned bytes compare */
+    case 2: /*   signed bytes compare */
+      for (j=0;j<16;j++) {
+        for (i=0;i<16;i++) {
           BoolRes[j][i] = (op1.xmmubyte(i) == op2.xmmubyte(j));
-          break;
-        case 1: /* 'ranges' comparison */
-          if ((i % 2) == 0)
-            BoolRes[j][i] = (op1.xmmubyte(i) <= op2.xmmubyte(j));
-          else
-            BoolRes[j][i] = (op1.xmmubyte(i) >= op2.xmmubyte(j));
-          break;
         }
       }
-    }
-    break;
+      break;
 
-  case 1: /* unsigned words compare */
-    for (i=0;i<8;i++) {
-      for (j=0;j<8;j++) {
-        switch (aggregation_operation) {
-        case 0: /* 'equal' comparison */
-        case 2:
-        case 3:
+    case 1: /* unsigned words compare */
+    case 3: /*   signed words compare */
+      for (i=0;i<8;i++) {
+        for (j=0;j<8;j++) {
           BoolRes[j][i] = (op1.xmm16u(i) == op2.xmm16u(j));
-          break;
-        case 1: /* 'ranges' comparison */
-          if ((i % 2) == 0)
-            BoolRes[j][i] = (op1.xmm16u(i) <= op2.xmm16u(j));
-          else
-            BoolRes[j][i] = (op1.xmm16u(i) >= op2.xmm16u(j));
-          break;
         }
       }
+      break;
     }
-    break;
-
-  case 2: /*   signed bytes compare */
-    for (i=0;i<16;i++) {
-      for (j=0;j<16;j++) {
-        switch (aggregation_operation) {
-        case 0: /* 'equal' comparison */
-        case 2:
-        case 3:
-          BoolRes[j][i] = (op1.xmmsbyte(i) == op2.xmmsbyte(j));
-          break;
-        case 1: /* 'ranges' comparison */
-          if ((i % 2) == 0)
-            BoolRes[j][i] = (op1.xmmsbyte(i) <= op2.xmmsbyte(j));
-          else
-            BoolRes[j][i] = (op1.xmmsbyte(i) >= op2.xmmsbyte(j));
-          break;
-        }
-      }
-    }
-    break;
-
-  case 3: /*   signed words compare */
-    for (i=0;i<8;i++) {
-      for (j=0;j<8;j++) {
-        switch (aggregation_operation) {
-        case 0: /* 'equal' comparison */
-        case 2:
-        case 3:
-          BoolRes[j][i] = (op1.xmm16s(i) == op2.xmm16s(j));
-          break;
-        case 1: /* 'ranges' comparison */
-          if ((i % 2) == 0)
-            BoolRes[j][i] = (op1.xmm16s(i) <= op2.xmm16s(j));
-          else
-            BoolRes[j][i] = (op1.xmm16s(i) >= op2.xmm16s(j));
-          break;
-        }
-      }
-    }
-    break;
   }
 }
 
