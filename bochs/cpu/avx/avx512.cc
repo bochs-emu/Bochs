@@ -2060,18 +2060,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VDBPSADBW_MASK_VdqHdqWdqIbR(bxInstruction_
 
 BX_CPP_INLINE Bit64u pmultishiftqb_scalar(Bit64u val_64, Bit64u control)
 {
-  // use packed register as 64-bit value with convinient accessors
-  BxPackedRegister result;
+  Bit64u result = 0;
 
   for (unsigned n=0; n < 8; n++, control >>= 8) {
     unsigned ctrl = (control & 0x3f);
-    Bit64u tmp = val_64;
-    if (ctrl != 0)
-        tmp = (val_64 << (64 - ctrl)) | (val_64 >> ctrl);
-    result.ubyte(n) = tmp & 0xff;
+    // rotate right by ctrl, (64 - ctrl) & 63 avoids shift by 64 when ctrl is 0
+    Bit64u tmp = (val_64 >> ctrl) | (val_64 << ((64 - ctrl) & 63));
+    result |= (tmp & 0xff) << (8*n);
   }
 
-  return MMXUQ(result);
+  return result;
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMULTISHIFTQB_MASK_VdqHdqWdqR(bxInstruction_c *i)
