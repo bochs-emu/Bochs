@@ -1411,36 +1411,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSHDUP_MASK_VpsWpsR(bxInstruction_c *i)
 
 // special bit operations
 
-BX_CPP_INLINE Bit32u ternlogd_scalar(Bit32u op1, Bit32u op2, Bit32u op3, unsigned imm8)
-{
-  Bit32u result = 0;
-
-  for (unsigned bit = 0; bit < 32; bit++) {
-    unsigned tmp  = (op1 >> bit) & 0x1;
-             tmp <<= 1;
-             tmp |= (op2 >> bit) & 0x1;
-             tmp <<= 1;
-             tmp |= (op3 >> bit) & 0x1;
-
-    result |= ((Bit32u)((imm8 >> tmp) & 0x1)) << bit;
-  }
-
-  return result;
-}
-
-BX_CPP_INLINE Bit64u ternlogq_scalar(Bit64u op1, Bit64u op2, Bit64u op3, unsigned imm8)
+// imm8 is a truth table indexed by (op1 bit << 2) | (op2 bit << 1) | op3 bit,
+// compute all 64 bits at once as OR of the minterms selected by imm8.
+// The operation is bitwise so it is independent of the element size.
+BX_CPP_INLINE Bit64u ternlog_scalar(Bit64u op1, Bit64u op2, Bit64u op3, unsigned imm8)
 {
   Bit64u result = 0;
 
-  for (unsigned bit = 0; bit < 64; bit++) {
-    unsigned tmp  = (op1 >> bit) & 0x1;
-             tmp <<= 1;
-             tmp |= (op2 >> bit) & 0x1;
-             tmp <<= 1;
-             tmp |= (op3 >> bit) & 0x1;
-
-    result |= ((Bit64u)((imm8 >> tmp) & 0x1)) << bit;
-  }
+  if (imm8 & 0x01) result |= ~op1 & ~op2 & ~op3;
+  if (imm8 & 0x02) result |= ~op1 & ~op2 &  op3;
+  if (imm8 & 0x04) result |= ~op1 &  op2 & ~op3;
+  if (imm8 & 0x08) result |= ~op1 &  op2 &  op3;
+  if (imm8 & 0x10) result |=  op1 & ~op2 & ~op3;
+  if (imm8 & 0x20) result |=  op1 & ~op2 &  op3;
+  if (imm8 & 0x40) result |=  op1 &  op2 & ~op3;
+  if (imm8 & 0x80) result |=  op1 &  op2 &  op3;
 
   return result;
 }
@@ -1451,11 +1436,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPTERNLOGD_VdqHdqWdqIbR(bxInstruction_c *i
                       op2 = BX_READ_AVX_REG(i->src1()),
                       op3 = BX_READ_AVX_REG(i->src2());
 
-  unsigned len = i->getVL(), num_elements = DWORD_ELEMENTS(len);
+  unsigned len = i->getVL(), num_elements = QWORD_ELEMENTS(len);
   Bit8u imm8 = i->Ib();
 
+  // without masking the element size does not matter, process qwords
   for (unsigned n=0; n < num_elements; n++) {
-    op1.vmm32u(n) = ternlogd_scalar(op1.vmm32u(n), op2.vmm32u(n), op3.vmm32u(n), imm8);
+    op1.vmm64u(n) = ternlog_scalar(op1.vmm64u(n), op2.vmm64u(n), op3.vmm64u(n), imm8);
   }
 
   BX_WRITE_AVX_REGZ(i->dst(), op1, len);
@@ -1475,7 +1461,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPTERNLOGD_MASK_VdqHdqWdqIbR(bxInstruction
 
   for (unsigned n=0; n < num_elements; n++, opmask >>= 1) {
     if (opmask & 0x1)
-      op1.vmm32u(n) = ternlogd_scalar(op1.vmm32u(n), op2.vmm32u(n), op3.vmm32u(n), imm8);
+      op1.vmm32u(n) = (Bit32u) ternlog_scalar(op1.vmm32u(n), op2.vmm32u(n), op3.vmm32u(n), imm8);
     else
       if (i->isZeroMasking()) op1.vmm32u(n) = 0;
   }
@@ -1494,7 +1480,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPTERNLOGQ_VdqHdqWdqIbR(bxInstruction_c *i
   Bit8u imm8 = i->Ib();
 
   for (unsigned n=0; n < num_elements; n++) {
-    op1.vmm64u(n) = ternlogq_scalar(op1.vmm64u(n), op2.vmm64u(n), op3.vmm64u(n), imm8);
+    op1.vmm64u(n) = ternlog_scalar(op1.vmm64u(n), op2.vmm64u(n), op3.vmm64u(n), imm8);
   }
 
   BX_WRITE_AVX_REGZ(i->dst(), op1, len);
@@ -1514,7 +1500,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPTERNLOGQ_MASK_VdqHdqWdqIbR(bxInstruction
 
   for (unsigned n=0; n < num_elements; n++, opmask >>= 1) {
     if (opmask & 0x1)
-      op1.vmm64u(n) = ternlogq_scalar(op1.vmm64u(n), op2.vmm64u(n), op3.vmm64u(n), imm8);
+      op1.vmm64u(n) = ternlog_scalar(op1.vmm64u(n), op2.vmm64u(n), op3.vmm64u(n), imm8);
     else
       if (i->isZeroMasking()) op1.vmm64u(n) = 0;
   }
