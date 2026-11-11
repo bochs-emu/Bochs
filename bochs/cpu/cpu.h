@@ -6221,10 +6221,12 @@ public: // for now...
   BX_SMF void xrstor_mxcsr_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_init_mxcsr_state(void);
 
+#if BX_SUPPORT_FPU
   BX_SMF bool xsave_x87_state_xinuse(void);
   BX_SMF void xsave_x87_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_x87_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_init_x87_state(void);
+#endif
 
   BX_SMF bool xsave_sse_state_xinuse(void);
   BX_SMF void xsave_sse_state(bxInstruction_c *i, bx_address offset);

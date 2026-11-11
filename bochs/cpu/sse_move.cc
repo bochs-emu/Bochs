@@ -42,82 +42,6 @@ void BX_CPU_C::print_state_SSE(void)
 
 #endif
 
-#if BX_SUPPORT_FPU
-Bit8u BX_CPU_C::pack_FPU_TW(Bit16u twd)
-{
-  Bit8u tag_byte = 0;
-
-  if((twd & 0x0003) != 0x0003) tag_byte |= 0x01;
-  if((twd & 0x000c) != 0x000c) tag_byte |= 0x02;
-  if((twd & 0x0030) != 0x0030) tag_byte |= 0x04;
-  if((twd & 0x00c0) != 0x00c0) tag_byte |= 0x08;
-  if((twd & 0x0300) != 0x0300) tag_byte |= 0x10;
-  if((twd & 0x0c00) != 0x0c00) tag_byte |= 0x20;
-  if((twd & 0x3000) != 0x3000) tag_byte |= 0x40;
-  if((twd & 0xc000) != 0xc000) tag_byte |= 0x80;
-
-  return tag_byte;
-}
-
-Bit16u unpack_FPU_TW(const i387_t *i387, Bit16u tag_byte)
-{
-  Bit32u twd = 0;
-
-  /*                                 FTW
-   *
-   * Note that the original format for FTW can be recreated from the stored
-   * FTW valid bits and the stored 80-bit FP data (assuming the stored data
-   * was not the contents of MMX registers) using the following table:
-
-     | Exponent | Exponent | Fraction | J,M bits | FTW valid | x87 FTW |
-     |  all 1s  |  all 0s  |  all 0s  |          |           |         |
-     -------------------------------------------------------------------
-     |    0     |    0     |    0     |    0x    |     1     | S    10 |
-     |    0     |    0     |    0     |    1x    |     1     | V    00 |
-     -------------------------------------------------------------------
-     |    0     |    0     |    1     |    00    |     1     | S    10 |
-     |    0     |    0     |    1     |    10    |     1     | V    00 |
-     -------------------------------------------------------------------
-     |    0     |    1     |    0     |    0x    |     1     | S    10 |
-     |    0     |    1     |    0     |    1x    |     1     | S    10 |
-     -------------------------------------------------------------------
-     |    0     |    1     |    1     |    00    |     1     | Z    01 |
-     |    0     |    1     |    1     |    10    |     1     | S    10 |
-     -------------------------------------------------------------------
-     |    1     |    0     |    0     |    1x    |     1     | S    10 |
-     |    1     |    0     |    0     |    1x    |     1     | S    10 |
-     -------------------------------------------------------------------
-     |    1     |    0     |    1     |    00    |     1     | S    10 |
-     |    1     |    0     |    1     |    10    |     1     | S    10 |
-     -------------------------------------------------------------------
-     |        all combinations above             |     0     | E    11 |
-
-   *
-   * The J-bit is defined to be the 1-bit binary integer to the left of
-   * the decimal place in the significand.
-   *
-   * The M-bit is defined to be the most significant bit of the fractional
-   * portion of the significand (i.e., the bit immediately to the right of
-   * the decimal place). When the M-bit is the most significant bit of the
-   * fractional portion  of the significand, it must be  0 if the fraction
-   * is all 0's.
-   */
-
-  for(int index = 7;index >= 0; index--, twd <<= 2, tag_byte <<= 1)
-  {
-      if(tag_byte & 0x80) {
-         const floatx80 &fpu_reg = i387->st_space[index];
-         twd |= FPU_tagof(fpu_reg);
-      }
-      else {
-         twd |= FPU_Tag_Empty;
-      }
-  }
-
-  return (twd >> 2);
-}
-#endif
-
 /* ************************************ */
 /* SSE: SAVE/RESTORE FPU/MMX/SSEx STATE */
 /* ************************************ */
@@ -156,8 +80,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STMXCSR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister xmm;
-
   BX_DEBUG(("FXSAVE: save FPU/MMX/SSE state"));
 
   if (BX_CPU_THIS_PTR cr0.get_EM() || BX_CPU_THIS_PTR cr0.get_TS())
@@ -185,82 +107,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
   // FXSAVE image (the first byte is checked by the very first write), touch the memory but no write actually occurs
   tickle_write_virtual(i->seg(), (eaddr + 511) & asize_mask, 1);
 
-  xmm.xmm16u(0) = BX_CPU_THIS_PTR the_i387.get_control_word();
-  xmm.xmm16u(1) = BX_CPU_THIS_PTR the_i387.get_status_word();
-  xmm.xmm16u(2) = pack_FPU_TW(BX_CPU_THIS_PTR the_i387.get_tag_word());
+  xsave_x87_state(i, eaddr);
 
-  /* x87 FPU Opcode (16 bits) */
-  /* The lower 11 bits contain the FPU opcode, upper 5 bits are reserved */
-  xmm.xmm16u(3) = BX_CPU_THIS_PTR the_i387.foo;
-
-  /*
-   * x87 FPU IP Offset (32/64 bits)
-   * The contents of this field differ depending on the current
-   * addressing mode (16/32/64 bit) when the FXSAVE instruction was executed:
-   *   + 64-bit mode - 64-bit IP offset
-   *   + 32-bit mode - 32-bit IP offset
-   *   + 16-bit mode - low 16 bits are IP offset; high 16 bits are reserved.
-   * x87 CS FPU IP Selector
-   *   + 16 bit, in 16/32 bit mode only
-   */
-#if BX_SUPPORT_X86_64
-  if (i->os64L()) /* 64 bit operand size mode */
-  {
-    xmm.xmm64u(1) = (BX_CPU_THIS_PTR the_i387.fip);
-  }
+  if (is_cpu_extension_supported(BX_ISA_SSE))
+    xsave_mxcsr_state(i, eaddr);
   else
-#endif
-  {
-    xmm.xmm32u(2) = (Bit32u)(BX_CPU_THIS_PTR the_i387.fip);
-    xmm.xmm32u(3) = x87_get_FCS();
-  }
-
-  write_virtual_xmmword_aligned(i->seg(), eaddr, &xmm);
-
-  /*
-   * x87 FPU Instruction Operand (Data) Pointer Offset (32/64 bits)
-   * The contents of this field differ depending on the current
-   * addressing mode (16/32 bit) when the FXSAVE instruction was executed:
-   *   + 64-bit mode - 64-bit offset
-   *   + 32-bit mode - 32-bit offset
-   *   + 16-bit mode - low 16 bits are offset; high 16 bits are reserved.
-   * x87 DS FPU Instruction Operand (Data) Pointer Selector
-   *   + 16 bit, in 16/32 bit mode only
-   */
-#if BX_SUPPORT_X86_64
-  if (i->os64L()) /* 64 bit operand size mode */
-  {
-    xmm.xmm64u(0) = (BX_CPU_THIS_PTR the_i387.fdp);
-  }
-  else
-#endif
-  {
-    xmm.xmm32u(0) = (Bit32u)(BX_CPU_THIS_PTR the_i387.fdp);
-    xmm.xmm32u(1) = x87_get_FDS();
-  }
-
-  if (is_cpu_extension_supported(BX_ISA_SSE)) {
-    xmm.xmm32u(2) = BX_MXCSR_REGISTER;
-    xmm.xmm32u(3) = MXCSR_MASK;
-  }
-  else {
-    xmm.xmm32u(2) = 0;
-    xmm.xmm32u(3) = 0;
-  }
-
-  write_virtual_xmmword(i->seg(), (eaddr + 16) & asize_mask, &xmm);
-
-  /* store i387 register file */
-  for(unsigned index=0; index < 8; index++)
-  {
-    const floatx80 &fp = BX_READ_FPU_REG(index);
-
-    xmm.xmm64u(0) = fp.signif;
-    xmm.xmm64u(1) = 0;
-    xmm.xmm16u(4) = fp.signExp;
-
-    write_virtual_xmmword(i->seg(), (eaddr+index*16+32) & asize_mask, &xmm);
-  }
+    write_virtual_qword(i->seg(), (eaddr + 24) & asize_mask, 0);
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR efer.get_FFXSR() && CPL == 0 && long64_mode()) {
@@ -284,8 +136,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister xmm;
-
   BX_DEBUG(("FXRSTOR: restore FPU/MMX/SSE state"));
 
   if (BX_CPU_THIS_PTR cr0.get_EM() || BX_CPU_THIS_PTR cr0.get_TS())
@@ -309,89 +159,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  // check that we would not fault while attempting to read, check that we can read-access byte 511 of the
-  // FXRSTOR image (the first byte is checked by the very first read)
+  // check that we would not fault while attempting to read, check that we can read-access first and last bytes
+  // of the FXRSTOR image before any state is modified, touch the memory but no read actually occurs
   tickle_read_virtual(i->seg(), (eaddr + 511) & asize_mask, 1);
-
-  read_virtual_xmmword_aligned(i->seg(), eaddr, &xmm);
-
-  i387_t restore_i387;
-
-  restore_i387.cwd =  xmm.xmm16u(0);
-  restore_i387.swd =  xmm.xmm16u(1);
-  restore_i387.tos = (xmm.xmm16u(1) >> 11) & 0x07;
-
-  /* always set bit 6 as '1 */
-  restore_i387.cwd = (restore_i387.cwd & ~FPU_CW_Reserved_Bits) | 0x0040;
-
-  /* Restore x87 FPU Opcode */
-  /* The lower 11 bits contain the FPU opcode, upper 5 bits are reserved */
-  restore_i387.foo = xmm.xmm16u(3) & 0x7FF;
-
-  /* Restore x87 FPU IP */
-#if BX_SUPPORT_X86_64
-  if (i->os64L()) {
-    restore_i387.fip = xmm.xmm64u(1);
-    restore_i387.fcs = 0;
-  }
-  else
-#endif
-  {
-    restore_i387.fip = xmm.xmm32u(2);
-    restore_i387.fcs = xmm.xmm16u(6);
-  }
-
-  Bit32u tag_byte = xmm.xmmubyte(4);
-
-  /* Restore x87 FPU DP */
-  read_virtual_xmmword(i->seg(), (eaddr + 16) & asize_mask, &xmm);
-
-#if BX_SUPPORT_X86_64
-  if (i->os64L()) {
-    restore_i387.fdp = xmm.xmm64u(0);
-    restore_i387.fds = 0;
-  }
-  else
-#endif
-  {
-    restore_i387.fdp = xmm.xmm32u(0);
-    restore_i387.fds = xmm.xmm16u(2);
-  }
-
-  Bit32u new_mxcsr = xmm.xmm32u(2);
-  if (is_cpu_extension_supported(BX_ISA_SSE)) {
-    if (new_mxcsr & ~MXCSR_MASK) {
-       BX_ERROR(("%s: corrupted MXCSR state restored new_mxcsr=0x%08x", i->getIaOpcodeNameShort(), new_mxcsr));
-       exception(BX_GP_EXCEPTION, 0);
-    }
-  }
-
-  /* load i387 register file */
-  for(unsigned index=0; index < 8; index++)
-  {
-    floatx80 reg;
-    reg.signif  = read_virtual_qword(i->seg(), (eaddr+index*16+32) & asize_mask);
-    reg.signExp = read_virtual_word (i->seg(), (eaddr+index*16+40) & asize_mask);
-
-    // update tag only if it is not empty
-    restore_i387.FPU_save_regi(reg,
-              IS_TAG_EMPTY(index) ? FPU_Tag_Empty : FPU_tagof(reg), index);
-  }
-
-  restore_i387.twd = unpack_FPU_TW(&restore_i387, tag_byte);
-
-  BX_CPU_THIS_PTR the_i387 = restore_i387;
-
-  /* check for unmasked exceptions */
-  if (FPU_PARTIAL_STATUS & ~FPU_CONTROL_WORD & FPU_CW_Exceptions_Mask)
-    set_unmasked_fpu_exception();
-  else
-    clear_unmasked_fpu_exception();
+  tickle_read_virtual(i->seg(), eaddr, 1);
 
   if (is_cpu_extension_supported(BX_ISA_SSE)) {
-    /* MXCSR is restored even in fast FXSAVE/FXRSTOR mode */
-    BX_MXCSR_REGISTER = new_mxcsr;
+    /* MXCSR is restored even in fast FXSAVE/FXRSTOR mode, #GP on reserved bits before any state is modified */
+    xrstor_mxcsr_state(i, eaddr);
+  }
 
+  xrstor_x87_state(i, eaddr);
+
+  if (is_cpu_extension_supported(BX_ISA_SSE)) {
 #if BX_SUPPORT_X86_64
     if (BX_CPU_THIS_PTR efer.get_FFXSR() && CPL == 0 && long64_mode()) {
       BX_NEXT_INSTR(i); // skip restore of the XMM state

@@ -528,6 +528,81 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 
 // x87 state management //
 
+#if BX_SUPPORT_FPU
+Bit8u BX_CPU_C::pack_FPU_TW(Bit16u twd)
+{
+  Bit8u tag_byte = 0;
+
+  if((twd & 0x0003) != 0x0003) tag_byte |= 0x01;
+  if((twd & 0x000c) != 0x000c) tag_byte |= 0x02;
+  if((twd & 0x0030) != 0x0030) tag_byte |= 0x04;
+  if((twd & 0x00c0) != 0x00c0) tag_byte |= 0x08;
+  if((twd & 0x0300) != 0x0300) tag_byte |= 0x10;
+  if((twd & 0x0c00) != 0x0c00) tag_byte |= 0x20;
+  if((twd & 0x3000) != 0x3000) tag_byte |= 0x40;
+  if((twd & 0xc000) != 0xc000) tag_byte |= 0x80;
+
+  return tag_byte;
+}
+
+Bit16u unpack_FPU_TW(const i387_t *i387, Bit16u tag_byte)
+{
+  Bit32u twd = 0;
+
+  /*                                 FTW
+   *
+   * Note that the original format for FTW can be recreated from the stored
+   * FTW valid bits and the stored 80-bit FP data (assuming the stored data
+   * was not the contents of MMX registers) using the following table:
+
+     | Exponent | Exponent | Fraction | J,M bits | FTW valid | x87 FTW |
+     |  all 1s  |  all 0s  |  all 0s  |          |           |         |
+     -------------------------------------------------------------------
+     |    0     |    0     |    0     |    0x    |     1     | S    10 |
+     |    0     |    0     |    0     |    1x    |     1     | V    00 |
+     -------------------------------------------------------------------
+     |    0     |    0     |    1     |    00    |     1     | S    10 |
+     |    0     |    0     |    1     |    10    |     1     | V    00 |
+     -------------------------------------------------------------------
+     |    0     |    1     |    0     |    0x    |     1     | S    10 |
+     |    0     |    1     |    0     |    1x    |     1     | S    10 |
+     -------------------------------------------------------------------
+     |    0     |    1     |    1     |    00    |     1     | Z    01 |
+     |    0     |    1     |    1     |    10    |     1     | S    10 |
+     -------------------------------------------------------------------
+     |    1     |    0     |    0     |    1x    |     1     | S    10 |
+     |    1     |    0     |    0     |    1x    |     1     | S    10 |
+     -------------------------------------------------------------------
+     |    1     |    0     |    1     |    00    |     1     | S    10 |
+     |    1     |    0     |    1     |    10    |     1     | S    10 |
+     -------------------------------------------------------------------
+     |        all combinations above             |     0     | E    11 |
+
+   *
+   * The J-bit is defined to be the 1-bit binary integer to the left of
+   * the decimal place in the significand.
+   *
+   * The M-bit is defined to be the most significant bit of the fractional
+   * portion of the significand (i.e., the bit immediately to the right of
+   * the decimal place). When the M-bit is the most significant bit of the
+   * fractional portion  of the significand, it must be  0 if the fraction
+   * is all 0's.
+   */
+
+  for(int index = 7;index >= 0; index--, twd <<= 2, tag_byte <<= 1)
+  {
+      if(tag_byte & 0x80) {
+         const floatx80 &fpu_reg = i387->st_space[index];
+         twd |= FPU_tagof(fpu_reg);
+      }
+      else {
+         twd |= FPU_Tag_Empty;
+      }
+  }
+
+  return (twd >> 2);
+}
+
 void BX_CPU_C::xsave_x87_state(bxInstruction_c *i, bx_address offset)
 {
   BxPackedXmmRegister xmm;
@@ -575,15 +650,14 @@ void BX_CPU_C::xsave_x87_state(bxInstruction_c *i, bx_address offset)
    *   + 16 bit, in 16/32 bit mode only
    */
 #if BX_SUPPORT_X86_64
-  // write cannot cause any boundary cross because XSAVE image is 64-byte aligned
   if (i->os64L()) {
-    write_virtual_qword(i->seg(), offset + 16, BX_CPU_THIS_PTR the_i387.fdp);
+    write_virtual_qword(i->seg(), (offset + 16) & asize_mask, BX_CPU_THIS_PTR the_i387.fdp);
   }
   else
 #endif
   {
-    write_virtual_dword(i->seg(), offset + 16, (Bit32u) BX_CPU_THIS_PTR the_i387.fdp);
-    write_virtual_dword(i->seg(), offset + 20, x87_get_FDS());
+    write_virtual_dword(i->seg(), (offset + 16) & asize_mask, (Bit32u) BX_CPU_THIS_PTR the_i387.fdp);
+    write_virtual_dword(i->seg(), (offset + 20) & asize_mask, x87_get_FDS());
   }
   /* do not touch MXCSR state */
 
@@ -635,8 +709,8 @@ void BX_CPU_C::xrstor_x87_state(bxInstruction_c *i, bx_address offset)
 
   Bit32u tag_byte = xmm.xmmubyte(4);
 
-  /* Restore x87 FPU DP - read cannot cause any boundary cross because XSAVE image is 64-byte aligned */
-  read_virtual_xmmword(i->seg(), offset + 16, &xmm);
+  /* Restore x87 FPU DP */
+  read_virtual_xmmword(i->seg(), (offset + 16) & asize_mask, &xmm);
 
 #if BX_SUPPORT_X86_64
   if (i->os64L()) {
@@ -701,20 +775,22 @@ bool BX_CPU_C::xsave_x87_state_xinuse(void)
 
   return false;
 }
+#endif
 
 // MXCSR state management //
 
 void BX_CPU_C::xsave_mxcsr_state(bxInstruction_c *i, bx_address eaddr)
 {
-  // store MXCSR - write cannot cause any boundary cross because XSAVE image is 64-byte aligned
-  write_virtual_dword(i->seg(), eaddr + 24, BX_MXCSR_REGISTER);
-  write_virtual_dword(i->seg(), eaddr + 28, MXCSR_MASK);
+  bx_address asize_mask = i->asize_mask();
+
+  // store MXCSR
+  write_virtual_dword(i->seg(), (eaddr + 24) & asize_mask, BX_MXCSR_REGISTER);
+  write_virtual_dword(i->seg(), (eaddr + 28) & asize_mask, MXCSR_MASK);
 }
 
 void BX_CPU_C::xrstor_mxcsr_state(bxInstruction_c *i, bx_address eaddr)
 {
-  // read cannot cause any boundary cross because XSAVE image is 64-byte aligned
-  Bit32u new_mxcsr = read_virtual_dword(i->seg(), eaddr + 24);
+  Bit32u new_mxcsr = read_virtual_dword(i->seg(), (eaddr + 24) & i->asize_mask());
   if(new_mxcsr & ~MXCSR_MASK) {
      BX_ERROR(("%s: corrupted MXCSR state restored new_mxcsr=0x%08x", i->getIaOpcodeNameShort(), new_mxcsr));
      exception(BX_GP_EXCEPTION, 0);
