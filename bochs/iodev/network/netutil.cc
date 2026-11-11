@@ -100,7 +100,7 @@ Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len)
 #define ARP_OPCODE_REV_REQUEST 3
 #define ARP_OPCODE_REV_REPLY   4
 
-#define ICMP_ECHO_PACKET_MAX  128
+#define ICMP_ECHO_PACKET_MAX  BX_PACKET_BUFSIZE
 
 #define INET_PORT_FTPDATA 20
 #define INET_PORT_FTP 21
@@ -1176,9 +1176,17 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
       ftpcmd = new char[data_len + 1];
       memcpy(ftpcmd, data, data_len);
       ftpcmd[data_len] = 0;
-      cmdstr = strtok(ftpcmd, " \r");
-      arg = strtok(NULL, "\r");
-      if (arg[0] == '\n') arg++;
+      cmdstr = strtok(ftpcmd, " \r\n");
+      if (cmdstr == NULL) {
+        // empty line
+        delete [] ftpcmd;
+        return;
+      }
+      arg = strtok(NULL, "\r\n");
+      if (arg == NULL) {
+        // command without argument: use the empty string at the end of the buffer
+        arg = &ftpcmd[data_len];
+      }
       fs = (ftp_session_t*)tcpc_cmd->data;
       fs->cmdcode = ftp_get_command(cmdstr, fs->anonymous);
       if (fs->state == FTP_STATE_LOGIN) {
@@ -1352,6 +1360,9 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
             break;
           case FTPCMD_RNFR:
             if (ftp_file_exists(tcpc_cmd, arg, tmp_path, NULL)) {
+              if (fs->last_fname != NULL) {
+                delete [] fs->last_fname;
+              }
               fs->last_fname = new char[strlen(tmp_path)+1];
               strcpy(fs->last_fname, tmp_path);
               ftp_send_reply(tcpc_cmd, "350 File exists. Ready for new name.");
@@ -1821,7 +1832,7 @@ void vnet_server_c::ftp_recv_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data, c
   ftp_session_t *fs = (ftp_session_t*)tcpc_cmd->data;
   int fd = -1;
   bool exists;
-  Bit8u n = 1;
+  unsigned n = 1;
 
   exists = ftp_file_exists(tcpc_cmd, fname, path, NULL);
   if (path[0] == 0) {
@@ -1829,7 +1840,11 @@ void vnet_server_c::ftp_recv_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data, c
   }
   if (exists && (fs->cmdcode == FTPCMD_STOU)) {
     do {
-      sprintf(tmp_path, "%s.%d", path, n++);
+      if (n > 999) {
+        ftp_send_reply(tcpc_cmd, "550 No unique file name available.");
+        return;
+      }
+      sprintf(tmp_path, "%s.%u", path, n++);
     } while (ftp_file_exists(tcpc_cmd, NULL, tmp_path, NULL));
     if (strlen(tmp_path) >= BX_PATHNAME_LEN) {
       ftp_send_reply(tcpc_cmd, "550 Path too long.");
@@ -1877,11 +1892,10 @@ void vnet_server_c::ftp_get_filesize(tcp_conn_t *tcp_conn, const char *arg)
   char reply[20];
   unsigned size = 0;
 
+  // on failure ftp_file_exists() has already sent the error reply
   if (ftp_file_exists(tcp_conn, arg, path, &size)) {
-    sprintf(reply, "213 %d", size);
+    sprintf(reply, "213 %u", size);
     ftp_send_reply(tcp_conn, reply);
-  } else {
-    ftp_send_reply(tcp_conn, "550 File not found.");
   }
 }
 
@@ -2318,9 +2332,10 @@ tftp_session_t *tftp_new_session(Bit16u req_tid, bool mode, const char *tpath, c
   s->options = 0;
   s->blksize_val = TFTP_DEFAULT_BLKSIZE;
   s->timeout_val = TFTP_DEFAULT_TIMEOUT;
+  s->block_nr = 0;
   s->next = tftp_sessions;
   tftp_sessions = s;
-  if ((strlen(tname) > 0) && ((strlen(tpath) + strlen(tname)) < BX_PATHNAME_LEN) &&
+  if ((strlen(tname) > 0) && ((strlen(tpath) + 1 + strlen(tname)) < BX_PATHNAME_LEN) &&
       vnet_path_is_safe(tname)) {
     sprintf(s->filename, "%s/%s", tpath, tname);
   } else {
@@ -2427,6 +2442,7 @@ int tftp_send_data(Bit8u *buffer, unsigned block_nr, tftp_session_t *s)
 
   put_net2(buffer, TFTP_DATA);
   put_net2(buffer + 2, block_nr);
+  s->block_nr = block_nr;
   if (rd < (int)s->blksize_val) {
     tftp_remove_session(s);
   } else {
@@ -2489,7 +2505,13 @@ void vnet_server_c::tftp_parse_options(const char *mode, const Bit8u *data,
       s->options |= TFTP_OPTION_BLKSIZE;
       mode += 8;
       s->blksize_val = atoi(mode);
-      if (s->blksize_val > TFTP_BUFFER_SIZE) {
+      if (s->blksize_val < 8) {
+        // RFC 2348: valid values are 8 and up - ignore the option
+        BX_ERROR(("tftp req: blksize value %d not valid - option ignored",
+                  s->blksize_val));
+        s->options &= ~TFTP_OPTION_BLKSIZE;
+        s->blksize_val = TFTP_DEFAULT_BLKSIZE;
+      } else if (s->blksize_val > TFTP_BUFFER_SIZE) {
         BX_ERROR(("tftp req: blksize value %d not supported - using %d instead",
                   s->blksize_val, TFTP_BUFFER_SIZE));
         s->blksize_val = TFTP_BUFFER_SIZE;
@@ -2634,20 +2656,24 @@ int vnet_server_c::udpipv4_tftp_handler_ns(const Bit8u *ipheader,
       if (s != NULL) {
         if (s->iswrite == 1) {
           block_nr = get_net2(data + 2);
-          strncpy((char*)reply, (const char*)data + 4, data_len - 4);
           tftp_len = data_len - 4;
-          reply[tftp_len] = 0;
+          if (block_nr == (s->block_nr & 0xffff)) {
+            // retransmission of the block written last: acknowledge again
+            tftp_update_timestamp(s);
+            return tftp_send_ack(reply, block_nr);
+          }
+          if (block_nr != ((s->block_nr + 1) & 0xffff)) {
+            return tftp_send_error(reply, 4, "Illegal request", s);
+          }
           if (tftp_len <= s->blksize_val) {
+            // blocks arrive in order, so appending is correct
             fp = fopen(s->filename, "ab");
             if (!fp) {
               return tftp_send_error(reply, 2, "Access violation", s);
             }
-            if (fseek(fp, (block_nr - 1) * TFTP_BUFFER_SIZE, SEEK_SET) < 0) {
-              fclose(fp);
-              return tftp_send_error(reply, 3, "Block not seekable", s);
-            }
-            fwrite(reply, 1, tftp_len, fp);
+            fwrite(data + 4, 1, tftp_len, fp);
             fclose(fp);
+            s->block_nr++;
             if (tftp_len < s->blksize_val) {
               tftp_remove_session(s);
             } else {
@@ -2668,7 +2694,15 @@ int vnet_server_c::udpipv4_tftp_handler_ns(const Bit8u *ipheader,
     case TFTP_ACK:
       if (s != NULL) {
         if (s->iswrite == 0) {
-          return tftp_send_data(reply, get_net2(data + 2) + 1, s);
+          // the block number is 16-bit and wraps, track it in the session
+          block_nr = get_net2(data + 2);
+          if (block_nr == (s->block_nr & 0xffff)) {
+            return tftp_send_data(reply, s->block_nr + 1, s);
+          } else if (block_nr == ((s->block_nr - 1) & 0xffff)) {
+            // the last data block was lost: send it again
+            return tftp_send_data(reply, s->block_nr, s);
+          }
+          return 0;
         } else {
           return tftp_send_error(reply, 4, "Illegal request", s);
         }
