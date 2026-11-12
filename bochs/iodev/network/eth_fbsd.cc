@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -83,6 +83,10 @@ extern "C" {
 #define BX_BPF_POLL  1000    // Poll for a frame every 250 usecs
 
 #define BX_BPF_INSNSIZ  8    // number of bpf insns
+
+// BPF buffer size: must hold several frames with their bpf headers,
+// read() must use a buffer of exactly this size
+#define BX_BPF_BUFSIZE  16384
 
 // template filter for a unicast mac address and all
 // multicast/broadcast frames
@@ -205,7 +209,7 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
   }
 
   // Set buffer size
-  v = BX_PACKET_BUFSIZE;
+  v = BX_BPF_BUFSIZE;
   if (ioctl(this->bpf_fd, BIOCSBLEN, (caddr_t)&v) < 0) {
     BX_PANIC(("eth_freebsd: could not set buffer size: %s", strerror(errno)));
     close(this->bpf_fd);
@@ -353,7 +357,7 @@ void
 bx_fbsd_pktmover_c::rx_timer(void)
 {
   int nbytes = 0;
-    unsigned char rxbuf[BX_PACKET_BUFSIZE];
+    unsigned char rxbuf[BX_BPF_BUFSIZE];
   struct bpf_hdr *bhdr;
     struct bpf_stat bstat;
     static struct bpf_stat previous_bstat;
@@ -376,7 +380,7 @@ bx_fbsd_pktmover_c::rx_timer(void)
     }
 
     // filter out packets sourced from this node
-    if (memcmp(bhdr + bhdr->bh_hdrlen + 6, this->fbsd_macaddr, 6)) {
+    if (memcmp(phdr + bhdr->bh_hdrlen + 6, this->fbsd_macaddr, 6)) {
       if (this->rxstat(this->netdev) & BX_NETDEV_RXREADY) {
         this->rxh(this->netdev, phdr + bhdr->bh_hdrlen, bhdr->bh_caplen);
       } else {

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -52,7 +52,7 @@ PLUGIN_ENTRY_FOR_NET_MODULE(null)
 
 #define LOG_THIS netdev->
 
-#define BX_ETH_NULL_LOGGING 1
+#define BX_ETH_NULL_LOGGING 0
 
 //
 //  Define the class. This is private to this module
@@ -66,9 +66,11 @@ public:
   virtual ~bx_null_pktmover_c();
   void sendpkt(void *buf, unsigned io_len);
 private:
+#if BX_ETH_NULL_LOGGING
   int rx_timer_index;
   static void rx_timer_handler(void *);
   FILE *txlog, *txlog_txt, *rxlog, *rxlog_txt;
+#endif
 };
 
 
@@ -148,9 +150,9 @@ void bx_null_pktmover_c::sendpkt(void *buf, unsigned io_len)
 #endif
 }
 
+#if BX_ETH_NULL_LOGGING
 void bx_null_pktmover_c::rx_timer_handler(void *this_ptr)
 {
-#if BX_ETH_NULL_LOGGING
   /// hey wait there is no receive data with a NULL ethernet, is there....
 
   int io_len = 0;
@@ -168,7 +170,7 @@ void bx_null_pktmover_c::rx_timer_handler(void *this_ptr)
     // flush log so that we see the packets as they arrive w/o buffering
     fflush(class_ptr->rxlog);
   }
-#endif
 }
+#endif
 
 #endif /* if BX_NETWORKING */
