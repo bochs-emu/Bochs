@@ -251,6 +251,8 @@ private:
   static void rx_handler(void *arg, const void *buf, unsigned len);
   unsigned mcast_index(const void *dst);
   bool rx_ring_valid(void);
+  int  rx_ring_avail(void);
+  void rx_missed(void);
   void rx_frame(const void *buf, unsigned io_len);
 
 #if BX_SUPPORT_PCI

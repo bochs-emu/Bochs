@@ -44,6 +44,9 @@
 // hit the unclear completely full buffer condition.
 #define BX_NE2K_NEVER_FULL_RING (1)
 
+// ring pages used by a maximum size frame (1514 bytes + header + CRC)
+#define BX_NE2K_MAX_FRAME_PAGES ((BX_PACKET_BUFSIZE + 4 + 4 + 255) / 256)
+
 #define LOG_THIS NE2kDevMain->
 
 bx_ne2k_main_c *NE2kDevMain = NULL;
@@ -728,7 +731,7 @@ bx_ne2k_c::chipmem_read(Bit32u address, unsigned int io_len)
     BX_PANIC(("unaligned chipmem word read"));
 
   // ROM'd MAC address
-  if ((address >=0) && (address <= 31)) {
+  if ((address + io_len) <= 32) {
     retval = BX_NE2K_THIS s.macaddr[address];
     if ((io_len == 2) || (io_len == 4)) {
       retval |= (BX_NE2K_THIS s.macaddr[address + 1] << 8);
@@ -740,7 +743,7 @@ bx_ne2k_c::chipmem_read(Bit32u address, unsigned int io_len)
     return (retval);
   }
 
-  if ((address >= BX_NE2K_MEMSTART) && (address < BX_NE2K_MEMEND)) {
+  if ((address >= BX_NE2K_MEMSTART) && ((address + io_len) <= BX_NE2K_MEMEND)) {
     retval = BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART];
     if ((io_len == 2) || (io_len == 4)) {
       retval |= (BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART + 1] << 8);
@@ -763,7 +766,7 @@ bx_ne2k_c::chipmem_write(Bit32u address, Bit32u value, unsigned io_len)
   if ((io_len == 2) && (address & 0x1))
     BX_PANIC(("unaligned chipmem word write"));
 
-  if ((address >= BX_NE2K_MEMSTART) && (address < BX_NE2K_MEMEND)) {
+  if ((address >= BX_NE2K_MEMSTART) && ((address + io_len) <= BX_NE2K_MEMEND)) {
     BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART] = value & 0xff;
     if ((io_len == 2) || (io_len == 4)) {
       BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART + 1] = value >> 8;
@@ -995,16 +998,19 @@ Bit32u bx_ne2k_c::page0_read(Bit32u offset, unsigned int io_len)
              (Bit8u)BX_NE2K_THIS s.RSR.rx_ok);
     break;
 
-  case 0xd:  // CNTR0
+  case 0xd:  // CNTR0 (cleared when read)
     value = BX_NE2K_THIS s.tallycnt_0;
+    BX_NE2K_THIS s.tallycnt_0 = 0;
     break;
 
-  case 0xe:  // CNTR1
+  case 0xe:  // CNTR1 (cleared when read)
     value = BX_NE2K_THIS s.tallycnt_1;
+    BX_NE2K_THIS s.tallycnt_1 = 0;
     break;
 
-  case 0xf:  // CNTR2
+  case 0xf:  // CNTR2 (cleared when read)
     value = BX_NE2K_THIS s.tallycnt_2;
+    BX_NE2K_THIS s.tallycnt_2 = 0;
     break;
 
   default:
@@ -1157,7 +1163,7 @@ void bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
       BX_PANIC(("TCR write, auto transmit disable not supported"));
 
     // Allow collision-offset to be set, although not used
-    BX_NE2K_THIS s.TCR.coll_prio = ((value & 0x08) > 0);
+    BX_NE2K_THIS s.TCR.coll_prio = ((value & 0x10) > 0);
     break;
 
   case 0xe:  // DCR
@@ -1178,7 +1184,7 @@ void bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
     BX_NE2K_THIS s.DCR.longaddr = (value & 0x04) > 0; // illegal ?
     BX_NE2K_THIS s.DCR.loop     = (value & 0x08) > 0;
     BX_NE2K_THIS s.DCR.auto_rx  = (value & 0x10) > 0; // also illegal ?
-    BX_NE2K_THIS s.DCR.fifo_size = (value & 0x50) >> 5;
+    BX_NE2K_THIS s.DCR.fifo_size = (value & 0x60) >> 5;
     break;
 
   case 0xf:  // IMR
@@ -1684,11 +1690,43 @@ Bit32u bx_ne2k_c::rx_status()
   Bit32u status = BX_NETDEV_10MBIT;
   if ((BX_NE2K_THIS s.CR.stop == 0) &&
       rx_ring_valid() &&
+      (rx_ring_avail() > BX_NE2K_MAX_FRAME_PAGES) &&
       (BX_NE2K_THIS s.DCR.loop ||
        (BX_NE2K_THIS s.TCR.loop_cntl == 0))) {
     status |= BX_NETDEV_RXREADY;
   }
   return status;
+}
+
+/*
+ * Number of free pages in the receive ring (ring must be valid)
+ */
+int bx_ne2k_c::rx_ring_avail(void)
+{
+  if (BX_NE2K_THIS s.curr_page < BX_NE2K_THIS s.bound_ptr) {
+    return BX_NE2K_THIS s.bound_ptr - BX_NE2K_THIS s.curr_page;
+  } else {
+    return (BX_NE2K_THIS s.page_stop - BX_NE2K_THIS s.page_start) -
+      (BX_NE2K_THIS s.curr_page - BX_NE2K_THIS s.bound_ptr);
+  }
+}
+
+/*
+ * A frame was lost because the receive ring is full: set RSR.MPA and
+ * count it in CNTR2 (stops at 192), CNT is set when the counter MSB is set
+ */
+void bx_ne2k_c::rx_missed(void)
+{
+  BX_NE2K_THIS s.RSR.rx_missed = 1;
+  if (BX_NE2K_THIS s.tallycnt_2 < 192) {
+    BX_NE2K_THIS s.tallycnt_2++;
+  }
+  if (BX_NE2K_THIS s.tallycnt_2 & 0x80) {
+    BX_NE2K_THIS s.ISR.cnt_oflow = 1;
+    if (BX_NE2K_THIS s.IMR.cofl_inte) {
+      set_irq_level(1);
+    }
+  }
 }
 
 /*
@@ -1741,13 +1779,7 @@ void bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   // out how many 256-byte pages the frame would occupy
   pages = (io_len + 4 + 4 + 255)/256;
 
-  if (BX_NE2K_THIS s.curr_page < BX_NE2K_THIS s.bound_ptr) {
-    avail = BX_NE2K_THIS s.bound_ptr - BX_NE2K_THIS s.curr_page;
-  } else {
-    avail = (BX_NE2K_THIS s.page_stop - BX_NE2K_THIS s.page_start) -
-      (BX_NE2K_THIS s.curr_page - BX_NE2K_THIS s.bound_ptr);
-//  wrapped = 1;
-  }
+  avail = rx_ring_avail();
 
   // Avoid getting into a buffer overflow condition by not attempting
   // to do partial receives. The emulation to handle this condition
@@ -1757,6 +1789,7 @@ void bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
       || (avail == pages)
 #endif
       ) {
+    rx_missed();
     return;
   }
 
@@ -1818,12 +1851,17 @@ void bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   } else {
     int endbytes = (BX_NE2K_THIS s.page_stop - BX_NE2K_THIS s.curr_page)
       * 256;
+    // frame bytes before the end of the ring (only the CRC room may wrap)
+    unsigned firstbytes = endbytes - 4;
+    if (firstbytes > io_len)
+      firstbytes = io_len;
     memcpy(startptr, pkthdr, 4);
-    memcpy(startptr + 4, buf, endbytes - 4);
-    startptr = & BX_NE2K_THIS s.mem[BX_NE2K_THIS s.page_start * 256 -
-				 BX_NE2K_MEMSTART];
-    memcpy(startptr, (void *)(pktbuf + endbytes - 4),
-	   io_len - endbytes + 8);
+    memcpy(startptr + 4, buf, firstbytes);
+    if (io_len > firstbytes) {
+      startptr = & BX_NE2K_THIS s.mem[BX_NE2K_THIS s.page_start * 256 -
+				   BX_NE2K_MEMSTART];
+      memcpy(startptr, (void *)(pktbuf + firstbytes), io_len - firstbytes);
+    }
     BX_NE2K_THIS s.curr_page = nextpage;
   }
 
