@@ -412,7 +412,7 @@ void BX_CPU_C::init_MSRs()
   //     [4]: SSB_NO: Processor is not susceptible to Speculative Store Bypass
   //  [63:5]: reserved
   BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_ARCH_CAPABILITIES] = new ConstMSR("MSR_IA32_ARCH_CAPABILITIES", BX_ISA_SPEC_CTRL, 0x1F); // read only, set bits [4:0]
-  // SPEC_CTRL and PRED_CMD MSRs are present with either Intel or AMD speculation control feature
+  // SPEC_CTRL, PRED_CMD and FLUSH_CMD MSRs are present with either Intel or AMD speculation control feature
   // (both features are never enabled together)
   unsigned spec_ctrl_feature = is_cpu_extension_supported(BX_ISA_SPEC_CTRL_AMD) ? BX_ISA_SPEC_CTRL_AMD : BX_ISA_SPEC_CTRL;
   BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_SPEC_CTRL] = new SpecCtrlMSR(BX_CPU_THIS, spec_ctrl_feature);
@@ -423,7 +423,7 @@ void BX_CPU_C::init_MSRs()
   // IA32_FLUSH_CMD MSR:
   //    [0] - WBINVD DL1 Cache
   // [63:1] - reserved
-  BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_FLUSH_CMD] = new WriteOnlyMSR("MSR_IA32_FLUSH_CMD", BX_ISA_SPEC_CTRL, ~BX_CONST64(1));
+  BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_FLUSH_CMD] = new WriteOnlyMSR("MSR_IA32_FLUSH_CMD", spec_ctrl_feature, ~BX_CONST64(1));
 
 #if BX_SUPPORT_VMX
   // IA32_FEATURE_CONTROL MSR, locked for writes once the lock bit is set

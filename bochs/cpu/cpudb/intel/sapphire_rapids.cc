@@ -657,7 +657,7 @@ void sapphire_rapids_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_
                                                    BX_CPUID_STD7_SUBLEAF1_EAX_FAST_ZEROLEN_REP_CMPSB);
     leaf->ebx = 0;
     leaf->ecx = 0;
-    leaf->edx = 0;
+    leaf->edx = get_std_cpuid_leaf_7_subleaf_1_edx();
     break;
 
   case 2:

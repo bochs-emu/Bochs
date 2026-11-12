@@ -2198,10 +2198,12 @@ void bx_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_funct
   case 0x80000026: // CPUID leaf 0x80000026 - Extended CPU Topology
     get_ext_cpuid_leaf_26(subfunction, leaf);
     break;
+  case 0x80000027: // CPUID leaf 0x80000027 - reserved
+  case 0x80000028: // CPUID leaf 0x80000028 - reserved
   case 0x8FFFFFFF: // CPUID leaf 0x8FFFFFFF - AMD magic (hidden) leaf
     get_hardware_cpuid_leaf(function, subfunction, leaf);
     break;
-  default:         // not reachable: max_std_leaf <= 0x28 and max_ext_leaf <= 0x80000026 for all models
+  default:         // not reachable: max_std_leaf <= 0x28 and max_ext_leaf <= 0x80000028 for all models
     get_hardware_cpuid_leaf(function, subfunction, leaf);
     break;
   }

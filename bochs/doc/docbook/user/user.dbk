@@ -6142,6 +6142,11 @@ features enabled at compile time (3rd column).
     <entry>cpu level 6, x86-64, avx</entry>
   </row>
   <row>
+    <entry>zen4_raphael</entry>
+    <entry>AMD Ryzen 9 7950X</entry>
+    <entry>cpu level 6, x86-64, avx</entry>
+  </row>
+  <row>
     <entry>corei7_ivy_bridge_3770k</entry>
     <entry>Intel(R) Core(TM) i7-3770K CPU (Ivy Bridge)</entry>
     <entry>cpu level 6, x86-64, avx</entry>

@@ -639,7 +639,7 @@ void zen3_vermeer_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [9:9]   OSVW: OS visible workarounds (AMD)
   // ! [10:10] IBS: Instruction based sampling
   //   [11:11] XOP: Extended Operations Support and XOP Prefix
-  // * [12:12] SKINIT support
+  // ! [12:12] SKINIT support
   // * [13:13] WDT: Watchdog timer support
   //   [14:14] Reserved
   //   [15:15] LWP: Light weight profiling
