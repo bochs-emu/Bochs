@@ -1824,14 +1824,15 @@ void bx_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
   //   [0:0] CLZERO support
   //   [1:1] Instruction Retired Counter MSR available
   //   [2:2] FP Error Pointers Restored by XRSTOR
-  //   [3:3] reserved
+  //   [3:3] INVLPGB and TLBSYNC instructions support
   //   [4:4] RDPRU support
   //   [5:5] reserved
   //   [6:6] Memory Bandwidth Enforcement (MBE) support
-  //   [8:7] reserved
+  //   [7:7] reserved
+  //   [8:8] MCOMMIT instruction support
   //   [9:9] WBNOINVD support - when not supported fall back to legacy WBINVD
   // [11:10] reserved
-  // [12:12] IBTB: Indirect Branch Prediction Barrier
+  // [12:12] IBPB: Indirect Branch Prediction Barrier
   // [13:13] INT_WBINVD: WBINVD/WBNOINVD instructions are interruptible
   // [14:14] IBRS: Indirect Branch Restricted Speculation
   // [15:15] STIBP: Single Thread Indirect Branch Prediction mode
@@ -1860,6 +1861,7 @@ void bx_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
 
   leaf->ecx = 0; // Reserved, undefined for Intel
 
+  // EDX[15:0]:  InvlpgbCountMax - maximum page count for INVLPGB instruction (INVLPGB is not supported, report 0)
   // EDX[31:16]: MaxRdpruID - maximum ECX value recognized by RDPRU (MPERF=0, APERF=1)
   leaf->edx = is_cpu_extension_supported(BX_ISA_RDPRU) ? (1 << 16) : 0;
 }
