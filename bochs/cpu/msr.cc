@@ -587,6 +587,12 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 #endif
 
 #if BX_SUPPORT_SVM
+  // AVIC Doorbell Register is write only, any attempt to read it results in #GP
+  if (index == BX_SVM_AVIC_DOORBELL_MSR && BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_AVIC)) {
+    BX_ERROR(("RDMSR AVIC_DOORBELL: write only MSR"));
+    return false;
+  }
+
   // these SVM MSRs are not handled through MSR descriptors yet
   if (index == BX_SVM_VM_CR_MSR || index == BX_SVM_HSAVE_PA_MSR) {
     if (! is_cpu_extension_supported(BX_ISA_SVM)) {
@@ -837,6 +843,19 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     }
     BX_CPU_THIS_PTR msr.svm_hsave_pa = val_64;
     return true;
+
+  case BX_SVM_AVIC_DOORBELL_MSR:
+    // AVIC Doorbell Register: [7:0] physical APIC ID, [63:8] reserved MBZ
+    // the MSR is supported if AVIC is supported, independent of EFER.SVME
+    if (BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_AVIC)) {
+      if (val_64 >> 8) {
+        BX_ERROR(("WRMSR AVIC_DOORBELL: attempt to set reserved bits"));
+        return false;
+      }
+      SvmAvicRingDoorbell((unsigned) val_64);
+      return true;
+    }
+    break;
   }
 #endif
 

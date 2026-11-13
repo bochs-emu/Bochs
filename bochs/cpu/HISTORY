@@ -13,6 +13,7 @@ Changes after Bochs 3.1:
 ! Implemented AI Compute Extensions (ACE) emulation according AI Compute Extensions (ACE) Specification rev1.16.2 from x86 Ecosystem Advisory Group
 ! Implemented support for Intel MPX ISA extension
 ! Implemented AMD AVX512_BMM (Bit Matrix Multiply and Bit Reversal) instructions VBMACOR16X16X16, VBMACXOR16X16X16 and VBITREV, not yet enabled in any CPU model
+! Implemented SVM AVIC (Advanced Virtual Interrupt Controller) in xAVIC mode, enabled in Ryzen, Zen3 and Zen4 models
 ! Implemented SVM TSC Ratio MSR (TSC scaling for SVM guests), enabled in Zambezi, Trinity and Ryzen models
 ! Implemented SVM Virtual GIF (VGIF) feature, enabled in Ryzen model
 ! Implemented SVM VMSAVE and VMLOAD virtualization feature, enabled in Ryzen model

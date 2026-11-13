@@ -1578,6 +1578,12 @@ void BX_CPU_C::WriteCR8(bxInstruction_c *i, bx_address val)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
+    // with AVIC writes to CR8 update V_TPR and the backing page TPR independent of V_INTR_MASKING
+    if (SVM_AVIC_ENABLED) {
+      SvmAvicWriteCR8(tpr);
+      return;
+    }
+
     SVM_V_TPR = tpr >> 4;   // V_TPR just matching CR8[3:0]
     handleInterruptMaskChange();
     if (SVM_V_INTR_MASKING) return;
@@ -1611,7 +1617,8 @@ Bit32u BX_CPU_C::ReadCR8(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR in_svm_guest) {
     if (SVM_CR_READ_INTERCEPTED(8)) Svm_Vmexit(SVM_VMEXIT_CR8_READ);
 
-    if (SVM_V_INTR_MASKING) return SVM_V_TPR;
+    // with AVIC reads from CR8 return V_TPR independent of V_INTR_MASKING
+    if (SVM_V_INTR_MASKING || SVM_AVIC_ENABLED) return SVM_V_TPR;
   }
 #endif
 
