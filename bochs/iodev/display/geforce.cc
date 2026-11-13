@@ -3001,6 +3001,8 @@ void bx_geforce_c::sifm(gf_channel* ch, bool swizzled)
           Bit32u srccolor = get_pixel(ch->sifm_src, src_offset, x, ch->sifm_color_bytes);
           if (ch->sifm_color_bytes == 2 && ch->swzs_color_bytes == 4)
             srccolor = color_565_to_888(srccolor);
+          if (ch->sifm_color_fmt == 4)
+            srccolor |= 0xFF000000;
           put_pixel_swzs(ch, ch->swzs_ofs +
             swizzle(x + dx, y + dy, 0, ch->swzs_width, ch->swzs_height, 1) *
             ch->swzs_color_bytes, srccolor);
@@ -3043,6 +3045,8 @@ void bx_geforce_c::sifm(gf_channel* ch, bool swizzled)
           Bit32u srccolor = get_pixel(ch->sifm_src, src_offset, sx >> 20, ch->sifm_color_bytes);
           if (ch->sifm_color_bytes == 2 && ch->swzs_color_bytes == 4)
             srccolor = color_565_to_888(srccolor);
+          if (ch->sifm_color_fmt == 4)
+            srccolor |= 0xFF000000;
           put_pixel_swzs(ch, ch->swzs_ofs +
             swizzle(x + dx, y + dy, 0, ch->swzs_width, ch->swzs_height, 1) *
             ch->swzs_color_bytes, srccolor);
