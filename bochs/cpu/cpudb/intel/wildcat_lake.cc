@@ -732,6 +732,8 @@ void wildcat_lake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *
     //   [06:06] support for UC-lock disable feature (UC lock causes #AC)
     // * [07:07] MONITOR_MITG_NO: MONITOR/UMONITOR instructions are not affected by performance or power issues due to 
     //                            MONITOR/UMONITOR instructions exceeding the capacity of an internal monitor tracking table
+    //   [08:08] reserved
+    //   [09:09] SSBD_PSFD_U_S: support SSBD_U, SSBD_S, PSFD_U, and PSFD_S bits of the IA32_SPEC_CTRL MSR
     if (is_cpu_extension_supported(BX_ISA_SPEC_CTRL))
       leaf->edx = 0xBF;
     break;

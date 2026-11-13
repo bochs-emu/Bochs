@@ -695,11 +695,15 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 // -----------------------------
 //    [0:4]   reserved
 //    [5:5]   Support immediate forms of RDMSR and WRMSRNS instructions
-//   [10:6]   reserved
+//    [7:6]   reserved
+//    [8:8]   Support IA32_SOC_CAPABILITIES MSR
+//   [10:9]   reserved
 //  [11:11]   ACE support
 //  [31:12]   reserved
 
 #define BX_CPUID_STD7_SUBLEAF1_ECX_MSR_IMM                (1 <<  5)
+// ...
+#define BX_CPUID_STD7_SUBLEAF1_ECX_IA32_SOC_CAP_MSR       (1 <<  8)
 // ...
 #define BX_CPUID_STD7_SUBLEAF1_ECX_ACE                    (1 << 11)
 

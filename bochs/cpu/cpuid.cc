@@ -816,8 +816,8 @@ void bx_cpuid_t::get_std_cpuid_amx_tmul_leaf(Bit32u subfunction, cpuid_function_
   //    [2] AMX-COMPLEX
   //    [3] AMX-FP16
   //    [4] AMX-FP8
-  //    [5] AMX-TRANSPOSE (deprecated)
-  //    [6] AMX-TF32 (deprecated)
+  //    [5] AMX-TRANSPOSE (deprecated, zero)
+  //    [6] reserved, deprecated AMX-TF32
   //    [7] AMX-AVX512
   //    [8] AMX-MOVRS
   // [31:9] reserved
@@ -918,8 +918,10 @@ void bx_cpuid_t::get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *
     // EBX:
     // ECX:
     //   [1] AVX10_BMM: Bit Matrix Multiply instructions support (optional, ACE v2)
-    //   [2] AVX10_VNNI_INT instructions support, also known as AVX10_V1_AUX, part of AVX10.2
+    //   [2] AVX10_V1_AUX instructions support, part of AVX10.2
     //   [3] AVX10_V2_AUX, part of ACE v1
+    // [6-4] reserved
+    //   [7] AVX10_VPMLDSABFLYDQ (butterfly) instruction
     // EDX:
     if (is_cpu_extension_supported(BX_ISA_ACE)) {
       leaf->eax = 0;
