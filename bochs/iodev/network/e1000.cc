@@ -699,6 +699,10 @@ void bx_e1000_c::e1000_register_state(bx_list_c *parent, Bit8u card)
 void bx_e1000_c::after_restore_state(void)
 {
   bx_pci_device_c::after_restore_pci_state();
+  // TX interrupt causes still pending: the timer state is not saved
+  if (BX_E1000_THIS s.tx.int_cause != 0) {
+    bx_pc_system.activate_timer(BX_E1000_THIS s.tx_timer_index, 10, 0);
+  }
 }
 
 bool bx_e1000_c::mem_read_handler(bx_phy_address addr, unsigned len,
@@ -800,9 +804,9 @@ bool bx_e1000_c::mem_read(bx_phy_address addr, unsigned len, void *data)
         break;
       default:
         if (((offset >= E1000_CRCERRS) && (offset <= E1000_MPC)) ||
-            ((offset >= E1000_RA) && (offset <= (E1000_RA + 31))) ||
-            ((offset >= E1000_MTA) && (offset <= (E1000_MTA + 127))) ||
-            ((offset >= E1000_VFTA) && (offset <= (E1000_VFTA + 127)))) {
+            ((offset >= E1000_RA) && (offset <= (E1000_RA + 0x7f))) ||
+            ((offset >= E1000_MTA) && (offset <= (E1000_MTA + 0x1ff))) ||
+            ((offset >= E1000_VFTA) && (offset <= (E1000_VFTA + 0x1ff)))) {
           value = BX_E1000_THIS s.mac_reg[index];
         } else {
           BX_DEBUG(("mem read from offset 0x%08x returns 0", offset));
@@ -901,9 +905,9 @@ bool bx_e1000_c::mem_write(bx_phy_address addr, unsigned len, void *data)
         BX_E1000_THIS s.mac_reg[CTRL] = value & ~E1000_CTRL_RST;
         break;
       default:
-        if (((offset >= E1000_RA) && (offset <= (E1000_RA + 31))) ||
-            ((offset >= E1000_MTA) && (offset <= (E1000_MTA + 127))) ||
-            ((offset >= E1000_VFTA) && (offset <= (E1000_VFTA + 127)))) {
+        if (((offset >= E1000_RA) && (offset <= (E1000_RA + 0x7f))) ||
+            ((offset >= E1000_MTA) && (offset <= (E1000_MTA + 0x1ff))) ||
+            ((offset >= E1000_VFTA) && (offset <= (E1000_VFTA + 0x1ff)))) {
           BX_E1000_THIS s.mac_reg[index] = value;
         } else {
           BX_DEBUG(("mem write to offset 0x%08x ignored - value = 0x%08x", offset, value));
@@ -1361,8 +1365,11 @@ void bx_e1000_c::start_xmit()
       break;
     }
   }
-  BX_E1000_THIS s.tx.int_cause = cause;
-  bx_pc_system.activate_timer(BX_E1000_THIS s.tx_timer_index, 10, 0); // not continuous
+  // collect the causes until the timer fires, do not push it out again
+  if (BX_E1000_THIS s.tx.int_cause == 0) {
+    bx_pc_system.activate_timer(BX_E1000_THIS s.tx_timer_index, 10, 0); // not continuous
+  }
+  BX_E1000_THIS s.tx.int_cause |= cause;
   bx_gui->statusbar_setitem(BX_E1000_THIS s.statusbar_id, 1, 1);
 }
 
@@ -1374,7 +1381,10 @@ void bx_e1000_c::tx_timer_handler(void *this_ptr)
 
 void bx_e1000_c::tx_timer(void)
 {
-  set_ics(BX_E1000_THIS s.tx.int_cause);
+  Bit32u cause = BX_E1000_THIS s.tx.int_cause;
+
+  BX_E1000_THIS s.tx.int_cause = 0;
+  set_ics(cause);
 }
 
 int bx_e1000_c::receive_filter(const Bit8u *buf, int size)
@@ -1490,6 +1500,7 @@ void bx_e1000_c::rx_frame(const void *buf, unsigned buf_size)
   Bit16u vlan_special = 0;
   Bit8u vlan_status = 0, vlan_offset = 0;
   Bit8u min_buf[MIN_BUF_SIZE];
+  Bit8u vlan_buf[BX_PACKET_BUFSIZE + 4];
   size_t desc_offset;
   size_t desc_size;
   size_t total_size;
@@ -1509,8 +1520,15 @@ void bx_e1000_c::rx_frame(const void *buf, unsigned buf_size)
     return;
 
   if (vlan_enabled() && is_vlan_packet((Bit8u *)buf)) {
+    // strip the tag in a local copy, the caller's buffer is read-only
+    if (buf_size > sizeof(vlan_buf)) {
+      BX_ERROR(("VLAN frame too long (%u bytes), dropped", buf_size));
+      return;
+    }
     vlan_special = cpu_to_le16(get_net2(((Bit8u *)(buf) + 14)));
-    memmove((Bit8u *)buf + 4, buf, 12);
+    memcpy(vlan_buf + 4, buf, 12);
+    memcpy(vlan_buf + 16, (const Bit8u *)buf + 16, buf_size - 16);
+    buf = vlan_buf;
     vlan_status = E1000_RXD_STAT_VP;
     vlan_offset = 4;
     buf_size -= 4;
