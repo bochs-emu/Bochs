@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -177,14 +177,10 @@ typedef struct _PACKET {
 	BOOLEAN      bIoComplete;
 } PACKET, *LPPACKET;
 
+// receive buffer size (one PacketReceivePacket() call)
+#define BX_WIN32_RXBUF_SIZE 256000
+
 HINSTANCE hPacket;
-LPADAPTER lpAdapter = 0;
-LPPACKET  pkSend;
-LPPACKET  pkRecv;
-char      buffer[256000];
-char      AdapterList[10][1024];
-char      cMacAddr[6];
-char      NetDev[512];
 BOOL      IsNT = TRUE;
 
 typedef LPADAPTER (CDECL *POpenAdapter)     (LPTSTR);
@@ -239,6 +235,13 @@ public:
   void sendpkt(void *buf, unsigned io_len);
 private:
   struct bpf_insn filter[8];
+  // per-instance adapter state (one object per emulated NIC)
+  LPADAPTER lpAdapter;
+  LPPACKET  pkSend;
+  LPPACKET  pkRecv;
+  char      *buffer;
+  char      cMacAddr[6];
+  char      NetDev[512];
   int rx_timer_index;
   static void rx_timer_handler(void *);
   void rx_timer(void);
@@ -278,6 +281,10 @@ bx_win32_pktmover_c::bx_win32_pktmover_c(
 
   this->rxh    = rxh;
   this->rxstat = rxstat;
+  lpAdapter = NULL;
+  pkSend = NULL;
+  pkRecv = NULL;
+  buffer = new char[BX_WIN32_RXBUF_SIZE];
 
   hPacket = LoadLibrary("PACKET.DLL");
   memcpy(cMacAddr, macaddr, 6);
@@ -353,6 +360,7 @@ bx_win32_pktmover_c::bx_win32_pktmover_c(
 
 bx_win32_pktmover_c::~bx_win32_pktmover_c()
 {
+  delete [] buffer;
 #if BX_ETH_WIN32_LOGGING
   fclose(pktlog_txt);
 #endif
@@ -363,6 +371,8 @@ void bx_win32_pktmover_c::sendpkt(void *buf, unsigned io_len)
 #if BX_ETH_WIN32_LOGGING
   write_pktlog_txt(pktlog_txt, (const Bit8u *)buf, io_len, 0);
 #endif
+
+  if ((lpAdapter == NULL) || (pkSend == NULL)) return;
 
   // SendPacket Here.
   PacketInitPacket(pkSend, (char *)buf, io_len);
@@ -387,8 +397,9 @@ void bx_win32_pktmover_c::rx_timer(void)
   unsigned int   iOffset = 0;
   struct bpf_hdr *hdr;
   int pktlen;
+  unsigned char padbuf[MIN_RX_PACKET_LEN];
 
-  PacketInitPacket(pkRecv, (char *)buffer, 256000);
+  PacketInitPacket(pkRecv, (char *)buffer, BX_WIN32_RXBUF_SIZE);
   if (WaitForSingleObject(lpAdapter->ReadEvent,0) == WAIT_OBJECT_0 || IsNT) {
     PacketReceivePacket(lpAdapter, pkRecv, TRUE);
     pBuf = (char *)pkRecv->Buffer;
@@ -399,10 +410,17 @@ void bx_win32_pktmover_c::rx_timer(void)
       pPacket = (unsigned char *)(pBuf + iOffset + hdr->bh_hdrlen);
       if (memcmp(pPacket + 6, cMacAddr, 6) != 0) // src field != ours
       {
-        if(memcmp(pPacket, cMacAddr, 6) == 0 || memcmp(pPacket, broadcast_macaddr, 6) == 0)
+        // our MAC address, broadcast or multicast (the NIC model filters further)
+        if ((memcmp(pPacket, cMacAddr, 6) == 0) || (pPacket[0] & 0x01))
         {
           pktlen = hdr->bh_caplen;
-          if (pktlen < MIN_RX_PACKET_LEN) pktlen = MIN_RX_PACKET_LEN;
+          if (pktlen < MIN_RX_PACKET_LEN) {
+            // pad with zeros in a local copy (the bytes behind belong to the next frame)
+            memcpy(padbuf, pPacket, pktlen);
+            memset(padbuf + pktlen, 0, MIN_RX_PACKET_LEN - pktlen);
+            pPacket = padbuf;
+            pktlen = MIN_RX_PACKET_LEN;
+          }
 #if BX_ETH_WIN32_LOGGING
           write_pktlog_txt(pktlog_txt, pPacket, pktlen, 1);
 #endif

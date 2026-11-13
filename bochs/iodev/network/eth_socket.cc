@@ -344,9 +344,9 @@ void bx_socket_pktmover_c::rx_timer(void)
     return;
   }
 
-  // let through broadcast and our mac address
+  // let through broadcast, multicast and our mac address
   if ((memcmp(rxbuf, this->socket_macaddr, 6) != 0) &&
-      (memcmp(rxbuf, broadcast_macaddr, 6) != 0)) {
+      ((rxbuf[0] & 0x01) == 0)) {
     return;
   }
 

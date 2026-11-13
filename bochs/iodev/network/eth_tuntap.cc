@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -358,6 +358,7 @@ void bx_tuntap_pktmover_c::rx_timer()
   BX_DEBUG(("eth_tuntap: got packet: %d bytes, dst=%02x:%02x:%02x:%02x:%02x:%02x, src=%02x:%02x:%02x:%02x:%02x:%02x", nbytes, rxbuf[0], rxbuf[1], rxbuf[2], rxbuf[3], rxbuf[4], rxbuf[5], rxbuf[6], rxbuf[7], rxbuf[8], rxbuf[9], rxbuf[10], rxbuf[11]));
   if (nbytes < MIN_RX_PACKET_LEN) {
     BX_INFO(("packet too short (%d), padding to %d", nbytes, MIN_RX_PACKET_LEN));
+    memset(rxbuf + nbytes, 0, MIN_RX_PACKET_LEN - nbytes);
     nbytes = MIN_RX_PACKET_LEN;
   }
   if (this->rxstat(this->netdev) & BX_NETDEV_RXREADY) {
