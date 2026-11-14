@@ -311,11 +311,7 @@ void zen3_vermeer_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction
     return;
   case 0x00000005:
   case 0x00000006: // CPUID leaf 0x00000006 - Thermal and Power Management Leaf
-    cpuid_table->get_std_leaf(function, subfunction, leaf);
-    return;
   case 0x00000007:
-    get_std_cpuid_leaf_7(subfunction, leaf);
-    return;
   case 0x0000000B:
   case 0x0000000D:
     cpuid_table->get_std_leaf(function, subfunction, leaf);
@@ -494,118 +490,6 @@ void zen3_vermeer_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x00000006 Thermal and Power Management Leaf //
 
 // leaf 0x00000007 //
-void zen3_vermeer_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const
-{
-  switch(subfunction) {
-  case 0:
-    leaf->eax = 0; /* report max sub-leaf that supported in leaf 7 */
-
-    // * [0:0]   FS/GS BASE access instructions
-    //   [1:1]   Support for IA32_TSC_ADJUST MSR
-    //   [2:2]   reserved
-    // * [3:3]   BMI1: Advanced Bit Manipulation Extensions
-    //   [4:4]   HLE: Hardware Lock Elision
-    // * [5:5]   AVX2
-    //   [6:6]   reserved
-    // * [7:7]   SMEP: Supervisor Mode Execution Protection
-    // * [8:8]   BMI2: Advanced Bit Manipulation Extensions
-    // * [9:9]   Support for Enhanced REP MOVSB/STOSB
-    // * [10:10] Support for INVPCID instruction
-    //   [11:11] RTM: Restricted Transactional Memory
-    // ! [12:12] Supports Quality of Service (QoS) capability
-    //   [13:13] Deprecates FPU CS and FPU DS values
-    //   [14:14] Intel Memory Protection Extensions
-    // ! [15:15] Supports Platform Quality of Service Enforcement (PQE) capability
-    //   [16:16] AVX512F instructions support
-    //   [17:17] reserved
-    // * [18:18] RDSEED instruction support
-    // * [19:19] ADCX/ADOX instructions support
-    // * [20:20] SMAP: Supervisor Mode Access Prevention
-    //   [21:21] reserved
-    //   [22:22] reserved
-    // * [23:23] CLFLUSHOPT instruction
-    // * [24:24] CLWB instruction
-    //   [25:25] Intel Processor Trace
-    //   [26:26] AVX512PF instructions support
-    //   [27:27] AVX512ER instructions support
-    //   [28:28] AVX512CD instructions support
-    // * [29:29] SHA instructions support
-    //   [30:30] reserved
-    //   [31:31] reserved
-    leaf->ebx = get_std_cpuid_leaf_7_ebx(BX_CPUID_STD7_SUBLEAF0_EBX_ENCHANCED_REP_STRINGS);
-
-    //   [0:0]   PREFETCHW1 instruction
-    //   [1:1]   AVX512 VBMI instructions
-    // * [2:2]   UMIP: Supports user-mode instruction prevention
-    // * [3:3]   PKU: Protection keys for user-mode pages
-    //   [4:4]   OSPKE: OS has set CR4.PKE to enable protection keys
-    //   [5:5]   WAITPKG (TPAUSE/UMONITOR/UMWAIT) support
-    //   [6:6]   AVX512 VBMI2 instructions support
-    // * [7:7]   CET_SS: Support CET Shadow Stack
-    //   [8:8]   GFNI instructions support
-    // * [9:9]   VAES instructions support
-    // * [10:10] VPCLMULQDQ instruction support
-    //   [11:11] AVX512 VNNI instructions support
-    //   [12:12] AVX512 BITALG instructions support
-    //   [13:13] TME_EN: indicates support for MSRs: IA32_TME_CAPABILITY, IA32_TME_ACTIVATE, IA32_TME_EXCLUDE_MASK, and IA32_TME_EXCLUDE_BASE
-    //   [14:14] AVX512 VPOPCNTDQ: AVX512 VPOPCNTD/VPOPCNTQ instructions
-    //   [15:15] reserved
-    //   [16:16] LA57: LA57 and 5-level paging
-    //   [21:17] MPX User Address-Width Adjust (MAWAU)
-    // * [22:22] RDPID: Read Processor ID support
-    //   [23:23] Keylocker support
-    //   [24:24] BUS_LOCK_DETECT: Indicates support for bus lock debug exceptions
-    //   [25:25] CLDEMOTE: CLDEMOTE instruction support
-    //   [26:26] reserved
-    //   [27:27] MOVDIRI: MOVDIRI instruction support
-    //   [28:28] MOVDIR64B: MOVDIR64B instruction support
-    //   [29:29] ENQCMD: Enqueue Stores support
-    //   [30:30] SGX_LC: SGX Launch Configuration
-    //   [31:31] PKS: Protection keys for supervisor-mode pages
-    leaf->ecx = get_std_cpuid_leaf_7_ecx();
-
-    //   [0:0]   reserved
-    //   [1:1]   reserved
-    //   [2:2]   AVX512_4VNNIW support
-    //   [3:3]   AVX512_4FMAPS support
-    // * [4:4]   Fast Short REP MOV support
-    //   [5:5]   UINTR: User interrupts support
-    //   [6:6]   reserved
-    //   [7:7]   reserved
-    //   [8:8]   AVX512_VP2INTERSECT support
-    //   [9:9]   reserved
-    //   [10:10] MD clear support
-    //   [11:11] reserved
-    //   [12:12] reserved
-    //   [13:13] reserved
-    //   [14:14] SERIALIZE instruction support
-    //   [15:15] Hybrid processor
-    //   [16:16] TSXLDTRK: TSX suspent load tracking support
-    //   [17:17] reserved
-    //   [18:18] PCONFIG support
-    //   [19:19] Architectural LBRs support
-    //   [20:20] CET IBT: Support CET indirect branch tracking
-    //   [21:21] reserved
-    //   [22:22] AMX BF16 support
-    //   [23:23] AVX512_FP16 instructions support
-    //   [24:24] AMX TILE architecture support
-    //   [25:25] AMX INT8 support
-    //   [26:26] IBRS: indirect branch restricted speculation
-    //   [27:27] STIBP: single thread indirect branch predictors
-    //   [28:28] L1D_FLUSH support
-    //   [29:29] Support for the IA32_ARCH_CAPABILITIES MSR
-    //   [30:30] Support for the IA32_CORE_CAPABILITIES MSR
-    //   [31:31] SSBD: Speculative Store Bypass Disable
-    leaf->edx = get_std_cpuid_leaf_7_edx(BX_CPUID_STD7_SUBLEAF0_EDX_FAST_SHORT_REP_MOV);
-    break;
-  default:
-    leaf->eax = 0;
-    leaf->ebx = 0;
-    leaf->ecx = 0;
-    leaf->edx = 0;
-  }
-}
-
 // leaf 0x0000000D - XSAVE //
 
 // leaf 0x80000000 //

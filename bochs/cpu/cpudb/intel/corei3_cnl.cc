@@ -243,11 +243,7 @@ void corei3_cnl_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, 
   case 0x00000004: // CPUID leaf 0x00000004 - Deterministic Cache Parameters
   case 0x00000005: // CPUID leaf 0x00000005 - MONITOR/MWAIT leaf
   case 0x00000006: // CPUID leaf 0x00000006 - Thermal and Power Management Leaf
-    cpuid_table->get_std_leaf(function, subfunction, leaf);
-    return;
   case 0x00000007:
-    get_std_cpuid_leaf_7(subfunction, leaf);
-    return;
   case 0x00000008:
   case 0x00000009:
   case 0x0000000A: // CPUID leaf 0x0000000A - Architectural Performance Monitor
@@ -440,85 +436,6 @@ void corei3_cnl_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x00000006 Thermal and Power Management Leaf //
 
 // leaf 0x00000007 //
-void corei3_cnl_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const
-{
-  switch(subfunction) {
-  case 0:
-    leaf->eax = 0; /* report max sub-leaf that supported in leaf 7 */
-
-    // * [0:0]   FS/GS BASE access instructions
-    // * [1:1]   Support for IA32_TSC_ADJUST MSR
-    //   [2:2]   SGX: Intel Software Guard Extensions
-    // * [3:3]   BMI1: Advanced Bit Manipulation Extensions
-    //   [4:4]   HLE: Hardware Lock Elision
-    // * [5:5]   AVX2
-    // * [6:6]   FDP Deprecation
-    // * [7:7]   SMEP: Supervisor Mode Execution Protection
-    // * [8:8]   BMI2: Advanced Bit Manipulation Extensions
-    // * [9:9]   Support for Enhanced REP MOVSB/STOSB
-    // * [10:10] Support for INVPCID instruction
-    //   [11:11] RTM: Restricted Transactional Memory
-    //   [12:12] Supports Quality of Service (QoS) capability
-    // * [13:13] Deprecates FPU CS and FPU DS values
-    // x [14:14] Intel Memory Protection Extensions
-    //   [15:15] Supports Platform Quality of Service Enforcement (PQE) capability
-    // * [16:16] AVX512F instructions support
-    // * [17:17] AVX512DQ instructions support
-    // * [18:18] RDSEED instruction support
-    // * [19:19] ADCX/ADOX instructions support
-    // * [20:20] SMAP: Supervisor Mode Access Prevention
-    // * [21:21] AVX512IFMA52 instructions support
-    //   [22:22] reserved
-    // * [23:23] CLFLUSHOPT instruction
-    //   [24:24] CLWB instruction
-    // x [25:25] Intel Processor Trace
-    //   [26:26] AVX512PF instructions support
-    //   [27:27] AVX512ER instructions support
-    // * [28:28] AVX512CD instructions support
-    // * [29:29] SHA instructions support
-    // * [30:30] AVX512BW instructions support
-    // * [31:31] AVX512VL variable vector length support
-    leaf->ebx = get_std_cpuid_leaf_7_ebx(BX_CPUID_STD7_SUBLEAF0_EBX_ENCHANCED_REP_STRINGS);
-
-    //   [0:0]    PREFETCHWT1 instruction support
-    // * [1:1]    AVX512 VBMI instructions support
-    // * [2:2]    UMIP: Supports user-mode instruction prevention
-    // * [3:3]    PKU: Protection keys for user-mode pages.
-    // * [4:4]    OSPKE: OS has set CR4.PKE to enable protection keys
-    //   [5:5]    WAITPKG (TPAUSE/UMONITOR/UMWAIT) support
-    //   [6:6]    AVX512 VBMI2 instructions support
-    //   [7:7]    reserved
-    //   [8:8]    GFNI instructions support
-    //   [9:9]    VAES instructions support
-    // [10:10]    VPCLMULQDQ instruction support
-    // [11:11]    AVX512 VNNI instructions support
-    // [12:12]    AVX512 BITALG instructions support
-    // [13:13]    reserved
-    // [14:14]    AVX512 VPOPCNTDQ: AVX512 VPOPCNTD/VPOPCNTQ instructions
-    // [15:15]    reserved
-    // [16:16]    LA57: LA57 and 5-level paging
-    // [21:17]    MPX User Address-Width Adjust (MAWAU)
-    // [22:22]    RDPID: Read Processor ID support
-    // [24:23]    reserved
-    // [25:25]    CLDEMOTE: CLDEMOTE instruction support
-    // [26:26]    reserved
-    // [27:27]    MOVDIRI: MOVDIRI instruction support
-    // [28:28]    MOVDIR64: MOVDIR64 instruction support
-    // [29:29]    reserved
-    // [30:30]    SGX_LC: SGX Launch Configuration
-    // [31:31]    reserved
-    leaf->ecx = get_std_cpuid_leaf_7_ecx();
-
-    leaf->edx = 0;
-    break;
-  default:
-    leaf->eax = 0;
-    leaf->ebx = 0;
-    leaf->ecx = 0;
-    leaf->edx = 0;
-  }
-}
-
 // leaf 0x00000008 reserved                          //
 // leaf 0x00000009 direct cache access not supported //
 

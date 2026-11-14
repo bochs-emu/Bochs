@@ -243,6 +243,7 @@ void zambezi_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpu
     return;
   case 0x00000005:
   case 0x00000006: // CPUID leaf 0x00000006 - Thermal and Power Management Leaf
+  case 0x00000007:
   case 0x0000000D:
     cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;

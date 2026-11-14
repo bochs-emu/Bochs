@@ -163,7 +163,24 @@ protected:
   void get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf) const;
   void get_cpuid_hidden_level(cpuid_function_t *leaf, const char *magic_string) const;
 
+  // CPUID function 0x00000004 - Deterministic Cache Parameters
   void get_std_cpuid_deterministic_cache_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
+
+  // CPUID function 0x00000005 - MONITOR/MWAIT Leaf
+  void get_std_cpuid_monitor_mwait_leaf(cpuid_function_t *leaf) const;
+
+  // CPUID function 0x00000007 - Structured Extended Feature Enumeration
+  void get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const;
+  void get_std_cpuid_leaf_7_hardware(Bit32u subfunction, cpuid_function_t *leaf) const;
+  unsigned std_leaf_7_max_subleaf() const;
+  Bit32u get_std_cpuid_leaf_7_ebx(Bit32u extra = 0) const;
+  Bit32u get_std_cpuid_leaf_7_ecx(Bit32u extra = 0) const;
+  Bit32u get_std_cpuid_leaf_7_edx(Bit32u extra = 0) const;
+  Bit32u get_std_cpuid_leaf_7_subleaf_1_eax(Bit32u extra = 0) const;
+  Bit32u get_std_cpuid_leaf_7_subleaf_1_ebx(Bit32u extra = 0) const;
+  Bit32u get_std_cpuid_leaf_7_subleaf_1_ecx(Bit32u extra = 0) const;
+  Bit32u get_std_cpuid_leaf_7_subleaf_1_edx(Bit32u extra = 0) const;
+  Bit32u get_std_cpuid_leaf_7_subleaf_2_edx(Bit32u extra = 0) const;
 
 #if BX_SUPPORT_APIC
   void get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
@@ -173,28 +190,31 @@ protected:
   void get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
 #endif
 
+  // CPUID leaves 0x15/0x16 declare the TSC and processor base frequencies of
+  // the CPU the model was dumped from, while the emulated TSC advances at the
+  // 'ips' rate; the 'cpu: cpuid_freq=' option chooses how they are reported.
+  // The eax/ebx/ecx arguments carry the hardware dump values of the model.
+  void get_freq_leaf_15(cpuid_function_t *leaf) const;
+  void get_freq_leaf_16(cpuid_function_t *leaf) const;
+
 #if BX_SUPPORT_AMX
+  // CPUID function 0x0000001D: AMX Palette info
   void get_std_cpuid_amx_palette_info_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
+  // CPUID function 0x0000001E: AMX: TMUL Information Main leaf
   void get_std_cpuid_amx_tmul_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
 #endif
 
+  // CPUID function 0x00000024: AVX10 support and versioning
   void get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
 
-  void get_std_cpuid_monitor_mwait_leaf(cpuid_function_t *leaf) const;
-
 #if BX_SUPPORT_APX
-  void get_std_cpuid_apx_leaf(Bit32u subfunction, cpuid_function_t *leaf) const; // leaf 0x29
+  // CPUID function 0x00000029: APX support and versioning
+  void get_std_cpuid_apx_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
 #endif
 
   Bit32u get_std_cpuid_leaf_1_ecx(Bit32u extra = 0) const;
   Bit32u get_std_cpuid_leaf_1_edx_common(Bit32u extra = 0) const;
   Bit32u get_std_cpuid_leaf_1_edx(Bit32u extra = 0) const;
-  Bit32u get_std_cpuid_leaf_7_ebx(Bit32u extra = 0) const;
-  Bit32u get_std_cpuid_leaf_7_ecx(Bit32u extra = 0) const;
-  Bit32u get_std_cpuid_leaf_7_edx(Bit32u extra = 0) const;
-  Bit32u get_std_cpuid_leaf_7_subleaf_1_eax(Bit32u extra = 0) const;
-  Bit32u get_std_cpuid_leaf_7_subleaf_1_ecx(Bit32u extra = 0) const;
-  Bit32u get_std_cpuid_leaf_7_subleaf_1_edx(Bit32u extra = 0) const;
 
   Bit32u get_ext_cpuid_leaf_1_ecx(Bit32u extra = 0) const;
   Bit32u get_ext_cpuid_leaf_1_edx_amd(Bit32u extra = 0) const;
@@ -205,13 +225,6 @@ protected:
 
   void get_ext_cpuid_leaf_1E(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_26(Bit32u subfunction, cpuid_function_t *leaf) const;
-
-  // CPUID leaves 0x15/0x16 declare the TSC and processor base frequencies of
-  // the CPU the model was dumped from, while the emulated TSC advances at the
-  // 'ips' rate; the 'cpu: cpuid_freq=' option chooses how they are reported.
-  // The eax/ebx/ecx arguments carry the hardware dump values of the model.
-  void get_freq_leaf_15(cpuid_function_t *leaf) const;
-  void get_freq_leaf_16(cpuid_function_t *leaf) const;
 
   BX_CPP_INLINE void get_leaf(cpuid_function_t *leaf, Bit32u eax, Bit32u ebx, Bit32u ecx, Bit32u edx) const
   {
