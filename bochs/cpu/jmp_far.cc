@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2025 Stanislav Shwartsman
+//   Copyright (c) 2005-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -188,32 +188,21 @@ BX_CPU_C::jmp_call_gate(bx_selector_t *selector, bx_descriptor_t *gate_descripto
 {
   bx_selector_t gate_cs_selector;
   bx_descriptor_t gate_cs_descriptor;
-  Bit32u dword1, dword2;
 
   if (gate_descriptor->type==BX_286_CALL_GATE)
     BX_DEBUG(("jmp_call_gate: jump to 286 CALL GATE"));
   else
     BX_DEBUG(("jmp_call_gate: jump to 386 CALL GATE"));
 
-  // task gate must be present else #NP(gate selector)
+  // call gate must be present else #NP(gate selector)
   if (! gate_descriptor->p) {
     BX_ERROR(("jmp_call_gate: call gate not present!"));
     exception(BX_NP_EXCEPTION, selector->value & 0xfffc);
   }
 
   // examine selector to code segment given in call gate descriptor
-  // selector must not be null, else #GP(0)
   Bit16u gate_cs_raw = gate_descriptor->u.gate.dest_selector;
-
-  if ((gate_cs_raw & 0xfffc) == 0) {
-    BX_ERROR(("jmp_call_gate: CS selector null"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
-  parse_selector(gate_cs_raw, &gate_cs_selector);
-  // selector must be within its descriptor table limits else #GP(CS selector)
-  fetch_raw_descriptor(&gate_cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
-  parse_descriptor(dword1, dword2, &gate_cs_descriptor);
+  fetch_cs_descriptor(gate_cs_raw, &gate_cs_selector, &gate_cs_descriptor);
 
   // check code-segment descriptor
   check_cs(&gate_cs_descriptor, gate_cs_raw, 0, CPL);
@@ -241,17 +230,7 @@ BX_CPU_C::jmp_call_gate64(bx_selector_t *gate_selector)
   parse_descriptor(dword1, dword2, &gate_descriptor);
 
   Bit16u dest_selector = gate_descriptor.u.gate.dest_selector;
-  // selector must not be null else #GP(0)
-  if ((dest_selector & 0xfffc) == 0) {
-    BX_ERROR(("jmp_call_gate64: selector in gate null"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
-  parse_selector(dest_selector, &cs_selector);
-  // selector must be within its descriptor table limits,
-  //   else #GP(code segment selector)
-  fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
-  parse_descriptor(dword1, dword2, &cs_descriptor);
+  fetch_cs_descriptor(dest_selector, &cs_selector, &cs_descriptor);
 
   // find the RIP in the gate_descriptor
   Bit64u new_RIP = GET64_FROM_HI32_LO32(dword3, gate_descriptor.u.gate.dest_offset);

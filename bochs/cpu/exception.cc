@@ -104,18 +104,8 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit32
   unsigned ist = gate_descriptor.u.gate.param_count & 0x7;
 
   // examine CS selector and descriptor given in gate descriptor
-  // selector must be non-null else #GP(EXT)
-  if ((gate_dest_selector & 0xfffc) == 0) {
-    BX_ERROR(("int_trap_gate(long mode): selector null"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
-  parse_selector(gate_dest_selector, &cs_selector);
-
-  // selector must be within its descriptor table limits
-  // else #GP(selector+EXT)
-  fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
-  parse_descriptor(dword1, dword2, &cs_descriptor);
+  // (exception() adds EXT to the error codes: #GP(EXT) or #GP(selector+EXT))
+  fetch_cs_descriptor(gate_dest_selector, &cs_selector, &cs_descriptor);
 
   // descriptor AR byte must indicate code seg
   // and code segment descriptor DPL<=CPL, else #GP(selector+EXT)
@@ -406,18 +396,8 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, 
     Bit32u gate_dest_offset   = gate_descriptor.u.gate.dest_offset;
 
     // examine CS selector and descriptor given in gate descriptor
-    // selector must be non-null else #GP(EXT)
-    if ((gate_dest_selector & 0xfffc) == 0) {
-      BX_ERROR(("int_trap_gate(): selector null"));
-      exception(BX_GP_EXCEPTION, 0);
-    }
-
-    parse_selector(gate_dest_selector, &cs_selector);
-
-    // selector must be within its descriptor table limits
-    // else #GP(selector+EXT)
-    fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
-    parse_descriptor(dword1, dword2, &cs_descriptor);
+    // (exception() adds EXT to the error codes: #GP(EXT) or #GP(selector+EXT))
+    fetch_cs_descriptor(gate_dest_selector, &cs_selector, &cs_descriptor);
 
     // descriptor AR byte must indicate code seg
     // and code segment descriptor DPL<=CPL, else #GP(selector+EXT)
@@ -661,8 +641,9 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, 
     {
       BX_DEBUG(("interrupt(): INTERRUPT TO SAME PRIVILEGE"));
 
-      if (v8086_mode() && (IS_CODE_SEGMENT_CONFORMING(cs_descriptor.type) || cs_descriptor.dpl != 0)) {
-        // if code segment DPL != 0 then #GP(new code segment selector)
+      // in v8086 mode (CPL=3) the code segment here is conforming or has DPL=3,
+      // interrupt to the same privilege level is not allowed: #GP(new code segment selector)
+      if (v8086_mode()) {
         BX_ERROR(("interrupt(): code segment conforming or DPL(%d) != 0 in v8086 mode", cs_descriptor.dpl));
         exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc);
       }

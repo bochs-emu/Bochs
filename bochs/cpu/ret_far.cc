@@ -34,7 +34,6 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
   bx_descriptor_t cs_descriptor, ss_descriptor;
   Bit32u stack_param_offset;
   bx_address return_RIP, return_RSP, temp_RSP;
-  Bit32u dword1, dword2;
 
   /* + 6+N*2: SS      | +12+N*4:     SS | +24+N*8      SS */
   /* + 4+N*2: SP      | + 8+N*4:    ESP | +16+N*8     RSP */
@@ -73,20 +72,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     stack_param_offset = 4;
   }
 
-  // selector must be non-null else #GP(0)
-  if ((raw_cs_selector & 0xfffc) == 0) {
-    BX_ERROR(("return_protected: CS selector null"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
-  parse_selector(raw_cs_selector, &cs_selector);
-
-  // selector index must be within its descriptor table limits,
-  // else #GP(selector)
-  fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
-
-  // descriptor AR byte must indicate code segment, else #GP(selector)
-  parse_descriptor(dword1, dword2, &cs_descriptor);
+  fetch_cs_descriptor(raw_cs_selector, &cs_selector, &cs_descriptor);
 
   // return selector RPL must be >= CPL, else #GP(return selector)
   if (cs_selector.rpl < CPL) {

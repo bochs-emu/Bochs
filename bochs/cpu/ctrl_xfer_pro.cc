@@ -26,6 +26,28 @@
 
 #include "icache.h"
 
+// Fetch the code segment descriptor referenced by the target selector of a far control
+// transfer (far RET, IRET, call gate and interrupt/trap gate destination):
+//   NULL selector                         -> #GP(0)
+//   selector index outside GDT/LDT limits -> #GP(selector)
+// The descriptor is only parsed, the caller performs the type and privilege checks.
+void BX_CPU_C::fetch_cs_descriptor(Bit16u raw_selector, bx_selector_t *selector, bx_descriptor_t *descriptor)
+{
+  Bit32u dword1, dword2;
+
+  // selector must be non-null else #GP(0)
+  if ((raw_selector & 0xfffc) == 0) {
+    BX_ERROR(("fetch_cs_descriptor: CS selector null"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  parse_selector(raw_selector, selector);
+
+  // selector index must be within its descriptor table limits, else #GP(selector)
+  fetch_raw_descriptor(selector, &dword1, &dword2, BX_GP_EXCEPTION);
+  parse_descriptor(dword1, dword2, descriptor);
+}
+
 /* pass zero in check_rpl if no needed selector RPL checking for
    non-conforming segments */
 void BX_CPU_C::check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_rpl, Bit8u check_cpl)

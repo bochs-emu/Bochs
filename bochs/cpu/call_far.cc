@@ -255,7 +255,6 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor)
 {
   bx_selector_t cs_selector;
-  Bit32u dword1, dword2;
   bx_descriptor_t cs_descriptor;
 
   // examine code segment selector in call gate descriptor
@@ -264,17 +263,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
   Bit16u dest_selector = gate_descriptor->u.gate.dest_selector;
   Bit32u new_EIP       = gate_descriptor->u.gate.dest_offset;
 
-  // selector must not be null else #GP(0)
-  if ((dest_selector & 0xfffc) == 0) {
-    BX_ERROR(("call_gate: selector in gate null"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
-  parse_selector(dest_selector, &cs_selector);
-  // selector must be within its descriptor table limits,
-  //   else #GP(code segment selector)
-  fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
-  parse_descriptor(dword1, dword2, &cs_descriptor);
+  fetch_cs_descriptor(dest_selector, &cs_selector, &cs_descriptor);
 
   // AR byte of selected descriptor must indicate code segment,
   //   else #GP(code segment selector)
@@ -515,17 +504,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
   parse_descriptor(dword1, dword2, &gate_descriptor);
 
   Bit16u dest_selector = gate_descriptor.u.gate.dest_selector;
-  // selector must not be null else #GP(0)
-  if ((dest_selector & 0xfffc) == 0) {
-    BX_ERROR(("call_gate64: selector in gate null"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
-  parse_selector(dest_selector, &cs_selector);
-  // selector must be within its descriptor table limits,
-  //   else #GP(code segment selector)
-  fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
-  parse_descriptor(dword1, dword2, &cs_descriptor);
+  fetch_cs_descriptor(dest_selector, &cs_selector, &cs_descriptor);
 
   // find the RIP in the gate_descriptor
   Bit64u new_RIP = GET64_FROM_HI32_LO32(dword3, gate_descriptor.u.gate.dest_offset);

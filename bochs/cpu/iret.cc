@@ -142,18 +142,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     new_eip         = stack_read_word(temp_ESP + 0);
   }
 
-  parse_selector(raw_cs_selector, &cs_selector);
-
-  // return CS selector must be non-null, else #GP(0)
-  if ((raw_cs_selector & 0xfffc) == 0) {
-    BX_ERROR(("iret: return CS selector null"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
-  // selector index must be within descriptor table limits,
-  // else #GP(return selector)
-  fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
-  parse_descriptor(dword1, dword2, &cs_descriptor);
+  fetch_cs_descriptor(raw_cs_selector, &cs_selector, &cs_descriptor);
 
   // return CS selector RPL must be >= CPL, else #GP(return selector)
   if (cs_selector.rpl < CPL) {
@@ -314,7 +303,6 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
 {
   Bit16u raw_cs_selector, raw_ss_selector;
   bx_selector_t cs_selector, ss_selector;
-  Bit32u dword1, dword2;
   bx_descriptor_t cs_descriptor, ss_descriptor;
   Bit32u new_eflags;
   Bit64u new_rip, new_rsp, temp_RSP;
@@ -369,18 +357,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
   // ignore VM flag in long mode
   new_eflags &= ~EFlagsVMMask;
 
-  parse_selector(raw_cs_selector, &cs_selector);
-
-  // return CS selector must be non-null, else #GP(0)
-  if ((raw_cs_selector & 0xfffc) == 0) {
-    BX_ERROR(("iret64: return CS selector null"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
-  // selector index must be within descriptor table limits,
-  // else #GP(return selector)
-  fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
-  parse_descriptor(dword1, dword2, &cs_descriptor);
+  fetch_cs_descriptor(raw_cs_selector, &cs_selector, &cs_descriptor);
 
   // return CS selector RPL must be >= CPL, else #GP(return selector)
   if (cs_selector.rpl < CPL) {
