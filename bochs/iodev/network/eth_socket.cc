@@ -78,6 +78,9 @@ PLUGIN_ENTRY_FOR_NET_MODULE(socket)
 
 #define LOG_THIS netdev->
 
+// maximum number of frames delivered per rx poll
+#define BX_RX_FRAMES_PER_POLL 32
+
 extern "C" {
 #ifdef WIN32
 #include <winsock2.h>
@@ -136,7 +139,7 @@ private:
   SOCKET fd;                               // socket we listen on
   struct sockaddr_in sin, sout;            // target address for RX / TX
   static void rx_timer_handler(void *);
-  void rx_timer(void);
+  bool rx_timer(void);
   int rx_timer_index;
 };
 
@@ -316,10 +319,17 @@ void bx_socket_pktmover_c::rx_timer_handler(void *this_ptr)
 {
   bx_socket_pktmover_c *class_ptr = (bx_socket_pktmover_c *) this_ptr;
 
-  class_ptr->rx_timer();
+  // deliver queued frames while the NIC can take them; frames stay
+  // in the host queue while it cannot
+  for (int n = 0; n < BX_RX_FRAMES_PER_POLL; n++) {
+    if (!(class_ptr->rxstat(class_ptr->netdev) & BX_NETDEV_RXREADY))
+      break;
+    if (!class_ptr->rx_timer())
+      break;
+  }
 }
 
-void bx_socket_pktmover_c::rx_timer(void)
+bool bx_socket_pktmover_c::rx_timer(void)
 {
   int nbytes = 0;
   socklen_t slen = sizeof(sin);
@@ -327,7 +337,7 @@ void bx_socket_pktmover_c::rx_timer(void)
 
   // is socket open and bound?
   if (this->fd == INVALID_SOCKET)
-    return;
+    return 0;
 
   // receive packet
   nbytes = recvfrom(this->fd, (char*)rxbuf, sizeof(rxbuf), MSG_NOSIGNAL,
@@ -341,18 +351,19 @@ void bx_socket_pktmover_c::rx_timer(void)
     if (errno != EAGAIN)
       BX_INFO(("eth_socket: error receiving packet: %s", strerror(errno)));
 #endif
-    return;
+    return 0;
   }
 
   // let through broadcast, multicast and our mac address
   if ((memcmp(rxbuf, this->socket_macaddr, 6) != 0) &&
       ((rxbuf[0] & 0x01) == 0)) {
-    return;
+    return 1; // frame consumed, not for us
   }
 
   if (this->rxstat(this->netdev) & BX_NETDEV_RXREADY) {
     BX_DEBUG(("eth_socket: got packet: %d bytes, dst=%x:%x:%x:%x:%x:%x, src=%x:%x:%x:%x:%x:%x", nbytes, rxbuf[0], rxbuf[1], rxbuf[2], rxbuf[3], rxbuf[4], rxbuf[5], rxbuf[6], rxbuf[7], rxbuf[8], rxbuf[9], rxbuf[10], rxbuf[11]));
     this->rxh(this->netdev, rxbuf, nbytes);
   }
+  return 1;
 }
 #endif /* if BX_NETWORKING && BX_NETMOD_SOCKET */

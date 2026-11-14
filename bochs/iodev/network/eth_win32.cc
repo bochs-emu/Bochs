@@ -342,7 +342,7 @@ bx_win32_pktmover_c::bx_win32_pktmover_c(
     BX_PANIC(("Could not allocate a recv packet"));
   }
   rx_timer_index =
-    DEV_register_timer(this, this->rx_timer_handler, 10000, 1, 1, "eth_win32");
+    DEV_register_timer(this, this->rx_timer_handler, 1000, 1, 1, "eth_win32");
 
 #if BX_ETH_WIN32_LOGGING
   pktlog_txt = fopen("eth_win32-pktlog.txt", "wb");
@@ -398,6 +398,10 @@ void bx_win32_pktmover_c::rx_timer(void)
   struct bpf_hdr *hdr;
   int pktlen;
   unsigned char padbuf[MIN_RX_PACKET_LEN];
+
+  // leave the frames in the driver buffer while the NIC cannot take them
+  if (!(this->rxstat(this->netdev) & BX_NETDEV_RXREADY))
+    return;
 
   PacketInitPacket(pkRecv, (char *)buffer, BX_WIN32_RXBUF_SIZE);
   if (WaitForSingleObject(lpAdapter->ReadEvent,0) == WAIT_OBJECT_0 || IsNT) {

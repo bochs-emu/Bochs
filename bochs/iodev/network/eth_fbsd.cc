@@ -363,6 +363,10 @@ bx_fbsd_pktmover_c::rx_timer(void)
     static struct bpf_stat previous_bstat;
 #define phdr ((unsigned char*)bhdr)
 
+  // leave the frames in the kernel buffer while the NIC cannot take them
+  if (!(this->rxstat(this->netdev) & BX_NETDEV_RXREADY))
+    return;
+
   bhdr = (struct bpf_hdr *) rxbuf;
   nbytes = read(this->bpf_fd, rxbuf, sizeof(rxbuf));
 

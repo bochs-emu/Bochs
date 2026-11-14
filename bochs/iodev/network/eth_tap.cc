@@ -104,6 +104,9 @@ PLUGIN_ENTRY_FOR_NET_MODULE(tap)
 
 #define LOG_THIS netdev->
 
+// maximum number of frames delivered per rx poll
+#define BX_RX_FRAMES_PER_POLL 32
+
 #include <signal.h>
 #include <sys/param.h>
 #include <sys/ioctl.h>
@@ -147,7 +150,7 @@ private:
   int fd;
   int rx_timer_index;
   static void rx_timer_handler(void *);
-  void rx_timer ();
+  bool rx_timer(void);
   Bit8u guest_macaddr[6];
 #if BX_ETH_TAP_LOGGING
   FILE *txlog, *txlog_txt, *rxlog, *rxlog_txt;
@@ -378,15 +381,23 @@ void bx_tap_pktmover_c::sendpkt(void *buf, unsigned io_len)
 void bx_tap_pktmover_c::rx_timer_handler(void *this_ptr)
 {
   bx_tap_pktmover_c *class_ptr = (bx_tap_pktmover_c *) this_ptr;
-  class_ptr->rx_timer();
+
+  // deliver queued frames while the NIC can take them; frames stay
+  // in the host queue while it cannot
+  for (int n = 0; n < BX_RX_FRAMES_PER_POLL; n++) {
+    if (!(class_ptr->rxstat(class_ptr->netdev) & BX_NETDEV_RXREADY))
+      break;
+    if (!class_ptr->rx_timer())
+      break;
+  }
 }
 
-void bx_tap_pktmover_c::rx_timer()
+bool bx_tap_pktmover_c::rx_timer(void)
 {
   int nbytes;
   Bit8u buf[BX_PACKET_BUFSIZE];
   Bit8u *rxbuf;
-  if (fd<0) return;
+  if (fd<0) return 0;
 #if defined(__sun__)
   struct strbuf sbuf;
   int f = 0;
@@ -419,7 +430,7 @@ void bx_tap_pktmover_c::rx_timer()
   if (nbytes<0) {
     if (errno != EAGAIN)
       BX_ERROR(("tap read error: %s", strerror(errno)));
-    return;
+    return 0;
   }
 #if BX_ETH_TAP_LOGGING
   if (nbytes > 0) {
@@ -445,6 +456,7 @@ void bx_tap_pktmover_c::rx_timer()
   } else {
     BX_ERROR(("device not ready to receive data"));
   }
+  return 1;
 }
 
 #endif /* if BX_NETWORKING && BX_NETMOD_TAP */

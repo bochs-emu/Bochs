@@ -48,6 +48,9 @@ PLUGIN_ENTRY_FOR_NET_MODULE(tuntap)
 
 #define LOG_THIS netdev->
 
+// maximum number of frames delivered per rx poll
+#define BX_RX_FRAMES_PER_POLL 32
+
 #include <signal.h>
 #include <sys/param.h>
 #include <sys/ioctl.h>
@@ -96,7 +99,7 @@ private:
   int fd;
   int rx_timer_index;
   static void rx_timer_handler(void *);
-  void rx_timer ();
+  bool rx_timer(void);
   Bit8u guest_macaddr[6];
 #if BX_ETH_TUNTAP_LOGGING
   FILE *txlog, *txlog_txt, *rxlog, *rxlog_txt;
@@ -292,15 +295,23 @@ void bx_tuntap_pktmover_c::sendpkt(void *buf, unsigned io_len)
 void bx_tuntap_pktmover_c::rx_timer_handler (void *this_ptr)
 {
   bx_tuntap_pktmover_c *class_ptr = (bx_tuntap_pktmover_c *) this_ptr;
-  class_ptr->rx_timer();
+
+  // deliver queued frames while the NIC can take them; frames stay
+  // in the host queue while it cannot
+  for (int n = 0; n < BX_RX_FRAMES_PER_POLL; n++) {
+    if (!(class_ptr->rxstat(class_ptr->netdev) & BX_NETDEV_RXREADY))
+      break;
+    if (!class_ptr->rx_timer())
+      break;
+  }
 }
 
-void bx_tuntap_pktmover_c::rx_timer()
+bool bx_tuntap_pktmover_c::rx_timer(void)
 {
   int nbytes;
   Bit8u buf[BX_PACKET_BUFSIZE];
   Bit8u *rxbuf;
-  if (fd<0) return;
+  if (fd<0) return 0;
 
 #ifdef __APPLE__ //FIXME:hack
   nbytes = 14;
@@ -340,7 +351,7 @@ void bx_tuntap_pktmover_c::rx_timer()
 #endif
     if (errno != EAGAIN)
       BX_ERROR(("tuntap read error: %s", strerror(errno)));
-    return;
+    return 0;
   }
 #if BX_ETH_TUNTAP_LOGGING
   if (nbytes > 0) {
@@ -366,6 +377,7 @@ void bx_tuntap_pktmover_c::rx_timer()
   } else {
     BX_ERROR(("device not ready to receive data"));
   }
+  return 1;
 }
 
 int tun_alloc(char *dev)
