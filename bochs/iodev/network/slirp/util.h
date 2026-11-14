@@ -71,6 +71,35 @@
 #define G_SIZEOF_MEMBER(type, member) sizeof(((type *)0)->member)
 #endif
 
+/* size_t, ssize_t format specifier. Windows, naturally, has to be different
+ * and, despite implementing "%z", MinGW hasn't caught up. */
+#if defined(__MINGW64__) || defined(_WIN64)
+#  if defined(PRIu64)
+#    define SLIRP_PRIsize_t PRIu64
+#  else
+#    define SLIRP_PRIsize_t "llu"
+#  endif
+#  if defined(PRId64)
+#    define SLIRP_PRIssize_t PRId64
+#  else
+#    define SLIRP_PRIssize_t "lld"
+#  endif
+#elif defined(__MINGW32__) || defined(_WIN32)
+#  if defined(PRIu32)
+#    define SLIRP_PRIsize_t PRIu32
+#  else
+#    define SLIRP_PRIsize_t "lu"
+#  endif
+#  if defined(PRId32)
+#    define SLIRP_PRIssize_t PRId32
+#  else
+#    define SLIRP_PRIssize_t "ld"
+#  endif
+#else
+#define SLIRP_PRIsize_t "zu"
+#define SLIRP_PRIssize_t "zd"
+#endif
+
 #if defined(_WIN32) /* CONFIG_IOVEC */
 struct iovec {
     void *iov_base;

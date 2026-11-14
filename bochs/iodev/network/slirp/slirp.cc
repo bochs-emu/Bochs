@@ -70,7 +70,7 @@ static const struct in6_addr SITE_LOCAL_DNS_BROADCAST_ADDRS[] = {
 
 #endif
 
-int slirp_debug;
+unsigned int slirp_debug;
 
 /* Define to 1 if you want KEEPALIVE timers */
 bool slirp_do_keepalive;
@@ -315,7 +315,7 @@ static int get_dns_addr_libresolv(int af, void *pdns_addr, void *cached_addr,
         if (found > 3) {
             DEBUG_MISC("  (more)");
             break;
-        } else if (slirp_debug & DBG_MISC) {
+        } else if (slirp_debug & SLIRP_DBG_MISC) {
             char s[INET6_ADDRSTRLEN];
             const char *res = inet_ntop(af, addr, s, sizeof(s));
             if (!res) {
@@ -424,7 +424,7 @@ static bool try_and_setdns_server(int af, unsigned found, unsigned if_index,
 
     if (found > 2) {
     DEBUG_MISC("  (more)");
-    } else if (slirp_debug & DBG_MISC) {
+    } else if (slirp_debug & SLIRP_DBG_MISC) {
     char s[INET6_ADDRSTRLEN];
     const char *res = inet_ntop(af, &tmp_addr, s, sizeof(s));
     if (!res) {
