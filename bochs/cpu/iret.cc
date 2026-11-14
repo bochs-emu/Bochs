@@ -487,7 +487,11 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     }
 
     if ((raw_ss_selector & 0xfffc) == 0) {
-      if (! IS_LONG64_SEGMENT(cs_descriptor) || cs_selector.rpl == 3) {
+      // NULL SS is allowed only in 64-bit mode when returning to 64-bit mode with RPL != 3,
+      // NULL SS selector RPL must be equal to the RPL of the return CS selector
+      if (! long64_mode() || ! IS_LONG64_SEGMENT(cs_descriptor) || cs_selector.rpl == 3 ||
+           BX_SELECTOR_RPL(raw_ss_selector) != cs_selector.rpl)
+      {
         BX_ERROR(("iret64: SS selector null"));
         exception(BX_GP_EXCEPTION, 0);
       }

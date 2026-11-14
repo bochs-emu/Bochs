@@ -911,7 +911,8 @@ void BX_CPU_C::get_SS_ESP_from_TSS(unsigned pl, Bit16u *ss, Bit32u *esp)
   {
     // 32-bit TSS
     Bit32u TSSstackaddr = 8*pl + 4;
-    if ((TSSstackaddr+7) > BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled) {
+    // For Intel only 2 bytes of SS are read at TSSstackaddr+4 (AMD reads SS as 4 bytes and checks TSSstackaddr+7) - follow Intel behavior
+    if ((TSSstackaddr+5) > BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled) {
       BX_DEBUG(("get_SS_ESP_from_TSS(386): TSSstackaddr > TSS.LIMIT"));
       exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc);
     }
@@ -948,13 +949,8 @@ Bit64u BX_CPU_C::get_RSP_from_TSS(unsigned pl)
     exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc);
   }
 
-  Bit64u rsp = system_read_qword(BX_CPU_THIS_PTR tr.cache.u.segment.base + TSSstackaddr);
-
-  if (! IsCanonical(rsp)) {
-    BX_ERROR(("get_RSP_from_TSS: canonical address failure 0x%08x%08x", GET32H(rsp), GET32L(rsp)));
-    exception(BX_SS_EXCEPTION, BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value & 0xfffc);
-  }
-
-  return rsp;
+  // The new RSP is not checked for canonicality here: the pushes onto the new stack fault with
+  // #SS(NewSS) where NewSS is a NULL selector, i.e. #SS(0) + EXT, if they hit non-canonical address
+  return system_read_qword(BX_CPU_THIS_PTR tr.cache.u.segment.base + TSSstackaddr);
 }
 #endif  // #if BX_SUPPORT_X86_64

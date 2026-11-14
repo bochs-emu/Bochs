@@ -167,13 +167,15 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 
     if ((raw_ss_selector & 0xfffc) == 0) {
 #if BX_SUPPORT_X86_64
-      if (long_mode()) {
-        if (! IS_LONG64_SEGMENT(cs_descriptor) || (cs_selector.rpl == 3)) {
+      // NULL SS is allowed only in 64-bit mode when returning to 64-bit mode with RPL != 3,
+      // NULL SS selector RPL must be equal to the RPL of the return CS selector
+      if (long64_mode()) {
+        if (! IS_LONG64_SEGMENT(cs_descriptor) || (cs_selector.rpl == 3) || (ss_selector.rpl != cs_selector.rpl)) {
           BX_ERROR(("return_protected: SS selector null"));
           exception(BX_GP_EXCEPTION, 0);
         }
       }
-      else // not in long or compatibility mode
+      else // not in 64-bit mode
 #endif
       {
         BX_ERROR(("return_protected: SS selector null"));

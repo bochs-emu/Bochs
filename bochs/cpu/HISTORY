@@ -84,6 +84,10 @@ Changes after Bochs 3.1:
 + AVX-512: Fix VRANGE* output when both arguments are different sign same magnitude and ABS_MIN and ABS_MAX is requested
 - Legacy: Added missing #AC check in tickle_write_linear, used for ENTER and XSAVE instructions
 - Legacy: Write pre-check (tickle_write_virtual) used segment read checks instead of write and could have missed segment write access violation
+- Legacy: interrupt from v8086 mode to non-zero DPL code segment must validate the new SS (#TS/#SS) before raising #GP(code segment selector)
+- Legacy: far CALL/interrupt pushes onto a new 32-bit stack segment with limit below 7 bypassed the segment limit check (unsigned underflow)
+- x86-64: non-canonical RSP loaded from the TSS by 64-bit call gate or interrupt raised #SS(old SS selector), the pushes onto the new stack must fault with #SS(0) (NULL NewSS) + EXT
+- x86-64: far RET/IRET popping NULL SS must #GP(0) if NULL SS.RPL != new CPL, NULL SS is allowed only when executed in 64-bit mode (not in compatibility mode)
 + x87: improved implementation of x87 transcendental instructions (F2XM1/FYL2X/FYL2XP1/FPATAN/FSIN/FCOS/FSINCOS/FPTAN) to match HW
 + x87: fixed unmasked underflow/overflow corner cases for FSCALE x87 instruction
 - x87: FPREM/FPREM1 must raise #U when the remainder is the unchanged denormal dividend (|ST0| < |ST1|/2) and UM is unmasked
@@ -105,8 +109,6 @@ Changes after Bochs 3.1:
 - APIC: APIC read from an address crossing 32-bit boundary actually returns all zero in HW
 - SMC: Fixed potential SMC detection problem while running guest code with AMX enabled (XCR0.TILECFG=XCR0.TILEDATA=1)
 + Fixed incorrect assertion in assert_checks: require CS.L and CS.D_B to be mutually exclusive only in long mode, CS.L is silently ignored outside of long mode
-+ CET: same privilege far CALL and 64-bit interrupt without stack switch did the shadow stack push after loading new CS, if the push faulted new CS was left loaded with old RIP (SVM decode assist also recorded 0 guest instruction bytes)
-+ CET: far CALL through call gate to more privilege and interrupt to inner privilege or through IST did the shadow stack switch and push after loading new CS, if they faulted new CS/CPL was left loaded with old RIP
 + VMX: vmcs.shadow_stack_prematurely_busy was not initialized on reset, until the first VMEXIT a stale value could suppress convertible EPT violation #VE or set exit reason bit 25 (shadow stack prematurely busy)
 + VMX: EPTP index VM-execution control was not loaded on VM entry, #VE information area reported stale or uninitialized EPTP index unless the guest executed VMFUNC EPTP switching
 - VMX: posted-interrupt processing with empty PIR and VIRR set RVI to 0xFF and delivered a bogus virtual interrupt 0xFF (instead should keep RVI unchanged when VIRR is empty)
@@ -223,12 +225,15 @@ Changes after Bochs 3.1:
 - VMX/FRED: VM exit during FRED event delivery of SYSCALL or SYSENTER reported stale IDT-vectoring (original event) information
 - CET: SAVEPREVSSP with CF=1 (alignment hole) checked the previous-ssp token itself instead of the hole following it, so it always failed with #GP
 + CET: legacy code page bitmap must be read with CPL access rights (not supervisor), indexed by LA[31:15] outside 64-bit mode and LA[56:15] with LA57
++ CET: 64-bit interrupt delivered at the same privilege level CPL3 skipped pushing CS:LIP:SSP onto the user shadow stack, so IRETQ failed with #CP
 - CET: ENDBR32/ENDBR64 must not modify IA32_U_CET/IA32_S_CET TRACKER and SUPPRESS bits when indirect branch tracking is not enabled
 - CET: far RET/IRET must check restored SSP against the mode being returned to (new CS.L) and require it canonical when returning to 64-bit mode
 - CET: task switch must report #TS(new TSS) instead of #GP(0) when busy bit of new shadow stack token cannot be set, IRET task switch frees current shadow stack token only if SSP is 8-byte aligned
 - CET: SYSCALL and SYSENTER in IA-32e mode must sign-extend SSP saved into IA32_PL3_SSP from the max linear-address width (LA_adjust)
 - CET: IRETQ from CPL3 to CPL3 must restore SSP from the user shadow stack (and verify CS/LIP) instead of loading it from IA32_PL3_SSP
 - VMX/CET: VM entry guest SSP check must only require bits 63:N identical (N = max linear-address width), guest SSP is not required to be canonical
++ CET: same privilege far CALL and 64-bit interrupt without stack switch did the shadow stack push after loading new CS, if the push faulted new CS was left loaded with old RIP (SVM decode assist also recorded 0 guest instruction bytes)
++ CET: far CALL through call gate to more privilege and interrupt to inner privilege or through IST did the shadow stack switch and push after loading new CS, if they faulted new CS/CPL was left loaded with old RIP
 - CET: far CALL/INT shadow stack switch must #GP if token and CS:LIP:SSP frame are not contained in a naturally aligned 32-byte region
 - CET: same privilege far CALL to legacy or compatibility mode must #GP if SSP is not in low 4GB
 - CET: IDT event delivery and call gates in IA-32e mode must sign-extend SSP saved into IA32_PL3_SSP from the max linear-address width (LA_adjust)

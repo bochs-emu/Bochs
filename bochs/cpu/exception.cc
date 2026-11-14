@@ -259,14 +259,15 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit32
   // shadow stack switch and push could fault, do them before CS is loaded
   if (ShadowStackEnabled(new_CPL)) {
     bx_address old_SSP = SSP;
+    // the CS:LIP:SSP frame is skipped only for interrupt from CPL3 to inner privilege,
+    // interrupt to the same privilege always pushes it (also at CPL3)
     if (check_ss_token) {
       shadow_stack_switch(new_SSP, new_CPL, true);
-      if (old_SS_DPL != 3)
+      if (new_CPL == old_CPL || old_SS_DPL != 3)
         new_shadow_stack_push(old_CS, return_LIP, old_SSP, new_CPL);
     }
     else {
-      if (old_SS_DPL != 3)
-        call_far_shadow_stack_push(old_CS, return_LIP, old_SSP, new_CPL);
+      call_far_shadow_stack_push(old_CS, return_LIP, old_SSP, new_CPL);
     }
   }
 #endif
@@ -461,12 +462,6 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, 
       // check selector and descriptor for new stack in current TSS
       get_SS_ESP_from_TSS(cs_descriptor.dpl, &SS_for_cpl_x, &ESP_for_cpl_x);
 
-      if (is_v8086_mode && cs_descriptor.dpl != 0) {
-        // if code segment DPL != 0 then #GP(new code segment selector)
-        BX_ERROR(("interrupt(): code segment DPL(%d) != 0 in v8086 mode", cs_descriptor.dpl));
-        exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc);
-      }
-
       // Selector must be non-null else #TS(EXT)
       if ((SS_for_cpl_x & 0xfffc) == 0) {
         BX_ERROR(("interrupt(): SS selector null"));
@@ -478,6 +473,13 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, 
       // selector index must be within its descriptor table limits
       // else #TS(SS selector + EXT)
       fetch_ss_descriptor(SS_for_cpl_x, &ss_selector, &ss_descriptor, cs_descriptor.dpl, BX_TS_EXCEPTION);
+
+      // Intel checks code segment DPL after the new SS descriptor is read and validated
+      if (is_v8086_mode && cs_descriptor.dpl != 0) {
+        // if code segment DPL != 0 then #GP(new code segment selector)
+        BX_ERROR(("interrupt(): code segment DPL(%d) != 0 in v8086 mode", cs_descriptor.dpl));
+        exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc);
+      }
 
       // IP must be within CS segment boundaries, else #GP(0)
       if (gate_dest_offset > cs_descriptor.u.segment.limit_scaled) {
