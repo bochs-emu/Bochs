@@ -406,6 +406,7 @@ struct socket *udpx_listen(Slirp *slirp,
         so->so_expire = 0;
     so->so_state &= SS_PERSISTENT_MASK;
     so->so_state |= SS_ISFCONNECTED | flags;
+    so->slirp->cb->register_poll_fd(so->s, so->slirp->opaque);
 
     return so;
 }
