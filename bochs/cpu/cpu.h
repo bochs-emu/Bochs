@@ -5952,6 +5952,7 @@ public: // for now...
 #endif
   BX_SMF void return_protected(bxInstruction_c *i, Bit16u pop_bytes) BX_CPP_AttrRegparmN(2);
   BX_SMF void iret_protected(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void iret_return_from_nested_task(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF Bit32u get_iret_eflags_write_mask(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64
   BX_SMF void long_iret(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

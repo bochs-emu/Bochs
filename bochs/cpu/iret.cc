@@ -51,12 +51,69 @@ BX_CPU_C::get_iret_eflags_write_mask(bxInstruction_c *i)
   return changeMask;
 }
 
+// IRET with EFLAGS.NT=1 in protected mode (SDM label TASK-RETURN): switch tasks back
+// to the task specified by the back link field of the current TSS
+  void BX_CPP_AttrRegparmN(1)
+BX_CPU_C::iret_return_from_nested_task(bxInstruction_c *i)
+{
+  /* what's the deal with NT & VM ? */
+  Bit16u raw_link_selector;
+  bx_selector_t   link_selector;
+  bx_descriptor_t tss_descriptor;
+  Bit32u dword1, dword2;
+
+  if (BX_CPU_THIS_PTR get_VM())
+    BX_PANIC(("iret_return_from_nested_task: VM sholdn't be set here !"));
+
+  BX_DEBUG(("IRET: nested task return"));
+
+  if (BX_CPU_THIS_PTR tr.cache.valid==0)
+    BX_PANIC(("IRET: TR not valid"));
+
+  // examine back link selector in TSS addressed by current TR
+  raw_link_selector = system_read_word(BX_CPU_THIS_PTR tr.cache.u.segment.base);
+
+  // must specify global, else #TS(new TSS selector)
+  parse_selector(raw_link_selector, &link_selector);
+
+  if (link_selector.ti) {
+    BX_ERROR(("iret: link selector.ti=1"));
+    exception(BX_TS_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_link_selector));
+  }
+
+  // index must be within GDT limits, else #TS(new TSS selector)
+  fetch_raw_descriptor(&link_selector, &dword1, &dword2, BX_TS_EXCEPTION);
+
+  // AR byte must specify TSS, else #TS(new TSS selector)
+  // new TSS must be busy, else #TS(new TSS selector)
+  parse_descriptor(dword1, dword2, &tss_descriptor);
+  if (tss_descriptor.valid==0 || tss_descriptor.segment) {
+    BX_ERROR(("iret: TSS selector points to bad TSS"));
+    exception(BX_TS_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_link_selector));
+  }
+  if (tss_descriptor.type != BX_SYS_SEGMENT_BUSY_286_TSS &&
+      tss_descriptor.type != BX_SYS_SEGMENT_BUSY_386_TSS)
+  {
+    BX_ERROR(("iret: TSS selector points to bad TSS"));
+    exception(BX_TS_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_link_selector));
+  }
+
+  // TSS must be present, else #NP(new TSS selector)
+  if (! IS_PRESENT(tss_descriptor)) {
+    BX_ERROR(("iret: task descriptor.p == 0"));
+    exception(BX_NP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_link_selector));
+  }
+
+  // switch tasks (without nesting) to TSS specified by back link selector
+  task_switch(i, &link_selector, &tss_descriptor,
+              BX_TASK_FROM_IRET, dword1, dword2);
+}
+
   void BX_CPP_AttrRegparmN(1)
 BX_CPU_C::iret_protected(bxInstruction_c *i)
 {
   Bit16u raw_cs_selector, raw_ss_selector;
   bx_selector_t cs_selector, ss_selector;
-  Bit32u dword1, dword2;
   bx_descriptor_t cs_descriptor, ss_descriptor;
 
 #if BX_SUPPORT_X86_64
@@ -66,58 +123,8 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
   }
 #endif
 
-  if (BX_CPU_THIS_PTR get_NT())   /* NT = 1: RETURN FROM NESTED TASK */
-  {
-    /* what's the deal with NT & VM ? */
-    Bit16u raw_link_selector;
-    bx_selector_t   link_selector;
-    bx_descriptor_t tss_descriptor;
-
-    if (BX_CPU_THIS_PTR get_VM())
-      BX_PANIC(("iret_protected: VM sholdn't be set here !"));
-
-    BX_DEBUG(("IRET: nested task return"));
-
-    if (BX_CPU_THIS_PTR tr.cache.valid==0)
-      BX_PANIC(("IRET: TR not valid"));
-
-    // examine back link selector in TSS addressed by current TR
-    raw_link_selector = system_read_word(BX_CPU_THIS_PTR tr.cache.u.segment.base);
-
-    // must specify global, else #TS(new TSS selector)
-    parse_selector(raw_link_selector, &link_selector);
-
-    if (link_selector.ti) {
-      BX_ERROR(("iret: link selector.ti=1"));
-      exception(BX_TS_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_link_selector));
-    }
-
-    // index must be within GDT limits, else #TS(new TSS selector)
-    fetch_raw_descriptor(&link_selector, &dword1, &dword2, BX_TS_EXCEPTION);
-
-    // AR byte must specify TSS, else #TS(new TSS selector)
-    // new TSS must be busy, else #TS(new TSS selector)
-    parse_descriptor(dword1, dword2, &tss_descriptor);
-    if (tss_descriptor.valid==0 || tss_descriptor.segment) {
-      BX_ERROR(("iret: TSS selector points to bad TSS"));
-      exception(BX_TS_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_link_selector));
-    }
-    if (tss_descriptor.type != BX_SYS_SEGMENT_BUSY_286_TSS &&
-        tss_descriptor.type != BX_SYS_SEGMENT_BUSY_386_TSS)
-    {
-      BX_ERROR(("iret: TSS selector points to bad TSS"));
-      exception(BX_TS_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_link_selector));
-    }
-
-    // TSS must be present, else #NP(new TSS selector)
-    if (! IS_PRESENT(tss_descriptor)) {
-      BX_ERROR(("iret: task descriptor.p == 0"));
-      exception(BX_NP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_link_selector));
-    }
-
-    // switch tasks (without nesting) to TSS specified by back link selector
-    task_switch(i, &link_selector, &tss_descriptor,
-                BX_TASK_FROM_IRET, dword1, dword2);
+  if (BX_CPU_THIS_PTR get_NT()) {  /* NT = 1: RETURN FROM NESTED TASK */
+    iret_return_from_nested_task(i);
     return;
   }
 
