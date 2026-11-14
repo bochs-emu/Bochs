@@ -321,7 +321,7 @@ struct tcpcb *tcp_close(struct tcpcb *tp)
 /* clobber input socket cache if we're closing the cached connection */
     if (so == slirp->tcp_last_so)
         slirp->tcp_last_so = &slirp->tcb;
-    so->slirp->cb->unregister_poll_fd(so->s, so->slirp->opaque);
+    slirp_unregister_poll_socket(so);
     closesocket(so->s);
     sbfree(&so->so_rcv);
     sbfree(&so->so_snd);
@@ -387,28 +387,30 @@ int tcp_fconnect(struct socket *so, unsigned short af)
     DEBUG_CALL("tcp_fconnect");
     DEBUG_ARG("so = %p", so);
 
-    ret = so->s = slirp_socket(af, SOCK_STREAM, 0);
-    if (ret >= 0) {
+    so->s = slirp_socket(af, SOCK_STREAM, 0);
+    ret = have_valid_socket(so->s) ? 0 : -1;
+    if (ret == 0) {
         ret = slirp_bind_outbound(so, af);
         if (ret < 0) {
             // bind failed - close socket
             closesocket(so->s);
-            so->s = -1;
+            so->s = SLIRP_INVALID_SOCKET;
             return (ret);
         }
     }
 
     if (ret >= 0) {
-        int opt, s = so->s;
+        int opt;
+        slirp_os_socket s = so->s;
         struct sockaddr_storage addr;
 
         slirp_set_nonblock(s);
-        so->slirp->cb->register_poll_fd(s, so->slirp->opaque);
+        slirp_register_poll_socket(so);
         slirp_socket_set_fast_reuse(s);
         opt = 1;
-        setsockopt(s, SOL_SOCKET, SO_OOBINLINE, &opt, sizeof(opt));
+        setsockopt(s, SOL_SOCKET, SO_OOBINLINE, (const void *) &opt, sizeof(opt));
         opt = 1;
-        setsockopt(s, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt));
+        setsockopt(s, IPPROTO_TCP, TCP_NODELAY, (const void *) &opt, sizeof(opt));
 
         addr = so->fhost.ss;
         DEBUG_CALL(" connect()ing");
@@ -446,7 +448,8 @@ void tcp_connect(struct socket *inso)
     struct sockaddr_storage addr;
     socklen_t addrlen;
     struct tcpcb *tp;
-    int s, opt, ret;
+    slirp_os_socket s;
+    int opt, ret;
     /* AF_INET6 addresses are bigger than AF_INET, so this is big enough. */
     char addrstr[INET6_ADDRSTRLEN];
     char portstr[6];
@@ -487,8 +490,8 @@ void tcp_connect(struct socket *inso)
             DEBUG_MISC(" guest address not available yet");
             addrlen = sizeof(addr);
             s = accept(inso->s, (struct sockaddr *)&addr, &addrlen);
-            if (s >= 0) {
-                close(s);
+            if (have_valid_socket(s)) {
+                closesocket(s);
             }
             return;
         }
@@ -512,15 +515,16 @@ void tcp_connect(struct socket *inso)
 
     addrlen = sizeof(addr);
     s = accept(inso->s, (struct sockaddr *)&addr, &addrlen);
-    if (s < 0) {
+    if (not_valid_socket(s)) {
         tcp_close(sototcpcb(so)); /* This will sofree() as well */
         return;
     }
+    so->s = s;
     slirp_set_nonblock(s);
-    so->slirp->cb->register_poll_fd(s, so->slirp->opaque);
+    slirp_register_poll_socket(so);
     slirp_socket_set_fast_reuse(s);
     opt = 1;
-    setsockopt(s, SOL_SOCKET, SO_OOBINLINE, &opt, sizeof(int));
+    setsockopt(s, SOL_SOCKET, SO_OOBINLINE, (const void *) &opt, sizeof(int));
     slirp_socket_set_nodelay(s);
 
     so->fhost.ss = addr;
@@ -529,14 +533,13 @@ void tcp_connect(struct socket *inso)
     /* Close the accept() socket, set right state */
     if (inso->so_state & SS_FACCEPTONCE) {
         /* If we only accept once, close the accept() socket */
-        so->slirp->cb->unregister_poll_fd(so->s, so->slirp->opaque);
+        slirp_unregister_poll_socket(so);
         closesocket(so->s);
 
         /* Don't select it yet, even though we have an FD */
         /* if it's not FACCEPTONCE, it's already NOFDREF */
         so->so_state = SS_NOFDREF;
     }
-    so->s = s;
     so->so_state |= SS_INCOMING;
 
     so->so_iptos = tcp_tos(so);
@@ -975,7 +978,7 @@ int tcp_ctl(struct socket *so)
             if (ex_ptr->ex_fport == so->so_fport &&
                 so->so_faddr.s_addr == ex_ptr->ex_addr.s_addr) {
                 if (ex_ptr->write_cb) {
-                    so->s = -1;
+                    so->s = SLIRP_INVALID_SOCKET;
                     so->guestfwd = ex_ptr;
                     return 1;
                 }

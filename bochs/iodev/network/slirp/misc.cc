@@ -106,7 +106,7 @@ char *slirp_neighbor_info(Slirp *slirp)
 int slirp_bind_outbound(struct socket *so, unsigned short af)
 {
     int ret = 0;
-    struct sockaddr *addr = NULL;
+    const struct sockaddr *addr = NULL;
     int addr_size = 0;
 
     if (af == AF_INET && so->slirp->outbound_addr != NULL) {

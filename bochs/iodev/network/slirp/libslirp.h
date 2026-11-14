@@ -8,15 +8,46 @@
 
 #ifdef _WIN32
 #include <winsock2.h>
+#include <windows.h>
 #include <ws2tcpip.h>
 #include <in6addr.h>
 #include <basetsd.h>
+#include <errno.h>
+
 typedef Bit64s slirp_ssize_t;
 #else
 #include <sys/types.h>
 typedef ssize_t slirp_ssize_t;
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#endif
+
+#ifdef __GNUC__
+#define SLIRP_DEPRECATED __attribute__((__deprecated__))
+#else
+#define SLIRP_DEPRECATED
+#endif
+
+/* Socket abstraction:*/
+
+#if !defined(_WIN32)
+/* Traditional Unix socket. */
+typedef int slirp_os_socket;
+#define SLIRP_INVALID_SOCKET (-1)
+#define SLIRP_PRIfd "d"
+#else
+/* Windows: Win64 is a LLP64 platform, sizeof(int) < sizeof(long long) == sizeof(void *).
+ *
+ * Windows likes to pass HANDLE types around, which are pointers (aka unsigned long longs),
+ * which cannot be represented as ints. And, MS, in its infinite wisdom, decided to use
+ * a SOCKET handle instead of an int for socket library calls. */
+typedef SOCKET slirp_os_socket;
+#define SLIRP_INVALID_SOCKET INVALID_SOCKET
+#if defined(_WIN64)
+# define SLIRP_PRIfd "llx"
+#else
+# define SLIRP_PRIfd "x"
+#endif
 #endif
 
 /* Opaque structure containing the slirp state */
@@ -37,8 +68,10 @@ typedef slirp_ssize_t (*SlirpReadCb)(void *buf, size_t len, void *opaque);
 typedef slirp_ssize_t (*SlirpWriteCb)(const void *buf, size_t len, void *opaque);
 /* Timer callback */
 typedef void (*SlirpTimerCb)(void *opaque);
-/* Callback for libslirp to register polling callbacks */
+/* This is deprecated, use SlirpAddPollSocketCb instead */
 typedef int (*SlirpAddPollCb)(int fd, int events, void *opaque);
+/* Callback for libslirp to register polling callbacks */
+typedef int (*SlirpAddPollSocketCb)(slirp_os_socket fd, int events, void *opaque);
 /* Callback for libslirp to get polling result */
 typedef int (*SlirpGetREventsCb)(int idx, void *opaque);
 
@@ -74,10 +107,10 @@ typedef struct SlirpCb {
     void (*timer_free)(void *timer, void *opaque);
     /* Modify a timer to expire at @expire_time (ms) */
     void (*timer_mod)(void *timer, int64_t expire_time, void *opaque);
-    /* Register a fd for future polling */
-    void (*register_poll_fd)(int fd, void *opaque);
-    /* Unregister a fd */
-    void (*unregister_poll_fd)(int fd, void *opaque);
+    /* Deprecated, use register_poll_socket instead */
+    void (*register_poll_fd)(int fd, void *opaque) SLIRP_DEPRECATED;
+    /* Deprecated, use unregister_poll_socket instead */
+    void (*unregister_poll_fd)(int fd, void *opaque) SLIRP_DEPRECATED;
     /* Kick the io-thread, to signal that new events may be processed because some TCP buffer
      * can now receive more data, i.e. slirp_socket_can_recv will return 1. */
     void (*notify)(void *opaque);
@@ -91,10 +124,18 @@ typedef struct SlirpCb {
     /* Create a new timer.  When the timer fires, the application passes
      * the SlirpTimerId and cb_opaque to slirp_handle_timer.  */
     void *(*timer_new_opaque)(SlirpTimerId id, void *cb_opaque, void *opaque);
+
+    /*
+     * Fields introduced in SlirpConfig version 6 begin
+     */
+    /* Register a socket for future polling */
+    void (*register_poll_socket)(slirp_os_socket socket, void *opaque);
+    /* Unregister a socket */
+    void (*unregister_poll_socket)(slirp_os_socket socket, void *opaque);
 } SlirpCb;
 
 #define SLIRP_CONFIG_VERSION_MIN 1
-#define SLIRP_CONFIG_VERSION_MAX 5
+#define SLIRP_CONFIG_VERSION_MAX 6
 
 typedef struct SlirpConfig {
     /* Version must be provided */
@@ -201,6 +242,10 @@ Slirp *slirp_init(int restricted, bool in_enabled, struct in_addr vnetwork,
 /* Shut down an instance of a slirp stack */
 void slirp_cleanup(Slirp *slirp);
 
+/* This is deprecated, use slirp_pollfds_fill_socket instead. */
+void slirp_pollfds_fill(Slirp *slirp, uint32_t *timeout,
+                        SlirpAddPollCb add_poll, void *opaque) SLIRP_DEPRECATED;
+
 /* This is called by the application when it is about to sleep through poll().
  * *timeout is set to the amount of virtual time (in ms) that the application intends to
  * wait (UINT32_MAX if infinite). slirp_pollfds_fill updates it according to
@@ -208,8 +253,8 @@ void slirp_cleanup(Slirp *slirp);
  * time. slirp_pollfds_fill calls add_poll for each file descriptor
  * that should be monitored along the sleep. The opaque pointer is passed as
  * such to add_poll, and add_poll returns an index. */
-void slirp_pollfds_fill(Slirp *slirp, uint32_t *timeout,
-                        SlirpAddPollCb add_poll, void *opaque);
+void slirp_pollfds_fill_socket(Slirp *slirp, uint32_t *timeout,
+                        SlirpAddPollSocketCb add_poll, void *opaque);
 
 /* This is called by the application after sleeping, to report which file
  * descriptors are available. slirp_pollfds_poll calls get_revents on each file
@@ -290,5 +335,13 @@ const char *slirp_version_string(void);
 
 /* Addition for Bochs logging */
 void slirp_set_logfn(void *slirp, void *logfn, uint8_t debug_switches);
+
+#if defined(_WIN32)
+/* Windows utility functions: */
+
+/* inet_aton() replacement that uses inet_pton(). Eliminates the dreaded
+ * winsock2 deprecation messages. */
+int slirp_inet_aton(const char *cp, struct in_addr *ia);
+#endif
 
 #endif /* LIBSLIRP_H */
