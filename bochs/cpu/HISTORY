@@ -86,7 +86,7 @@ Changes after Bochs 3.1:
 - Legacy: Write pre-check (tickle_write_virtual) used segment read checks instead of write and could have missed segment write access violation
 - Legacy: interrupt from v8086 mode to non-zero DPL code segment must validate the new SS (#TS/#SS) before raising #GP(code segment selector)
 - Legacy: far CALL/interrupt pushes onto a new 32-bit stack segment with limit below 7 bypassed the segment limit check (unsigned underflow)
-- x86-64: non-canonical RSP loaded from the TSS by 64-bit call gate or interrupt raised #SS(old SS selector), the pushes onto the new stack must fault with #SS(0) (NULL NewSS) + EXT
+- x86-64: non-canonical RSP from the TSS faults with #SS(0), except IST interrupt without privilege change - #SS(old SS selector)
 - x86-64: far RET/IRET popping NULL SS must #GP(0) if NULL SS.RPL != new CPL, NULL SS is allowed only when executed in 64-bit mode (not in compatibility mode)
 + x87: improved implementation of x87 transcendental instructions (F2XM1/FYL2X/FYL2XP1/FPATAN/FSIN/FCOS/FSINCOS/FPTAN) to match HW
 + x87: fixed unmasked underflow/overflow corner cases for FSCALE x87 instruction

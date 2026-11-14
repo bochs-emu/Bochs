@@ -206,6 +206,11 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit32
         new_SSP = system_read_qword(new_SSP_addr);
       }
 #endif
+      // no privilege change, the stack pushes fault with #SS(old SS selector)
+      if (! IsCanonical(RSP_for_cpl_x)) {
+        BX_ERROR(("interrupt(long mode): IST canonical address failure"));
+        exception(BX_SS_EXCEPTION, BX_SELECTOR_ERROR_CODE(old_SS));
+      }
     }
     else {
       RSP_for_cpl_x = RSP;
