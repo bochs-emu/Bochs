@@ -232,7 +232,12 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         return;
 
       case BX_TASK_GATE:
-        task_gate(i, &gate_selector, &gate_descriptor, BX_TASK_FROM_CALL);
+        // task gate must be present else #NP(gate selector)
+        if (! IS_PRESENT(gate_descriptor)) {
+          BX_ERROR(("call_protected: task gate not present"));
+          exception(BX_NP_EXCEPTION, cs_raw & 0xfffc);
+        }
+        task_gate(i, &gate_descriptor, BX_TASK_FROM_CALL);
         return;
 
       case BX_286_CALL_GATE:

@@ -5935,7 +5935,7 @@ public: // for now...
   BX_SMF void jmp_far32(bxInstruction_c *i, Bit16u cs_raw, Bit32u disp32);
   BX_SMF void call_far16(bxInstruction_c *i, Bit16u cs_raw, Bit16u disp16);
   BX_SMF void call_far32(bxInstruction_c *i, Bit16u cs_raw, Bit32u disp32);
-  BX_SMF void task_gate(bxInstruction_c *i, bx_selector_t *selector, bx_descriptor_t *gate_descriptor, unsigned source);
+  BX_SMF void task_gate(bxInstruction_c *i, bx_descriptor_t *gate_descriptor, unsigned source, bool push_error = 0, Bit32u error_code = 0);
   BX_SMF void jump_protected(bxInstruction_c *i, Bit16u cs, bx_address disp) BX_CPP_AttrRegparmN(3);
   BX_SMF void jmp_call_gate(bx_selector_t *selector, bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(2);
   BX_SMF void call_gate(bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(1);

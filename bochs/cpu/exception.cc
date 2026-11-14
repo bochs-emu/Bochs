@@ -293,10 +293,6 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, 
   bx_descriptor_t gate_descriptor, cs_descriptor;
   bx_selector_t cs_selector;
 
-  Bit16u raw_tss_selector;
-  bx_selector_t   tss_selector;
-  bx_descriptor_t tss_descriptor;
-
   // interrupt vector must be within IDT table limits,
   // else #GP(vector*8 + 2 + EXT)
   if ((vector*8 + 7) > BX_CPU_THIS_PTR idtr.limit) {
@@ -346,45 +342,8 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, 
 
   switch (gate_descriptor.type) {
   case BX_TASK_GATE:
-    // examine selector to TSS, given in task gate descriptor
-    raw_tss_selector = gate_descriptor.u.taskgate.tss_selector;
-    parse_selector(raw_tss_selector, &tss_selector);
-
-    // must specify global in the local/global bit,
-    //      else #GP(TSS selector)
-    if (tss_selector.ti) {
-      BX_ERROR(("interrupt(): tss_selector.ti=1 from gate descriptor - #GP(tss_selector)"));
-      exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc);
-    }
-
-    // index must be within GDT limits, else #TS(TSS selector)
-    fetch_raw_descriptor(&tss_selector, &dword1, &dword2, BX_GP_EXCEPTION);
-
-    parse_descriptor(dword1, dword2, &tss_descriptor);
-
-    // AR byte must specify available TSS,
-    //   else #GP(TSS selector)
-    if (tss_descriptor.valid==0 || tss_descriptor.segment) {
-      BX_ERROR(("interrupt(): TSS selector points to invalid or bad TSS - #GP(tss_selector)"));
-      exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc);
-    }
-
-    if (tss_descriptor.type!=BX_SYS_SEGMENT_AVAIL_286_TSS &&
-        tss_descriptor.type!=BX_SYS_SEGMENT_AVAIL_386_TSS)
-    {
-      BX_ERROR(("interrupt(): TSS selector points to bad TSS - #GP(tss_selector)"));
-      exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc);
-    }
-
-    // TSS must be present, else #NP(TSS selector)
-    if (! IS_PRESENT(tss_descriptor)) {
-      BX_ERROR(("interrupt(): TSS descriptor.p == 0"));
-      exception(BX_NP_EXCEPTION, raw_tss_selector & 0xfffc);
-    }
-
     // switch tasks with nesting to TSS
-    task_switch(0, &tss_selector, &tss_descriptor,
-                    BX_TASK_FROM_INT, dword1, dword2, push_error, error_code);
+    task_gate(0, &gate_descriptor, BX_TASK_FROM_INT, push_error, error_code);
     return;
 
   case BX_286_INTERRUPT_GATE:

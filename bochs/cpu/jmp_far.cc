@@ -117,7 +117,12 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         return;
 
       case BX_TASK_GATE:
-        task_gate(i, &selector, &descriptor, BX_TASK_FROM_JUMP);
+        // task gate must be present else #NP(gate selector)
+        if (! IS_PRESENT(descriptor)) {
+          BX_ERROR(("jump_protected: task gate not present"));
+          exception(BX_NP_EXCEPTION, cs_raw & 0xfffc);
+        }
+        task_gate(i, &descriptor, BX_TASK_FROM_JUMP);
         return;
 
       case BX_286_CALL_GATE:
@@ -132,18 +137,15 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
   }
 }
 
-void BX_CPU_C::task_gate(bxInstruction_c *i, bx_selector_t *selector, bx_descriptor_t *gate_descriptor, unsigned source)
+// Switch task through task gate (far CALL/JMP or interrupt/exception), the caller
+// already checked the task gate itself (type, DPL and present bit).
+// push_error/error_code: error code of an exception pushed onto the new task stack.
+void BX_CPU_C::task_gate(bxInstruction_c *i, bx_descriptor_t *gate_descriptor, unsigned source, bool push_error, Bit32u error_code)
 {
   Bit16u          raw_tss_selector;
   bx_selector_t   tss_selector;
   bx_descriptor_t tss_descriptor;
   Bit32u dword1, dword2;
-
-  // task gate must be present else #NP(gate selector)
-  if (! gate_descriptor->p) {
-    BX_ERROR(("task_gate: task gate not present"));
-    exception(BX_NP_EXCEPTION, selector->value & 0xfffc);
-  }
 
   // examine selector to TSS, given in Task Gate descriptor
   // must specify global in the local/global bit else #GP(TSS selector)
@@ -179,8 +181,8 @@ void BX_CPU_C::task_gate(bxInstruction_c *i, bx_selector_t *selector, bx_descrip
     exception(BX_NP_EXCEPTION, raw_tss_selector & 0xfffc);
   }
 
-  // SWITCH_TASKS _without_ nesting to TSS
-  task_switch(i, &tss_selector, &tss_descriptor, source, dword1, dword2);
+  // SWITCH_TASKS to TSS (nesting depends on the source)
+  task_switch(i, &tss_selector, &tss_descriptor, source, dword1, dword2, push_error, error_code);
 }
 
   void BX_CPP_AttrRegparmN(2)
