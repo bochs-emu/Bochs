@@ -286,9 +286,9 @@ int translate_dnssearch(Slirp *s, const char ** names);
 
 /* cksum.c */
 /* Compute the checksum of the mbuf */
-int cksum(struct mbuf *m, int len);
+uint16_t cksum(struct mbuf *m, size_t len);
 /* Compute the checksum of the mbuf which contains an IPv6 packet */
-int ip6_cksum(struct mbuf *m);
+uint16_t ip6_cksum(struct mbuf *m);
 
 /* if.c */
 /* Called from slirp_new */
