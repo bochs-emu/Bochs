@@ -4777,21 +4777,21 @@ void bx_geforce_c::d3d_pixel_quad_shader(gf_channel* ch, float in[4][16][4],
             op_results[fi][ci] = ddy[ci];
         break;
       }
-      case 0x18: { // TXP
-        for (Bit32u fi = 0; fi < 4; fi++) {
-          float winv = 1.0f / paramsq[fi][0][3];
-          paramsq[fi][0][0] *= winv;
-          paramsq[fi][0][1] *= winv;
-          paramsq[fi][0][2] *= winv;
-        }
-        // fallthrough
-      }
+      case 0x18: // TXP
       case 0x2f: // TXL
       case 0x31: // TXB
       case 0x19: // TXD
       case 0x17: { // TEX
         Bit32u tex_unit = (dst_word >> 17) & 0xf;
         gf_texture* tex = &ch->d3d_texture[tex_unit];
+        if (op == 0x18 /* TXP */ && !tex->cubemap) {
+          for (Bit32u fi = 0; fi < 4; fi++) {
+            float winv = 1.0f / paramsq[fi][0][3];
+            paramsq[fi][0][0] *= winv;
+            paramsq[fi][0][1] *= winv;
+            paramsq[fi][0][2] *= winv;
+          }
+        }
         float lodq[4];
         if (op == 0x2f) { // TXL
           for (Bit32u fi = 0; fi < 4; fi++)
@@ -5012,6 +5012,12 @@ void bx_geforce_c::d3d_pixel_quad_shader(gf_channel* ch, float in[4][16][4],
               case 0x3a: // DIV
                 for (int comp_index = 0; comp_index < 4; comp_index++)
                   op_result[comp_index] = params[0][comp_index] / params[1][0];
+                break;
+              case 0x3c: // LIF
+                op_result[0] = 1.0f;
+                op_result[1] = params[0][1];
+                op_result[2] = params[0][1] > 0.0f ? exp2(params[0][3]) : 0.0f;
+                op_result[3] = 1.0f;
                 break;
               default:
                 for (int comp_index = 0; comp_index < 4; comp_index++)
