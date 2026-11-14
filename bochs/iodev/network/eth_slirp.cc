@@ -64,6 +64,15 @@ typedef ssize_t slirp_ssize_t;
 #else
 #include "slirp/libslirp.h"
 #endif
+
+// libslirp 4.9.0 introduced config version 6 with socket handle based polling
+#if SLIRP_CONFIG_VERSION_MAX >= 6
+#define BX_SLIRP_CONFIG_VERSION 6
+#else
+#define BX_SLIRP_CONFIG_VERSION 4
+typedef int slirp_os_socket;
+#define slirp_pollfds_fill_socket slirp_pollfds_fill
+#endif
 #include <signal.h>
 #ifndef _WIN32
 #include <sys/wait.h>
@@ -218,12 +227,12 @@ static void timer_mod(void *_timer, int64_t expire_time, void *opaque)
 
 static int npoll;
 
-static void register_poll_fd(int fd, void *opaque)
+static void register_poll_socket(slirp_os_socket fd, void *opaque)
 {
   npoll++;
 }
 
-static void unregister_poll_fd(int fd, void *opaque)
+static void unregister_poll_socket(slirp_os_socket fd, void *opaque)
 {
   npoll--;
 }
@@ -240,10 +249,16 @@ static struct SlirpCb callbacks = {
     .clock_get_ns = clock_get_ns,
     .timer_free = timer_free,
     .timer_mod = timer_mod,
-    .register_poll_fd = register_poll_fd,
-    .unregister_poll_fd = unregister_poll_fd,
+#if BX_SLIRP_CONFIG_VERSION < 6
+    .register_poll_fd = register_poll_socket,
+    .unregister_poll_fd = unregister_poll_socket,
+#endif
     .notify = notify,
     .timer_new_opaque = timer_new_opaque,
+#if BX_SLIRP_CONFIG_VERSION >= 6
+    .register_poll_socket = register_poll_socket,
+    .unregister_poll_socket = unregister_poll_socket,
+#endif
 };
 #else
 static struct SlirpCb callbacks;
@@ -267,14 +282,19 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
   callbacks.clock_get_ns = clock_get_ns,
   callbacks.timer_free = timer_free,
   callbacks.timer_mod = timer_mod,
-  callbacks.register_poll_fd = register_poll_fd,
-  callbacks.unregister_poll_fd = unregister_poll_fd,
+#if BX_SLIRP_CONFIG_VERSION >= 6
+  callbacks.register_poll_socket = register_poll_socket,
+  callbacks.unregister_poll_socket = unregister_poll_socket,
+#else
+  callbacks.register_poll_fd = register_poll_socket,
+  callbacks.unregister_poll_fd = unregister_poll_socket,
+#endif
   callbacks.notify = notify,
   callbacks.timer_new_opaque = timer_new_opaque,
 #endif
   /* default settings according to historic slirp */
   memset(&config, 0, sizeof(config));
-  config.version = 4;
+  config.version = BX_SLIRP_CONFIG_VERSION;
   config.in_enabled = true;
   config.disable_host_loopback = false;
   config.enable_emu = false;
@@ -608,7 +628,7 @@ void bx_slirp_pktmover_c::rx_timer_handler(void *this_ptr)
 }
 
 
-static int add_poll_cb(int fd, int events, void *opaque)
+static int add_poll_cb(slirp_os_socket fd, int events, void *opaque)
 {
     if (events & SLIRP_POLL_IN)
         FD_SET(fd, &rfds);
@@ -616,19 +636,19 @@ static int add_poll_cb(int fd, int events, void *opaque)
         FD_SET(fd, &wfds);
     if (events & SLIRP_POLL_PRI)
         FD_SET(fd, &xfds);
-    if (nfds < fd)
-        nfds = fd;
-    return fd;
+    if (nfds < (int)fd)
+        nfds = (int)fd;
+    return (int)fd;
 }
 
 static int get_revents_cb(int idx, void *opaque)
 {
     int event = 0;
-    if (FD_ISSET(idx, &rfds))
+    if (FD_ISSET((slirp_os_socket)idx, &rfds))
         event |= SLIRP_POLL_IN;
-    if (FD_ISSET(idx, &wfds))
+    if (FD_ISSET((slirp_os_socket)idx, &wfds))
         event |= SLIRP_POLL_OUT;
-    if (FD_ISSET(idx, &xfds))
+    if (FD_ISSET((slirp_os_socket)idx, &xfds))
         event |= SLIRP_POLL_PRI;
     return event;
 }
@@ -647,7 +667,7 @@ void bx_slirp_pktmover_c::rx_timer(void)
   FD_ZERO(&rfds);
   FD_ZERO(&wfds);
   FD_ZERO(&xfds);
-  slirp_pollfds_fill(slirp, &timeout, add_poll_cb, this);
+  slirp_pollfds_fill_socket(slirp, &timeout, add_poll_cb, this);
   tv.tv_sec = 0;
   tv.tv_usec = 0;
   ret = select(nfds + 1, &rfds, &wfds, &xfds, &tv);

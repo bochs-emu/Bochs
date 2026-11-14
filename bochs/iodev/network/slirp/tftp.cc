@@ -33,6 +33,11 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#if defined(_WIN32) && !defined(__CYGWIN__)
+#include <io.h>
+#include <share.h>
+#endif
+
 // Missing defines for open (copied from osdep.h)
 #ifndef S_IRUSR
 #define S_IRUSR 0400
@@ -396,13 +401,13 @@ static void tftp_handle_rrq(Slirp *slirp, struct sockaddr_storage *srcsas,
 
     /* check if a session already exists and if so terminate it */
     s = tftp_session_find(slirp, srcsas, &tp->hdr);
-    if (s >= 0) {
+    if (have_valid_socket(s)) {
         tftp_session_terminate(&slirp->tftp_sessions[s]);
     }
 
     s = tftp_session_allocate(slirp, srcsas, &tp->hdr);
 
-    if (s < 0) {
+    if (not_valid_socket(s)) {
         return;
     }
 
@@ -626,7 +631,7 @@ static void tftp_handle_ack(Slirp *slirp, struct sockaddr_storage *srcsas,
 
     s = tftp_session_find(slirp, srcsas, hdr);
 
-    if (s < 0) {
+    if (not_valid_socket(s)) {
         return;
     }
 
@@ -640,7 +645,7 @@ static void tftp_handle_error(Slirp *slirp, struct sockaddr_storage *srcsas,
 
     s = tftp_session_find(slirp, srcsas, hdr);
 
-    if (s < 0) {
+    if (not_valid_socket(s)) {
         return;
     }
 
