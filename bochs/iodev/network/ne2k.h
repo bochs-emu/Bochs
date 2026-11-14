@@ -237,6 +237,9 @@ private:
   Bit32u page3_read(Bit32u offset, unsigned io_len);
 
   void chipmem_write(Bit32u address, Bit32u value, unsigned io_len) BX_CPP_AttrRegparmN(3);
+#if BX_SUPPORT_REPEAT_SPEEDUPS
+  unsigned rdma_bulk(Bit8u *host, unsigned words, bool write);
+#endif
   void asic_write(Bit32u address, Bit32u value, unsigned io_len);
   void page0_write(Bit32u address, Bit32u value, unsigned io_len);
   void page1_write(Bit32u address, Bit32u value, unsigned io_len);

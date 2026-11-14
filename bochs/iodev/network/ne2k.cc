@@ -779,6 +779,59 @@ bx_ne2k_c::chipmem_write(Bit32u address, Bit32u value, unsigned io_len)
     BX_DEBUG(("out-of-bounds chipmem write, %04X", address));
 }
 
+#if BX_SUPPORT_REPEAT_SPEEDUPS
+//
+// rdma_bulk - word mode remote DMA for REP INSW/OUTSW: copy whole words
+// between the packet memory and the host buffer of the string instruction.
+// Remote address, byte count, ring wrap and remote DMA complete behave as
+// for single word accesses. Accesses outside the packet memory, at an odd
+// address or with less than one word left use the normal path (returns 0).
+//
+unsigned bx_ne2k_c::rdma_bulk(Bit8u *host, unsigned words, bool write)
+{
+  unsigned count = 0;
+
+  while (count < words) {
+    Bit32u addr = BX_NE2K_THIS s.remote_dma;
+    if ((addr & 1) || (addr < BX_NE2K_MEMSTART) || (addr >= BX_NE2K_MEMEND) ||
+        (BX_NE2K_THIS s.remote_bytes < 2))
+      break;
+    // contiguous run up to the end of memory, the ring stop page and the byte count
+    Bit32u end = BX_NE2K_MEMEND;
+    Bit32u stop = (Bit32u) BX_NE2K_THIS s.page_stop << 8;
+    if ((stop > addr) && (stop < end))
+      end = stop;
+    unsigned len = end - addr;
+    if (len > (unsigned)(BX_NE2K_THIS s.remote_bytes & ~1))
+      len = BX_NE2K_THIS s.remote_bytes & ~1;
+    if (len > ((words - count) * 2))
+      len = (words - count) * 2;
+    len &= ~1;
+    if (len == 0)
+      break;
+    if (write) {
+      memcpy(&BX_NE2K_THIS s.mem[addr - BX_NE2K_MEMSTART], host, len);
+    } else {
+      memcpy(host, &BX_NE2K_THIS s.mem[addr - BX_NE2K_MEMSTART], len);
+    }
+    host += len;
+    count += len / 2;
+    BX_NE2K_THIS s.remote_dma += len;
+    BX_NE2K_THIS s.remote_bytes -= len;
+    if (BX_NE2K_THIS s.remote_dma == stop) {
+      BX_NE2K_THIS s.remote_dma = BX_NE2K_THIS s.page_start << 8;
+    }
+  }
+  if ((count > 0) && (BX_NE2K_THIS s.remote_bytes == 0)) {
+    BX_NE2K_THIS s.ISR.rdma_done = 1;
+    if (BX_NE2K_THIS s.IMR.rdma_inte) {
+      set_irq_level(1);
+    }
+  }
+  return count;
+}
+#endif
+
 //
 // asic_read/asic_write - This is the high 16 bytes of i/o space
 // (the lower 16 bytes is for the DS8390). Only two locations
@@ -801,6 +854,17 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
     // and the source-address and length registers must
     // have been initialised.
     //
+#if BX_SUPPORT_REPEAT_SPEEDUPS
+    // REP INSW: move as many words as possible in one go
+    if ((io_len == 2) && BX_NE2K_THIS s.DCR.wdsize && DEV_bulk_io_quantum_requested()) {
+      unsigned count = rdma_bulk(DEV_bulk_io_host_addr(), DEV_bulk_io_quantum_requested(), 0);
+      if (count > 0) {
+        DEV_bulk_io_quantum_transferred() = count;
+        DEV_bulk_io_host_addr() += count * 2;
+        break; // value returned not important
+      }
+    }
+#endif
     if (io_len > BX_NE2K_THIS s.remote_bytes) {
       BX_ERROR(("ne2K: dma read underrun iolen=%d remote_bytes=%d",io_len,BX_NE2K_THIS s.remote_bytes));
       //return 0;
@@ -862,6 +926,17 @@ void bx_ne2k_c::asic_write(Bit32u offset, Bit32u value, unsigned io_len)
       BX_PANIC(("dma write length %d on byte mode operation", io_len));
       break;
     }
+#if BX_SUPPORT_REPEAT_SPEEDUPS
+    // REP OUTSW: move as many words as possible in one go
+    if ((io_len == 2) && DEV_bulk_io_quantum_requested()) {
+      unsigned count = rdma_bulk(DEV_bulk_io_host_addr(), DEV_bulk_io_quantum_requested(), 1);
+      if (count > 0) {
+        DEV_bulk_io_quantum_transferred() = count;
+        DEV_bulk_io_host_addr() += count * 2;
+        break;
+      }
+    }
+#endif
     if (BX_NE2K_THIS s.remote_bytes == 0) {
       BX_ERROR(("ne2K: dma write, byte count 0"));
     }
