@@ -5947,6 +5947,8 @@ public: // for now...
   BX_SMF void call_protected(bxInstruction_c *i, Bit16u cs, bx_address disp) BX_CPP_AttrRegparmN(3);
 #if BX_SUPPORT_X86_64
   BX_SMF void call_gate64(bx_selector_t *selector) BX_CPP_AttrRegparmN(1);
+  BX_SMF void call_gate64_more_privilege(bx_selector_t *cs_selector, bx_descriptor_t *cs_descriptor, Bit64u new_RIP) BX_CPP_AttrRegparmN(3);
+  BX_SMF void call_gate64_same_privilege(bx_selector_t *cs_selector, bx_descriptor_t *cs_descriptor, Bit64u new_RIP) BX_CPP_AttrRegparmN(3);
 #endif
   BX_SMF void return_protected(bxInstruction_c *i, Bit16u pop_bytes) BX_CPP_AttrRegparmN(2);
   BX_SMF void iret_protected(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

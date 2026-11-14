@@ -549,6 +549,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
     exception(BX_NP_EXCEPTION, BX_SELECTOR_ERROR_CODE(dest_selector));
   }
 
+  // CALL GATE TO MORE PRIVILEGE
+  // if non-conforming code segment and DPL < CPL then
+  if (IS_CODE_SEGMENT_NON_CONFORMING(cs_descriptor.type) && (cs_descriptor.dpl < CPL))
+    call_gate64_more_privilege(&cs_selector, &cs_descriptor, new_RIP);
+  else   // CALL GATE TO SAME PRIVILEGE
+    call_gate64_same_privilege(&cs_selector, &cs_descriptor, new_RIP);
+}
+
+void BX_CPP_AttrRegparmN(3) BX_CPU_C::call_gate64_more_privilege(bx_selector_t *cs_selector, bx_descriptor_t *cs_descriptor, Bit64u new_RIP)
+{
   Bit64u old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
   Bit64u old_RIP = RIP;
 
@@ -558,76 +568,79 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
   unsigned old_CPL = CPL;
 #endif
 
-  // CALL GATE TO MORE PRIVILEGE
-  // if non-conforming code segment and DPL < CPL then
-  if (IS_CODE_SEGMENT_NON_CONFORMING(cs_descriptor.type) && (cs_descriptor.dpl < CPL))
-  {
-    BX_DEBUG(("CALL GATE64 TO MORE PRIVILEGE LEVEL"));
+  BX_DEBUG(("CALL GATE64 TO MORE PRIVILEGE LEVEL"));
 
-    // get new RSP for new privilege level from TSS
-    Bit64u RSP_for_cpl_x  = get_RSP_from_TSS(cs_descriptor.dpl);
-    Bit64u old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
-    Bit64u old_RSP = RSP;
+  // get new RSP for new privilege level from TSS
+  Bit64u RSP_for_cpl_x  = get_RSP_from_TSS(cs_descriptor->dpl);
+  Bit64u old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
+  Bit64u old_RSP = RSP;
 
-    // push old stack long pointer onto new stack
-    write_new_stack_qword(RSP_for_cpl_x -  8, cs_descriptor.dpl, old_SS);
-    write_new_stack_qword(RSP_for_cpl_x - 16, cs_descriptor.dpl, old_RSP);
-    // push long pointer to return address onto new stack
-    write_new_stack_qword(RSP_for_cpl_x - 24, cs_descriptor.dpl, old_CS);
-    write_new_stack_qword(RSP_for_cpl_x - 32, cs_descriptor.dpl, old_RIP);
-    RSP_for_cpl_x -= 32;
+  // push old stack long pointer onto new stack
+  write_new_stack_qword(RSP_for_cpl_x -  8, cs_descriptor->dpl, old_SS);
+  write_new_stack_qword(RSP_for_cpl_x - 16, cs_descriptor->dpl, old_RSP);
+  // push long pointer to return address onto new stack
+  write_new_stack_qword(RSP_for_cpl_x - 24, cs_descriptor->dpl, old_CS);
+  write_new_stack_qword(RSP_for_cpl_x - 32, cs_descriptor->dpl, old_RIP);
+  RSP_for_cpl_x -= 32;
 
 #if BX_SUPPORT_CET
-    if(ShadowStackEnabled(old_CPL)) {
-      if (old_CPL == 3)
-        // in IA-32e mode adjust so bits 63:N get the value of bit N-1, N is the CPU maximum linear-address width
-        BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = long_mode() ? CpuidCanonicalizeAddress(SSP) : SSP;
-    }
-    // shadow stack switch and push could fault, do them before CS is loaded
-    if(ShadowStackEnabled(cs_descriptor.dpl)) {
-      bx_address old_SSP = SSP;
-      shadow_stack_switch(BX_CPU_THIS_PTR msr.ia32_pl_ssp[cs_descriptor.dpl], cs_descriptor.dpl, true);
-      if (old_SS_DPL != 3)
-        new_shadow_stack_push(old_CS, temp_LIP, old_SSP, cs_descriptor.dpl);
-    }
-#endif
-
-    // load CS:RIP (guaranteed to be in 64 bit mode)
-    branch_far(&cs_selector, &cs_descriptor, new_RIP, cs_descriptor.dpl);
-
-    // set up null SS descriptor
-    load_null_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], cs_descriptor.dpl);
-
-    RSP = RSP_for_cpl_x;
-
-#if BX_SUPPORT_CET
-    track_indirect(CPL);
-#endif
+  if(ShadowStackEnabled(old_CPL)) {
+    if (old_CPL == 3)
+      // in IA-32e mode adjust so bits 63:N get the value of bit N-1, N is the CPU maximum linear-address width
+      BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = long_mode() ? CpuidCanonicalizeAddress(SSP) : SSP;
   }
-  else
-  {
-    BX_DEBUG(("CALL GATE64 TO SAME PRIVILEGE"));
-
-    // push to 64-bit stack, switch to long64 guaranteed
-    write_new_stack_qword(RSP -  8, CPL, old_CS);
-    write_new_stack_qword(RSP - 16, CPL, old_RIP);
-
-#if BX_SUPPORT_CET
-    // shadow stack push could fault, do it before CS is loaded
-    if (ShadowStackEnabled(CPL)) {
-      call_far_shadow_stack_push(old_CS, temp_LIP, SSP, CPL);
-    }
-#endif
-
-    // load CS:RIP (guaranteed to be in 64 bit mode)
-    branch_far(&cs_selector, &cs_descriptor, new_RIP, CPL);
-
-    RSP -= 16;
-
-#if BX_SUPPORT_CET
-    track_indirect(CPL);
-#endif
+  // shadow stack switch and push could fault, do them before CS is loaded
+  if(ShadowStackEnabled(cs_descriptor->dpl)) {
+    bx_address old_SSP = SSP;
+    shadow_stack_switch(BX_CPU_THIS_PTR msr.ia32_pl_ssp[cs_descriptor->dpl], cs_descriptor->dpl, true);
+    if (old_SS_DPL != 3)
+      new_shadow_stack_push(old_CS, temp_LIP, old_SSP, cs_descriptor->dpl);
   }
+#endif
+
+  // load CS:RIP (guaranteed to be in 64 bit mode)
+  branch_far(cs_selector, cs_descriptor, new_RIP, cs_descriptor->dpl);
+
+  // set up null SS descriptor
+  load_null_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], cs_descriptor->dpl);
+
+  RSP = RSP_for_cpl_x;
+
+#if BX_SUPPORT_CET
+  track_indirect(CPL);
+#endif
+}
+
+void BX_CPP_AttrRegparmN(3) BX_CPU_C::call_gate64_same_privilege(bx_selector_t *cs_selector, bx_descriptor_t *cs_descriptor, Bit64u new_RIP)
+{
+  Bit64u old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+  Bit64u old_RIP = RIP;
+
+#if BX_SUPPORT_CET
+  bx_address temp_LIP = get_laddr(BX_SEG_REG_CS, RIP);
+#endif
+
+  BX_DEBUG(("CALL GATE64 TO SAME PRIVILEGE"));
+
+  // push to 64-bit stack, switch to long64 guaranteed
+  write_new_stack_qword(RSP -  8, CPL, old_CS);
+  write_new_stack_qword(RSP - 16, CPL, old_RIP);
+
+#if BX_SUPPORT_CET
+  // shadow stack push could fault, do it before CS is loaded
+  if (ShadowStackEnabled(CPL)) {
+    call_far_shadow_stack_push(old_CS, temp_LIP, SSP, CPL);
+  }
+#endif
+
+  // load CS:RIP (guaranteed to be in 64 bit mode)
+  branch_far(cs_selector, cs_descriptor, new_RIP, CPL);
+
+  RSP -= 16;
+
+#if BX_SUPPORT_CET
+  track_indirect(CPL);
+#endif
 }
 
 #if BX_SUPPORT_CET
