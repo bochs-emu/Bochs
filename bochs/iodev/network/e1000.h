@@ -12,7 +12,7 @@
 //  Copyright (c) 2007 Dan Aloni
 //  Copyright (c) 2004 Antony T Curtis
 //
-//  Copyright (C) 2011-2025  The Bochs Project
+//  Copyright (C) 2011-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -104,6 +104,12 @@ typedef struct {
   int tx_timer_index;
   int statusbar_id;
 
+  // interrupt throttling (ITR)
+  int    itr_timer_index;
+  bool   int_level;      // state of the interrupt line
+  bool   itr_pending;    // assertion held back until the ITR interval ends
+  Bit64u itr_last_nsec;  // time of the last interrupt assertion
+
   Bit8u devfunc;
   char devname[16];
   char ldevname[32];
@@ -152,6 +158,8 @@ private:
 
   static void tx_timer_handler(void *);
   void tx_timer(void);
+  static void itr_timer_handler(void *);
+  void itr_timer(void);
 
   int     receive_filter(const Bit8u *buf, int size);
   bool    e1000_has_rxbufs(size_t total_size);

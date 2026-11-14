@@ -56,6 +56,7 @@ const Bit8u e1000_iomask[32] = {4, 0, 0, 0, 7, 1, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0,
 #define E1000_MDIC     0x00020  // MDI Control - RW
 #define E1000_VET      0x00038  // VLAN Ether Type - RW
 #define E1000_ICR      0x000C0  // Interrupt Cause Read - R/clr
+#define E1000_ITR      0x000C4  // Interrupt Throttling Rate - RW
 #define E1000_ICS      0x000C8  // Interrupt Cause Set - WO
 #define E1000_IMS      0x000D0  // Interrupt Mask Set - RW
 #define E1000_IMC      0x000D8  // Interrupt Mask Clear - WO
@@ -265,7 +266,7 @@ enum {
   defreg(TORH),  defreg(TORL),  defreg(TOTH),   defreg(TOTL),
   defreg(TPR),   defreg(TPT),   defreg(TXDCTL), defreg(WUFC),
   defreg(RA),    defreg(MTA),   defreg(CRCERRS),defreg(VFTA),
-  defreg(VET),
+  defreg(VET),   defreg(ITR),
 };
 
 enum { PHY_R = 1, PHY_W = 2, PHY_RW = PHY_R | PHY_W };
@@ -511,6 +512,7 @@ bx_e1000_c::bx_e1000_c()
 {
   memset(&s, 0, sizeof(bx_e1000_t));
   s.tx_timer_index = BX_NULL_TIMER_HANDLE;
+  s.itr_timer_index = BX_NULL_TIMER_HANDLE;
   ethdev = NULL;
 }
 
@@ -574,6 +576,10 @@ void bx_e1000_c::init_card(Bit8u card)
   if (BX_E1000_THIS s.tx_timer_index == BX_NULL_TIMER_HANDLE) {
     BX_E1000_THIS s.tx_timer_index =
       DEV_register_timer(this, tx_timer_handler, 0, 0, 0, "e1000"); // one-shot, inactive
+  }
+  if (BX_E1000_THIS s.itr_timer_index == BX_NULL_TIMER_HANDLE) {
+    BX_E1000_THIS s.itr_timer_index =
+      DEV_register_timer(this, itr_timer_handler, 0, 0, 0, "e1000 itr"); // one-shot, inactive
   }
   BX_E1000_THIS s.statusbar_id = bx_gui->register_statusitem("E1000", 1);
 
@@ -639,6 +645,10 @@ void bx_e1000_c::reset(unsigned type)
   BX_E1000_THIS s.io_memaddr = 0;
 
   // Deassert IRQ
+  bx_pc_system.deactivate_timer(BX_E1000_THIS s.itr_timer_index);
+  BX_E1000_THIS s.itr_pending = 0;
+  BX_E1000_THIS s.itr_last_nsec = 0;
+  BX_E1000_THIS s.int_level = 0;
   set_irq_level(0);
 }
 
@@ -692,6 +702,8 @@ void bx_e1000_c::e1000_register_state(bx_list_c *parent, Bit8u card)
   BXRS_PARAM_BOOL(eecds, reading, BX_E1000_THIS s.eecd_state.reading);
   BXRS_HEX_PARAM_FIELD(eecds, old_eecd, BX_E1000_THIS s.eecd_state.old_eecd);
   BXRS_HEX_PARAM_FIELD(list, io_memaddr, BX_E1000_THIS s.io_memaddr);
+  BXRS_PARAM_BOOL(list, int_level, BX_E1000_THIS s.int_level);
+  BXRS_PARAM_BOOL(list, itr_pending, BX_E1000_THIS s.itr_pending);
 
   register_pci_state(list);
 }
@@ -702,6 +714,13 @@ void bx_e1000_c::after_restore_state(void)
   // TX interrupt causes still pending: the timer state is not saved
   if (BX_E1000_THIS s.tx.int_cause != 0) {
     bx_pc_system.activate_timer(BX_E1000_THIS s.tx_timer_index, 10, 0);
+  }
+  // interrupt held back by ITR: wait one full interval
+  BX_E1000_THIS s.itr_last_nsec = 0;
+  if (BX_E1000_THIS s.itr_pending) {
+    Bit64u interval = (Bit64u)(BX_E1000_THIS s.mac_reg[ITR] & 0xffff) * 256;
+    bx_pc_system.activate_timer_nsec(BX_E1000_THIS s.itr_timer_index,
+                                     (interval > 0) ? interval : 1, 0);
   }
 }
 
@@ -776,6 +795,7 @@ bool bx_e1000_c::mem_read(bx_phy_address addr, unsigned len, void *data)
       case E1000_RDBAL:
       case E1000_TDLEN:
       case E1000_RDLEN:
+      case E1000_ITR:
         value = BX_E1000_THIS s.mac_reg[index];
         break;
       case E1000_TOTH:
@@ -861,6 +881,9 @@ bool bx_e1000_c::mem_write(bx_phy_address addr, unsigned len, void *data)
       case E1000_TDLEN:
       case E1000_RDLEN:
         BX_E1000_THIS s.mac_reg[index] = value & 0xfff80;
+        break;
+      case E1000_ITR:
+        BX_E1000_THIS s.mac_reg[index] = value & 0xffff;
         break;
       case E1000_TCTL:
       case E1000_TDT:
@@ -979,7 +1002,49 @@ void bx_e1000_c::set_interrupt_cause(Bit32u value)
     value |= E1000_ICR_INT_ASSERTED;
   BX_E1000_THIS s.mac_reg[ICR] = value;
   BX_E1000_THIS s.mac_reg[ICS] = value;
-  set_irq_level((BX_E1000_THIS s.mac_reg[IMS] & BX_E1000_THIS s.mac_reg[ICR]) != 0);
+
+  if ((BX_E1000_THIS s.mac_reg[IMS] & BX_E1000_THIS s.mac_reg[ICR]) == 0) {
+    // nothing to signal (any more)
+    if (BX_E1000_THIS s.itr_pending) {
+      bx_pc_system.deactivate_timer(BX_E1000_THIS s.itr_timer_index);
+      BX_E1000_THIS s.itr_pending = 0;
+    }
+    BX_E1000_THIS s.int_level = 0;
+    set_irq_level(0);
+    return;
+  }
+  // already asserted or waiting for the end of the ITR interval
+  if (BX_E1000_THIS s.int_level || BX_E1000_THIS s.itr_pending)
+    return;
+  // ITR: minimum interval between interrupt assertions in 256 ns units
+  Bit32u itr = BX_E1000_THIS s.mac_reg[ITR] & 0xffff;
+  Bit64u now = bx_pc_system.time_nsec();
+  if (itr != 0) {
+    Bit64u interval = (Bit64u) itr * 256;
+    Bit64u elapsed = now - BX_E1000_THIS s.itr_last_nsec;
+    if (elapsed < interval) {
+      bx_pc_system.activate_timer_nsec(BX_E1000_THIS s.itr_timer_index,
+                                       interval - elapsed, 0);
+      BX_E1000_THIS s.itr_pending = 1;
+      return;
+    }
+  }
+  BX_E1000_THIS s.itr_last_nsec = now;
+  BX_E1000_THIS s.int_level = 1;
+  set_irq_level(1);
+}
+
+void bx_e1000_c::itr_timer_handler(void *this_ptr)
+{
+  bx_e1000_c *class_ptr = (bx_e1000_c *) this_ptr;
+  class_ptr->itr_timer();
+}
+
+void bx_e1000_c::itr_timer(void)
+{
+  BX_E1000_THIS s.itr_pending = 0;
+  // re-evaluate the causes collected meanwhile
+  set_interrupt_cause(BX_E1000_THIS s.mac_reg[ICR]);
 }
 
 void bx_e1000_c::set_ics(Bit32u value)
