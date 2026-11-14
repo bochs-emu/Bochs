@@ -1,6 +1,6 @@
 Changes after Bochs 3.1 release:
 
-(up to date with commits done till 8 Nov 2026)
+(up to date with commits done till 14 Nov 2026)
 
 - CPU emulation and instrumentation
   ! CPUDB: Added AMD Zen3 (Vermeer) CPUID model (features X2APIC, CLWB, UMIP, PKU, CET, VAES, RDPID + introduces CPUID 0x80000021: AMD Extended Feature Identification 2)
@@ -124,6 +124,10 @@ Changes after Bochs 3.1 release:
       - #955: Implement DOT_PRODUCT_TEXTURE_2D_NV texture shader operation (bump mapping with NV20)
       - #956: Fix texture filtering with NV15
       - #958: Implement depth buffer swizzling (missing geometry in render to texture demos)
+      - #996: Implement SIFM context store (broken mipmap generation and texture corruption in render to texture demo)
+      - #997: Use card type derived from the class id for 3D rendering (missing 3D output with 30.82 driver and NV35)
+      - #998: Fix X8R8G8B8 pixel reads in SIFM command (blur effect in Minecraft main menu with NV40)
+      - #1001: Fix projective texture lookup for cubemaps and implement LIF pixel shader operation (bump mapping and marble demos with NV40)
   - Hard drive / HD image
     - VVFAT: Fixed LongName handling in vvfat disks
     - VVFAT: Adding path prefix "fat32:" forces using FAT32 file system
@@ -243,8 +247,21 @@ Changes after Bochs 3.1 release:
     - SB16, ES1370: fixed host crash (division by zero) and out of bounds reads triggered by the guest
     - ES1370: DMA channels are stopped on reset (no sound after reboot when the guest used the other DAC),
       stopping the inactive DAC keeps the active one playing
+    - SB16, ES1370: MIDI delta times and OPL timers are computed on demand from the emulated time (no periodic timers, faster emulation)
   - Networking
+    - Fixed many guest-triggerable host memory corruptions and out of bounds accesses (NE2000, E1000, PCI Pseudo-NIC, vnet, tap, FreeBSD backend)
+    - vnet: TFTP and FTP file access is restricted to the server root directory
+    - vnet: no more network stall when the NIC is not ready to receive, fixed TFTP uploads and downloads of large files
+      (more than 65535 blocks), FTP commands without argument are handled
+    - NE2000: fixed receive ring wrap, missed frames counter and DCR / TCR bits decoding
+    - E1000: full multicast, receive address and VLAN filter tables are decoded, TX interrupt causes are no longer lost
+    - win32 and socket backends pass multicast frames to the NIC, win32 backend supports more than one NIC
     - VDE: fix networking on FreeBSD
+    - Faster networking:
+      - Host backends deliver up to 32 received frames per poll, frames stay in the host queue while the NIC cannot take them (were dropped),
+        win32 backend polls every 1 ms
+      - NE2000: bulk string I/O (REP INSW/OUTSW) for word mode remote DMA
+      - E1000: implemented interrupt throttling (ITR register)
   - CMOS
     - Save/restore: the extended CMOS RAM bank (ports 0x72/0x73) is save/restored now
     - Report an error instead of PANIC when the CMOS image file cannot be written on exit
