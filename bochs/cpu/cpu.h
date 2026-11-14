@@ -5939,6 +5939,8 @@ public: // for now...
   BX_SMF void jump_protected(bxInstruction_c *i, Bit16u cs, bx_address disp) BX_CPP_AttrRegparmN(3);
   BX_SMF void jmp_call_gate(bx_selector_t *selector, bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(2);
   BX_SMF void call_gate(bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(1);
+  BX_SMF void call_gate_more_privilege(bx_descriptor_t *gate_descriptor, bx_selector_t *cs_selector, bx_descriptor_t *cs_descriptor) BX_CPP_AttrRegparmN(3);
+  BX_SMF void call_gate_same_privilege(bx_descriptor_t *gate_descriptor, bx_selector_t *cs_selector, bx_descriptor_t *cs_descriptor) BX_CPP_AttrRegparmN(3);
 #if BX_SUPPORT_X86_64
   BX_SMF void jmp_call_gate64(bx_selector_t *selector) BX_CPP_AttrRegparmN(1);
 #endif
@@ -5948,6 +5950,7 @@ public: // for now...
 #endif
   BX_SMF void return_protected(bxInstruction_c *i, Bit16u pop_bytes) BX_CPP_AttrRegparmN(2);
   BX_SMF void iret_protected(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF Bit32u get_iret_eflags_write_mask(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64
   BX_SMF void long_iret(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void swapgs();
