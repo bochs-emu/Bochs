@@ -266,6 +266,7 @@
     <ClInclude Include="..\iodev\network\slirp\tftp.h" />
     <ClInclude Include="..\iodev\network\slirp\udp.h" />
     <ClInclude Include="..\iodev\network\slirp\util.h" />
+    <ClInclude Include="..\iodev\network\slirp\winver.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="bochs.vcxproj">

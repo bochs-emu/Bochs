@@ -73,7 +73,11 @@
 
 /* size_t, ssize_t format specifier. Windows, naturally, has to be different
  * and, despite implementing "%z", MinGW hasn't caught up. */
-#if defined(__MINGW64__) || defined(_WIN64)
+#if defined(__CYGWIN__)
+/* Bochs: Cygwin defines _WIN32 for slirp, slirp_ssize_t is Bit64s */
+#define SLIRP_PRIsize_t "zu"
+#define SLIRP_PRIssize_t "lld"
+#elif defined(__MINGW64__) || defined(_WIN64)
 #  if defined(PRIu64)
 #    define SLIRP_PRIsize_t PRIu64
 #  else
@@ -90,10 +94,11 @@
 #  else
 #    define SLIRP_PRIsize_t "lu"
 #  endif
-#  if defined(PRId32)
-#    define SLIRP_PRIssize_t PRId32
+/* Bochs: slirp_ssize_t is Bit64s on Windows */
+#  if defined(PRId64)
+#    define SLIRP_PRIssize_t PRId64
 #  else
-#    define SLIRP_PRIssize_t "ld"
+#    define SLIRP_PRIssize_t "lld"
 #  endif
 #else
 #define SLIRP_PRIsize_t "zu"
@@ -192,6 +197,20 @@ int slirp_getsockopt_wrap(slirp_os_socket sockfd, int level, int optname, void *
 int slirp_setsockopt_wrap(slirp_os_socket sockfd, int level, int optname,
                           const void *optval, int optlen);
 #define inet_aton slirp_inet_aton
+
+#if WINVER < 0x0601
+/* Windows versions older than Windows 7: */
+
+#undef inet_pton
+#undef inet_ntop
+
+#define inet_pton slirp_inet_pton
+#define inet_ntop slirp_inet_ntop
+
+int slirp_inet_pton(int af, const char *src, void *dst);
+const char *slirp_inet_ntop(int af, const void *src, char *dst, socklen_t size);
+#endif
+
 #else
 #define closesocket(s) close(s)
 #define ioctlsocket(s, r, v) ioctl(s, r, v)
