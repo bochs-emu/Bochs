@@ -114,20 +114,20 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit32
       cs_descriptor.dpl > CPL)
   {
     BX_ERROR(("interrupt(long mode): not accessible or not code segment"));
-    exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc);
+    exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_selector.value));
   }
 
   // check that it's a 64 bit segment
   if (! IS_LONG64_SEGMENT(cs_descriptor) || cs_descriptor.u.segment.d_b)
   {
     BX_ERROR(("interrupt(long mode): must be 64 bit segment"));
-    exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc);
+    exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_selector.value));
   }
 
   // segment must be present, else #NP(selector + EXT)
   if (! IS_PRESENT(cs_descriptor)) {
     BX_ERROR(("interrupt(long mode): segment not present"));
-    exception(BX_NP_EXCEPTION, cs_selector.value & 0xfffc);
+    exception(BX_NP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_selector.value));
   }
 
   Bit64u RSP_for_cpl_x;
@@ -237,7 +237,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit32
   else {
     BX_ERROR(("interrupt(long mode): bad descriptor type %u (CS.DPL=%u CPL=%u)",
       (unsigned) cs_descriptor.type, (unsigned) cs_descriptor.dpl, (unsigned) CPL));
-    exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc);
+    exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_selector.value));
   }
 
 #if BX_SUPPORT_CET
@@ -365,13 +365,13 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, 
         cs_descriptor.dpl > CPL)
     {
       BX_ERROR(("interrupt(): not accessible or not code segment cs=0x%04x", cs_selector.value));
-      exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc);
+      exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_selector.value));
     }
 
     // segment must be present, else #NP(selector + EXT)
     if (! IS_PRESENT(cs_descriptor)) {
       BX_ERROR(("interrupt(): segment not present"));
-      exception(BX_NP_EXCEPTION, cs_selector.value & 0xfffc);
+      exception(BX_NP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_selector.value));
     }
 
     Bit32u old_ESP = ESP;
@@ -402,7 +402,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, 
       get_SS_ESP_from_TSS(cs_descriptor.dpl, &SS_for_cpl_x, &ESP_for_cpl_x);
 
       // Selector must be non-null else #TS(EXT)
-      if ((SS_for_cpl_x & 0xfffc) == 0) {
+      if (BX_IS_NULL_SELECTOR(SS_for_cpl_x)) {
         BX_ERROR(("interrupt(): SS selector null"));
         exception(BX_TS_EXCEPTION, 0); /* TS(ext) */
       }
@@ -417,7 +417,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, 
       if (is_v8086_mode && cs_descriptor.dpl != 0) {
         // if code segment DPL != 0 then #GP(new code segment selector)
         BX_ERROR(("interrupt(): code segment DPL(%d) != 0 in v8086 mode", cs_descriptor.dpl));
-        exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc);
+        exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_selector.value));
       }
 
       // IP must be within CS segment boundaries, else #GP(0)
@@ -432,7 +432,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, 
       new_stack.cache = ss_descriptor;
       new_stack.selector.rpl = cs_descriptor.dpl;
       // add cpl to the selector value
-      new_stack.selector.value = (0xfffc & new_stack.selector.value) | new_stack.selector.rpl;
+      new_stack.selector.value = (BX_SELECTOR_RPL_MASK & new_stack.selector.value) | new_stack.selector.rpl;
 
       if (ss_descriptor.u.segment.d_b) {
         Bit32u temp_ESP = ESP_for_cpl_x;
@@ -604,7 +604,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, 
       // interrupt to the same privilege level is not allowed: #GP(new code segment selector)
       if (v8086_mode()) {
         BX_ERROR(("interrupt(): code segment conforming or DPL(%d) != 0 in v8086 mode", cs_descriptor.dpl));
-        exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc);
+        exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_selector.value));
       }
 
       // EIP must be in CS limit else #GP(0)

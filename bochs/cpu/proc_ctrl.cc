@@ -1017,7 +1017,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
   }
 #endif
 
-  if ((BX_CPU_THIS_PTR msr.sysenter_cs_msr & BX_SELECTOR_RPL_MASK) == 0) {
+  if (BX_IS_NULL_SELECTOR(BX_CPU_THIS_PTR msr.sysenter_cs_msr)) {
     BX_ERROR(("SYSENTER with zero sysenter_cs_msr !"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -1104,7 +1104,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
     BX_ERROR(("SYSEXIT from real mode or with CPL<>0 !"));
     exception(BX_GP_EXCEPTION, 0);
   }
-  if ((BX_CPU_THIS_PTR msr.sysenter_cs_msr & BX_SELECTOR_RPL_MASK) == 0) {
+  if (BX_IS_NULL_SELECTOR(BX_CPU_THIS_PTR msr.sysenter_cs_msr)) {
     BX_ERROR(("SYSEXIT with zero sysenter_cs_msr !"));
     exception(BX_GP_EXCEPTION, 0);
   }

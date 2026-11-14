@@ -77,7 +77,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
   // return selector RPL must be >= CPL, else #GP(return selector)
   if (cs_selector.rpl < CPL) {
     BX_ERROR(("return_protected: CS.rpl < CPL"));
-    exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc);
+    exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_cs_selector));
   }
 
   // check code-segment descriptor
@@ -127,7 +127,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 #if BX_SUPPORT_FRED
     if (BX_CPU_THIS_PTR cr4.get_FRED()) {
       BX_ERROR(("return_protected: ring transition is not allowed when FRED is enabled"));
-      exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc);
+      exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_cs_selector));
     }
 #endif
 
@@ -151,7 +151,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
      * else #GP(selector) */
     parse_selector(raw_ss_selector, &ss_selector);
 
-    if ((raw_ss_selector & 0xfffc) == 0) {
+    if (BX_IS_NULL_SELECTOR(raw_ss_selector)) {
 #if BX_SUPPORT_X86_64
       // NULL SS is allowed only in 64-bit mode when returning to 64-bit mode with RPL != 3,
       // NULL SS selector RPL must be equal to the RPL of the return CS selector
@@ -188,7 +188,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 
     branch_far(&cs_selector, &cs_descriptor, return_RIP, cs_selector.rpl);
 
-    if ((raw_ss_selector & 0xfffc) != 0) {
+    if (! BX_IS_NULL_SELECTOR(raw_ss_selector)) {
       // load SS:RSP from stack
       // load the SS-cache with SS descriptor
       load_ss(&ss_selector, &ss_descriptor, cs_selector.rpl);

@@ -424,7 +424,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETU(bxInstruction_c *i)
 
     parse_selector(raw_cs_selector, &cs_selector);
     // return CS selector must be non-null, else #GP(0)
-    if ((raw_cs_selector & 0xfffc) == 0) {
+    if (BX_IS_NULL_SELECTOR(raw_cs_selector)) {
       BX_ERROR(("ERETU: return CS selector null"));
       exception(BX_GP_EXCEPTION, 0);
     }
@@ -435,7 +435,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETU(bxInstruction_c *i)
     // return CS selector RPL must be >= CPL, else #GP(return selector)
     if (cs_selector.rpl < CPL) {
       BX_ERROR(("ERETU: return selector RPL < CPL"));
-      exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc);
+      exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_cs_selector));
     }
 
     // check code-segment descriptor
@@ -491,7 +491,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETU(bxInstruction_c *i)
   else {
     load_cs(&cs_selector, &cs_descriptor, cs_descriptor.dpl);
 
-    if ((raw_ss_selector & 0xfffc) != 0) {
+    if (! BX_IS_NULL_SELECTOR(raw_ss_selector)) {
       // load SS:RSP from stack
       // load the SS-cache with SS descriptor
       load_ss(&ss_selector, &ss_descriptor, cs_selector.rpl);

@@ -50,6 +50,11 @@ typedef struct { /* bx_selector_t */
 #define BX_SELECTOR_RPL(selector) ((selector) & 0x03)
 #define BX_SELECTOR_RPL_MASK (0xfffc)
 
+// NULL selector: index 0 in GDT (TI=0), any RPL
+#define BX_IS_NULL_SELECTOR(selector) (((selector) & BX_SELECTOR_RPL_MASK) == 0)
+// selector based exception error code: RPL bits are cleared (EXT is added by exception())
+#define BX_SELECTOR_ERROR_CODE(selector) ((selector) & BX_SELECTOR_RPL_MASK)
+
 typedef struct
 {
 

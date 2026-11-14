@@ -1704,7 +1704,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
         continue;
 
 #if BX_SUPPORT_X86_64
-     if (n == BX_SEG_REG_SS && (selector & BX_SELECTOR_RPL_MASK) == 0) {
+     if (n == BX_SEG_REG_SS && BX_IS_NULL_SELECTOR(selector)) {
         // SS is allowed to be NULL selector if going to 64-bit guest
         if (x86_64_guest && guest.sregs[BX_SEG_REG_CS].cache.u.segment.l)
            continue;

@@ -34,7 +34,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
   bx_descriptor_t cs_descriptor;
 
   /* new cs selector must not be null, else #GP(0) */
-  if ((cs_raw & 0xfffc) == 0) {
+  if (BX_IS_NULL_SELECTOR(cs_raw)) {
     BX_DEBUG(("call_protected: CS selector null"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -48,7 +48,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
   // examine AR byte of selected descriptor for various legal values
   if (cs_descriptor.valid==0) {
     BX_ERROR(("call_protected: invalid CS descriptor"));
-    exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
+    exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
   }
 
   if (cs_descriptor.segment)   // normal segment
@@ -174,13 +174,13 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
     // descriptor DPL must be >= CPL else #GP(gate selector)
     if (gate_descriptor.dpl < CPL) {
       BX_ERROR(("call_protected: descriptor.dpl < CPL"));
-      exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
+      exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
     }
 
     // descriptor DPL must be >= gate selector RPL else #GP(gate selector)
     if (gate_descriptor.dpl < gate_selector.rpl) {
       BX_ERROR(("call_protected: descriptor.dpl < selector.rpl"));
-      exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
+      exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
     }
 
 #if BX_SUPPORT_X86_64
@@ -188,18 +188,18 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
       // call gate type is higher priority than non-present bit check
       if (gate_descriptor.type != BX_386_CALL_GATE) {
         BX_ERROR(("call_protected: gate type %u unsupported in long mode", (unsigned) gate_descriptor.type));
-        exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
+        exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
       }
 #if BX_SUPPORT_FRED
       if (BX_CPU_THIS_PTR cr4.get_FRED()) {
         BX_ERROR(("call_protected: call gate not allowed when FRED is enabled"));
-        exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
+        exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
       }
 #endif
       // gate descriptor must be present else #NP(gate selector)
       if (! IS_PRESENT(gate_descriptor)) {
         BX_ERROR(("call_protected: call gate not present"));
-        exception(BX_NP_EXCEPTION, cs_raw & 0xfffc);
+        exception(BX_NP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
       }
 
       call_gate64(&gate_selector);
@@ -217,13 +217,13 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 
         if (gate_descriptor.valid==0 || gate_selector.ti) {
           BX_ERROR(("call_protected: call bad TSS selector !"));
-          exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
+          exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
         }
 
         // TSS must be present, else #NP(TSS selector)
         if (! IS_PRESENT(gate_descriptor)) {
           BX_ERROR(("call_protected: call not present TSS !"));
-          exception(BX_NP_EXCEPTION, cs_raw & 0xfffc);
+          exception(BX_NP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
         }
 
         // SWITCH_TASKS _without_ nesting to TSS
@@ -235,7 +235,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         // task gate must be present else #NP(gate selector)
         if (! IS_PRESENT(gate_descriptor)) {
           BX_ERROR(("call_protected: task gate not present"));
-          exception(BX_NP_EXCEPTION, cs_raw & 0xfffc);
+          exception(BX_NP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
         }
         task_gate(i, &gate_descriptor, BX_TASK_FROM_CALL);
         return;
@@ -245,14 +245,14 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         // gate descriptor must be present else #NP(gate selector)
         if (! IS_PRESENT(gate_descriptor)) {
           BX_ERROR(("call_protected: gate not present"));
-          exception(BX_NP_EXCEPTION, cs_raw & 0xfffc);
+          exception(BX_NP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
         }
         call_gate(&gate_descriptor);
         return;
 
       default: // can't get here
         BX_ERROR(("call_protected(): gate.type(%u) unsupported", (unsigned) gate_descriptor.type));
-        exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
+        exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
     }
   }
 }
@@ -278,13 +278,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
       IS_DATA_SEGMENT(cs_descriptor.type) || cs_descriptor.dpl > CPL)
   {
     BX_ERROR(("call_gate: selected descriptor is not code"));
-    exception(BX_GP_EXCEPTION, dest_selector & 0xfffc);
+    exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(dest_selector));
   }
 
   // code segment must be present else #NP(selector)
   if (! IS_PRESENT(cs_descriptor)) {
     BX_ERROR(("call_gate: code segment not present !"));
-    exception(BX_NP_EXCEPTION, dest_selector & 0xfffc);
+    exception(BX_NP_EXCEPTION, BX_SELECTOR_ERROR_CODE(dest_selector));
   }
 
   // CALL GATE TO MORE PRIVILEGE
@@ -305,7 +305,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
 
     // check selector & descriptor for new SS:
     // selector must not be null, else #TS(0)
-    if ((SS_for_cpl_x & 0xfffc) == 0) {
+    if (BX_IS_NULL_SELECTOR(SS_for_cpl_x)) {
       BX_ERROR(("call_gate: new SS null"));
       exception(BX_TS_EXCEPTION, 0);
     }
@@ -339,7 +339,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
     new_stack.cache = ss_descriptor;
     new_stack.selector.rpl = cs_descriptor.dpl;
     // add cpl to the selector value
-    new_stack.selector.value = (0xfffc & new_stack.selector.value) | new_stack.selector.rpl;
+    new_stack.selector.value = (BX_SELECTOR_RPL_MASK & new_stack.selector.value) | new_stack.selector.rpl;
 
     /* load new SS:SP value from TSS */
     if (ss_descriptor.u.segment.d_b) {
@@ -523,7 +523,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
       cs_descriptor.dpl > CPL)
   {
     BX_ERROR(("call_gate64: selected descriptor is not code"));
-    exception(BX_GP_EXCEPTION, dest_selector & 0xfffc);
+    exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(dest_selector));
   }
 
   // In long mode, only 64-bit call gates are allowed, and they must point
@@ -531,13 +531,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
   if (! IS_LONG64_SEGMENT(cs_descriptor) || cs_descriptor.u.segment.d_b)
   {
     BX_ERROR(("call_gate64: not 64-bit code segment in call gate 64"));
-    exception(BX_GP_EXCEPTION, dest_selector & 0xfffc);
+    exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(dest_selector));
   }
 
   // code segment must be present else #NP(selector)
   if (! IS_PRESENT(cs_descriptor)) {
     BX_ERROR(("call_gate64: code segment not present !"));
-    exception(BX_NP_EXCEPTION, dest_selector & 0xfffc);
+    exception(BX_NP_EXCEPTION, BX_SELECTOR_ERROR_CODE(dest_selector));
   }
 
   Bit64u old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;

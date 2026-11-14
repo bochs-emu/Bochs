@@ -64,7 +64,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
 
     if (link_selector.ti) {
       BX_ERROR(("iret: link selector.ti=1"));
-      exception(BX_TS_EXCEPTION, raw_link_selector & 0xfffc);
+      exception(BX_TS_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_link_selector));
     }
 
     // index must be within GDT limits, else #TS(new TSS selector)
@@ -75,19 +75,19 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     parse_descriptor(dword1, dword2, &tss_descriptor);
     if (tss_descriptor.valid==0 || tss_descriptor.segment) {
       BX_ERROR(("iret: TSS selector points to bad TSS"));
-      exception(BX_TS_EXCEPTION, raw_link_selector & 0xfffc);
+      exception(BX_TS_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_link_selector));
     }
     if (tss_descriptor.type != BX_SYS_SEGMENT_BUSY_286_TSS &&
         tss_descriptor.type != BX_SYS_SEGMENT_BUSY_386_TSS)
     {
       BX_ERROR(("iret: TSS selector points to bad TSS"));
-      exception(BX_TS_EXCEPTION, raw_link_selector & 0xfffc);
+      exception(BX_TS_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_link_selector));
     }
 
     // TSS must be present, else #NP(new TSS selector)
     if (! IS_PRESENT(tss_descriptor)) {
       BX_ERROR(("iret: task descriptor.p == 0"));
-      exception(BX_NP_EXCEPTION, raw_link_selector & 0xfffc);
+      exception(BX_NP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_link_selector));
     }
 
     // switch tasks (without nesting) to TSS specified by back link selector
@@ -147,7 +147,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
   // return CS selector RPL must be >= CPL, else #GP(return selector)
   if (cs_selector.rpl < CPL) {
     BX_ERROR(("iret: return selector RPL < CPL"));
-    exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc);
+    exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_cs_selector));
   }
 
   // check code-segment descriptor
@@ -220,7 +220,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     }
 
     /* selector must be non-null, else #GP(0) */
-    if ((raw_ss_selector & 0xfffc) == 0) {
+    if (BX_IS_NULL_SELECTOR(raw_ss_selector)) {
       BX_ERROR(("iret: SS selector null"));
       exception(BX_GP_EXCEPTION, 0);
     }
@@ -362,14 +362,14 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
   // return CS selector RPL must be >= CPL, else #GP(return selector)
   if (cs_selector.rpl < CPL) {
     BX_ERROR(("iret64: return selector RPL < CPL"));
-    exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc);
+    exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_cs_selector));
   }
 
 #if BX_SUPPORT_FRED
   if (BX_CPU_THIS_PTR cr4.get_FRED()) {
     if (cs_selector.rpl > CPL) {
       BX_ERROR(("iret64: ring transition is not allowed when FRED is enabled"));
-      exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc);
+      exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_cs_selector));
     }
   }
 #endif
@@ -463,7 +463,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
       }
     }
 
-    if ((raw_ss_selector & 0xfffc) == 0) {
+    if (BX_IS_NULL_SELECTOR(raw_ss_selector)) {
       // NULL SS is allowed only in 64-bit mode when returning to 64-bit mode with RPL != 3,
       // NULL SS selector RPL must be equal to the RPL of the return CS selector
       if (! long64_mode() || ! IS_LONG64_SEGMENT(cs_descriptor) || cs_selector.rpl == 3 ||
@@ -515,7 +515,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     // VM unaffected
     writeEFlags(new_eflags, changeMask);
 
-    if ((raw_ss_selector & 0xfffc) != 0) {
+    if (! BX_IS_NULL_SELECTOR(raw_ss_selector)) {
       // load SS:RSP from stack
       // load the SS-cache with SS descriptor
       load_ss(&ss_selector, &ss_descriptor, cs_selector.rpl);

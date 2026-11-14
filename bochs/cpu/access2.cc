@@ -1153,7 +1153,7 @@ accessOK:
   if (!write_virtual_checks(seg, offset, 2)) {
     BX_ERROR(("write_new_stack_word(): segment limit violation"));
     exception(BX_SS_EXCEPTION,
-         seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0);
+         seg->selector.rpl != CPL ? BX_SELECTOR_ERROR_CODE(seg->selector.value) : 0);
   }
   goto accessOK;
 }
@@ -1181,7 +1181,7 @@ accessOK:
   if (!write_virtual_checks(seg, offset, 4)) {
     BX_ERROR(("write_new_stack_dword(): segment limit violation"));
     exception(BX_SS_EXCEPTION,
-         seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0);
+         seg->selector.rpl != CPL ? BX_SELECTOR_ERROR_CODE(seg->selector.value) : 0);
   }
   goto accessOK;
 }
@@ -1209,7 +1209,7 @@ accessOK:
   if (!write_virtual_checks(seg, offset, 8)) {
     BX_ERROR(("write_new_stack_qword(): segment limit violation"));
     exception(BX_SS_EXCEPTION,
-        seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0);
+        seg->selector.rpl != CPL ? BX_SELECTOR_ERROR_CODE(seg->selector.value) : 0);
   }
   goto accessOK;
 }

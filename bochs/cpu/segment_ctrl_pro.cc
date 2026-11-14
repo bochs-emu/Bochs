@@ -43,7 +43,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 
       parse_selector(new_value, &ss_selector);
 
-      if ((new_value & 0xfffc) == 0) { /* null selector */
+      if (BX_IS_NULL_SELECTOR(new_value)) { /* null selector */
 #if BX_SUPPORT_X86_64
         // allow SS = 0 in 64 bit mode only with cpl != 3 and rpl=cpl
         if (long64_mode() && CPL != 3 && ss_selector.rpl == CPL) {
@@ -52,7 +52,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
         }
 #endif
         BX_ERROR(("load_seg_reg(SS): loading null selector"));
-        exception(BX_GP_EXCEPTION, new_value & 0xfffc);
+        exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(new_value));
       }
 
       fetch_raw_descriptor(&ss_selector, &dword1, &dword2, BX_GP_EXCEPTION);
@@ -60,14 +60,14 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       /* selector's RPL must = CPL, else #GP(selector) */
       if (ss_selector.rpl != CPL) {
         BX_ERROR(("load_seg_reg(SS): rpl != CPL"));
-        exception(BX_GP_EXCEPTION, new_value & 0xfffc);
+        exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(new_value));
       }
 
       parse_descriptor(dword1, dword2, &descriptor);
 
       if (descriptor.valid==0) {
         BX_ERROR(("load_seg_reg(SS): valid bit cleared"));
-        exception(BX_GP_EXCEPTION, new_value & 0xfffc);
+        exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(new_value));
       }
 
       /* AR byte must indicate a writable data segment else #GP(selector) */
@@ -75,19 +75,19 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
           IS_DATA_SEGMENT_WRITEABLE(descriptor.type) == 0)
       {
         BX_ERROR(("load_seg_reg(SS): not writable data segment"));
-        exception(BX_GP_EXCEPTION, new_value & 0xfffc);
+        exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(new_value));
       }
 
       /* DPL in the AR byte must equal CPL else #GP(selector) */
       if (descriptor.dpl != CPL) {
         BX_ERROR(("load_seg_reg(SS): dpl != CPL"));
-        exception(BX_GP_EXCEPTION, new_value & 0xfffc);
+        exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(new_value));
       }
 
       /* segment must be marked PRESENT else #SS(selector) */
       if (! IS_PRESENT(descriptor)) {
         BX_ERROR(("load_seg_reg(SS): not present"));
-        exception(BX_SS_EXCEPTION, new_value & 0xfffc);
+        exception(BX_SS_EXCEPTION, BX_SELECTOR_ERROR_CODE(new_value));
       }
 
       touch_segment(&ss_selector, &descriptor);
@@ -111,7 +111,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       bx_selector_t selector;
       Bit32u dword1, dword2;
 
-      if ((new_value & 0xfffc) == 0) { /* null selector */
+      if (BX_IS_NULL_SELECTOR(new_value)) { /* null selector */
         load_null_selector(seg, new_value);
         return;
       }
@@ -122,7 +122,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 
       if (descriptor.valid==0) {
         BX_ERROR(("load_seg_reg(%s, 0x%04x): invalid segment", strseg(seg), new_value));
-        exception(BX_GP_EXCEPTION, new_value & 0xfffc);
+        exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(new_value));
       }
 
       /* AR byte must indicate data or readable code segment else #GP(selector) */
@@ -130,7 +130,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
           IS_CODE_SEGMENT_READABLE(descriptor.type) == 0))
       {
         BX_ERROR(("load_seg_reg(%s, 0x%04x): not data or readable code", strseg(seg), new_value));
-        exception(BX_GP_EXCEPTION, new_value & 0xfffc);
+        exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(new_value));
       }
 
       /* If data or non-conforming code, then both the RPL and the CPL
@@ -140,14 +140,14 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       {
         if ((selector.rpl > descriptor.dpl) || (CPL > descriptor.dpl)) {
           BX_ERROR(("load_seg_reg(%s, 0x%04x): RPL & CPL must be <= DPL", strseg(seg), new_value));
-          exception(BX_GP_EXCEPTION, new_value & 0xfffc);
+          exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(new_value));
         }
       }
 
       /* segment must be marked PRESENT else #NP(selector) */
       if (! IS_PRESENT(descriptor)) {
         BX_ERROR(("load_seg_reg(%s, 0x%04x): segment not present", strseg(seg), new_value));
-        exception(BX_NP_EXCEPTION, new_value & 0xfffc);
+        exception(BX_NP_EXCEPTION, BX_SELECTOR_ERROR_CODE(new_value));
       }
 
       touch_segment(&selector, &descriptor);
@@ -217,7 +217,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
   void BX_CPP_AttrRegparmN(2)
 BX_CPU_C::load_null_selector(bx_segment_reg_t *seg, unsigned value)
 {
-  BX_ASSERT((value & 0xfffc) == 0);
+  BX_ASSERT(BX_IS_NULL_SELECTOR(value));
 
   seg->selector.index = 0;
   seg->selector.ti    = 0;
@@ -584,7 +584,7 @@ BX_CPU_C::load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
   // Add cpl to the selector value.
   selector->value = (BX_SELECTOR_RPL_MASK & selector->value) | cpl;
 
-  if ((selector->value & BX_SELECTOR_RPL_MASK) != 0)
+  if (! BX_IS_NULL_SELECTOR(selector->value))
     touch_segment(selector, descriptor);
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector = *selector;
@@ -605,19 +605,19 @@ void BX_CPU_C::fetch_raw_descriptor(const bx_selector_t *selector,
     if ((index*8 + 7) > BX_CPU_THIS_PTR gdtr.limit) {
       BX_ERROR(("fetch_raw_descriptor: GDT: index (%x) %x > limit (%x)",
          index*8 + 7, index, BX_CPU_THIS_PTR gdtr.limit));
-      exception(exception_no, selector->value & 0xfffc);
+      exception(exception_no, BX_SELECTOR_ERROR_CODE(selector->value));
     }
     offset = BX_CPU_THIS_PTR gdtr.base + index*8;
   }
   else { /* LDT */
     if (BX_CPU_THIS_PTR ldtr.cache.valid==0) {
       BX_ERROR(("fetch_raw_descriptor: LDTR.valid=0"));
-      exception(exception_no, selector->value & 0xfffc);
+      exception(exception_no, BX_SELECTOR_ERROR_CODE(selector->value));
     }
     if ((index*8 + 7) > BX_CPU_THIS_PTR ldtr.cache.u.segment.limit_scaled) {
       BX_ERROR(("fetch_raw_descriptor: LDT: index (%x) %x > limit (%x)",
          index*8 + 7, index, BX_CPU_THIS_PTR ldtr.cache.u.segment.limit_scaled));
-      exception(exception_no, selector->value & 0xfffc);
+      exception(exception_no, BX_SELECTOR_ERROR_CODE(selector->value));
     }
     offset = BX_CPU_THIS_PTR ldtr.cache.u.segment.base + index*8;
   }
@@ -668,19 +668,19 @@ void BX_CPU_C::fetch_raw_descriptor_64(const bx_selector_t *selector,
     if ((index*8 + 15) > BX_CPU_THIS_PTR gdtr.limit) {
       BX_ERROR(("fetch_raw_descriptor64: GDT: index (%x) %x > limit (%x)",
          index*8 + 15, index, BX_CPU_THIS_PTR gdtr.limit));
-      exception(exception_no, selector->value & 0xfffc);
+      exception(exception_no, BX_SELECTOR_ERROR_CODE(selector->value));
     }
     offset = BX_CPU_THIS_PTR gdtr.base + index*8;
   }
   else { /* LDT */
     if (BX_CPU_THIS_PTR ldtr.cache.valid==0) {
       BX_ERROR(("fetch_raw_descriptor64: LDTR.valid=0"));
-      exception(exception_no, selector->value & 0xfffc);
+      exception(exception_no, BX_SELECTOR_ERROR_CODE(selector->value));
     }
     if ((index*8 + 15) > BX_CPU_THIS_PTR ldtr.cache.u.segment.limit_scaled) {
       BX_ERROR(("fetch_raw_descriptor64: LDT: index (%x) %x > limit (%x)",
          index*8 + 15, index, BX_CPU_THIS_PTR ldtr.cache.u.segment.limit_scaled));
-      exception(exception_no, selector->value & 0xfffc);
+      exception(exception_no, BX_SELECTOR_ERROR_CODE(selector->value));
     }
     offset = BX_CPU_THIS_PTR ldtr.cache.u.segment.base + index*8;
   }
@@ -690,7 +690,7 @@ void BX_CPU_C::fetch_raw_descriptor_64(const bx_selector_t *selector,
 
   if (raw_descriptor2 & BX_CONST64(0x00001F0000000000)) {
     BX_ERROR(("fetch_raw_descriptor64: extended attributes DWORD4 TYPE != 0"));
-    exception(BX_GP_EXCEPTION, selector->value & 0xfffc);
+    exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(selector->value));
   }
 
   *dword1 = GET32L(raw_descriptor1);
@@ -751,7 +751,7 @@ void BX_CPU_C::fetch_ss_descriptor(Bit16u raw_ss_selector, const bx_selector_t *
    * else #GP(selector) */
   if (ss_selector->rpl != cs_rpl) {
     BX_ERROR(("fetch_ss_descriptor: SS.rpl != CS.rpl"));
-    exception(exception_no, raw_ss_selector & 0xfffc);
+    exception(exception_no, BX_SELECTOR_ERROR_CODE(raw_ss_selector));
   }
 
   /* descriptor AR byte must indicate a writable data segment,
@@ -761,20 +761,20 @@ void BX_CPU_C::fetch_ss_descriptor(Bit16u raw_ss_selector, const bx_selector_t *
       !IS_DATA_SEGMENT_WRITEABLE(ss_descriptor->type))
   {
     BX_ERROR(("fetch_ss_descriptor: SS.AR byte not writable data"));
-    exception(exception_no, raw_ss_selector & 0xfffc);
+    exception(exception_no, BX_SELECTOR_ERROR_CODE(raw_ss_selector));
   }
 
   /* descriptor dpl must = RPL of the return CS selector,
    * else #GP(selector) */
   if (ss_descriptor->dpl != cs_rpl) {
     BX_ERROR(("fetch_ss_descriptor: SS.dpl != CS.rpl"));
-    exception(exception_no, raw_ss_selector & 0xfffc);
+    exception(exception_no, BX_SELECTOR_ERROR_CODE(raw_ss_selector));
   }
 
   /* segment must be present else #SS(selector) */
   if (! ss_descriptor->p) {
     BX_ERROR(("fetch_ss_descriptor: SS not present"));
-    exception(BX_SS_EXCEPTION, raw_ss_selector & 0xfffc);
+    exception(BX_SS_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_ss_selector));
   }
 }
 

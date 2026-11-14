@@ -36,7 +36,7 @@ void BX_CPU_C::fetch_cs_descriptor(Bit16u raw_selector, bx_selector_t *selector,
   Bit32u dword1, dword2;
 
   // selector must be non-null else #GP(0)
-  if ((raw_selector & 0xfffc) == 0) {
+  if (BX_IS_NULL_SELECTOR(raw_selector)) {
     BX_ERROR(("fetch_cs_descriptor: CS selector null"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -57,14 +57,14 @@ void BX_CPU_C::check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_
           IS_DATA_SEGMENT(descriptor->type))
   {
     BX_ERROR(("check_cs(0x%04x): not a valid code segment !", cs_raw));
-    exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
+    exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
   }
 
 #if BX_SUPPORT_X86_64
   if (long_mode()) {
     if (descriptor->u.segment.l && descriptor->u.segment.d_b) {
       BX_ERROR(("check_cs(0x%04x): Both CS.L and CS.D_B bits enabled !", cs_raw));
-      exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
+      exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
     }
 
 #if BX_SUPPORT_FRED
@@ -72,7 +72,7 @@ void BX_CPU_C::check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_
       // cannot enter compatibility mode with CPL=0 (conforming DPL=0 code segment can be entered from CPL=3)
       if (check_cpl == 0 && !descriptor->u.segment.l) {
         BX_ERROR(("check_cs(0x%04x): attempt to enter compatibility mode with CPL=0 under FRED enabled", cs_raw));
-        exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
+        exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
       }
     }
 #endif
@@ -84,14 +84,14 @@ void BX_CPU_C::check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_
     if (descriptor->dpl != check_cpl) {
       BX_ERROR(("check_cs(0x%04x): non-conforming code seg descriptor dpl != cpl, dpl=%d, cpl=%d",
          cs_raw, descriptor->dpl, check_cpl));
-      exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
+      exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
     }
 
     /* RPL of destination selector must be <= CPL else #GP(selector) */
     if (check_rpl > check_cpl) {
       BX_ERROR(("check_cs(0x%04x): non-conforming code seg selector rpl > cpl, rpl=%d, cpl=%d",
          cs_raw, check_rpl, check_cpl));
-      exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
+      exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
     }
   }
   // if conforming, then code segment descriptor DPL must <= CPL else #GP(selector)
@@ -99,14 +99,14 @@ void BX_CPU_C::check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_
     if (descriptor->dpl > check_cpl) {
       BX_ERROR(("check_cs(0x%04x): conforming code seg descriptor dpl > cpl, dpl=%d, cpl=%d",
          cs_raw, descriptor->dpl, check_cpl));
-      exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
+      exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
     }
   }
 
   // code segment must be present else #NP(selector)
   if (! descriptor->p) {
     BX_ERROR(("check_cs(0x%04x): code segment not present !", cs_raw));
-    exception(BX_NP_EXCEPTION, cs_raw & 0xfffc);
+    exception(BX_NP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
   }
 }
 
@@ -118,7 +118,7 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
 #endif
 
   // Add cpl to the selector value.
-  selector->value = (0xfffc & selector->value) | cpl;
+  selector->value = (BX_SELECTOR_RPL_MASK & selector->value) | cpl;
 
   touch_segment(selector, descriptor);
 
