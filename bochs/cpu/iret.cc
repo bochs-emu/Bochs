@@ -26,6 +26,31 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+// EFLAGS bits that protected mode IRET may change, must be called before CPL is changed:
+//   IF only changed if (CPL <= EFLAGS.IOPL)
+//   VIF, VIP, IOPL only changed if CPL == 0
+//   VM is unaffected (return to v8086 mode is handled separately)
+//   16-bit operand size changes only bits 15:0
+  Bit32u BX_CPP_AttrRegparmN(1)
+BX_CPU_C::get_iret_eflags_write_mask(bxInstruction_c *i)
+{
+  // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
+  Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask |
+                          EFlagsDFMask | EFlagsNTMask | EFlagsRFMask;
+#if BX_CPU_LEVEL >= 4
+  changeMask |= (EFlagsIDMask | EFlagsACMask);  // ID/AC
+#endif
+  if (CPL <= BX_CPU_THIS_PTR get_IOPL())
+    changeMask |= EFlagsIFMask;
+  if (CPL == 0)
+    changeMask |= EFlagsVIPMask | EFlagsVIFMask | EFlagsIOPLMask;
+
+  if (! i->os32L()) // 16 bit
+    changeMask &= 0xffff;
+
+  return changeMask;
+}
+
   void BX_CPP_AttrRegparmN(1)
 BX_CPU_C::iret_protected(bxInstruction_c *i)
 {
@@ -170,27 +195,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
 
     /* top 6/12 bytes on stack must be within limits, else #SS(0) */
     /* satisfied above */
-    if (i->os32L()) {
-      // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
-      Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask |
-                              EFlagsDFMask | EFlagsNTMask | EFlagsRFMask;
-#if BX_CPU_LEVEL >= 4
-      changeMask |= (EFlagsIDMask | EFlagsACMask);  // ID/AC
-#endif
-      if (CPL <= BX_CPU_THIS_PTR get_IOPL())
-        changeMask |= EFlagsIFMask;
-      if (CPL == 0)
-        changeMask |= EFlagsVIPMask | EFlagsVIFMask | EFlagsIOPLMask;
-
-      // IF only changed if (CPL <= EFLAGS.IOPL)
-      // VIF, VIP, IOPL only changed if CPL == 0
-      // VM unaffected
-      writeEFlags(new_eflags, changeMask);
-    }
-    else {
-      /* load flags with third word on stack */
-      write_flags((Bit16u) new_eflags, CPL==0, CPL<=BX_CPU_THIS_PTR get_IOPL());
-    }
+    writeEFlags(new_eflags, get_iret_eflags_write_mask(i));
 
     /* increment stack by 6/12 */
     if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
@@ -236,19 +241,8 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       new_esp = stack_read_word(temp_ESP + 6);
     }
 
-    // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
-    Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask |
-                            EFlagsDFMask | EFlagsNTMask | EFlagsRFMask;
-#if BX_CPU_LEVEL >= 4
-    changeMask |= (EFlagsIDMask | EFlagsACMask);  // ID/AC
-#endif
-    if (CPL <= BX_CPU_THIS_PTR get_IOPL())
-      changeMask |= EFlagsIFMask;
-    if (CPL == 0)
-      changeMask |= EFlagsVIPMask | EFlagsVIFMask | EFlagsIOPLMask;
-
-    if (! i->os32L()) // 16 bit
-      changeMask &= 0xffff;
+    // computed with the previous CPL
+    Bit32u changeMask = get_iret_eflags_write_mask(i);
 
 #if BX_SUPPORT_CET
     unsigned prev_cpl = CPL;
@@ -409,21 +403,10 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     }
 #endif
 
-    // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
-    Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask | EFlagsDFMask |
-                            EFlagsNTMask | EFlagsRFMask | EFlagsIDMask | EFlagsACMask;
-    if (CPL <= BX_CPU_THIS_PTR get_IOPL())
-      changeMask |= EFlagsIFMask;
-    if (CPL == 0)
-      changeMask |= EFlagsVIPMask | EFlagsVIFMask | EFlagsIOPLMask;
-
-    if (! i->os32L()) // 16 bit
-      changeMask &= 0xffff;
-
     // IF only changed if (CPL <= EFLAGS.IOPL)
     // VIF, VIP, IOPL only changed if CPL == 0
     // VM unaffected
-    writeEFlags(new_eflags, changeMask);
+    writeEFlags(new_eflags, get_iret_eflags_write_mask(i));
 
     /* we are NOT in 64-bit mode */
     if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
@@ -480,16 +463,8 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
 
     Bit8u prev_cpl = CPL; /* previous CPL */
 
-    // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
-    Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask | EFlagsDFMask |
-                            EFlagsNTMask | EFlagsRFMask | EFlagsIDMask | EFlagsACMask;
-    if (prev_cpl <= BX_CPU_THIS_PTR get_IOPL())
-      changeMask |= EFlagsIFMask;
-    if (prev_cpl == 0)
-      changeMask |= EFlagsVIPMask | EFlagsVIFMask | EFlagsIOPLMask;
-
-    if (! i->os32L()) // 16 bit
-      changeMask &= 0xffff;
+    // computed with the previous CPL
+    Bit32u changeMask = get_iret_eflags_write_mask(i);
 
 #if BX_SUPPORT_CET
     bool same_privilege = (cs_selector.rpl == CPL);
