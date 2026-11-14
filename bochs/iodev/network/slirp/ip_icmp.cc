@@ -331,7 +331,7 @@ void icmp_forward_error(struct mbuf *msrc, uint8_t type, uint8_t code, int minsi
     if (!msrc)
         goto end_error;
     ip = mtod(msrc, struct ip *);
-    if (slirp_debug & DBG_MISC) {
+    if (slirp_debug & SLIRP_DBG_MISC) {
         char addr_src[INET_ADDRSTRLEN];
         char addr_dst[INET_ADDRSTRLEN];
 
