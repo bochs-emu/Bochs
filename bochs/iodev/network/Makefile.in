@@ -389,8 +389,8 @@ slirp/udp.o: slirp/udp.@CPP_SUFFIX@ slirp/slirp.h ../../config.h slirp/compat.h 
  slirp/socket.h slirp/misc.h slirp/sbuf.h slirp/ip_icmp.h \
  slirp/ip6_icmp.h slirp/mbuf.h slirp/if.h slirp/main.h slirp/bootp.h \
  slirp/tftp.h
-slirp/util.o: slirp/util.@CPP_SUFFIX@ ../../config.h slirp/util.h slirp/libslirp.h \
- slirp/compat.h
+slirp/util.o: slirp/util.@CPP_SUFFIX@ ../../config.h slirp/winver.h slirp/util.h \
+ slirp/libslirp.h slirp/compat.h slirp/debug.h
 e1000.lo: e1000.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../logio.h ../../misc/bswap.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h ../../memory/memory-bochs.h ../../gui/siminterface.h \
@@ -598,5 +598,5 @@ slirp/udp.lo: slirp/udp.@CPP_SUFFIX@ slirp/slirp.h ../../config.h slirp/compat.h
  slirp/socket.h slirp/misc.h slirp/sbuf.h slirp/ip_icmp.h \
  slirp/ip6_icmp.h slirp/mbuf.h slirp/if.h slirp/main.h slirp/bootp.h \
  slirp/tftp.h
-slirp/util.lo: slirp/util.@CPP_SUFFIX@ ../../config.h slirp/util.h slirp/libslirp.h \
- slirp/compat.h
+slirp/util.lo: slirp/util.@CPP_SUFFIX@ ../../config.h slirp/winver.h slirp/util.h \
+ slirp/libslirp.h slirp/compat.h slirp/debug.h

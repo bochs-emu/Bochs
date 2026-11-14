@@ -2,7 +2,7 @@
 #ifndef SLIRP_H
 #define SLIRP_H
 
-#define SLIRP_VERSION_STRING "4.8.0"
+#define SLIRP_VERSION_STRING "4.9.0"
 
 #ifdef __CYGWIN__
 #define __USE_W32_SOCKETS
@@ -16,23 +16,8 @@
 #endif
 
 #ifdef _WIN32
-/* TARGET_WINVER defined on the compiler command line? */
-#if defined(TARGET_WINVER) && !defined(WINVER)
-#  define WINVER TARGET_WINVER
-/* Default WINVER to Windows 7 API, same as glib. */
-#elif !defined(WINVER)
-#  define WINVER 0x0601
-#endif
 
-/* Ensure that _WIN32_WINNT matches WINVER */
-#ifdef _WIN32_WINNT
-#if _WIN32_WINNT < WINVER
-#undef _WIN32_WINNT
-#endif
-#endif
-#if defined(WINVER) && !defined(_WIN32_WINNT)
-#define _WIN32_WINNT WINVER
-#endif
+#include "winver.h"
 
 /* reduces the number of implicitly included headers */
 #ifndef WIN32_LEAN_AND_MEAN

@@ -35,6 +35,11 @@
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP
 
+/* slirp.h is not included here. However, if TARGET_WINVER is set,
+ * ensure that WINVER and _WIN32_WINNT are also properly set.
+ */
+#include "winver.h"
+
 #include <fcntl.h>
 #include <stdint.h>
 #include <stdarg.h>
@@ -51,20 +56,75 @@
 int slirp_inet_aton(const char *cp, struct in_addr *ia)
 {
     uint32_t addr;
+    int valid_addr;
 
-#if defined(_MSC_VER)
-    if (!inet_pton(AF_INET, cp, &addr)) {
-        return 0;
-    }
-#else 
+#if WINVER >= 0x0601
+    valid_addr = inet_pton(AF_INET, cp, &addr) > 0;
+#else
     addr = inet_addr(cp);
+    valid_addr = (addr != 0xffffffff);
 #endif
-    if (addr == 0xffffffff) {
-        return 0;
+
+    if (valid_addr) {
+        ia->s_addr = addr;
+        return 1;
     }
-    ia->s_addr = addr;
-    return 1;
+
+    /* Invalid address. */
+    return 0;
 }
+
+#if WINVER < 0x0601
+/* Something older than Windows 7 and TARGET_WINVER obviously was set. There
+ * are more than a few calls to inet_pton() and inet_ntop(), so provide suitable
+ * stubs with renames. */
+
+int slirp_inet_pton(int af, const char *src, void *dst)
+{
+  struct sockaddr_storage ss;
+  int size = (int) sizeof(ss);
+  char src_copy[INET6_ADDRSTRLEN + 1];
+
+  ZeroMemory(&ss, sizeof(ss));
+  strncpy (src_copy, src, INET6_ADDRSTRLEN);
+  src_copy[INET6_ADDRSTRLEN] = '\0';
+
+  if (WSAStringToAddress(src_copy, af, NULL, (struct sockaddr *)&ss, &size) == 0) {
+    switch(af) {
+      case AF_INET:
+        *((struct in_addr *) dst) = ((const struct sockaddr_in *) &ss)->sin_addr;
+        return 1;
+      case AF_INET6:
+        *((struct in6_addr *) dst) = ((const struct sockaddr_in6 *) &ss)->sin6_addr;
+        return 1;
+    }
+  }
+
+  return 0;
+}
+
+const char *slirp_inet_ntop(int af, const void *src, char *dst, socklen_t size)
+{
+  struct sockaddr_storage ss;
+  DWORD s = (DWORD) size;
+
+  ZeroMemory(&ss, sizeof(ss));
+  ss.ss_family = af;
+
+  switch(af) {
+    case AF_INET:
+      ((struct sockaddr_in *) &ss)->sin_addr = *((const struct in_addr *) src);
+      break;
+    case AF_INET6:
+      ((struct sockaddr_in6 *) &ss)->sin6_addr = *((const struct in6_addr *) src);
+      break;
+    default:
+      return NULL;
+  }
+
+  return (WSAAddressToString((struct sockaddr *)&ss, sizeof(ss), NULL, dst, &s) == 0) ? dst : NULL;
+}
+#endif
 #endif
 
 
