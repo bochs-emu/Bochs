@@ -969,8 +969,8 @@ void GetWindowPostitionForNext(HWND Wnd, const char *name)
 
       // check to make sure we don't move clear off the right/bottom of screen
       //  (this can happen if the user changes the Host screen size to a smaller size)
-      if ((int) Left > (desktop_x - 25)) Left = (desktop_x - 25);
-      if ((int) Top > (desktop_y - 25)) Top = (desktop_y - 25);
+      if (Left > (desktop_x - 25)) Left = (desktop_x - 25);
+      if (Top > (desktop_y - 25)) Top = (desktop_y - 25);
 
       sprintf(SubKey, "%sLeft", name);
       RegSetValueEx(hKey, SubKey, 0, REG_DWORD, (const BYTE *) &Left, sizeof(DWORD));
