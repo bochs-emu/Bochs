@@ -940,10 +940,6 @@ void SetWindowPositionFromLast(const char *name, int *ipLeft, int *ipTop) {
   sprintf(SubKey, "%sTop", name);
   LONG resTop = RegGetValue(HKEY_CURRENT_USER, szRegLocation, SubKey, RRF_RT_DWORD, NULL, &Top, &TopSize);
   if ((resLeft == ERROR_SUCCESS) && (resTop == ERROR_SUCCESS)) {
-    // check to make sure we don't move clear off the screen
-    //  (this can happen if the user changes the Host screen size to a smaller size)
-    if (Left > (desktop_x - 25)) Left = (desktop_x - 25);
-    if (Top > (desktop_y - 25)) Top = (desktop_y - 25);
     // send the new values
     if (ipLeft) *ipLeft = (int) Left;
     if (ipTop) *ipTop = (int) Top;
