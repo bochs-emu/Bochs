@@ -368,6 +368,16 @@ void tcp_sockclosed(struct tcpcb *tp)
     case TCPS_CLOSE_WAIT:
         tp->t_state = TCPS_LAST_ACK;
         break;
+    case TCPS_FIN_WAIT_2:
+        /*
+         * If we can't receive any more
+         * data, then closing user can proceed.
+         * Starting the timer is contrary to the
+         * specification, but if we don't get a FIN
+         * we'll hang forever.
+         */
+        tp->t_timer[TCPT_2MSL] = TCP_LINGERTIME;
+        break;
     }
     tcp_output(tp);
 }

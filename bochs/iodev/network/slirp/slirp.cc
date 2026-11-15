@@ -290,9 +290,12 @@ static int get_dns_addr_libresolv(int af, void *pdns_addr, void *cached_addr,
     found = 0;
     DEBUG_MISC("IP address of your DNS(s):");
     for (int i = 0; i < count; i++) {
-        if (af == servers[i].sin.sin_family) {
-            found++;
+        if (af != servers[i].sin.sin_family) {
+            continue;
         }
+
+        found++;
+
         if (af == AF_INET) {
             addr = &servers[i].sin.sin_addr;
         } else { // af == AF_INET6
