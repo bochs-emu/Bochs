@@ -572,6 +572,7 @@ void icmp6_input(struct mbuf *m)
     case ICMP6_ECHO_REQUEST:
         if (in6_equal_host(&ip->ip_dst)) {
             icmp6_send_echoreply(m, slirp, ip, icmp);
+            m_free(m);
         } else if (slirp->restricted) {
             goto freeit;
         } else {

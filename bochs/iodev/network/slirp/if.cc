@@ -113,11 +113,14 @@ diddit:
          */
         if (on_fastq &&
             ((so->so_nqueued >= 6) && (so->so_nqueued - so->so_queued) >= 3)) {
+            struct mbuf *head = ifm;
+            while (head->m_prevpkt != head && head->m_prevpkt != ifm)
+                head = head->m_prevpkt;
             /* Remove from current queue... */
-            slirp_remque(ifm->m_nextpkt);
+            slirp_remque(head);
 
             /* ...And insert in the new.  That'll teach ya! */
-            slirp_insque(ifm->m_nextpkt, &slirp->if_batchq);
+            slirp_insque(head, &slirp->if_batchq);
         }
     }
 

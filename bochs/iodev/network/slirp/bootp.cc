@@ -68,7 +68,7 @@ static BOOTPClient *get_new_addr(Slirp *slirp, struct in_addr *paddr,
  found:
     bc = &slirp->bootp_clients[i];
     bc->allocated = 1;
-    paddr->s_addr = slirp->vdhcp_startaddr.s_addr + htonl(i);
+    paddr->s_addr = htonl(ntohl(slirp->vdhcp_startaddr.s_addr) + i);
     return bc;
 }
 

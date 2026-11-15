@@ -45,8 +45,11 @@ void arp_table_add(Slirp *slirp, uint32_t ip_addr,
     DEBUG_ARG("hw addr = %s", slirp_ether_ntoa(ethaddr, ethaddr_str,
                                                sizeof(ethaddr_str)));
 
-    if (ip_addr == 0 || ip_addr == 0xffffffff || ip_addr == broadcast_addr) {
-        /* Do not register broadcast addresses */
+    if (ip_addr == 0 || ip_addr == 0xffffffff || ip_addr == broadcast_addr
+        || IN_MULTICAST(ntohl(ip_addr))
+        || ip_addr == slirp->vhost_addr.s_addr
+        || ip_addr == slirp->vnameserver_addr.s_addr) {
+        /* Do not register broadcast, multicast, or our addresses */
         return;
     }
 

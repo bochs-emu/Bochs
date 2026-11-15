@@ -559,7 +559,10 @@ void icmp_forward_error(struct mbuf *msrc, uint8_t type, uint8_t code, int minsi
     else if(s_ip_len>ICMP_MAXDATALEN)         /* maximum size */
         s_ip_len=ICMP_MAXDATALEN;
 
-    m->m_len=ICMP_MINLEN+s_ip_len;        /* 8 bytes ICMP header */
+    if (s_ip_len > (unsigned)msrc->m_len)
+        s_ip_len = msrc->m_len;
+
+    m->m_len = ICMP_MINLEN + s_ip_len; /* 8 bytes ICMP header */
 
     /* min. size = 8+sizeof(struct ip)+8 */
 
