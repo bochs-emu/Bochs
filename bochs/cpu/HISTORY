@@ -202,20 +202,21 @@ Changes after Bochs 3.1:
 - URDMSR/UWRMSR: missing #GP(0) if MSR address bits [63:14] are not all zero
 + VMX: fix VM-exit info for URDMSR, UWRMSR and immediate RDMSR/WRMSRNS + save VM-exit instruction information (bits 6:3 = data register operand)
 + VMX: exit reason 85 is the WRMSRNS immediate form only, legacy WRMSRNS exits with WRMSR basic reason (32) and qualification 1
+- FRED: faulting LKGS left GS segment base and MSR_KERNEL_GS_BASE swapped
 + FRED: FRED event delivery saves CS augmented with CSL and IBT state (bits 18:16) on the shadow stack. shadow_stack_restore() truncated the expected CS to 16 bits, so ERETS raised #CP whenever CSL!=0 or the IBT bit was set.
 + FRED: FRED event delivery from CPL3 didn't save the user SSP into IA32_PL3_SSP, so ERETU restored a stale user shadow stack pointer
 + FRED: ERETU compared IA32_PL0_SSP against the new user SSP instead of the current SSP, could lead to false #CP
-- FRED: faulting LKGS left GS segment base and MSR_KERNEL_GS_BASE swapped
 + FRED: ERETU to standard compatibility mode configuration checked new RIP against uninitialized CS descriptor limit
 - FRED: ERETU compared and loaded CS/SS selectors using 15 bits only instead of full 16-bit selector
 - FRED: #DB event data was missing BD bit (bit 13, debug register access detected)
 - FRED: event information instruction length must be reported only for INTn, INT1, INT3/INTO, SYSCALL and SYSENTER (can be others for VMX event injection)
-- FRED: STI blocking bit (bit 16 of augmented SS) was never saved, must be set only for hardware exceptions delivered while interrupts are blocked by STI
 - FRED: the restriction to enter compatibility mode with CPL=0 was checking target DPL instead of CPL (conforming DPL=0 code segment can be entered from CPL=3)
 - FRED: IBT tracker bit 18 of augmented CS must be set only for events occurring with CPL=0
+- FRED: STI blocking bit (bit 16 of augmented SS) was never saved, must be set only for hardware exceptions delivered while interrupts are blocked by STI
 - FRED: ERETS must establish STI blocking only if STI blocking was not in effect prior to ERETS (was not implemented during FRED implementation and left as TODO)
 - FRED: ERETU must not check new RIP for canonicality when returning to compatibility mode (bits 63:32 of RIP are cleared instead)
 + FRED: exception encountered during delivery of external interrupt, NMI, INTn, SYSCALL or SYSENTER was not reported as nested (NST), so it used wrong stack level (also VMX nested exception bit 13)
++ FRED: event delivery cleared RFLAGS.IF without updating the interrupt mask, so an external interrupt could be delivered with IF=0 (random Linux boot hang with FRED enabled)
 + VMX/FRED: VM exit with "save FRED" control saved guest IA32_FRED_RSP1-3/SSP1-3 into wrong VMCS fields (shifted by one, RSP3 overwrote STACK_LEVELS field)
 - VMX/FRED: VM entry must fail if host CR4.FRED is set while "host address-space size" VM-exit control is 0 (was causing BX_PANIC on VM exit)
 - VMX/FRED: VM entry must check that host and guest IA32_FRED_CONFIG fields are canonical

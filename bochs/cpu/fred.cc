@@ -183,8 +183,7 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
 
   // update registers defining context
   RIP = new_RIP;
-  BX_CPU_THIS_PTR eflags = 0x2; // Clear EFLAGS, bit1 is always set
-  clearEFlagsOSZAPC();	        // update lazy flags state
+  setEFlags(0x2);               // clear EFLAGS (bit1 is always set); also updates the interrupt mask
   RSP = new_RSP - 64;
   set_CSL(new_CSL);
 
