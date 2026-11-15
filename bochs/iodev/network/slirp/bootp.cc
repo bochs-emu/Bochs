@@ -68,7 +68,7 @@ static BOOTPClient *get_new_addr(Slirp *slirp, struct in_addr *paddr,
  found:
     bc = &slirp->bootp_clients[i];
     bc->allocated = 1;
-    paddr->s_addr = slirp->vdhcp_startaddr.s_addr + htonl(i);
+    paddr->s_addr = htonl(ntohl(slirp->vdhcp_startaddr.s_addr) + i);
     return bc;
 }
 
@@ -473,7 +473,8 @@ static void bootp_reply(Slirp *slirp,
            we assume that, if the bootfile parameter was configured as an http
            URL, the user intends to perform UEFI HTTP boot, so send this option
            automatically */
-        if (slirp->bootp_filename && !strncmp(slirp->bootp_filename, "http://", 7)) {
+        if (slirp->bootp_filename && (!strncmp(slirp->bootp_filename, "http://", 7) ||
+                                      !strncmp(slirp->bootp_filename, "https://", 8))) {
             val = strlen(UEFI_HTTP_VENDOR_CLASS_ID);
             if (q + val + 2 >= end) {
                 slirplog_error("DHCP packet size exceeded, omitting vendor class id option.");

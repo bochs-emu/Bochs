@@ -88,6 +88,8 @@ unsigned curtime;
 
 static struct in_addr dns_addr;
 static struct in6_addr dns6_addr;
+static uint16_t dns_port;
+static uint16_t dns6_port;
 static uint32_t dns6_scope_id;
 static unsigned dns_addr_time;
 static unsigned dns6_addr_time;
@@ -99,7 +101,7 @@ static unsigned dns6_addr_time;
 
 #if defined(_WIN32)
 
-int get_dns_addr(struct in_addr *pdns_addr)
+int get_dns_addr(struct in_addr *pdns_addr, uint16_t *pdns_port)
 {
     FIXED_INFO *FixedInfo = NULL;
     ULONG BufLen;
@@ -135,6 +137,7 @@ int get_dns_addr(struct in_addr *pdns_addr)
     pIPAddr = &(FixedInfo->DnsServerList);
     inet_aton(pIPAddr->IpAddress.String, &tmp_addr);
     *pdns_addr = tmp_addr;
+    *pdns_port = dns_port = htons(53); // TODO: honor custom port
     dns_addr = tmp_addr;
     dns_addr_time = curtime;
     if (FixedInfo) {
@@ -231,16 +234,19 @@ failure:
     return -1;
 }
 
-int get_dns6_addr(struct in6_addr *pdns6_addr, uint32_t *scope_id)
+int get_dns6_addr(struct in6_addr *pdns6_addr, uint16_t *pdns6_port,
+                  uint32_t *scope_id)
 {
     if (!in6_zero(&dns6_addr) && (curtime - dns6_addr_time) < TIMEOUT_DEFAULT) {
         *pdns6_addr = dns6_addr;
+        *pdns6_port = dns6_port;
         *scope_id = dns6_scope_id;
         return 0;
     }
 
     if (get_ipv6_dns_server(pdns6_addr, scope_id) == 0) {
         dns6_addr = *pdns6_addr;
+        *pdns6_port = dns6_port = htons(53); // TODO: honor custom port
         dns6_addr_time = curtime;
         dns6_scope_id = *scope_id;
         return 0;
@@ -259,10 +265,13 @@ static void CDECL winsock_cleanup(void)
 #include <resolv.h>
 
 static int get_dns_addr_cached(void *pdns_addr, void *cached_addr,
-                               socklen_t addrlen, unsigned *cached_time)
+                               socklen_t addrlen,
+                               uint16_t *pdns_port, uint16_t cached_port,
+                               unsigned *cached_time)
 {
     if (curtime - *cached_time < TIMEOUT_DEFAULT) {
         memcpy(pdns_addr, cached_addr, addrlen);
+        *pdns_port = cached_port;
         return 0;
     }
     return 1;
@@ -270,6 +279,7 @@ static int get_dns_addr_cached(void *pdns_addr, void *cached_addr,
 
 static int get_dns_addr_libresolv(int af, void *pdns_addr, void *cached_addr,
                                   socklen_t addrlen,
+                                  uint16_t *pdns_port, uint16_t *cached_port,
                                   uint32_t *scope_id, uint32_t *cached_scope_id,
                                   unsigned *cached_time)
 {
@@ -278,6 +288,7 @@ static int get_dns_addr_libresolv(int af, void *pdns_addr, void *cached_addr,
     int count;
     int found;
     void *addr;
+    uint16_t port;
 
     // we only support IPv4 and IPv4, we assume it's one or the other
     assert(af == AF_INET || af == AF_INET6);
@@ -290,19 +301,25 @@ static int get_dns_addr_libresolv(int af, void *pdns_addr, void *cached_addr,
     found = 0;
     DEBUG_MISC("IP address of your DNS(s):");
     for (int i = 0; i < count; i++) {
-        if (af == servers[i].sin.sin_family) {
-            found++;
+        if (af != servers[i].sin.sin_family) {
+            continue;
         }
+
+        found++;
+
         if (af == AF_INET) {
             addr = &servers[i].sin.sin_addr;
+            port = servers[i].sin.sin_port;
         } else { // af == AF_INET6
             addr = &servers[i].sin6.sin6_addr;
+            port = servers[i].sin6.sin6_port;
         }
 
         // we use the first found entry
         if (found == 1) {
             memcpy(pdns_addr, addr, addrlen);
             memcpy(cached_addr, addr, addrlen);
+            *pdns_port = *cached_port = port;
             if (scope_id) {
                 *scope_id = 0;
             }
@@ -321,7 +338,7 @@ static int get_dns_addr_libresolv(int af, void *pdns_addr, void *cached_addr,
             if (!res) {
                 res = "  (string conversion error)";
             }
-            DEBUG_MISC("  %s", res);
+            DEBUG_MISC("  %s, port %d", res, ntohs(port));
         }
     }
 
@@ -331,26 +348,29 @@ static int get_dns_addr_libresolv(int af, void *pdns_addr, void *cached_addr,
     return 0;
 }
 
-int get_dns_addr(struct in_addr *pdns_addr)
+int get_dns_addr(struct in_addr *pdns_addr, uint16_t *pdns_port)
 {
     if (dns_addr.s_addr != 0) {
         int ret;
         ret = get_dns_addr_cached(pdns_addr, &dns_addr, sizeof(dns_addr),
-                                  &dns_addr_time);
+                                  pdns_port, dns_port, &dns_addr_time);
         if (ret <= 0) {
             return ret;
         }
     }
     return get_dns_addr_libresolv(AF_INET, pdns_addr, &dns_addr,
-                                  sizeof(dns_addr), NULL, NULL, &dns_addr_time);
+                                  sizeof(dns_addr),
+                                  pdns_port, &dns_port,
+                                  NULL, NULL, &dns_addr_time);
 }
 
-int get_dns6_addr(struct in6_addr *pdns6_addr, uint32_t *scope_id)
+int get_dns6_addr(struct in6_addr *pdns6_addr, uint16_t *pdns6_port,
+                  uint32_t *scope_id)
 {
     if (!in6_zero(&dns6_addr)) {
         int ret;
         ret = get_dns_addr_cached(pdns6_addr, &dns6_addr, sizeof(dns6_addr),
-                                  &dns6_addr_time);
+                                  pdns6_port, dns6_port, &dns6_addr_time);
         if (ret == 0) {
             *scope_id = dns6_scope_id;
         }
@@ -360,6 +380,7 @@ int get_dns6_addr(struct in6_addr *pdns6_addr, uint32_t *scope_id)
     }
     return get_dns_addr_libresolv(AF_INET6, pdns6_addr, &dns6_addr,
                                   sizeof(dns6_addr),
+                                  pdns6_port, &dns6_port,
                                   scope_id, &dns6_scope_id, &dns6_addr_time);
 }
 
@@ -438,6 +459,7 @@ static bool try_and_setdns_server(int af, unsigned found, unsigned if_index,
 
 static int get_dns_addr_resolv_conf(int af, void *pdns_addr, void *cached_addr,
                                     socklen_t addrlen,
+                                    uint16_t *pdns_port, uint16_t *cached_port,
                                     uint32_t *scope_id, uint32_t *cached_scope_id,
                                     unsigned *cached_time)
 {
@@ -486,10 +508,13 @@ static int get_dns_addr_resolv_conf(int af, void *pdns_addr, void *cached_addr,
         cached_scope_id, cached_time);
     }
 
+    if (found)
+        *pdns_port = *cached_port = htons(53); // TODO: honor custom port
+
     return found ? 0 : -1;
 }
 
-int get_dns_addr(struct in_addr *pdns_addr)
+int get_dns_addr(struct in_addr *pdns_addr, uint16_t *pdns_port)
 {
     static struct stat dns_addr_stat;
 
@@ -503,10 +528,12 @@ int get_dns_addr(struct in_addr *pdns_addr)
     }
     return get_dns_addr_resolv_conf(AF_INET, pdns_addr, &dns_addr,
                                     sizeof(dns_addr),
+                                    pdns_port, &dns_port,
                                     NULL, NULL, &dns_addr_time);
 }
 
-int get_dns6_addr(struct in6_addr *pdns6_addr, uint32_t *scope_id)
+int get_dns6_addr(struct in6_addr *pdns6_addr, uint16_t *pdns6_port,
+                  uint32_t *scope_id)
 {
     static struct stat dns6_addr_stat;
 
@@ -523,6 +550,7 @@ int get_dns6_addr(struct in6_addr *pdns6_addr, uint32_t *scope_id)
     }
     return get_dns_addr_resolv_conf(AF_INET6, pdns6_addr, &dns6_addr,
                                     sizeof(dns6_addr),
+                                    pdns6_port, &dns6_port,
                                     scope_id, &dns6_scope_id, &dns6_addr_time);
 }
 
@@ -1548,15 +1576,18 @@ static bool check_guestfwd(Slirp *slirp, struct in_addr *guest_addr,
                              (htonl(0x0204) & ~slirp->vnetwork_mask.s_addr);
     }
     if ((guest_addr->s_addr & slirp->vnetwork_mask.s_addr) !=
-            slirp->vnetwork_addr.s_addr ||
-        guest_addr->s_addr == slirp->vhost_addr.s_addr ||
-        guest_addr->s_addr == slirp->vnameserver_addr.s_addr) {
+            slirp->vnetwork_addr.s_addr) {
+        return false;
+    }
+    if (!slirp->disable_dns &&
+        guest_addr->s_addr == slirp->vnameserver_addr.s_addr &&
+        guest_port == 53) {
         return false;
     }
 
     /* check if the port is "bound" */
     for (tmp_ptr = slirp->guestfwd_list; tmp_ptr; tmp_ptr = tmp_ptr->ex_next) {
-        if (guest_port == tmp_ptr->ex_fport &&
+        if (guest_port == ntohs(tmp_ptr->ex_fport) &&
             guest_addr->s_addr == tmp_ptr->ex_addr.s_addr)
             return false;
     }

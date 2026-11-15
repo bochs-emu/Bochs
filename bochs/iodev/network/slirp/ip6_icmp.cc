@@ -242,6 +242,7 @@ void icmp6_reflect(struct mbuf *m)
 void icmp6_receive(struct socket *so)
 {
     struct mbuf *m = so->so_m;
+    struct ip6 *ip = mtod(m, struct ip6 *);
     int hlen = sizeof(struct ip6);
     uint8_t error_code;
     struct icmp6 *icp;
@@ -268,9 +269,12 @@ void icmp6_receive(struct socket *so)
             error_code = ICMP6_UNREACH_ADDRESS;
         }
         DEBUG_MISC(" udp icmp rx errno = %d-%s", errno, strerror(errno));
-        icmp6_send_error(so->so_m, ICMP_UNREACH, error_code);
+        icmp6_send_error(m, ICMP6_UNREACH, error_code);
     } else {
-        icmp6_reflect(so->so_m);
+        m->m_len = hlen + len;
+        ip->ip_pl = htons(len);
+
+        icmp6_reflect(m);
         so->so_m = NULL; /* Don't m_free() it again! */
     }
     icmp_detach(so);
@@ -288,6 +292,7 @@ static void ndp_send_ra(Slirp *slirp)
     struct ip6 *rip = mtod(t, struct ip6 *);
     size_t pl_size = 0;
     struct in6_addr addr;
+    uint16_t port;
     uint32_t scope_id;
 
     rip->ip_src = (struct in6_addr)LINKLOCAL_ADDR;
@@ -336,7 +341,7 @@ static void ndp_send_ra(Slirp *slirp)
     pl_size += NDPOPT_PREFIXINFO_LEN;
 
     /* Prefix information (NDP option) */
-    if (get_dns6_addr(&addr, &scope_id) >= 0) {
+    if (get_dns6_addr(&addr, &port, &scope_id) >= 0) {
         /* Host system does have an IPv6 DNS server, announce our proxy.  */
         struct ndpopt *opt3 = mtod(t, struct ndpopt *);
         opt3->ndpopt_type = NDPOPT_RDNSS;
@@ -567,6 +572,7 @@ void icmp6_input(struct mbuf *m)
     case ICMP6_ECHO_REQUEST:
         if (in6_equal_host(&ip->ip_dst)) {
             icmp6_send_echoreply(m, slirp, ip, icmp);
+            m_free(m);
         } else if (slirp->restricted) {
             goto freeit;
         } else {

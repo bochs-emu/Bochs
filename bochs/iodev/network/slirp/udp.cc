@@ -265,6 +265,8 @@ int udp_output(struct socket *so, struct mbuf *m, const struct sockaddr_in *sadd
     DEBUG_ARG("m = %p", m);
     DEBUG_ARG("saddr = %s", inet_ntop(AF_INET, &saddr->sin_addr, addr, sizeof(addr)));
     DEBUG_ARG("daddr = %s", inet_ntop(AF_INET, &daddr->sin_addr, addr, sizeof(addr)));
+    DEBUG_ARG("s_inport = %d", ntohs(saddr->sin_port));
+    DEBUG_ARG("d_inport = %d", ntohs(daddr->sin_port));
 
     /*
      * Adjust for header
@@ -334,8 +336,9 @@ slirp_os_socket udp_attach(struct socket *so, unsigned short af)
 
         so->so_expire = curtime + SO_EXPIRE;
         slirp_insque(so, &so->slirp->udb);
+        slirp_set_nonblock(so->s);
+        slirp_register_poll_socket(so);
     }
-    slirp_register_poll_socket(so);
     return (so->s);
 }
 
@@ -406,6 +409,7 @@ struct socket *udpx_listen(Slirp *slirp,
         so->so_expire = 0;
     so->so_state &= SS_PERSISTENT_MASK;
     so->so_state |= SS_ISFCONNECTED | flags;
+    slirp_set_nonblock(so->s);
     slirp_register_poll_socket(so);
 
     return so;

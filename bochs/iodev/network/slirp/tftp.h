@@ -18,7 +18,6 @@
 #define TFTP_OACK   6
 
 #define TFTP_FILENAME_MAX 512
-#define TFTP_BLOCKSIZE_MAX 1428
 
 SLIRP_PACKED_BEGIN
 struct tftphdr {
@@ -26,21 +25,28 @@ struct tftphdr {
     uint16_t tp_op;
 } SLIRP_PACKED_END;
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4200) /* zero-sized array in struct/union */
+#endif
 SLIRP_PACKED_BEGIN
 struct tftp_t {
   struct tftphdr hdr;
   union {
     struct {
       uint16_t tp_block_nr;
-      uint8_t tp_buf[TFTP_BLOCKSIZE_MAX];
+      uint8_t tp_buf[0];
     } tp_data;
     struct {
       uint16_t tp_error_code;
-      uint8_t tp_msg[TFTP_BLOCKSIZE_MAX];
+      uint8_t tp_msg[0];
     } tp_error;
-    char tp_buf[TFTP_BLOCKSIZE_MAX + 2];
+    char tp_buf[0];
   } x;
 } SLIRP_PACKED_END;
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 struct tftp_session {
     Slirp *slirp;

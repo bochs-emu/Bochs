@@ -60,7 +60,7 @@ static uint32_t ncsi_calculate_checksum(uint8_t *data, int len)
 /* Response handler for Mellanox command Get Mac Address */
 static int ncsi_rsp_handler_oem_mlx_gma(Slirp *slirp,
                                         const struct ncsi_pkt_hdr *nh,
-                                        struct ncsi_rsp_pkt_hdr *rnh)
+                                        struct ncsi_rsp_pkt_hdr *rnh, int pkt_len)
 {
     uint8_t oob_eth_addr_allocated = 0;
     struct ncsi_rsp_oem_pkt *rsp;
@@ -87,7 +87,7 @@ static int ncsi_rsp_handler_oem_mlx_gma(Slirp *slirp,
 
 /* Response handler for Mellanox card */
 static int ncsi_rsp_handler_oem_mlx(Slirp *slirp, const struct ncsi_pkt_hdr *nh,
-                                    struct ncsi_rsp_pkt_hdr *rnh)
+                                    struct ncsi_rsp_pkt_hdr *rnh, int pkt_len)
 {
     const struct ncsi_cmd_oem_pkt *cmd;
     const struct ncsi_rsp_oem_mlx_pkt *cmd_mlx;
@@ -102,6 +102,14 @@ static int ncsi_rsp_handler_oem_mlx(Slirp *slirp, const struct ncsi_pkt_hdr *nh,
     rsp = (struct ncsi_rsp_oem_pkt *)rnh;
     rsp_mlx = (struct ncsi_rsp_oem_mlx_pkt *)rsp->data;
 
+    if (pkt_len < (int)(ETH_HLEN + sizeof(struct ncsi_cmd_oem_pkt) +
+                        sizeof(struct ncsi_rsp_oem_mlx_pkt))) {
+        rsp->rsp.common.length = htons(8);
+        rsp->rsp.code = htons(NCSI_PKT_RSP_C_UNSUPPORTED);
+        rsp->rsp.reason = htons(NCSI_PKT_RSP_R_UNKNOWN);
+        return -ENOENT;
+    }
+
     /* Ensure the OEM response header matches the command's */
     rsp_mlx->cmd_rev = cmd_mlx->cmd_rev;
     rsp_mlx->cmd = cmd_mlx->cmd;
@@ -110,7 +118,7 @@ static int ncsi_rsp_handler_oem_mlx(Slirp *slirp, const struct ncsi_pkt_hdr *nh,
 
     if (cmd_mlx->cmd == NCSI_OEM_MLX_CMD_GMA &&
         cmd_mlx->param == NCSI_OEM_MLX_CMD_GMA_PARAM)
-        return ncsi_rsp_handler_oem_mlx_gma(slirp, nh, rnh);
+        return ncsi_rsp_handler_oem_mlx_gma(slirp, nh, rnh, pkt_len);
 
     rsp->rsp.common.length = htons(8);
     rsp->rsp.code = htons(NCSI_PKT_RSP_C_UNSUPPORTED);
@@ -121,7 +129,7 @@ static int ncsi_rsp_handler_oem_mlx(Slirp *slirp, const struct ncsi_pkt_hdr *nh,
 static const struct ncsi_rsp_oem_handler {
     unsigned int mfr_id;
     int (*handler)(Slirp *slirp, const struct ncsi_pkt_hdr *nh,
-                   struct ncsi_rsp_pkt_hdr *rnh);
+                   struct ncsi_rsp_pkt_hdr *rnh, int pkt_len);
 } ncsi_rsp_oem_handlers[] = {
     { NCSI_OEM_MFR_MLX_ID, ncsi_rsp_handler_oem_mlx },
     { NCSI_OEM_MFR_BCM_ID, NULL },
@@ -130,14 +138,18 @@ static const struct ncsi_rsp_oem_handler {
 
 /* Response handler for OEM command */
 static int ncsi_rsp_handler_oem(Slirp *slirp, const struct ncsi_pkt_hdr *nh,
-                                struct ncsi_rsp_pkt_hdr *rnh)
+                                struct ncsi_rsp_pkt_hdr *rnh, int pkt_len)
 {
     const struct ncsi_rsp_oem_handler *nrh = NULL;
     const struct ncsi_cmd_oem_pkt *cmd = (const struct ncsi_cmd_oem_pkt *)nh;
     struct ncsi_rsp_oem_pkt *rsp = (struct ncsi_rsp_oem_pkt *)rnh;
-    uint32_t mfr_id = ntohl(cmd->mfr_id);
+    uint32_t mfr_id;
     int i;
 
+    if (pkt_len < (int)(ETH_HLEN + sizeof(struct ncsi_cmd_oem_pkt))) {
+        goto error;
+    }
+    mfr_id = ntohl(cmd->mfr_id);
     rsp->mfr_id = cmd->mfr_id;
 
     if (mfr_id != slirp->mfr_id) {
@@ -161,7 +173,7 @@ static int ncsi_rsp_handler_oem(Slirp *slirp, const struct ncsi_pkt_hdr *nh,
     }
 
     /* Process the packet */
-    return nrh->handler(slirp, nh, rnh);
+    return nrh->handler(slirp, nh, rnh, pkt_len);
 
 error:
     rsp->rsp.common.length = htons(8);
@@ -173,19 +185,19 @@ error:
 
 /* Get Version ID */
 static int ncsi_rsp_handler_gvi(Slirp *slirp, const struct ncsi_pkt_hdr *nh,
-                                struct ncsi_rsp_pkt_hdr *rnh)
+                                struct ncsi_rsp_pkt_hdr *rnh, int pkt_len)
 {
     struct ncsi_rsp_gvi_pkt *rsp = (struct ncsi_rsp_gvi_pkt *)rnh;
 
-    rsp->ncsi_version = htonl(0xF1F0F000);
-    rsp->mf_id = htonl(slirp->mfr_id);
+    rsp->ncsi_version = htonl(0xF1F0F000);  /* NCSI version 1.0.0 */
+    rsp->mf_id = htonl(slirp->mfr_id);      /* Manufacturer ID */
 
     return 0;
 }
 
 /* Get Capabilities */
 static int ncsi_rsp_handler_gc(Slirp *slirp, const struct ncsi_pkt_hdr *nh,
-                               struct ncsi_rsp_pkt_hdr *rnh)
+                               struct ncsi_rsp_pkt_hdr *rnh, int pkt_len)
 {
     struct ncsi_rsp_gc_pkt *rsp = (struct ncsi_rsp_gc_pkt *)rnh;
 
@@ -201,7 +213,7 @@ static int ncsi_rsp_handler_gc(Slirp *slirp, const struct ncsi_pkt_hdr *nh,
 
 /* Get Link status */
 static int ncsi_rsp_handler_gls(Slirp *slirp, const struct ncsi_pkt_hdr *nh,
-                                struct ncsi_rsp_pkt_hdr *rnh)
+                                struct ncsi_rsp_pkt_hdr *rnh, int pkt_len)
 {
     struct ncsi_rsp_gls_pkt *rsp = (struct ncsi_rsp_gls_pkt *)rnh;
 
@@ -211,7 +223,7 @@ static int ncsi_rsp_handler_gls(Slirp *slirp, const struct ncsi_pkt_hdr *nh,
 
 /* Get Parameters */
 static int ncsi_rsp_handler_gp(Slirp *slirp, const struct ncsi_pkt_hdr *nh,
-                               struct ncsi_rsp_pkt_hdr *rnh)
+                               struct ncsi_rsp_pkt_hdr *rnh, int pkt_len)
 {
     struct ncsi_rsp_gp_pkt *rsp = (struct ncsi_rsp_gp_pkt *)rnh;
 
@@ -228,28 +240,28 @@ static const struct ncsi_rsp_handler {
     unsigned char type;
     int payload;
     int (*handler)(Slirp *slirp, const struct ncsi_pkt_hdr *nh,
-                   struct ncsi_rsp_pkt_hdr *rnh);
-} ncsi_rsp_handlers[] = { { NCSI_PKT_RSP_CIS, 4, NULL },
-                          { NCSI_PKT_RSP_SP, 4, NULL },
-                          { NCSI_PKT_RSP_DP, 4, NULL },
-                          { NCSI_PKT_RSP_EC, 4, NULL },
+                   struct ncsi_rsp_pkt_hdr *rnh, int pkt_len);
+} ncsi_rsp_handlers[] = { { NCSI_PKT_RSP_CIS, 4, NULL },     /* Clear Initial State */
+                          { NCSI_PKT_RSP_SP, 4, NULL },      /* Select Package */
+                          { NCSI_PKT_RSP_DP, 4, NULL },      /* Deselect Package */
+                          { NCSI_PKT_RSP_EC, 4, NULL },      /* Enable Channel */
                           { NCSI_PKT_RSP_DC, 4, NULL },
                           { NCSI_PKT_RSP_RC, 4, NULL },
-                          { NCSI_PKT_RSP_ECNT, 4, NULL },
+                          { NCSI_PKT_RSP_ECNT, 4, NULL },    /* Enable Channel TX */
                           { NCSI_PKT_RSP_DCNT, 4, NULL },
-                          { NCSI_PKT_RSP_AE, 4, NULL },
+                          { NCSI_PKT_RSP_AE, 4, NULL },      /* Enable AEN */
                           { NCSI_PKT_RSP_SL, 4, NULL },
                           { NCSI_PKT_RSP_GLS, 16, ncsi_rsp_handler_gls },
-                          { NCSI_PKT_RSP_SVF, 4, NULL },
-                          { NCSI_PKT_RSP_EV, 4, NULL },
-                          { NCSI_PKT_RSP_DV, 4, NULL },
-                          { NCSI_PKT_RSP_SMA, 4, NULL },
-                          { NCSI_PKT_RSP_EBF, 4, NULL },
+                          { NCSI_PKT_RSP_SVF, 4, NULL },     /* Set VLAN Filter */
+                          { NCSI_PKT_RSP_EV, 4, NULL },      /* Enable VLAN */
+                          { NCSI_PKT_RSP_DV, 4, NULL },      /* Disable VLAN */
+                          { NCSI_PKT_RSP_SMA, 4, NULL },     /* Set MAC Address */
+                          { NCSI_PKT_RSP_EBF, 4, NULL },     /* Enable Broadcast Filter */
                           { NCSI_PKT_RSP_DBF, 4, NULL },
                           { NCSI_PKT_RSP_EGMF, 4, NULL },
-                          { NCSI_PKT_RSP_DGMF, 4, NULL },
+                          { NCSI_PKT_RSP_DGMF, 4, NULL },    /* Disable Global Multicast Filter */
                           { NCSI_PKT_RSP_SNFC, 4, NULL },
-                          { NCSI_PKT_RSP_GVI, 40, ncsi_rsp_handler_gvi },
+                          { NCSI_PKT_RSP_GVI, 40, ncsi_rsp_handler_gvi },  /* Get Version ID */
                           { NCSI_PKT_RSP_GC, 32, ncsi_rsp_handler_gc },
                           { NCSI_PKT_RSP_GP, 40, ncsi_rsp_handler_gp },
                           { NCSI_PKT_RSP_GCPS, 172, NULL },
@@ -270,6 +282,12 @@ void ncsi_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
 {
     const struct ncsi_pkt_hdr *nh =
         (const struct ncsi_pkt_hdr *)(pkt + ETH_HLEN);
+    /*
+     * Add 2-byte padding at start of buffer for proper alignment of IP header
+     * after 14-byte Ethernet header. This ensures the IP payload starts on a
+     * 4-byte boundary, which is required for optimal performance on many
+     * architectures and expected by slirp's packet handling code.
+     */
     uint8_t ncsi_reply[2 + ETH_HLEN + NCSI_MAX_LEN];
     struct ethhdr *reh = (struct ethhdr *)(ncsi_reply + 2);
     struct ncsi_rsp_pkt_hdr *rnh =
@@ -309,7 +327,7 @@ void ncsi_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
         rnh->reason = htons(NCSI_PKT_RSP_R_NO_ERROR);
 
         if (handler->handler) {
-            handler->handler(slirp, nh, rnh);
+            handler->handler(slirp, nh, rnh, pkt_len);
         }
         ncsi_rsp_len += ntohs(rnh->common.length);
     } else {
@@ -324,6 +342,7 @@ void ncsi_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
     *pchecksum = htonl(checksum);
     ncsi_rsp_len += 4;
 
+    /* Skip the 2-byte padding when sending the packet */
     slirp_send_packet_all(slirp, ncsi_reply + 2, ETH_HLEN + ncsi_rsp_len);
 }
 

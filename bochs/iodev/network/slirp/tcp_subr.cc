@@ -368,6 +368,20 @@ void tcp_sockclosed(struct tcpcb *tp)
     case TCPS_CLOSE_WAIT:
         tp->t_state = TCPS_LAST_ACK;
         break;
+    case TCPS_FIN_WAIT_1:
+    case TCPS_CLOSING:
+    case TCPS_LAST_ACK:
+    case TCPS_FIN_WAIT_2:
+    case TCPS_TIME_WAIT:
+        /*
+         * If we can't receive any more
+         * data, then closing user can proceed.
+         * Starting the timer is contrary to the
+         * specification, but if we don't get a FIN
+         * we'll hang forever.
+         */
+        tp->t_timer[TCPT_2MSL] = TCP_LINGERTIME;
+        break;
     }
     tcp_output(tp);
 }
@@ -834,6 +848,7 @@ int tcp_emu(struct socket *so, struct mbuf *m)
         return 1;
 
      case EMU_REALAUDIO:
+     {
                 /*
          * RealAudio emulation - JP. We must try to parse the incoming
          * data and try to find the two characters that contain the
@@ -870,10 +885,11 @@ int tcp_emu(struct socket *so, struct mbuf *m)
          * us where we're going.
          */
 
+        int ra = 0;
+
         bptr = m->m_data;
         while (bptr < m->m_data + m->m_len) {
             uint16_t p;
-            static int ra = 0;
             char ra_tbl[4];
 
             ra_tbl[0] = 0x50;
@@ -963,6 +979,7 @@ int tcp_emu(struct socket *so, struct mbuf *m)
             ra++;
         }
         return 1;
+    }
 
      default:
         /* Ooops, not emulated, won't call tcp_emu again */
@@ -986,22 +1003,20 @@ int tcp_ctl(struct socket *so)
     DEBUG_ARG("so = %p", so);
 
     /* TODO: IPv6 */
-    if (so->so_faddr.s_addr != slirp->vhost_addr.s_addr) {
-        /* Check if it's pty_exec */
-        for (ex_ptr = slirp->guestfwd_list; ex_ptr; ex_ptr = ex_ptr->ex_next) {
-            if (ex_ptr->ex_fport == so->so_fport &&
-                so->so_faddr.s_addr == ex_ptr->ex_addr.s_addr) {
-                if (ex_ptr->write_cb) {
-                    so->s = SLIRP_INVALID_SOCKET;
-                    so->guestfwd = ex_ptr;
-                    return 1;
-                }
-                DEBUG_MISC(" executing %s", ex_ptr->ex_exec);
-                if (ex_ptr->ex_unix)
-                    return open_unix(so, ex_ptr->ex_unix);
-                else
-                    return fork_exec(so, ex_ptr->ex_exec);
+    /* Check if it's pty_exec */
+    for (ex_ptr = slirp->guestfwd_list; ex_ptr; ex_ptr = ex_ptr->ex_next) {
+        if (ex_ptr->ex_fport == so->so_fport &&
+            so->so_faddr.s_addr == ex_ptr->ex_addr.s_addr) {
+            if (ex_ptr->write_cb) {
+                so->s = SLIRP_INVALID_SOCKET;
+                so->guestfwd = ex_ptr;
+                return 1;
             }
+            DEBUG_MISC(" executing %s", ex_ptr->ex_exec);
+            if (ex_ptr->ex_unix)
+                return open_unix(so, ex_ptr->ex_unix);
+            else
+                return fork_exec(so, ex_ptr->ex_exec);
         }
     }
     sb->sb_cc = slirp_fmt(sb->sb_wptr, sb->sb_datalen - (sb->sb_wptr - sb->sb_data),

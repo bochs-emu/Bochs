@@ -12,9 +12,9 @@ struct gfwd_list {
     SlirpWriteCb write_cb;
     void *opaque;
     struct in_addr ex_addr; /* Server address */
-    int ex_fport;           /* Port to telnet to */
-    char *ex_exec;          /* Command line of what to exec */
-    char *ex_unix;          /* unix socket */
+    int ex_fport; /* Port to telnet to (network order) */
+    char *ex_exec; /* Command line of what to exec */
+    char *ex_unix; /* unix socket */
     struct gfwd_list *ex_next;
 };
 

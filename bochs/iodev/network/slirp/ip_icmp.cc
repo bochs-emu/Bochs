@@ -39,6 +39,15 @@
 #ifndef _WIN32
 #include <sys/param.h>
 #endif
+#if defined(__linux__)
+/* VirtualBox/virtualbox#479: Needed to read Linux ping-socket ICMP router errors. */
+#include <linux/errqueue.h>
+#endif
+#if defined(_WIN32)
+/* VirtualBox/virtualbox#479: Needed for the Windows non-raw ICMP traceroute fallback. */
+#include <iphlpapi.h>
+#include <icmpapi.h>
+#endif
 
 #ifndef WITH_ICMP_ERROR_MSG
 #define WITH_ICMP_ERROR_MSG 0
@@ -89,12 +98,144 @@ void icmp_cleanup(Slirp *slirp)
     }
 }
 
+#if defined(_WIN32)
+#define ICMP_WINHELPER_TIMEOUT_MS 1000
+
+/* VirtualBox/virtualbox#479: Map Windows IP Helper Echo statuses to guest-visible ICMP errors. */
+static bool icmp_winhelper_status_to_icmp(DWORD status, uint8_t *ptype, uint8_t *pcode)
+{
+    if (status == IP_REQ_TIMED_OUT)
+        return false;
+    switch (status) {
+    case IP_TTL_EXPIRED_TRANSIT:
+        *ptype = ICMP_TIMXCEED;
+        *pcode = ICMP_TIMXCEED_INTRANS;
+        return true;
+    case IP_TTL_EXPIRED_REASSEM:
+        *ptype = ICMP_TIMXCEED;
+        *pcode = ICMP_TIMXCEED_REASS;
+        return true;
+    case IP_DEST_NET_UNREACHABLE:
+        *ptype = ICMP_UNREACH;
+        *pcode = ICMP_UNREACH_NET;
+        return true;
+    case IP_DEST_PROT_UNREACHABLE:
+        *ptype = ICMP_UNREACH;
+        *pcode = ICMP_UNREACH_PROTOCOL;
+        return true;
+    case IP_DEST_PORT_UNREACHABLE:
+        *ptype = ICMP_UNREACH;
+        *pcode = ICMP_UNREACH_PORT;
+        return true;
+    case IP_PACKET_TOO_BIG:
+        *ptype = ICMP_UNREACH;
+        *pcode = ICMP_UNREACH_NEEDFRAG;
+        return true;
+    case IP_DEST_HOST_UNREACHABLE:
+    default:
+        *ptype = ICMP_UNREACH;
+        *pcode = ICMP_UNREACH_HOST;
+        return true;
+    }
+}
+
+/*
+ * VirtualBox/virtualbox#479: Use Windows IP Helper when low-TTL ping sockets cannot expose intermediate hops.
+ * This fallback is synchronous and may block the NAT thread up to ICMP_WINHELPER_TIMEOUT_MS.
+ * A production follow-up should use IcmpSendEcho2Ex() asynchronously and signal completion
+ * through a pollable loopback socket, so icmp_receive() can forward the result without blocking.
+ */
+static bool icmp_send_winhelper(struct socket *so, struct mbuf *m, int hlen, int ttl)
+{
+    uint8_t *pbIcmp = (uint8_t *)m->m_data + hlen;
+    int cbIcmp = m->m_len - hlen;
+    if (cbIcmp < ICMP_MINLEN)
+        return false;
+
+    int cbPayload = cbIcmp - ICMP_MINLEN;
+    if (cbPayload > UINT16_MAX)
+        return false;
+
+    HANDLE hIcmp = IcmpCreateFile();
+    if (hIcmp == INVALID_HANDLE_VALUE)
+        return false;
+
+    IP_OPTION_INFORMATION OptInfo;
+    memset(&OptInfo, 0, sizeof(OptInfo));
+    OptInfo.Ttl = (UCHAR)ttl;
+    OptInfo.Tos = so->so_iptos;
+
+    IPAddr src_ip = 0;
+    if (so->slirp->outbound_addr)
+        src_ip = so->slirp->outbound_addr->sin_addr.s_addr;
+
+    DWORD cbReply = sizeof(ICMP_ECHO_REPLY) + cbPayload + 8;
+    ICMP_ECHO_REPLY *pReply = (ICMP_ECHO_REPLY *)calloc(1, cbReply);
+
+    /* VirtualBox/virtualbox#479: Synchronous stopgap; see helper comment for the async completion-socket design. */
+    DWORD cReplies = IcmpSendEcho2Ex(hIcmp, NULL, NULL, NULL, src_ip,
+                                     so->so_faddr.s_addr, pbIcmp + ICMP_MINLEN,
+                                     (WORD)cbPayload, &OptInfo, pReply, cbReply,
+                                     ICMP_WINHELPER_TIMEOUT_MS);
+    DWORD dwError = cReplies ? ERROR_SUCCESS : GetLastError();
+    IcmpCloseHandle(hIcmp);
+
+    if (!cReplies) {
+        free(pReply);
+        if (dwError == IP_REQ_TIMED_OUT) {
+            icmp_detach(so);
+            return true;
+        }
+        return false;
+    }
+
+    if (pReply->Status == IP_REQ_TIMED_OUT) {
+        free(pReply);
+        icmp_detach(so);
+        return true;
+    }
+
+    bool fHandled = true;
+    if (pReply->Status == IP_SUCCESS) {
+        struct ip *ip = mtod(so->so_m, struct ip *);
+        ip->ip_ttl = pReply->Options.Ttl ? pReply->Options.Ttl : MAXTTL;
+        icmp_reflect(so->so_m);
+        so->so_m = NULL;
+    } else {
+        uint8_t type;
+        uint8_t code;
+        if (icmp_winhelper_status_to_icmp(pReply->Status, &type, &code)) {
+            struct in_addr src_addr;
+            src_addr.s_addr = pReply->Address ? pReply->Address : so->so_faddr.s_addr;
+            icmp_forward_error(so->so_m, type, code, 0, NULL, &src_addr);
+        } else
+            fHandled = false;
+    }
+
+    free(pReply);
+    if (fHandled)
+        icmp_detach(so);
+    return fHandled;
+}
+#undef ICMP_WINHELPER_TIMEOUT_MS
+#endif
+
 /* Send ICMP packet to the Internet, and save it to so_m */
 static int icmp_send(struct socket *so, struct mbuf *m, int hlen)
 {
     Slirp *slirp = m->slirp;
 
-    struct sockaddr_in addr;
+    struct sockaddr_in addr = { 0 };
+    struct ip *ip = mtod(m, struct ip *);
+    int ttl = ip->ip_ttl - IPTTLDEC;
+
+    /* Expire at the NAT hop even when the host cannot open ICMP sockets. */
+    if (ttl <= 0) {
+        icmp_send_error(m, ICMP_TIMXCEED, ICMP_TIMXCEED_INTRANS, 0, NULL);
+        m_free(m);
+        sofree(so);
+        return 0;
+    }
 
     /*
      * The behavior of reading SOCK_DGRAM+IPPROTO_ICMP sockets is inconsistent
@@ -105,27 +246,39 @@ static int icmp_send(struct socket *so, struct mbuf *m, int hlen)
      * isn't possible to detect this difference at runtime, so we must use an
      * #ifdef to determine if we need to remove the IP header.
      */
-#if defined(BSD) && !defined(__GNU__)
+#if (defined(BSD) && !defined(__GNU__)) || defined(__APPLE__)
     so->so_type = IPPROTO_IP;
 #else
     so->so_type = IPPROTO_ICMP;
 #endif
 
-    so->s = slirp_socket(AF_INET, SOCK_DGRAM, IPPROTO_ICMP);
-    if (not_valid_socket(so->s)) {
-        if (errno == EAFNOSUPPORT
-         || errno == EPROTONOSUPPORT
-         || errno == EACCES) {
-            /* Kernel doesn't support or allow ping sockets. */
+#ifndef __linux__
+    /* Prefer raw replies for low-TTL probes where ping sockets cannot
+     * expose router errors. Failure still falls back to SOCK_DGRAM. */
+    if (ttl < IPDEFTTL) {
+        so->s = slirp_socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+        if (have_valid_socket(so->s)) {
             so->so_type = IPPROTO_IP;
+        }
+    }
+#endif
+    if (not_valid_socket(so->s)) {
+        so->s = slirp_socket(AF_INET, SOCK_DGRAM, IPPROTO_ICMP);
+        if (not_valid_socket(so->s)) {
             so->s = slirp_socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+            so->so_type = IPPROTO_IP;
         }
     }
     if (not_valid_socket(so->s)) {
         return -1;
     }
-    slirp_register_poll_socket(so);
-
+#if defined(__APPLE__) && defined(IP_STRIPHDR)
+    if (so->so_type == IPPROTO_IP) {
+        /* VirtualBox/virtualbox#479: Darwin ICMP dgram replies must keep the IP header for router-error parsing. */
+        int fStripHdr = 0;
+        setsockopt(so->s, IPPROTO_IP, IP_STRIPHDR, &fStripHdr, sizeof(fStripHdr));
+    }
+#endif
     if (slirp_bind_outbound(so, AF_INET) != 0) {
         // bind failed - close socket
         closesocket(so->s);
@@ -133,8 +286,9 @@ static int icmp_send(struct socket *so, struct mbuf *m, int hlen)
         return -1;
     }
 
+    slirp_register_poll_socket(so);
     M_DUP_DEBUG(slirp, m, 0, 0);
-    struct ip *ip = mtod(m, struct ip *);
+    ip = mtod(m, struct ip *);
 
     so->so_m = m;
     so->so_faddr = ip->ip_dst;
@@ -145,6 +299,20 @@ static int icmp_send(struct socket *so, struct mbuf *m, int hlen)
 
     addr.sin_family = AF_INET;
     addr.sin_addr = so->so_faddr;
+
+#ifdef _WIN32
+    if (ttl < IPDEFTTL && so->so_type == IPPROTO_ICMP && icmp_send_winhelper(so, m, hlen, ttl))
+        return 0;
+#endif
+#ifdef __linux__
+    if (so->so_type == IPPROTO_ICMP) {
+        /* VirtualBox/virtualbox#479: Ping sockets report router errors via MSG_ERRQUEUE. */
+        int fRecvErr = 1;
+        setsockopt(so->s, IPPROTO_IP, IP_RECVERR, &fRecvErr, sizeof(fRecvErr));
+        setsockopt(so->s, IPPROTO_IP, IP_RECVTTL, &fRecvErr, sizeof(fRecvErr));
+    }
+#endif
+    setsockopt(so->s, IPPROTO_IP, IP_TTL, (const void *)&ttl, sizeof(ttl));
 
     slirp_insque(so, &so->slirp->icmp);
 
@@ -207,7 +375,8 @@ void icmp_input(struct mbuf *m, int hlen)
         ip->ip_len += hlen;	             /* since ip_input subtracts this */
         if (ip->ip_dst.s_addr == slirp->vhost_addr.s_addr ||
             ip->ip_dst.s_addr == slirp->vnameserver_addr.s_addr) {
-          icmp_reflect(m);
+            ip->ip_ttl = MAXTTL;
+            icmp_reflect(m);
         } else if (slirp->restricted) {
             goto freeit;
         } else {
@@ -261,7 +430,7 @@ void icmp_input(struct mbuf *m, int hlen)
                 udp_detach(so);
                 break;
             }
-            setsockopt(so->s, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl));
+            setsockopt(so->s, IPPROTO_IP, IP_TTL, (const void *)&ttl, sizeof(ttl));
 
             if (sendto(so->s, icmp_ping_msg, strlen(icmp_ping_msg), 0,
                        (struct sockaddr *)&addr, sockaddr_size(&addr)) == -1) {
@@ -343,7 +512,7 @@ void icmp_forward_error(struct mbuf *msrc, uint8_t type, uint8_t code, int minsi
         goto end_error; /* Only reply to fragment 0 */
 
     /* Do not reply to source-only IPs */
-    if ((ip->ip_src.s_addr & htonl(~(0xf << 28))) == 0) {
+    if ((ip->ip_src.s_addr & htonl(~(0xfU << 28))) == 0) {
         goto end_error;
     }
 
@@ -390,7 +559,10 @@ void icmp_forward_error(struct mbuf *msrc, uint8_t type, uint8_t code, int minsi
     else if(s_ip_len>ICMP_MAXDATALEN)         /* maximum size */
         s_ip_len=ICMP_MAXDATALEN;
 
-    m->m_len=ICMP_MINLEN+s_ip_len;        /* 8 bytes ICMP header */
+    if (s_ip_len > (unsigned)msrc->m_len)
+        s_ip_len = msrc->m_len;
+
+    m->m_len = ICMP_MINLEN + s_ip_len; /* 8 bytes ICMP header */
 
     /* min. size = 8+sizeof(struct ip)+8 */
 
@@ -484,7 +656,7 @@ void icmp_reflect(struct mbuf *m)
         m->m_len -= optlen;
     }
 
-    ip->ip_ttl = MAXTTL;
+    /* VirtualBox/virtualbox#479: Keep real Echo Reply TTL instead of resetting it to MAXTTL. */
     { /* swap */
         struct in_addr icmp_dst;
         icmp_dst = ip->ip_dst;
@@ -495,44 +667,162 @@ void icmp_reflect(struct mbuf *m)
     ip_output((struct socket *)NULL, m);
 }
 
+#ifdef __linux__
+/* VirtualBox/virtualbox#479: Return true after draining a Linux ping-socket error queue entry, forwarding any ICMP router error. */
+static bool icmp_receive_error_queue(struct socket *so)
+{
+    char buf[256];
+    char control[1024];
+    struct sockaddr_storage saddr;
+    struct msghdr msg;
+    struct iovec iov;
+    ssize_t len;
+
+    /* Prepare recvmsg() buffers for the queued ICMP error and its ancillary data. */
+    memset(&msg, 0, sizeof(msg));
+    msg.msg_name = &saddr;
+    msg.msg_namelen = sizeof(saddr);
+    msg.msg_control = control;
+    msg.msg_controllen = sizeof(control);
+    iov.iov_base = buf;
+    iov.iov_len = sizeof(buf);
+    msg.msg_iov = &iov;
+    msg.msg_iovlen = 1;
+
+    /* Drain at most one queued router error without blocking normal Echo Reply receive. */
+    len = recvmsg(so->s, &msg, MSG_ERRQUEUE | MSG_DONTWAIT);
+    if (len < 0)
+        return false;
+
+    /* Linux reports ping-socket ICMP errors as IP_RECVERR control messages. */
+    struct cmsghdr *cmsg;
+    for (cmsg = CMSG_FIRSTHDR(&msg); cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
+        if (cmsg->cmsg_level == IPPROTO_IP && cmsg->cmsg_type == IP_RECVERR) {
+            struct sock_extended_err *ee = (struct sock_extended_err *)CMSG_DATA(cmsg);
+            if (cmsg->cmsg_len >= CMSG_LEN(sizeof(*ee) + sizeof(struct sockaddr_in))
+                && ee->ee_origin == SO_EE_ORIGIN_ICMP) {
+                /* The offender address is the intermediate router traceroute must show. */
+                struct sockaddr *sa = SO_EE_OFFENDER(ee);
+                if (sa->sa_family == AF_INET) {
+                    struct sockaddr_in *sin;
+
+                    /* VirtualBox/virtualbox#479: Forward Linux ping-socket router errors to the guest. */
+                    sin = (struct sockaddr_in *)sa;
+                    icmp_forward_error(so->so_m, ee->ee_type, ee->ee_code,
+                                       0, NULL, &sin->sin_addr);
+                }
+            }
+        }
+    }
+
+    return true;
+}
+#endif
+
+/* VirtualBox/virtualbox#479: Receive into a temporary buffer so router errors do not overwrite the quoted Echo Request. */
 void icmp_receive(struct socket *so)
 {
     struct mbuf *m = so->so_m;
     struct ip *ip = mtod(m, struct ip *);
     int hlen = ip->ip_hl << 2;
     uint8_t error_code;
+    struct in_addr icmp_src = ip->ip_dst;
+    uint8_t icmp_ttl = MAXTTL;
+    bool f_have_icmp_ttl = false;
     struct icmp *icp;
-    int id, len;
+    struct icmp *icp_rx;
+    unsigned char *buf;
+    struct sockaddr_storage srcaddr;
+#ifndef __linux__
+    socklen_t srcaddrlen;
+#endif
+    int id, len, room;
+
+#ifdef __linux__
+    if (so->so_type == IPPROTO_ICMP && icmp_receive_error_queue(so)) {
+        icmp_detach(so);
+        return;
+    }
+#endif
 
     m->m_data += hlen;
     m->m_len -= hlen;
     icp = mtod(m, struct icmp *);
 
     id = icp->icmp_id;
-    len = recv(so->s, icp, M_ROOM(m), 0);
+    room = M_ROOM(m);
+    buf = (unsigned char *)malloc(room);
+    memset(&srcaddr, 0, sizeof(srcaddr));
+#ifndef __linux__
+    srcaddrlen = sizeof(srcaddr);
+#endif
+    /* VirtualBox/virtualbox#479: recvfrom keeps the hop source on hosts delivering in-band ICMP errors without IP headers. */
+#ifdef __linux__
+    struct iovec iov = { .iov_base = buf, .iov_len = room };
+    union {
+        struct cmsghdr align;
+        char data[CMSG_SPACE(sizeof(int))];
+    } control;
+    struct msghdr msg = {
+        .msg_name = &srcaddr,
+        .msg_namelen = sizeof(srcaddr),
+        .msg_iov = &iov,
+        .msg_iovlen = 1,
+        .msg_control = control.data,
+        .msg_controllen = sizeof(control.data),
+    };
+    len = recvmsg(so->s, &msg, MSG_DONTWAIT);
+    if (len > 0 && !(msg.msg_flags & MSG_CTRUNC)) {
+        struct cmsghdr *cmsg;
 
-    if (so->so_type == IPPROTO_IP) {
+        for (cmsg = CMSG_FIRSTHDR(&msg); cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
+            if (cmsg->cmsg_level == IPPROTO_IP && cmsg->cmsg_type == IP_TTL &&
+                cmsg->cmsg_len >= CMSG_LEN(sizeof(int))) {
+                int ttl;
+                memcpy(&ttl, CMSG_DATA(cmsg), sizeof(ttl));
+                if (ttl > 0 && ttl <= MAXTTL) {
+                    icmp_ttl = ttl;
+                    f_have_icmp_ttl = true;
+                }
+            }
+        }
+    }
+#else
+    len = recvfrom(so->s, (char *)buf, room, 0,
+                   (struct sockaddr *)&srcaddr, &srcaddrlen);
+#endif
+    if (len > 0 && srcaddr.ss_family == AF_INET)
+        icmp_src = ((struct sockaddr_in *)&srcaddr)->sin_addr;
+    icp_rx = (struct icmp *)buf;
+
+    if (so->so_type == IPPROTO_IP && len > 0) {
         if (len >= (int)sizeof(struct ip)) {
-            struct ip *inner_ip = mtod(m, struct ip *);
+            struct ip *inner_ip = (struct ip *)buf;
             int inner_hlen = inner_ip->ip_hl << 2;
-            if (inner_hlen > len) {
+            if (inner_hlen < (int)sizeof(struct ip) || inner_hlen > len) {
                 len = -1;
-                errno = -EINVAL;
+                errno = EINVAL;
             } else {
+                /* VirtualBox/virtualbox#479: Raw ICMP sockets include an IP header; keep its source and Echo Reply TTL. */
+                icmp_ttl = inner_ip->ip_ttl;
+                f_have_icmp_ttl = true;
+                icmp_src = inner_ip->ip_src;
                 len -= inner_hlen;
-                memmove(icp, (unsigned char *)icp + inner_hlen, len);
+                icp_rx = (struct icmp *)(buf + inner_hlen);
             }
         } else {
             len = -1;
-            errno = -EINVAL;
+            errno = EINVAL;
         }
     }
-
-    icp->icmp_id = id;
 
     m->m_data -= hlen;
     m->m_len += hlen;
 
+    if (len < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+        free(buf);
+        return;
+    }
     if (len == -1 || len == 0) {
         if (errno == ENETUNREACH) {
             error_code = ICMP_UNREACH_NET;
@@ -540,11 +830,63 @@ void icmp_receive(struct socket *so)
             error_code = ICMP_UNREACH_HOST;
         }
         DEBUG_MISC(" udp icmp rx errno = %d-%s", errno, strerror(errno));
-        icmp_send_error(so->so_m, ICMP_UNREACH, error_code, 0, strerror(errno));
+        icmp_send_error(m, ICMP_UNREACH, error_code, 0, strerror(errno));
     } else {
-        icmp_reflect(so->so_m);
-        so->so_m = NULL; /* Don't m_free() it again! */
+        /* Do not reflect ICMP errors as echo replies. */
+        if (len < ICMP_MINLEN) {
+            icmp_send_error(m, ICMP_UNREACH, ICMP_UNREACH_HOST, 0, "short icmp");
+        } else if (icp_rx->icmp_type == ICMP_TIMXCEED || icp_rx->icmp_type == ICMP_UNREACH) {
+            /* Raw sockets also receive errors for other probes. Only forward
+             * a quote that identifies this socket's original echo request. */
+            struct ip *quoted = (struct ip *)((char *)icp_rx + ICMP_MINLEN);
+            int quoted_hlen;
+            struct icmp *quoted_icmp;
+
+            if (len < (int)(ICMP_MINLEN + sizeof(struct ip))) {
+                free(buf);
+                return;
+            }
+            quoted_hlen = quoted->ip_hl << 2;
+            if (quoted->ip_v != IPVERSION || quoted->ip_p != IPPROTO_ICMP ||
+                quoted_hlen < (int)sizeof(struct ip) ||
+                len < ICMP_MINLEN + quoted_hlen + ICMP_MINLEN ||
+                quoted->ip_dst.s_addr != ip->ip_dst.s_addr) {
+                free(buf);
+                return;
+            }
+            quoted_icmp = (struct icmp *)((char *)quoted + quoted_hlen);
+            if (quoted_icmp->icmp_type != ICMP_ECHO ||
+                quoted_icmp->icmp_seq != icp->icmp_seq ||
+                (so->so_type == IPPROTO_IP && quoted_icmp->icmp_id != id)) {
+                free(buf);
+                return;
+            }
+            /* VirtualBox/virtualbox#479: Forward router errors using the untouched Echo Request as the quote. */
+            icmp_forward_error(so->so_m, icp_rx->icmp_type, icp_rx->icmp_code,
+                               0, NULL, &icmp_src);
+        } else if (icp_rx->icmp_type == ICMP_ECHOREPLY &&
+                   icp_rx->icmp_seq == icp->icmp_seq &&
+                   (so->so_type != IPPROTO_IP || icp_rx->icmp_id == id)) {
+            /* VirtualBox/virtualbox#479: Copy real Echo Replies into so_m and preserve their received TTL. */
+            m->m_data += hlen;
+            m->m_len -= hlen;
+            icp = mtod(m, struct icmp *);
+            memcpy(icp, icp_rx, len);
+            icp->icmp_id = id;
+            m->m_data -= hlen;
+            m->m_len = hlen + len;
+            ip->ip_len = m->m_len;
+            ip->ip_ttl = f_have_icmp_ttl ? icmp_ttl : MAXTTL;
+
+            icmp_reflect(so->so_m);
+            so->so_m = NULL; /* Don't m_free() it again! */
+        } else {
+            /* Raw sockets can deliver unrelated ICMP traffic. */
+            free(buf);
+            return;
+        }
     }
+    free(buf);
     icmp_detach(so);
 }
 
