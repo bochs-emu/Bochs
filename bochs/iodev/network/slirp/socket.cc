@@ -422,7 +422,7 @@ int sowrite(struct socket *so)
 
     if (so->so_urgc) {
         uint32_t expected = so->so_urgc;
-        int noob = sosendoob(so);
+        noob = sosendoob(so);
 
         if (noob <= 0)
             goto err_disconnected;
