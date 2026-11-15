@@ -112,7 +112,7 @@ static int icmp_send(struct socket *so, struct mbuf *m, int hlen)
 #endif
 
     so->s = slirp_socket(AF_INET, SOCK_DGRAM, IPPROTO_ICMP);
-    if (so->s == -1) {
+    if (not_valid_socket(so->s)) {
         if (errno == EAFNOSUPPORT
          || errno == EPROTONOSUPPORT
          || errno == EACCES) {
@@ -121,15 +121,15 @@ static int icmp_send(struct socket *so, struct mbuf *m, int hlen)
             so->s = slirp_socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
         }
     }
-    if (so->s == -1) {
+    if (not_valid_socket(so->s)) {
         return -1;
     }
-    so->slirp->cb->register_poll_fd(so->s, so->slirp->opaque);
+    slirp_register_poll_socket(so);
 
     if (slirp_bind_outbound(so, AF_INET) != 0) {
         // bind failed - close socket
         closesocket(so->s);
-        so->s = -1;
+        so->s = SLIRP_INVALID_SOCKET;
         return -1;
     }
 
@@ -161,7 +161,7 @@ static int icmp_send(struct socket *so, struct mbuf *m, int hlen)
 
 void icmp_detach(struct socket *so)
 {
-    so->slirp->cb->unregister_poll_fd(so->s, so->slirp->opaque);
+    slirp_unregister_poll_socket(so);
     closesocket(so->s);
     sofree(so);
 }
@@ -224,7 +224,7 @@ void icmp_input(struct mbuf *m, int hlen)
             /* We could not send this as ICMP, try to send it on UDP echo
              * service (7), wishfully hoping that it is open there. */
 
-            if (udp_attach(so, AF_INET) == -1) {
+            if (not_valid_socket(udp_attach(so, AF_INET))) {
                 DEBUG_MISC("icmp_input udp_attach errno = %d-%s", errno,
                            strerror(errno));
                 sofree(so);
@@ -331,7 +331,7 @@ void icmp_forward_error(struct mbuf *msrc, uint8_t type, uint8_t code, int minsi
     if (!msrc)
         goto end_error;
     ip = mtod(msrc, struct ip *);
-    if (slirp_debug & DBG_MISC) {
+    if (slirp_debug & SLIRP_DBG_MISC) {
         char addr_src[INET_ADDRSTRLEN];
         char addr_dst[INET_ADDRSTRLEN];
 

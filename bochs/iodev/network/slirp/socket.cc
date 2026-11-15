@@ -19,8 +19,8 @@ static void sofcantrcvmore(struct socket *so);
 static void sofcantsendmore(struct socket *so);
 
 struct socket *solookup(struct socket **last, struct socket *head,
-                        struct sockaddr_storage *lhost,
-                        struct sockaddr_storage *fhost)
+                        const struct sockaddr_storage *lhost,
+                        const struct sockaddr_storage *fhost)
 {
     struct socket *so = *last;
 
@@ -53,8 +53,8 @@ struct socket *socreate(Slirp *slirp, int type)
         memset(so, 0, sizeof(struct socket));
         so->so_type = type;
         so->so_state = SS_NOFDREF;
-        so->s = -1;
-        so->s_aux = -1;
+        so->s = SLIRP_INVALID_SOCKET;
+        so->s_aux = SLIRP_INVALID_SOCKET;
         so->slirp = slirp;
         so->pollfds_idx = -1;
   }
@@ -65,7 +65,7 @@ struct socket *socreate(Slirp *slirp, int type)
 /*
  * Remove references to so from the given message queue.
  */
-static void soqfree(struct socket *so, struct slirp_quehead *qh)
+static void soqfree(const struct socket *so, struct slirp_quehead *qh)
 {
     struct mbuf *ifq;
 
@@ -88,7 +88,7 @@ void sofree(struct socket *so)
 {
     Slirp *slirp = so->slirp;
 
-    if (so->s_aux != -1) {
+    if (have_valid_socket(so->s_aux)) {
         closesocket(so->s_aux);
     }
 
@@ -801,7 +801,8 @@ struct socket *tcpx_listen(Slirp *slirp,
                            int flags)
 {
     struct socket *so;
-    int s, opt = 1;
+    slirp_os_socket s;
+    int opt = 1;
     socklen_t addrlen;
 
     DEBUG_CALL("tcpx_listen");
@@ -867,22 +868,19 @@ struct socket *tcpx_listen(Slirp *slirp,
     sockaddr_copy(&so->lhost.sa, sizeof(so->lhost), laddr, laddrlen);
 
     s = slirp_socket(haddr->sa_family, SOCK_STREAM, 0);
-    if ((s < 0) ||
+    if ((not_valid_socket(s)) ||
         (haddr->sa_family == AF_INET6 && slirp_socket_set_v6only(s, (flags & SS_HOSTFWD_V6ONLY) != 0) < 0) ||
         (slirp_socket_set_fast_reuse(s) < 0) ||
         (bind(s, haddr, haddrlen) < 0) ||
         (listen(s, 1) < 0)) {
         int tmperrno = errno; /* Don't clobber the real reason we failed */
-        if (s >= 0) {
+        if (have_valid_socket(s)) {
             closesocket(s);
         }
         sofree(so);
         /* Restore the real errno */
-#ifdef _WIN32
-        WSASetLastError(tmperrno);
-#else
         errno = tmperrno;
-#endif
+
         return NULL;
     }
     setsockopt(s, SOL_SOCKET, SO_OOBINLINE, &opt, sizeof(int));
@@ -893,6 +891,8 @@ struct socket *tcpx_listen(Slirp *slirp,
     sotranslate_accept(so);
 
     so->s = s;
+    slirp_register_poll_socket(so);
+
     return so;
 }
 
@@ -1093,7 +1093,7 @@ void sotranslate_accept(struct socket *so)
          * this source port by binding to port 0 so that the OS allocates a
          * port for us. If this fails, we fall back to choosing a random port
          * with a random number generator. */
-        int s = 0;
+        slirp_os_socket s = 0;
         struct sockaddr_in in_addr;
         struct sockaddr_in6 in6_addr;
         socklen_t in_addr_len;
@@ -1114,7 +1114,7 @@ void sotranslate_accept(struct socket *so)
                 slirplog_error("Unknown protocol");
                 break;
             }
-            if (s < 0) {
+            if (not_valid_socket(s)) {
                 slirplog_error("Ephemeral slirp_socket() allocation failed");
                 goto unix2inet_cont;
             }
@@ -1157,7 +1157,7 @@ unix2inet_cont:
                 slirplog_error("Unknown protocol");
                 break;
             }
-            if (s < 0) {
+            if (not_valid_socket(s)) {
                 slirplog_error("Ephemeral slirp_socket() allocation failed");
                 goto unix2inet6_cont;
             }

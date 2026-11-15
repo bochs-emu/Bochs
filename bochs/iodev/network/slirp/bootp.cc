@@ -285,7 +285,7 @@ static void bootp_reply(Slirp *slirp,
     memcpy(rbp->bp_hwaddr, bp->bp_hwaddr, ETH_ALEN);
 
     rbp->bp_yiaddr = daddr.sin_addr; /* Client IP address */
-    rbp->bp_siaddr = saddr.sin_addr; /* Server IP address */
+    rbp->bp_siaddr = saddr.sin_addr; /* Next server IP address */
 
     q = rbp->bp_vend;
     end = rbp->bp_vend + DHCP_OPT_LEN;
@@ -296,6 +296,27 @@ static void bootp_reply(Slirp *slirp,
         DPRINTF("%s addr=%08x",
                 (dhcp_opts.msg_type == DHCPDISCOVER) ? "offered" : "ack'ed",
                 ntohl(daddr.sin_addr.s_addr));
+
+        if (slirp->tftp_server_name) {
+            struct addrinfo hints;
+            struct addrinfo *ai = NULL;
+            int gaierrno;
+
+            memset(&hints, 0, sizeof(hints));
+            hints.ai_family = AF_INET;  /* must be IPv4 */
+
+            if ((gaierrno = getaddrinfo(slirp->tftp_server_name,
+                                        NULL, &hints, &ai))) {
+                slirplog_error("Failed to resolve tftp-server-name '%s': %s. "
+                               "Sending DHCP server as next server address.",
+                               slirp->tftp_server_name,
+                               gai_strerror(gaierrno));
+            } else {
+                /* only use the first candidate */
+                rbp->bp_siaddr = ((struct sockaddr_in*)ai->ai_addr)->sin_addr;
+            }
+            freeaddrinfo(ai);
+        }
 
         if (dhcp_opts.msg_type == DHCPDISCOVER) {
             *q++ = RFC2132_MSG_TYPE;

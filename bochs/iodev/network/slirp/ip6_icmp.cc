@@ -64,7 +64,7 @@ static int icmp6_send(struct socket *so, struct mbuf *m, int hlen)
 #endif
 
     so->s = slirp_socket(AF_INET6, SOCK_DGRAM, IPPROTO_ICMPV6);
-    if (so->s == -1) {
+    if (not_valid_socket(so->s)) {
         if (errno == EAFNOSUPPORT
          || errno == EPROTONOSUPPORT
          || errno == EACCES) {
@@ -73,10 +73,10 @@ static int icmp6_send(struct socket *so, struct mbuf *m, int hlen)
             so->s = slirp_socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
         }
     }
-    if (so->s == -1) {
+    if (not_valid_socket(so->s)) {
         return -1;
     }
-    so->slirp->cb->register_poll_fd(so->s, so->slirp->opaque);
+    slirp_register_poll_socket(so);
 
     if (slirp_bind_outbound(so, AF_INET6) != 0) {
         // bind failed - close socket
@@ -583,7 +583,7 @@ void icmp6_input(struct mbuf *m)
             /* We could not send this as ICMP, try to send it on UDP echo
              * service (7), wishfully hoping that it is open there. */
 
-            if (udp_attach(so, AF_INET6) == -1) {
+            if (not_valid_socket(udp_attach(so, AF_INET6))) {
                 DEBUG_MISC("icmp6_input udp_attach errno = %d-%s", errno,
                            strerror(errno));
                 sofree(so);
