@@ -2,7 +2,7 @@
 #ifndef SLIRP_H
 #define SLIRP_H
 
-#define SLIRP_VERSION_STRING "4.9.5"
+#define SLIRP_VERSION_STRING "4.9.6"
 
 #ifdef __CYGWIN__
 #define __USE_W32_SOCKETS

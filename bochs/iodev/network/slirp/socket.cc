@@ -984,6 +984,13 @@ static bool sotranslate_out4(Slirp *s, struct socket *so, struct sockaddr_in *si
                 get_dns_addr(&sin->sin_addr, &sin->sin_port) >= 0);
     }
 
+    /* VirtualBox/virtualbox#447: statically configured guests may use the
+     * gateway as their DNS server, as supported by VirtualBox before 7.2. */
+    if (!s->disable_dns && so->so_faddr.s_addr == s->vhost_addr.s_addr &&
+        so->so_fport == htons(53)) {
+        return get_dns_addr(&sin->sin_addr, &sin->sin_port) >= 0;
+    }
+
     if (so->so_faddr.s_addr == s->vhost_addr.s_addr ||
         so->so_faddr.s_addr == 0xffffffff) {
         if (s->disable_host_loopback) {
@@ -1006,6 +1013,18 @@ static bool sotranslate_out6(Slirp *s, struct socket *so, struct sockaddr_in6 *s
             return true;
         }
         return false;
+    }
+
+    /* IPv6 counterpart of the gateway DNS compatibility above. */
+    if (!s->disable_dns && in6_equal(&so->so_faddr6, &s->vhost_addr6) &&
+        so->so_fport == htons(53)) {
+        uint32_t scope_id;
+
+        if (get_dns6_addr(&sin->sin6_addr, &sin->sin6_port, &scope_id) < 0) {
+            return false;
+        }
+        sin->sin6_scope_id = scope_id;
+        return true;
     }
 
     if (in6_equal_net(&so->so_faddr6, &s->vprefix_addr6, s->vprefix_len) ||
@@ -1064,6 +1083,15 @@ void sotranslate_in(struct socket *so, struct sockaddr_storage *addr)
             }
         }
 
+        /* Restore the guest-visible gateway DNS endpoint. */
+        if (!slirp->disable_dns &&
+            so->so_faddr.s_addr == slirp->vhost_addr.s_addr &&
+            so->so_fport == htons(53)) {
+            sin->sin_addr = slirp->vhost_addr;
+            sin->sin_port = htons(53);
+            break;
+        }
+
         struct in_addr sin_addr;
         if (get_dns_addr(&sin_addr, &dns_port) >= 0 &&
                 sin->sin_port == dns_port &&
@@ -1079,6 +1107,15 @@ void sotranslate_in(struct socket *so, struct sockaddr_storage *addr)
                 !in6_equal(&so->so_faddr6, &slirp->vhost_addr6)) {
                 sin6->sin6_addr = so->so_faddr6;
             }
+        }
+
+        /* Restore the guest-visible gateway DNS endpoint. */
+        if (!slirp->disable_dns &&
+            in6_equal(&so->so_faddr6, &slirp->vhost_addr6) &&
+            so->so_fport == htons(53)) {
+            sin6->sin6_addr = slirp->vhost_addr6;
+            sin6->sin6_port = htons(53);
+            break;
         }
 
         struct in6_addr sin6_addr;

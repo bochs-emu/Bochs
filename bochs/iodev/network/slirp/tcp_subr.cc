@@ -884,10 +884,12 @@ int tcp_emu(struct socket *so, struct mbuf *m)
          * us where we're going.
          */
 
+        int ra; /* not initialized here: C++ forbids jumping past initialization */
+        ra = 0;
+
         bptr = m->m_data;
         while (bptr < m->m_data + m->m_len) {
             uint16_t p;
-            static int ra = 0;
             char ra_tbl[4];
 
             ra_tbl[0] = 0x50;

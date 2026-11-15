@@ -165,6 +165,23 @@ static inline void in6_compute_ethaddr(struct in6_addr ip,
     memcpy(&eth[2], &ip.s6_addr[16 - (ETH_ALEN - 2)], ETH_ALEN - 2);
 }
 
+static inline bool in6_martian(const struct in6_addr *ip)
+{
+    return in6_equal(ip, &in6addr_any)
+        || in6_equal(ip, &in6addr_loopback);
+}
+
+static inline bool in6_martian_source(const struct in6_addr *src)
+{
+    return in6_martian(src)
+        || IN6_IS_ADDR_MULTICAST(src);
+}
+
+static inline bool in6_martian_destination(const struct in6_addr *dst)
+{
+    return in6_martian(dst);
+}
+
 /*
  * Definitions for internet protocol version 6.
  * Per RFC 2460, December 1998.

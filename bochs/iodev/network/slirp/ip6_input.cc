@@ -74,6 +74,29 @@ void ip6_input(struct mbuf *m)
         goto bad;
     }
 
+    if (in6_martian_source(&ip6->ip_src)
+     || in6_martian_destination(&ip6->ip_dst)) {
+        goto bad;
+    }
+
+    if (IN6_IS_ADDR_V4MAPPED(&ip6->ip_src)
+     || IN6_IS_ADDR_V4COMPAT(&ip6->ip_src)) {
+        struct in_addr ip4_src;
+        memcpy(&ip4_src, &ip6->ip_src.s6_addr[12], 4);
+        if (in_martian_source(ntohl(ip4_src.s_addr))) {
+            goto bad;
+        }
+    }
+
+    if (IN6_IS_ADDR_V4MAPPED(&ip6->ip_dst)
+     || IN6_IS_ADDR_V4COMPAT(&ip6->ip_dst)) {
+        struct in_addr ip4_dst;
+        memcpy(&ip4_dst, &ip6->ip_dst.s6_addr[12], 4);
+        if (in_martian_destination(ntohl(ip4_dst.s_addr))) {
+            goto bad;
+        }
+    }
+
     /*
      * Switch out to protocol's input routine.
      */

@@ -138,6 +138,11 @@ void ip_input(struct mbuf *m)
         goto bad;
     }
 
+    if (in_martian_source(ntohl(ip->ip_src.s_addr))
+     || in_martian_destination(ntohl(ip->ip_dst.s_addr))) {
+        goto bad;
+    }
+
     /*
      * If offset or IP_MF are set, must reassemble.
      * Otherwise, nothing need be done.

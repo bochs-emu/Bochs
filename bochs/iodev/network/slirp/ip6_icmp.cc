@@ -242,6 +242,7 @@ void icmp6_reflect(struct mbuf *m)
 void icmp6_receive(struct socket *so)
 {
     struct mbuf *m = so->so_m;
+    struct ip6 *ip = mtod(m, struct ip6 *);
     int hlen = sizeof(struct ip6);
     uint8_t error_code;
     struct icmp6 *icp;
@@ -268,9 +269,12 @@ void icmp6_receive(struct socket *so)
             error_code = ICMP6_UNREACH_ADDRESS;
         }
         DEBUG_MISC(" udp icmp rx errno = %d-%s", errno, strerror(errno));
-        icmp6_send_error(so->so_m, ICMP_UNREACH, error_code);
+        icmp6_send_error(m, ICMP6_UNREACH, error_code);
     } else {
-        icmp6_reflect(so->so_m);
+        m->m_len = hlen + len;
+        ip->ip_pl = htons(len);
+
+        icmp6_reflect(m);
         so->so_m = NULL; /* Don't m_free() it again! */
     }
     icmp_detach(so);
