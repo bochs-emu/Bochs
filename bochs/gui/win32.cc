@@ -950,6 +950,15 @@ void SetWindowPositionFromLast(const char *name, int *ipLeft, int *ipTop)
   sprintf(SubKey, "%sTop", name);
   LONG resTop = RegGetValue(HKEY_CURRENT_USER, szRegLocation, SubKey, RRF_RT_DWORD, NULL, &Top, &TopSize);
   if ((resLeft == ERROR_SUCCESS) && (resTop == ERROR_SUCCESS)) {
+    // Make sure we don't move off the left/top of the screen
+    if ((int) Left < 0) Left = 0;
+    if ((int) Top < 0) Top = 0;
+
+    // check to make sure we don't move clear off the right/bottom of screen
+    //  (this can happen if the user changes the Host screen size to a smaller size)
+    if (Left > (desktop_x - 25)) Left = (desktop_x - 25);
+    if (Top > (desktop_y - 25)) Top = (desktop_y - 25);
+    
     // send the new values
     if (ipLeft) *ipLeft = (int) Left;
     if (ipTop) *ipTop = (int) Top;
@@ -968,18 +977,8 @@ void GetWindowPostitionForNext(HWND Wnd, const char *name)
     RECT Rect;
     if (GetWindowRect(Wnd, &Rect)) {
       // LONG might not be the same size as DWORD
-      // (We can't make Left/Top integers since sizeof(int) might not be the same size as sizeof(DWORD))
       DWORD Left = (DWORD) Rect.left;
       DWORD Top = (DWORD) Rect.top;
-
-      // Make sure we don't move off the left/top of the screen
-      if ((int) Left < 0) Left = 0; 
-      if ((int) Top < 0) Top = 0;
-
-      // check to make sure we don't move clear off the right/bottom of screen
-      //  (this can happen if the user changes the Host screen size to a smaller size)
-      if (Left > (desktop_x - 25)) Left = (desktop_x - 25);
-      if (Top > (desktop_y - 25)) Top = (desktop_y - 25);
 
       sprintf(SubKey, "%sLeft", name);
       RegSetValueEx(hKey, SubKey, 0, REG_DWORD, (const BYTE *) &Left, sizeof(DWORD));
