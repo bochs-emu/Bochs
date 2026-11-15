@@ -180,6 +180,18 @@ void vbox_image_t::close()
   if (file_descriptor == -1)
     return;
 
+  sync();
+
+  delete [] mtlb; mtlb = 0;
+  delete [] block_data; block_data = 0;
+
+  bx_close_image(file_descriptor, pathname);
+  file_descriptor = -1;
+}
+
+// write cached block, map table and header back to the image file
+void vbox_image_t::sync()
+{
   flush();
 
   // write the map back to the disk
@@ -188,6 +200,7 @@ void vbox_image_t::close()
         != (ssize_t)(header.blocks_in_hdd * sizeof(Bit32u))) {
         BX_PANIC(("did not write map table"));
     }
+    mtlb_dirty = 0;
   }
 
   // write header back to image
@@ -195,13 +208,8 @@ void vbox_image_t::close()
     if (bx_write_image(file_descriptor, 0, &header, sizeof(VBOX_VDI_Header)) != sizeof(VBOX_VDI_Header)) {
       BX_PANIC(("did not write header"));
     }
+    header_dirty = 0;
   }
-
-  delete [] mtlb; mtlb = 0;
-  delete [] block_data; block_data = 0;
-
-  bx_close_image(file_descriptor, pathname);
-  file_descriptor = -1;
 }
 
 Bit64s vbox_image_t::lseek(Bit64s offset, int whence)
@@ -428,6 +436,7 @@ Bit32u vbox_image_t::get_capabilities(void)
 #ifndef BXIMAGE
 bool vbox_image_t::save_state(const char *backup_fname)
 {
+  sync();
   return hdimage_backup_file(file_descriptor, backup_fname);
 }
 

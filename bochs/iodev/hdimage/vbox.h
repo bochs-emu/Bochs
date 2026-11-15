@@ -10,7 +10,7 @@
  * Contact: fys [at] fysnet [dot] net
  *
  * Copyright (C) 2015 Benjamin D Lunt.
- * Copyright (C) 2006-2021  The Bochs Project
+ * Copyright (C) 2006-2026  The Bochs Project
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -103,6 +103,7 @@ class vbox_image_t : public device_image_t
         bool read_header();
         off_t perform_seek();
         void flush();
+        void sync();
         void read_block(const Bit32u index);
         void write_block(const Bit32u index);
 
