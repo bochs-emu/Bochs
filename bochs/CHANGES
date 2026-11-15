@@ -1,6 +1,6 @@
 Changes after Bochs 3.1 release:
 
-(up to date with commits done till 14 Nov 2026)
+(up to date with commits done till 15 Nov 2026)
 
 - CPU emulation and instrumentation
   ! CPUDB: Added AMD Zen3 (Vermeer) CPUID model (features X2APIC, CLWB, UMIP, PKU, CET, VAES, RDPID + introduces CPUID 0x80000021: AMD Extended Feature Identification 2)
@@ -128,6 +128,7 @@ Changes after Bochs 3.1 release:
       - #997: Use card type derived from the class id for 3D rendering (missing 3D output with 30.82 driver and NV35)
       - #998: Fix X8R8G8B8 pixel reads in SIFM command (blur effect in Minecraft main menu with NV40)
       - #1001: Fix projective texture lookup for cubemaps and implement LIF pixel shader operation (bump mapping and marble demos with NV40)
+      - #1005: Implement LIT and TIMESWTEX pixel shader operations (shading in marble and bump mapping demos with NV35)
   - Hard drive / HD image
     - VVFAT: Fixed LongName handling in vvfat disks
     - VVFAT: Adding path prefix "fat32:" forces using FAT32 file system
@@ -249,6 +250,7 @@ Changes after Bochs 3.1 release:
       stopping the inactive DAC keeps the active one playing
     - SB16, ES1370: MIDI delta times and OPL timers are computed on demand from the emulated time (no periodic timers, faster emulation)
   - Networking
+    - Updated builtin slirp to libslirp 4.9.7 (including upstream security fixes)
     - Fixed many guest-triggerable host memory corruptions and out of bounds accesses (NE2000, E1000, PCI Pseudo-NIC, vnet, tap, FreeBSD backend)
     - vnet: TFTP and FTP file access is restricted to the server root directory
     - vnet: no more network stall when the NIC is not ready to receive, fixed TFTP uploads and downloads of large files
@@ -296,11 +298,13 @@ Changes after Bochs 3.1 release:
     - Fixed paste (an extra NUL byte was sent to the guest)
     - Fixed mouse wheel event in absolute mouse mode
     - Fixed status bar drawing past the window width in narrow video modes
+    - Fixed erratic mouse movement when the mouse is captured on Wayland (#1003)
   - rfb / vncsrv
     - Fixed hangs and deadlocks when the event queue is full or the headerbar is clicked
     - Fixed RFB protocol handling: client clipboard text is skipped, unknown message type closes the connection (was 100% CPU loop)
   - x11 gui
     - Faster graphics tile update
+    - Header bar buttons ignore clicks while the mouse is captured (accidental reset / power off in USB tablet mode)
   - term gui
     - Fixed terminal init in debugger enabled mode
     - Added support for the command mode
