@@ -182,11 +182,7 @@ void athlon_xp_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000000 //
 void athlon_xp_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
-  // EAX: highest extended function understood by CPUID
-  // EBX: reserved
-  // EDX: reserved
-  // ECX: reserved
-  get_leaf_0(0x80000008, NULL, leaf);
+  get_leaf_0(0x80000008, "AuthenticAMD", leaf);
 }
 
 // leaf 0x80000001 //
