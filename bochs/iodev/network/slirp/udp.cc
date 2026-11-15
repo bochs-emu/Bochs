@@ -265,6 +265,8 @@ int udp_output(struct socket *so, struct mbuf *m, const struct sockaddr_in *sadd
     DEBUG_ARG("m = %p", m);
     DEBUG_ARG("saddr = %s", inet_ntop(AF_INET, &saddr->sin_addr, addr, sizeof(addr)));
     DEBUG_ARG("daddr = %s", inet_ntop(AF_INET, &daddr->sin_addr, addr, sizeof(addr)));
+    DEBUG_ARG("s_inport = %d", ntohs(saddr->sin_port));
+    DEBUG_ARG("d_inport = %d", ntohs(daddr->sin_port));
 
     /*
      * Adjust for header

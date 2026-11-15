@@ -213,7 +213,9 @@ int soread(struct socket *so)
                 if (!shutdown_wr && getpeername(so->s, paddr, &alen) < 0) {
                     err = errno;
                 } else {
-                    getsockopt(so->s, SOL_SOCKET, SO_ERROR, &err, &elen);
+                    if (getsockopt(so->s, SOL_SOCKET, SO_ERROR, &err, &elen) < 0) {
+                        err = errno;
+                    }
                 }
             }
 
@@ -341,7 +343,8 @@ int sorecvoob(struct socket *so)
 int sosendoob(struct socket *so)
 {
     struct sbuf *sb = &so->so_rcv;
-    char buff[2048]; /* XXX Shouldn't be sending more oob data than this */
+    uint32_t urgc = so->so_urgc;
+    char buff[2048];
 
     int n;
 
@@ -349,12 +352,15 @@ int sosendoob(struct socket *so)
     DEBUG_ARG("so = %p", so);
     DEBUG_ARG("sb->sb_cc = %d", sb->sb_cc);
 
-    if (so->so_urgc > sizeof(buff))
-        so->so_urgc = sizeof(buff); /* XXXX */
+    if (urgc > sizeof(buff))
+        urgc = sizeof(buff);
+
+    if (urgc > sb->sb_cc)
+        urgc = sb->sb_cc;
 
     if (sb->sb_rptr < sb->sb_wptr) {
         /* We can send it directly */
-        n = (int)slirp_send(so, sb->sb_rptr, so->so_urgc,
+        n = (int)slirp_send(so, sb->sb_rptr, urgc,
                             (MSG_OOB)); /* |MSG_DONTWAIT)); */
     } else {
         /*
@@ -362,7 +368,6 @@ int sosendoob(struct socket *so)
          * we must copy all data to a linear buffer then
          * send it all
          */
-        uint32_t urgc = so->so_urgc; /* Amount of room left in buff */
         int len = (sb->sb_data + sb->sb_datalen) - sb->sb_rptr;
         if (len > (int)urgc) {
             len = urgc;
@@ -407,7 +412,7 @@ int sosendoob(struct socket *so)
  */
 int sowrite(struct socket *so)
 {
-    int  n,nn;
+    int n, nn, noob = 0;
     struct sbuf *sb = &so->so_rcv;
     int len = sb->sb_cc;
     struct iovec iov[2];
@@ -417,16 +422,20 @@ int sowrite(struct socket *so)
 
     if (so->so_urgc) {
         uint32_t expected = so->so_urgc;
-        if (sosendoob(so) < (int)expected) {
-            /* Treat a short write as a fatal error too,
-             * rather than continuing on and sending the urgent
-             * data as if it were non-urgent and leaving the
-             * so_urgc count wrong.
-             */
+        int noob = sosendoob(so);
+
+        if (noob <= 0)
             goto err_disconnected;
-        }
+
+        if (noob < (int)expected)
+            /* Short write: either we have not yet received all
+             * urgent data, or the socket buffers are full. Leave
+             * it for later when we have data or have room.  */
+            return noob;
+
         if (sb->sb_cc == 0)
-            return 0;
+            /* Nothing left to write actually */
+            return noob;
     }
 
     /*
@@ -457,12 +466,11 @@ int sowrite(struct socket *so)
         } else
             n = 1;
     }
-    /* Check if there's urgent data to send, and if so, send it */
 
     nn = (int)slirp_send(so, iov[0].iov_base, iov[0].iov_len,0);
     /* This should never happen, but people tell me it does *shrug* */
     if (nn < 0 && (errno == EAGAIN || errno == EINTR))
-        return 0;
+        return noob;
 
     if (nn <= 0) {
         goto err_disconnected;
@@ -489,7 +497,7 @@ int sowrite(struct socket *so)
     if ((so->so_state & SS_FWDRAIN) && sb->sb_cc == 0)
         sofcantsendmore(so);
 
-    return nn;
+    return noob + nn;
 
 err_disconnected:
     DEBUG_MISC(" --- sowrite disconnected, so->so_state = %x, errno = %d",
@@ -972,7 +980,8 @@ void sofwdrain(struct socket *so)
 static bool sotranslate_out4(Slirp *s, struct socket *so, struct sockaddr_in *sin)
 {
     if (!s->disable_dns && so->so_faddr.s_addr == s->vnameserver_addr.s_addr) {
-        return so->so_fport == htons(53) && get_dns_addr(&sin->sin_addr) >= 0;
+        return (so->so_fport == htons(53) &&
+                get_dns_addr(&sin->sin_addr, &sin->sin_port) >= 0);
     }
 
     if (so->so_faddr.s_addr == s->vhost_addr.s_addr ||
@@ -991,7 +1000,8 @@ static bool sotranslate_out6(Slirp *s, struct socket *so, struct sockaddr_in6 *s
 {
     if (!s->disable_dns && in6_equal(&so->so_faddr6, &s->vnameserver_addr6)) {
         uint32_t scope_id;
-        if (so->so_fport == htons(53) && get_dns6_addr(&sin->sin6_addr, &scope_id) >= 0) {
+        if (so->so_fport == htons(53) &&
+                get_dns6_addr(&sin->sin6_addr, &sin->sin6_port, &scope_id) >= 0) {
             sin->sin6_scope_id = scope_id;
             return true;
         }
@@ -1038,6 +1048,8 @@ void sotranslate_in(struct socket *so, struct sockaddr_storage *addr)
     struct sockaddr_in *sin = (struct sockaddr_in *)addr;
     struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)addr;
 
+    uint16_t dns_port;
+
     switch (addr->ss_family) {
     case AF_INET:
         if ((so->so_faddr.s_addr & slirp->vnetwork_mask.s_addr) ==
@@ -1051,6 +1063,13 @@ void sotranslate_in(struct socket *so, struct sockaddr_storage *addr)
                 sin->sin_addr = so->so_faddr;
             }
         }
+
+        struct in_addr sin_addr;
+        if (get_dns_addr(&sin_addr, &dns_port) >= 0 &&
+                sin->sin_port == dns_port &&
+                sin->sin_addr.s_addr == sin_addr.s_addr)
+            sin->sin_port = htons(53);
+
         break;
 
     case AF_INET6:
@@ -1061,6 +1080,15 @@ void sotranslate_in(struct socket *so, struct sockaddr_storage *addr)
                 sin6->sin6_addr = so->so_faddr6;
             }
         }
+
+        struct in6_addr sin6_addr;
+        uint32_t scope_id;
+        if (get_dns6_addr(&sin6_addr, &dns_port, &scope_id) >= 0 &&
+                sin6->sin6_port == dns_port &&
+                sin6->sin6_scope_id == scope_id &&
+                in6_equal(&sin6->sin6_addr, &sin6_addr))
+            sin6->sin6_port = htons(53);
+
         break;
 
     default:

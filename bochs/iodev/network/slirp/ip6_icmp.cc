@@ -288,6 +288,7 @@ static void ndp_send_ra(Slirp *slirp)
     struct ip6 *rip = mtod(t, struct ip6 *);
     size_t pl_size = 0;
     struct in6_addr addr;
+    uint16_t port;
     uint32_t scope_id;
 
     rip->ip_src = (struct in6_addr)LINKLOCAL_ADDR;
@@ -336,7 +337,7 @@ static void ndp_send_ra(Slirp *slirp)
     pl_size += NDPOPT_PREFIXINFO_LEN;
 
     /* Prefix information (NDP option) */
-    if (get_dns6_addr(&addr, &scope_id) >= 0) {
+    if (get_dns6_addr(&addr, &port, &scope_id) >= 0) {
         /* Host system does have an IPv6 DNS server, announce our proxy.  */
         struct ndpopt *opt3 = mtod(t, struct ndpopt *);
         opt3->ndpopt_type = NDPOPT_RDNSS;

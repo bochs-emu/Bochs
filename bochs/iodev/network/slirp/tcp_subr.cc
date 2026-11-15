@@ -368,7 +368,11 @@ void tcp_sockclosed(struct tcpcb *tp)
     case TCPS_CLOSE_WAIT:
         tp->t_state = TCPS_LAST_ACK;
         break;
+    case TCPS_FIN_WAIT_1:
+    case TCPS_CLOSING:
+    case TCPS_LAST_ACK:
     case TCPS_FIN_WAIT_2:
+    case TCPS_TIME_WAIT:
         /*
          * If we can't receive any more
          * data, then closing user can proceed.

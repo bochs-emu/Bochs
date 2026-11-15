@@ -2,7 +2,7 @@
 #ifndef SLIRP_H
 #define SLIRP_H
 
-#define SLIRP_VERSION_STRING "4.9.1"
+#define SLIRP_VERSION_STRING "4.9.2"
 
 #ifdef __CYGWIN__
 #define __USE_W32_SOCKETS
@@ -245,11 +245,12 @@ struct Slirp {
  */
 void if_start(Slirp *);
 
-/* Get the address of the DNS server on the host side */
-int get_dns_addr(struct in_addr *pdns_addr);
+/* Get the IPv4 address and port of the DNS server on the host side */
+int get_dns_addr(struct in_addr *pdns_addr, uint16_t *pdns_port);
 
-/* Get the IPv6 address of the DNS server on the host side */
-int get_dns6_addr(struct in6_addr *pdns6_addr, uint32_t *scope_id);
+/* Get the IPv6 address and port of the DNS server on the host side */
+int get_dns6_addr(struct in6_addr *pdns6_addr, uint16_t *pdns_port,
+                  uint32_t *scope_id);
 
 /* ncsi.c */
 

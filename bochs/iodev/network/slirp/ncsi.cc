@@ -177,8 +177,8 @@ static int ncsi_rsp_handler_gvi(Slirp *slirp, const struct ncsi_pkt_hdr *nh,
 {
     struct ncsi_rsp_gvi_pkt *rsp = (struct ncsi_rsp_gvi_pkt *)rnh;
 
-    rsp->ncsi_version = htonl(0xF1F0F000);
-    rsp->mf_id = htonl(slirp->mfr_id);
+    rsp->ncsi_version = htonl(0xF1F0F000);  /* NCSI version 1.0.0 */
+    rsp->mf_id = htonl(slirp->mfr_id);      /* Manufacturer ID */
 
     return 0;
 }
@@ -229,27 +229,27 @@ static const struct ncsi_rsp_handler {
     int payload;
     int (*handler)(Slirp *slirp, const struct ncsi_pkt_hdr *nh,
                    struct ncsi_rsp_pkt_hdr *rnh);
-} ncsi_rsp_handlers[] = { { NCSI_PKT_RSP_CIS, 4, NULL },
-                          { NCSI_PKT_RSP_SP, 4, NULL },
-                          { NCSI_PKT_RSP_DP, 4, NULL },
-                          { NCSI_PKT_RSP_EC, 4, NULL },
+} ncsi_rsp_handlers[] = { { NCSI_PKT_RSP_CIS, 4, NULL },     /* Clear Initial State */
+                          { NCSI_PKT_RSP_SP, 4, NULL },      /* Select Package */
+                          { NCSI_PKT_RSP_DP, 4, NULL },      /* Deselect Package */
+                          { NCSI_PKT_RSP_EC, 4, NULL },      /* Enable Channel */
                           { NCSI_PKT_RSP_DC, 4, NULL },
                           { NCSI_PKT_RSP_RC, 4, NULL },
-                          { NCSI_PKT_RSP_ECNT, 4, NULL },
+                          { NCSI_PKT_RSP_ECNT, 4, NULL },    /* Enable Channel TX */
                           { NCSI_PKT_RSP_DCNT, 4, NULL },
-                          { NCSI_PKT_RSP_AE, 4, NULL },
+                          { NCSI_PKT_RSP_AE, 4, NULL },      /* Enable AEN */
                           { NCSI_PKT_RSP_SL, 4, NULL },
                           { NCSI_PKT_RSP_GLS, 16, ncsi_rsp_handler_gls },
-                          { NCSI_PKT_RSP_SVF, 4, NULL },
-                          { NCSI_PKT_RSP_EV, 4, NULL },
-                          { NCSI_PKT_RSP_DV, 4, NULL },
-                          { NCSI_PKT_RSP_SMA, 4, NULL },
-                          { NCSI_PKT_RSP_EBF, 4, NULL },
+                          { NCSI_PKT_RSP_SVF, 4, NULL },     /* Set VLAN Filter */
+                          { NCSI_PKT_RSP_EV, 4, NULL },      /* Enable VLAN */
+                          { NCSI_PKT_RSP_DV, 4, NULL },      /* Disable VLAN */
+                          { NCSI_PKT_RSP_SMA, 4, NULL },     /* Set MAC Address */
+                          { NCSI_PKT_RSP_EBF, 4, NULL },     /* Enable Broadcast Filter */
                           { NCSI_PKT_RSP_DBF, 4, NULL },
                           { NCSI_PKT_RSP_EGMF, 4, NULL },
-                          { NCSI_PKT_RSP_DGMF, 4, NULL },
+                          { NCSI_PKT_RSP_DGMF, 4, NULL },    /* Disable Global Multicast Filter */
                           { NCSI_PKT_RSP_SNFC, 4, NULL },
-                          { NCSI_PKT_RSP_GVI, 40, ncsi_rsp_handler_gvi },
+                          { NCSI_PKT_RSP_GVI, 40, ncsi_rsp_handler_gvi },  /* Get Version ID */
                           { NCSI_PKT_RSP_GC, 32, ncsi_rsp_handler_gc },
                           { NCSI_PKT_RSP_GP, 40, ncsi_rsp_handler_gp },
                           { NCSI_PKT_RSP_GCPS, 172, NULL },
@@ -270,6 +270,12 @@ void ncsi_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
 {
     const struct ncsi_pkt_hdr *nh =
         (const struct ncsi_pkt_hdr *)(pkt + ETH_HLEN);
+    /*
+     * Add 2-byte padding at start of buffer for proper alignment of IP header
+     * after 14-byte Ethernet header. This ensures the IP payload starts on a
+     * 4-byte boundary, which is required for optimal performance on many
+     * architectures and expected by slirp's packet handling code.
+     */
     uint8_t ncsi_reply[2 + ETH_HLEN + NCSI_MAX_LEN];
     struct ethhdr *reh = (struct ethhdr *)(ncsi_reply + 2);
     struct ncsi_rsp_pkt_hdr *rnh =
@@ -324,6 +330,7 @@ void ncsi_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
     *pchecksum = htonl(checksum);
     ncsi_rsp_len += 4;
 
+    /* Skip the 2-byte padding when sending the packet */
     slirp_send_packet_all(slirp, ncsi_reply + 2, ETH_HLEN + ncsi_rsp_len);
 }
 
