@@ -929,7 +929,8 @@ void resize_main_window(BOOL disable_fullscreen)
 // name -> 'Window Name' which will be appended with "Left" or "Top"
 // ipLeft and ipTop, if this function is successful, will be updated with
 //  the top left corner of the window.
-void SetWindowPositionFromLast(const char *name, int *ipLeft, int *ipTop) {
+void SetWindowPositionFromLast(const char *name, int *ipLeft, int *ipTop)
+{
   DWORD Left, LeftSize = sizeof(DWORD);
   DWORD Top, TopSize = sizeof(DWORD);
   char SubKey[128];
@@ -948,7 +949,8 @@ void SetWindowPositionFromLast(const char *name, int *ipLeft, int *ipTop) {
 
 // Save the coord's of the specified window to the registry so that next time
 //  we can place the window in the same place
-void GetWindowPostitionForNext(HWND Wnd, const char *name) {
+void GetWindowPostitionForNext(HWND Wnd, const char *name)
+{
   char SubKey[128];
   HKEY hKey;
   LONG result = RegCreateKeyEx(HKEY_CURRENT_USER, szRegLocation, 0, NULL,
@@ -960,7 +962,7 @@ void GetWindowPostitionForNext(HWND Wnd, const char *name) {
       // (We can't make Left/Top integers since sizeof(int) might not be the same size as sizeof(DWORD))
       DWORD Left = (DWORD) Rect.left;
       DWORD Top = (DWORD) Rect.top;
-      
+
       // Make sure we don't move off the left/top of the screen
       if ((int) Left < 0) Left = 0; 
       if ((int) Top < 0) Top = 0;
@@ -969,7 +971,7 @@ void GetWindowPostitionForNext(HWND Wnd, const char *name) {
       //  (this can happen if the user changes the Host screen size to a smaller size)
       if ((int) Left > (desktop_x - 25)) Left = (desktop_x - 25);
       if ((int) Top > (desktop_y - 25)) Top = (desktop_y - 25);
-      
+
       sprintf(SubKey, "%sLeft", name);
       RegSetValueEx(hKey, SubKey, 0, REG_DWORD, (const BYTE *) &Left, sizeof(DWORD));
       sprintf(SubKey, "%sTop", name);
