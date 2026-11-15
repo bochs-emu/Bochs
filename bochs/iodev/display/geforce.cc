@@ -3976,6 +3976,26 @@ float dot4(float x[4], float y[4])
   return x[0] * y[0] + x[1] * y[1] + x[2] * y[2] + x[3] * y[3];
 }
 
+void lit(float params[4], float coeffs[4])
+{
+  float tmpx = params[0];
+  float tmpy = params[1];
+  float tmpw = params[3];
+  if (tmpx < 0.0f)
+    tmpx = 0.0f;
+  if (tmpy < 0.0f)
+    tmpy = 0.0f;
+  float epsilon = 1.0e-6f;
+  if (tmpw < -(128.0f - epsilon))
+    tmpw = -(128.0f - epsilon);
+  else if (tmpw > 128.0f - epsilon)
+    tmpw = 128.0f - epsilon;
+  coeffs[0] = 1.0f;
+  coeffs[1] = tmpx;
+  coeffs[2] = (tmpx > 0.0f) ? pow(tmpy, tmpw) : 0.0f;
+  coeffs[3] = 1.0f;
+}
+
 void reflection(float axis[3], float direction[3], float refl_dir[3])
 {
   float k = 2.0f * dot3(axis, direction) / dot3(axis, axis);
@@ -4312,22 +4332,7 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
         break;
       }
       case 7: { // LIT
-        float tmpx = params[2][0];
-        float tmpy = params[2][1];
-        float tmpw = params[2][3];
-        if (tmpx < 0.0f)
-          tmpx = 0.0f;
-        if (tmpy < 0.0f)
-          tmpy = 0.0f;
-        float epsilon = 1.0e-6f;
-        if (tmpw < -(128.0f - epsilon))
-          tmpw = -(128.0f - epsilon);
-        else if (tmpw > 128.0f - epsilon)
-          tmpw = 128.0f - epsilon;
-        sca_result[0] = 1.0f;
-        sca_result[1] = tmpx;
-        sca_result[2] = (tmpx > 0.0f) ? pow(tmpy, tmpw) : 0.0f;
-        sca_result[3] = 1.0f;
+        lit(params[2], sca_result);
         break;
       }
       case 0xd: { // LG2
@@ -4777,10 +4782,18 @@ void bx_geforce_c::d3d_pixel_quad_shader(gf_channel* ch, float in[4][16][4],
             op_results[fi][ci] = ddy[ci];
         break;
       }
+      case 0x37: // TIMESWTEX
+        for (Bit32u fi = 0; fi < 4; fi++) {
+          float winv = 1.0f / in[fi][0][3];
+          paramsq[fi][0][0] *= winv;
+          paramsq[fi][0][1] *= winv;
+          paramsq[fi][0][2] *= winv;
+        }
+        // fallthrough
       case 0x18: // TXP
+      case 0x19: // TXD
       case 0x2f: // TXL
       case 0x31: // TXB
-      case 0x19: // TXD
       case 0x17: { // TEX
         Bit32u tex_unit = (dst_word >> 17) & 0xf;
         gf_texture* tex = &ch->d3d_texture[tex_unit];
@@ -4954,6 +4967,9 @@ void bx_geforce_c::d3d_pixel_quad_shader(gf_channel* ch, float in[4][16][4],
                   op_result[comp_index] = lg2;
                 break;
               }
+              case 0x1e: // LIT
+                lit(params[0], op_result);
+                break;
               case 0x1f: // LRP
                 for (int comp_index = 0; comp_index < 4; comp_index++)
                   op_result[comp_index] = params[0][comp_index] * params[1][comp_index] +
