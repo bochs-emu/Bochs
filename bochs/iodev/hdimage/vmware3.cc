@@ -215,20 +215,25 @@ int vmware3_image_t::write_ints(int fd, Bit32u *buffer, size_t count)
 
 char* vmware3_image_t::generate_cow_name(const char * filename, unsigned chain)
 {
-  char * name = new char[strlen(filename) + 4];
+  // room for the chain suffix: '-' and up to 10 digits
+  char * name = new char[strlen(filename) + 12];
   if (name == NULL)
-    BX_PANIC(("unable to allocate %u bytes for vmware3 COW file name (base: %s, chain: %u)", (unsigned)strlen(filename) + 4, filename, chain));
+    BX_PANIC(("unable to allocate %u bytes for vmware3 COW file name (base: %s, chain: %u)", (unsigned)strlen(filename) + 12, filename, chain));
   strcpy(name, filename);
   if (chain != 0) {
     char chainstr[12];
     sprintf(chainstr, "-%02u", chain + 1);
+    // insert the suffix before the extension of the file name (not at a dot of a directory name)
     char * period = strrchr(name, '.');
-    if (period != 0) {
-      char temp[1024];
-      strcpy(temp, period);
-      *period = 0;
-      strcat(name, chainstr);
-      strcat(name, temp);
+    char * sep = strrchr(name, '/');
+#ifdef WIN32
+    char * sep2 = strrchr(name, '\\');
+    if ((sep2 != NULL) && ((sep == NULL) || (sep2 > sep))) sep = sep2;
+#endif
+    if ((period != NULL) && ((sep == NULL) || (period > sep))) {
+      size_t chainlen = strlen(chainstr);
+      memmove(period + chainlen, period, strlen(period) + 1);
+      memcpy(period, chainstr, chainlen);
     } else {
       strcat(name, chainstr);
     }
