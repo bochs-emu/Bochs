@@ -758,7 +758,7 @@ void icmp_receive(struct socket *so)
 #endif
     /* VirtualBox/virtualbox#479: recvfrom keeps the hop source on hosts delivering in-band ICMP errors without IP headers. */
 #ifdef __linux__
-    struct iovec iov = { .iov_base = buf, .iov_len = room };
+    struct iovec iov = { .iov_base = buf, .iov_len = (size_t)room };
     union {
         struct cmsghdr align;
         char data[CMSG_SPACE(sizeof(int))];
