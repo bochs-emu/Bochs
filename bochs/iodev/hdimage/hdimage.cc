@@ -2013,6 +2013,7 @@ ssize_t redolog_t::read(void* buf, size_t count)
 
   if (dtoh32(catalog[extent_index]) == REDOLOG_PAGE_NOT_ALLOCATED) {
     // page not allocated
+    lseek(512, SEEK_CUR);
     return 0;
   }
 
@@ -2035,6 +2036,7 @@ ssize_t redolog_t::read(void* buf, size_t count)
     BX_DEBUG(("read not in redolog"));
 
     // bitmap says block not in redolog
+    lseek(512, SEEK_CUR);
     return 0;
   }
 
@@ -2376,6 +2378,7 @@ undoable_image_t::undoable_image_t(const char* _redolog_name)
   ro_disk = NULL;
   redolog_name = NULL;
   caps = 0;
+  ro_disk_synced = 0;
   if (_redolog_name != NULL) {
     if ((strlen(_redolog_name) > 0) && (strcmp(_redolog_name,"none") != 0)) {
       redolog_name = new char[strlen(_redolog_name) + 1];
@@ -2458,8 +2461,10 @@ void undoable_image_t::close()
 
 Bit64s undoable_image_t::lseek(Bit64s offset, int whence)
 {
-  redolog->lseek(offset, whence);
-  return ro_disk->lseek(offset, whence);
+  Bit64s pos = redolog->lseek(offset, whence);
+  if (pos < 0) return pos;
+  ro_disk_synced = 1;
+  return ro_disk->lseek(pos, SEEK_SET);
 }
 
 ssize_t undoable_image_t::read(void* buf, size_t count)
@@ -2470,8 +2475,16 @@ ssize_t undoable_image_t::read(void* buf, size_t count)
 
   while (n < count) {
     if ((size_t)redolog->read(cbuf, 512) != 512) {
+      if (!ro_disk_synced) {
+        // redolog_t::read() has already moved past this sector
+        ret = ro_disk->lseek(redolog->lseek(0, SEEK_CUR) - 512, SEEK_SET);
+        if (ret < 0) break;
+        ro_disk_synced = 1;
+      }
       ret = ro_disk->read(cbuf, 512);
       if (ret < 0) break;
+    } else {
+      ro_disk_synced = 0;
     }
     cbuf += 512;
     n += 512;
@@ -2484,6 +2497,8 @@ ssize_t undoable_image_t::write(const void* buf, size_t count)
   char *cbuf = (char*)buf;
   size_t n = 0;
   ssize_t ret = 0;
+
+  ro_disk_synced = 0;
 
   while (n < count) {
     ret = redolog->write(cbuf, 512);
@@ -2534,6 +2549,7 @@ volatile_image_t::volatile_image_t(const char* _redolog_name)
   redolog_temp = NULL;
   redolog_name = NULL;
   caps = 0;
+  ro_disk_synced = 0;
   if (_redolog_name != NULL) {
     if ((strlen(_redolog_name) > 0) && (strcmp(_redolog_name,"none") != 0)) {
       redolog_name = new char[strlen(_redolog_name) + 1];
@@ -2639,8 +2655,10 @@ void volatile_image_t::close()
 
 Bit64s volatile_image_t::lseek(Bit64s offset, int whence)
 {
-  redolog->lseek(offset, whence);
-  return ro_disk->lseek(offset, whence);
+  Bit64s pos = redolog->lseek(offset, whence);
+  if (pos < 0) return pos;
+  ro_disk_synced = 1;
+  return ro_disk->lseek(pos, SEEK_SET);
 }
 
 ssize_t volatile_image_t::read(void* buf, size_t count)
@@ -2651,8 +2669,16 @@ ssize_t volatile_image_t::read(void* buf, size_t count)
 
   while (n < count) {
     if ((size_t)redolog->read(cbuf, 512) != 512) {
+      if (!ro_disk_synced) {
+        // redolog_t::read() has already moved past this sector
+        ret = ro_disk->lseek(redolog->lseek(0, SEEK_CUR) - 512, SEEK_SET);
+        if (ret < 0) break;
+        ro_disk_synced = 1;
+      }
       ret = ro_disk->read(cbuf, 512);
       if (ret < 0) break;
+    } else {
+      ro_disk_synced = 0;
     }
     cbuf += 512;
     n += 512;
@@ -2665,6 +2691,8 @@ ssize_t volatile_image_t::write(const void* buf, size_t count)
   char *cbuf = (char*)buf;
   size_t n = 0;
   ssize_t ret = 0;
+
+  ro_disk_synced = 0;
 
   while (n < count) {
     ret = redolog->write(cbuf, 512);

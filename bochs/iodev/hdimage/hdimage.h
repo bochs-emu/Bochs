@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2005-2025  The Bochs Project
+//  Copyright (C) 2005-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -568,6 +568,7 @@ class undoable_image_t : public device_image_t
       device_image_t  *ro_disk;       // Read-only base disk instance
       char            *redolog_name;  // Redolog name
       Bit32u          caps;
+      bool            ro_disk_synced; // ro_disk position matches redolog position
 };
 
 
@@ -612,6 +613,7 @@ class volatile_image_t : public device_image_t
       char            *redolog_name;  // Redolog name
       char            *redolog_temp;  // Redolog temporary file name
       Bit32u          caps;
+      bool            ro_disk_synced; // ro_disk position matches redolog position
 };
 
 
