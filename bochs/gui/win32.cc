@@ -598,20 +598,29 @@ void terminateEmul(int reason)
   }
   x_tilesize = 0;
 
+  // reset everything freed here, terminateEmul could be called more than once
   if (MemoryDC) DeleteDC (MemoryDC);
+  MemoryDC = NULL;
   if (FontDC) {
     SelectObject(FontDC, FontDCdefBitmap);
     DeleteDC(FontDC);
   }
+  FontDC = NULL;
   if (MemoryBitmap) DeleteObject (MemoryBitmap);
+  MemoryBitmap = NULL;
 
   delete[] (char*)bitmap_info;
+  bitmap_info = NULL;
 
-  for (unsigned b=0; b<bx_bitmap_entries; b++)
+  for (unsigned b=0; b<bx_bitmap_entries; b++) {
     if (bx_bitmaps[b].bmap) DeleteObject(bx_bitmaps[b].bmap);
+    bx_bitmaps[b].bmap = NULL;
+  }
   for (unsigned c=0; c<256; c++) {
     if (vgafont[0][c]) DeleteObject(vgafont[0][c]);
     if (vgafont[1][c]) DeleteObject(vgafont[1][c]);
+    vgafont[0][c] = NULL;
+    vgafont[1][c] = NULL;
   }
 
   switch (reason) {
@@ -1775,7 +1784,12 @@ void bx_win32_gui_c::handle_events(void)
   Bit32u key;
   Bit32u key_event;
 
-  if (stInfo.kill) terminateEmul(stInfo.kill);
+  if (stInfo.kill) {
+    // GUI thread is gone (window closed) - quit like the power button does,
+    // the cleanup is done once by the exit() method
+    bx_user_quit = 1;
+    BX_FATAL(("Window closed, exiting!"));
+  }
 
   if (fix_size) {
     resize_main_window(FALSE);
