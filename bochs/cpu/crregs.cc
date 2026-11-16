@@ -1760,6 +1760,10 @@ Bit32u BX_CPU_C::hwdebug_compare(bx_address laddr_0, unsigned size, unsigned opa
          (laddr_0 <= dr_end) &&
          (laddr_n >= dr_start)) {
       dr6_mask |= (1<<n);
+      // instruction breakpoint with LENn != 00b (undefined in SDM) never triggers #DB
+      // (Intel behavior), its Bn bit is still reported in DR6 if #DB is delivered
+      if (dr_op[n] == BX_HWDebugInstruction && dr_len[n] != 0)
+        continue;
       // tell if breakpoint was enabled
       if (dr7 & (3 << n*2)) {
         dr6_mask |= BX_DEBUG_TRAP_HIT;

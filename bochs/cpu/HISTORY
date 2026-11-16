@@ -106,6 +106,7 @@ Changes after Bochs 3.1:
 - Legacy: update flags handling for AAD BCD instruction to handle undocumented flags more accurate like HW
 - x86 Debugger: touching memory to check for potential faults should not trigger data breakpoints
 - x86 Debugger: code breakpoint was missed when a direct branch to another page followed a cached trace link which skipped prefetch() of the new page (only without internal debugger)
+- x86 Debugger: instruction breakpoint with LENn != 00b (undefined in SDM) must not trigger #DB, only report its Bn bit in DR6 (Intel behavior)
 - AMX_AVX512: AMX_AVX512 instructions cannot be encoded with EVEX.b=1 and should #UD
 - AMX_AVX512: AMX_AVX512 instructions must #UD if EVEX is not enabled through XCR0[7:5]
 - APIC: APIC read from an address crossing 32-bit boundary actually returns all zero in HW
