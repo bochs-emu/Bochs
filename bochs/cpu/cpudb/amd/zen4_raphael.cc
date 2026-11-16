@@ -326,8 +326,6 @@ void zen4_raphael_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction
     get_reserved_leaf(leaf);
     return;
   case 0x80000021: // Extended Feature Identification 2
-    get_ext_cpuid_leaf_21(leaf);
-    return;
   case 0x80000022: // Extended Performance Monitoring and Debug
   case 0x80000023: // Multi-Key Encrypted Memory Capabilities - not implemented
   case 0x80000024: // reserved
@@ -707,65 +705,7 @@ void zen4_raphael_t::get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const
 // leaf 0x8000001A - Performance Optimization Identifiers
 // leaf 0x8000001B - Instruction Based Sampling Identifiers //
 // leaf 0x8000001D - Cache Properties //
-
-void zen4_raphael_t::get_ext_cpuid_leaf_21(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x800000021 - Extended Feature Identification 2
-
-  // * [0:0]   NoNestedDataBP - ignore nested data breakpoints
-  // * [1:1]   FsGsBaseWriteNotSerializing - WRMSR to FSBASE, GSBASE and KERNEL_GSBASE is not serializing
-  // * [2:2]   LfenceAlwaysSerializing
-  // * [3:3]   SmmPgCfgLock - SMM paging configuration lock support
-  //   [4:4]   Reserved
-  //   [5:5]   Reserved
-  // * [6:6]   NullSelectClearsBase - Null segment selector load also clear its base and limit
-  // ! [7:7]   UpperAddressIgnore
-  // ! [8:8]   AutoIBRS
-  // * [9:9]   NoSmmCtlMSR - SMM_CTL MSR is not supported
-  // * [10:10] FastShortRepStosb
-  // * [11:11] FastShortRepeCmpsb
-  //   [12:12] PreciseRetirePMC2Manual: PerfEvtSel2[PREC_RET] is supported
-  // ! [13:13] PrefetchCtlMsr: Prefetch control MSR supported
-  //   [14:14] L2TlbSizeX32: L2TLB sizes are encoded as multiples of 32
-  //   [15:15] AMD_ERMSB: AMD implementation of Enhanced REP MOVSB/STOSB is supported
-  //   [16:16] Opcode0F017Reclaim: 0F 01 /7 opcode space is reserved for AMD use
-  // ! [17:17] CpuidUserDis: CPUID disable for non-privileged software
-  // * [18:18] EPSF: Enhanced Predictive Store Forwarding supported.
-  //   [19:19] FAST_REP_SCASB: Fast short REP SCASB supported
-  //   [20:20] PREFETCHI: IC prefetch supported
-  //   [21:21] FP512_DOWNGRADE: FP512 is downgraded to FP256
-  //   [22:22] Reserved
-  //   [23:23] AVX512_BMM support
-  //   [24:24] ERAPS: Enhanced Return Address Predictor Security supported
-  //   [25:25] Reserved
-  //   [26:26] Reserved
-  //   [27:27] SBPB: Selective Branch Predictor Barrier supported
-  //   [28:28] IBPB_BRTYPE: PRED_CMD[IBPB] clears all branch type predictions from the branch predictor
-  //   [29:29] SRSO_NO: The processor is not affected by Speculative Return Stack Overflow vulnerability
-  //   [30:30] SRSO_USER_KERNEL_NO: The processor is not affected by Speculative Return Stack Overflow vulnerability across user/kernel boundaries
-  //   [31:31] SRSO_MSR_FIX: Software may use MSR_BP_CFG[BpSpecReduce] to mitigate Speculative Return Stack Overflow vulnerability
-  leaf->eax = BX_CPUID_EXT21_EAX_NO_NESTED_DATA_BP |
-              BX_CPUID_EXT21_EAX_FSGSBASE_NOT_SERIALIZING |
-              BX_CPUID_EXT21_EAX_LFENCE_ALWAYS_SERIALIZING |
-              BX_CPUID_EXT21_EAX_SMM_PG_CFG_LOCK |
-              BX_CPUID_EXT21_EAX_NULL_SELECT_CLEARS_BASE |
-           /* BX_CPUID_EXT21_EAX_UPPER_ADDRESS_IGNORE | */ // not implemented yet
-           /* BX_CPUID_EXT21_EAX_AUTOMATIC_IBRS | */ // not implemented yet
-              BX_CPUID_EXT21_EAX_NO_SMM_CTL_MSR |
-              BX_CPUID_EXT21_EAX_FAST_SHORT_REP_STOSB |
-              BX_CPUID_EXT21_EAX_FAST_SHORT_REPE_CMPSB |
-           /* BX_CPUID_EXT21_EAX_PREFETCH_CTL_MSR | */ // not implemented yet
-           /* BX_CPUID_EXT21_EAX_CPUID_USER_DIS | */ // not implemented yet
-              BX_CPUID_EXT21_EAX_EPSF;
-
-  // not supported by Zen4 hardware, could be enabled through add_features
-  if (is_cpu_extension_supported(BX_ISA_AVX512_BMM))
-    leaf->eax |= BX_CPUID_EXT21_EAX_AVX512_BMM;
-
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-}
+// leaf 0x80000021 - Extended Feature Identification 2 //
 
 bx_cpuid_t *create_zen4_raphael_cpuid(BX_CPU_C *cpu) { return new zen4_raphael_t(cpu); }
 

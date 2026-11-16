@@ -24,6 +24,14 @@
 #ifndef BX_CPU_MODEL_SPECIFIC
 #define BX_CPU_MODEL_SPECIFIC
 
+enum class cpu_vendor_t {
+  GenuineIntel,
+  AuthenticAMD,
+  CyrixInstead,
+  HygonGenuine,
+  CentaurHauls
+};
+
 struct cpuid_function_t {
   Bit32u eax;
   Bit32u ebx;
@@ -223,7 +231,15 @@ protected:
   void get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_8_amd(cpuid_function_t *leaf) const;
 
+  // CPUID leaf 0x8000001E - AMD Processor Topology Information
   void get_ext_cpuid_leaf_1E(cpuid_function_t *leaf) const;
+
+  // CPUID leaf 0x80000021 - Extended Feature Identification 2
+  void get_ext_cpuid_leaf_21(cpuid_function_t *leaf) const;
+  Bit32u get_ext_cpuid_leaf_21_eax(Bit32u extra = 0) const;
+  Bit32u get_ext_cpuid_leaf_21_ebx(Bit32u extra = 0) const;
+
+  // CPUID leaf 0x80000026 - Extended CPU Topology
   void get_ext_cpuid_leaf_26(Bit32u subfunction, cpuid_function_t *leaf) const;
 
   BX_CPP_INLINE void get_leaf(cpuid_function_t *leaf, Bit32u eax, Bit32u ebx, Bit32u ecx, Bit32u edx) const

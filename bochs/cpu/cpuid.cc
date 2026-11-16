@@ -2042,6 +2042,97 @@ void bx_cpuid_t::get_ext_cpuid_leaf_1E(cpuid_function_t *leaf) const
 #endif
 }
 
+// CPUID function 0x80000021 - Extended Feature Identification 2
+void bx_cpuid_t::get_ext_cpuid_leaf_21(cpuid_function_t *leaf) const
+{
+  // the hardware supplies extras for the white listed bits
+  cpuid_function_t hw;
+  get_hardware_cpuid_leaf(0x80000021, 0, &hw);
+
+  leaf->eax = get_ext_cpuid_leaf_21_eax(hw.eax);
+  leaf->ebx = get_ext_cpuid_leaf_21_ebx(hw.ebx);
+  leaf->ecx = 0;
+  leaf->edx = 0;
+}
+
+// CPUID function 0x80000021 - EAX
+Bit32u bx_cpuid_t::get_ext_cpuid_leaf_21_eax(Bit32u extra) const
+{
+  // white list of bits passed through from extra (no emulation required)
+  static const Bit32u extra_white_list = BX_CPUID_EXT21_EAX_NO_NESTED_DATA_BP |
+                                         BX_CPUID_EXT21_EAX_FSGSBASE_NOT_SERIALIZING |
+                                         BX_CPUID_EXT21_EAX_LFENCE_ALWAYS_SERIALIZING |
+                                         BX_CPUID_EXT21_EAX_SMM_PG_CFG_LOCK |
+                                         BX_CPUID_EXT21_EAX_NULL_SELECT_CLEARS_BASE |
+                                         BX_CPUID_EXT21_EAX_NO_SMM_CTL_MSR |
+                                         BX_CPUID_EXT21_EAX_FAST_SHORT_REP_STOSB |
+                                         BX_CPUID_EXT21_EAX_FAST_SHORT_REPE_CMPSB |
+                                         BX_CPUID_EXT21_EAX_PREFETCHI |
+                                         BX_CPUID_EXT21_EAX_L2TLB_SIZE_X32 |
+                                         BX_CPUID_EXT21_EAX_AMD_ERMSB |
+                                         BX_CPUID_EXT21_EAX_OPCODE_0F017_RECLAIM |
+                                         BX_CPUID_EXT21_EAX_EPSF |
+                                         BX_CPUID_EXT21_EAX_FAST_REP_SCASB;
+
+  // spec_ctrl bits (SCA mitigations, marked with *) are passed through only
+  // when speculation control is supported
+  static const Bit32u extra_spec_ctrl_white_list = BX_CPUID_EXT21_EAX_SBPB |
+                                                   BX_CPUID_EXT21_EAX_IBPB_BRTYPE |
+                                                   BX_CPUID_EXT21_EAX_SRSO_NO |
+                                                   BX_CPUID_EXT21_EAX_SRSO_USER_KERNEL_NO;
+
+  Bit32u eax = extra & extra_white_list;
+  if (is_cpu_extension_supported(BX_ISA_SPEC_CTRL) || is_cpu_extension_supported(BX_ISA_SPEC_CTRL_AMD))
+    eax |= extra & extra_spec_ctrl_white_list;
+
+  //   [0:0]   NoNestedDataBp: Processor ignores nested data breakpoints - passed through from extra
+  //   [1:1]   FsGsBaseWriteNotSerializing: WRMSR to FS.Base, GS.Base and KernelGSBase MSRs is not serializing - passed through from extra
+  //   [2:2]   LFenceAlwaysSerializing: LFENCE is always dispatch serializing - passed through from extra
+  //   [3:3]   SmmPgCfgLock: SMM paging configuration lock supported - passed through from extra
+  //   [5:4]   reserved
+  //   [6:6]   NullSelectClearsBase: Null segment selector loads also clear the destination segment register base and limit - passed through from extra
+  // ! [7:7]   UpperAddressIgnore: Upper Address Ignore is supported - not supported
+  // ! [8:8]   AutomaticIBRS: Automatic IBRS - not supported
+  //   [9:9]   NoSmmCtlMSR: SMM_CTL MSR (C001_0116h) is not supported - passed through from extra
+  //   [10:10] FastShortRepStosb: Fast short REP STOSB supported - passed through from extra
+  //   [11:11] FastShortRepeCmpsb: Fast short REPE CMPSB supported - passed through from extra
+  // ! [12:12] PreciseRetirePmc2: PerfEvtSel2[PREC_RET] is supported - not supported
+  // ! [13:13] PrefetchCtlMsr: Prefetch control MSR supported - not supported
+  //   [14:14] L2TlbSizeX32: L2TLB sizes are encoded as multiples of 32 - passed through from extra
+  //   [15:15] AMD_ERMSB: AMD implementation of Enhanced REP MOVSB/STOSB is supported - passed through from extra
+  //   [16:16] Opcode0F017Reclaim: 0F 01/7 opcode space is reserved for AMD use - passed through from extra
+  // ! [17:17] CpuidUserDis: CPUID disable for non-privileged software - not supported
+  //   [18:18] EPSF: Enhanced Predictive Store Forwarding supported - passed through from extra
+  //   [19:19] FAST_REP_SCASB: Fast short REP SCASB supported - passed through from extra
+  //   [20:20] PREFETCHI: IC prefetch supported - passed through from extra
+  // ! [21:21] FP512_DOWNGRADE: FP512 is downgraded to FP256 - not supported
+  //   [22:22] reserved
+  //   [23:23] AVX512_BMM: Bit Matrix Multiply instructions supported
+  // ! [24:24] ERAPS: Enhanced Return Address Predictor Security supported - not supported
+  //   [26:25] reserved
+  // * [27:27] SBPB: Selective Branch Predictor Barrier supported - not supported
+  // * [28:28] IBPB_BRTYPE: PRED_CMD[IBPB] clears all branch type predictions from the branch predictor
+  // * [29:29] SRSO_NO: The processor is not affected by Speculative Return Stack Overflow vulnerability
+  // * [30:30] SRSO_USER_KERNEL_NO: The processor is not affected by SRSO vulnerability across user/kernel boundaries
+  // ! [31:31] SRSO_MSR_FIX: Software may use MSR_BP_CFG[BpSpecReduce] to mitigate SRSO vulnerability - not supported
+
+#if BX_SUPPORT_EVEX
+  if (is_cpu_extension_supported(BX_ISA_AVX512_BMM))
+    eax |= BX_CPUID_EXT21_EAX_AVX512_BMM;
+#endif
+
+  return eax;
+}
+
+// CPUID function 0x80000021 - EBX
+Bit32u bx_cpuid_t::get_ext_cpuid_leaf_21_ebx(Bit32u extra) const
+{
+  //   [15:0]  MicrocodePatchSize: the size of the microcode patch in 16-byte multiples - passed through from extra
+  //   [23:16] RapSize: Return Address Predictor size - reported only with ERAPS, not supported
+  //   [31:24] reserved
+  return extra & 0xffff;
+}
+
 // CPUID function 0x80000026 - AMD Extended CPU Topology
 void bx_cpuid_t::get_ext_cpuid_leaf_26(Bit32u subfunction, cpuid_function_t *leaf) const
 {
@@ -2328,7 +2419,7 @@ void bx_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_funct
     get_reserved_leaf(leaf);
     break;
   case 0x80000021: // CPUID leaf 0x80000021 - Extended Feature Identification 2
-    get_hardware_cpuid_leaf(function, subfunction, leaf);
+    get_ext_cpuid_leaf_21(leaf);
     break;
   case 0x80000022: // CPUID leaf 0x80000022 - Extended Performance Monitoring and Debug
   case 0x80000023: // CPUID leaf 0x80000023 - Multi-Key Encrypted Memory Capabilities
