@@ -1525,7 +1525,7 @@ int vvfat_image_t::open(const char* dirname, int flags)
   return 0;
 }
 
-direntry_t* vvfat_image_t::read_direntry(Bit8u *buffer, char *filename)
+direntry_t* vvfat_image_t::read_direntry(Bit8u *buffer, Bit8u *buffer_end, char *filename)
 {
   const Bit8u lfn_map[13] = {1, 3, 5, 7, 9, 14, 16, 18, 20, 22, 24, 28, 30};
   direntry_t *entry;
@@ -1536,6 +1536,11 @@ direntry_t* vvfat_image_t::read_direntry(Bit8u *buffer, char *filename)
   memset(filename, 0, BX_PATHNAME_LEN);
   lfn_tmp[0] = 0;
   do {
+    if (buffer >= buffer_end) {
+      // end of directory data without terminating entry
+      entry = NULL;
+      break;
+    }
     entry = (direntry_t*)buffer;
     if (entry->name[0] == 0) {
       entry = NULL;
@@ -1547,8 +1552,10 @@ direntry_t* vvfat_image_t::read_direntry(Bit8u *buffer, char *filename)
           lfn_tmp[i] = buffer[lfn_map[i]];
         }
         lfn_tmp[i] = 0;
-        strcat(lfn_tmp, filename);
-        strcpy(filename, lfn_tmp);
+        if ((strlen(lfn_tmp) + strlen(filename)) < BX_PATHNAME_LEN) {
+          strcat(lfn_tmp, filename);
+          strcpy(filename, lfn_tmp);
+        }
         has_lfn = 1;
         buffer += 32;
       } else {
@@ -1578,6 +1585,10 @@ direntry_t* vvfat_image_t::read_direntry(Bit8u *buffer, char *filename)
 
 Bit32u vvfat_image_t::fat_get_next(Bit32u current)
 {
+  // clusters outside of the FAT terminate the chain
+  if ((current < 2) || (current >= (cluster_count + 2)))
+    return max_fat_value;
+
   if (fat_type == 32) {
     return dtoh32(((Bit32u*)fat2)[current]);
   } else if (fat_type == 16) {
@@ -1601,7 +1612,7 @@ Bit32u vvfat_image_t::fat_get_next(Bit32u current)
 bool vvfat_image_t::write_file(const char *path, direntry_t *entry, bool create)
 {
   int fd;
-  Bit32u csize, fsize, fstart, cur, next, rsvd_clusters, bad_cluster;
+  Bit32u csize, fsize, fstart, cur, next, rsvd_clusters, bad_cluster, nclusters = 0;
   Bit64u offset;
   Bit8u *buffer = NULL;
 #ifndef WIN32
@@ -1643,6 +1654,9 @@ bool vvfat_image_t::write_file(const char *path, direntry_t *entry, bool create)
   next = fstart;
   do {
     cur = next;
+    // stop at invalid clusters, at the end of the file data or on a FAT chain loop
+    if ((cur < 2) || (cur >= (cluster_count + 2)) || (fsize == 0) || (++nclusters > cluster_count))
+      break;
     offset = cluster2sector(cur);
     lseek(offset * 0x200, SEEK_SET);
     read(buffer, csize);
@@ -1651,6 +1665,7 @@ bool vvfat_image_t::write_file(const char *path, direntry_t *entry, bool create)
       fsize -= csize;
     } else {
       ::write(fd, buffer, fsize);
+      fsize = 0;
     }
     next = fat_get_next(cur);
     if ((next >= rsvd_clusters) && (next < bad_cluster)) {
@@ -1715,7 +1730,7 @@ bool vvfat_image_t::write_file(const char *path, direntry_t *entry, bool create)
 
 void vvfat_image_t::parse_directory(const char *path, Bit32u start_cluster)
 {
-  Bit32u csize, fstart, cur, next, size, rsvd_clusters;
+  Bit32u csize, fstart, cur, next, size, rsvd_clusters, nclusters = 0;
   Bit64u offset;
   Bit8u *buffer, *ptr;
   direntry_t *entry, *newentry;
@@ -1743,6 +1758,10 @@ void vvfat_image_t::parse_directory(const char *path, Bit32u start_cluster)
       lseek(offset * 0x200, SEEK_SET);
       read(buffer+(size-csize), csize);
       next = fat_get_next(cur);
+      if (++nclusters >= cluster_count) {
+        // FAT chain loop
+        break;
+      }
       if (next < rsvd_clusters) {
         size += csize;
         buffer = (Bit8u*)realloc(buffer, size);
@@ -1751,9 +1770,9 @@ void vvfat_image_t::parse_directory(const char *path, Bit32u start_cluster)
   }
   ptr = buffer;
   do {
-    newentry = read_direntry(ptr, filename);
+    newentry = read_direntry(ptr, buffer + size, filename);
     if (newentry != NULL) {
-      sprintf(full_path, "%s/%s", path, filename);
+      snprintf(full_path, sizeof(full_path), "%s/%s", path, filename);
       if ((newentry->attributes != 0x10) && (newentry->attributes != 0x20)) {
         if (vvfat_attr_fd != NULL) {
           attr_txt[0] = 0;
