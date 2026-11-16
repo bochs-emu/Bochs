@@ -57,11 +57,6 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit32
   Bit64u desctmp1 = system_read_qword(BX_CPU_THIS_PTR idtr.base + vector*16);
   Bit64u desctmp2 = system_read_qword(BX_CPU_THIS_PTR idtr.base + vector*16 + 8);
 
-  if (desctmp2 & BX_CONST64(0x00001F0000000000)) {
-    BX_ERROR(("interrupt(long mode): IDT entry extended attributes DWORD4 TYPE != 0"));
-    exception(BX_GP_EXCEPTION, vector*8 + 2);
-  }
-
   Bit32u dword1 = GET32L(desctmp1);
   Bit32u dword2 = GET32H(desctmp1);
   Bit32u dword3 = GET32L(desctmp2);
