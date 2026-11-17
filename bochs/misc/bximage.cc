@@ -716,7 +716,7 @@ int parse_cmdline(int argc, char *argv[])
 
 void image_overwrite_check(const char *filename)
 {
-  char buffer[512];
+  char buffer[620];
 
   int fd = hdimage_open_file(filename, O_RDONLY, NULL, NULL);
   if (fd >= 0) {
