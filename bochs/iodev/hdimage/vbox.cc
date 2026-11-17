@@ -235,15 +235,36 @@ ssize_t vbox_image_t::read(void *buf, size_t count)
   char *cbuf = (char*)buf;
   ssize_t total = 0;
   while (count > 0) {
-    off_t readable = perform_seek();
-    if (readable == INVALID_OFFSET) {
-      BX_ERROR(("vbox disk image read failed on %u bytes at " FMT_LL "d", (unsigned)count, current_offset));
+    if (current_offset == INVALID_OFFSET) {
+      BX_ERROR(("invalid offset specified in vbox read"));
+      return -1;
+    }
+    Bit32u index = (Bit32u) (current_offset / header.block_size);
+    if (index >= header.blocks_in_hdd) {
+      BX_ERROR(("vbox disk image read beyond end of disk at " FMT_LL "d", current_offset));
       return -1;
     }
 
-    off_t copysize = ((off_t)count > readable) ? readable : count;
     off_t offset = current_offset & (header.block_size - 1);
-    memcpy(cbuf, block_data + (size_t) offset, (size_t) copysize);
+    off_t copysize = header.block_size - offset;
+    if ((off_t)count < copysize) copysize = count;
+
+    if (index == mtlb_sector) {
+      // block is cached (and may hold data not yet written to the file)
+      memcpy(cbuf, block_data + (size_t) offset, (size_t) copysize);
+    } else if (dtoh32(mtlb[index]) == -1) {
+      if (header.image_type == 2) {
+        BX_PANIC(("Found non-existing block in Static type image"));
+      }
+      memset(cbuf, 0, (size_t) copysize);
+    } else {
+      // read only the requested bytes instead of loading the whole block
+      off_t file_offset = header.offset_data + (off_t)dtoh32(mtlb[index]) * header.block_size + offset;
+      if (bx_read_image(file_descriptor, file_offset, cbuf, (int) copysize) != (int) copysize) {
+        BX_ERROR(("vbox disk image read failed on %u bytes at " FMT_LL "d", (unsigned)copysize, current_offset));
+        return -1;
+      }
+    }
 
     current_offset += copysize;
     total += (long) copysize;
@@ -259,21 +280,41 @@ ssize_t vbox_image_t::write(const void *buf, size_t count)
   char *cbuf = (char*)buf;
   ssize_t total = 0;
   while (count > 0) {
-    off_t writable = perform_seek();
-    if (writable == INVALID_OFFSET) {
-      BX_ERROR(("vbox disk image write failed on %u bytes at " FMT_LL "d", (unsigned)count, current_offset));
+    if (current_offset == INVALID_OFFSET) {
+      BX_ERROR(("invalid offset specified in vbox write"));
+      return -1;
+    }
+    Bit32u index = (Bit32u) (current_offset / header.block_size);
+    if (index >= header.blocks_in_hdd) {
+      BX_ERROR(("vbox disk image write beyond end of disk at " FMT_LL "d", current_offset));
       return -1;
     }
 
-    off_t writesize = ((off_t)count > writable) ? writable : count;
     off_t offset = current_offset & (header.block_size - 1);
-    memcpy(block_data + offset, cbuf, (size_t) writesize);
+    off_t writesize = header.block_size - offset;
+    if ((off_t)count < writesize) writesize = count;
+
+    if ((index != mtlb_sector) && (dtoh32(mtlb[index]) != -1)) {
+      // allocated block which is not cached: write directly to the file
+      off_t file_offset = header.offset_data + (off_t)dtoh32(mtlb[index]) * header.block_size + offset;
+      if (bx_write_image(file_descriptor, file_offset, cbuf, (int) writesize) != (int) writesize) {
+        BX_ERROR(("vbox disk image write failed on %u bytes at " FMT_LL "d", (unsigned)writesize, current_offset));
+        return -1;
+      }
+    } else {
+      // cached block or new block (allocated in the file on flush)
+      if (perform_seek() == INVALID_OFFSET) {
+        BX_ERROR(("vbox disk image write failed on %u bytes at " FMT_LL "d", (unsigned)count, current_offset));
+        return -1;
+      }
+      memcpy(block_data + offset, cbuf, (size_t) writesize);
+      is_dirty = 1;
+    }
 
     current_offset += writesize;
     total += (long) writesize;
     cbuf += writesize;
     count -= (size_t) writesize;
-    is_dirty = 1;
   }
   return total;
 }
