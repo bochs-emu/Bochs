@@ -614,7 +614,7 @@ int parse_cmdline(int argc, char *argv[])
     // parse next arg
     if (!strcmp("--help", argv[arg]) || !strncmp("/?", argv[arg], 2)) {
       print_usage();
-      ret = 0;
+      return 0;
     }
     else if (!strncmp("-func=", argv[arg], 6)) {
       if (bximage_func != BXIMAGE_FUNC_NULL) {
