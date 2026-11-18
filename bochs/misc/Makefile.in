@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2013  The Bochs Project
+# Copyright (C) 2001-2026  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -40,7 +40,7 @@ LIBTOOL=@LIBTOOL@
 	$(CXX) @DASH@c $(CPPFLAGS) $(CXXFLAGS) @CXXFP@$< @OFP@$@
 
 
-all: make_cmos_image
+all: make_cmos_image@EXE@
 
 make_cmos_image@EXE@: make_cmos_image.o
 	@LINK_CONSOLE@ make_cmos_image.o

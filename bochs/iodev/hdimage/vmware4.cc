@@ -91,7 +91,10 @@ vmware4_image_t::vmware4_image_t()
   tlb_offset(INVALID_OFFSET),
   tlb_file_offset(0),
   current_offset(INVALID_OFFSET),
-  is_dirty(0)
+  is_dirty(0),
+  gd(0),
+  gd_copy(0),
+  gd_count(0)
 {
   if (sizeof(_VM4_Header) != 77) {
     BX_FATAL(("system error: invalid header structure size"));
@@ -124,6 +127,22 @@ int vmware4_image_t::open(const char* _pathname, int flags)
   if (tlb == 0)
     BX_PANIC(("unable to allocate " FMT_LL "d bytes for vmware4 image's tlb", header.tlb_size_sectors * SECTOR_SIZE));
 
+  // cache both grain directories, they are not modified at runtime
+  Bit64u grains_per_gd_entry = header.tlb_size_sectors * header.slb_count;
+  gd_count = (Bit32u)((header.total_sectors + grains_per_gd_entry - 1) / grains_per_gd_entry);
+  gd = new Bit32u[gd_count];
+  gd_copy = new Bit32u[gd_count];
+  int gd_size = (int)(gd_count * sizeof(Bit32u));
+  if ((bx_read_image(file_descriptor, header.flb_offset_sectors * SECTOR_SIZE, gd, gd_size) != gd_size) ||
+      (bx_read_image(file_descriptor, header.flb_copy_offset_sectors * SECTOR_SIZE, gd_copy, gd_size) != gd_size)) {
+    BX_PANIC(("unable to read vmware4 grain directory from file '%s'", pathname));
+    return -1;
+  }
+  for (Bit32u i = 0; i < gd_count; i++) {
+    gd[i] = dtoh32(gd[i]);
+    gd_copy[i] = dtoh32(gd_copy[i]);
+  }
+
   tlb_offset = INVALID_OFFSET;
   current_offset = 0;
   is_dirty = 0;
@@ -151,6 +170,8 @@ void vmware4_image_t::close()
 
   flush();
   delete [] tlb; tlb = 0;
+  delete [] gd; gd = 0;
+  delete [] gd_copy; gd_copy = 0;
 
   bx_close_image(file_descriptor, pathname);
   file_descriptor = -1;
@@ -316,8 +337,12 @@ off_t vmware4_image_t::perform_seek()
   Bit32u slb_index = (Bit32u)(index % header.slb_count);
   Bit32u flb_index = (Bit32u)(index / header.slb_count);
 
-  Bit32u slb_sector = read_block_index(header.flb_offset_sectors, flb_index);
-  Bit32u slb_copy_sector = read_block_index(header.flb_copy_offset_sectors, flb_index);
+  if (flb_index >= gd_count) {
+    BX_DEBUG(("vmware4 seek beyond end of disk"));
+    return INVALID_OFFSET;
+  }
+  Bit32u slb_sector = gd[flb_index];
+  Bit32u slb_copy_sector = gd_copy[flb_index];
 
   if (slb_sector == 0 && slb_copy_sector == 0) {
     BX_DEBUG(("loaded vmware4 disk image requires un-implemented feature"));

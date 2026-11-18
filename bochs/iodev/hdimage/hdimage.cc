@@ -2048,7 +2048,6 @@ ssize_t redolog_t::read(void* buf, size_t count)
 
 ssize_t redolog_t::write(const void* buf, size_t count)
 {
-  Bit32u i;
   Bit64s block_offset, bitmap_offset, catalog_offset;
   ssize_t written;
   bool update_catalog = 0;
@@ -2073,22 +2072,24 @@ ssize_t redolog_t::write(const void* buf, size_t count)
 
     extent_next += 1;
 
-    char *zerobuffer = new char[512];
-    memset(zerobuffer, 0, 512);
+    // Write an empty bitmap. The extent data area does not need to be cleared,
+    // only sectors marked in the bitmap are ever read from the redolog.
+    Bit32u zsize = 512 * bitmap_blocks;
+    char *zerobuffer = new char[zsize];
+    memset(zerobuffer, 0, zsize);
 
-    // Write bitmap
     bitmap_offset  = (Bit64s)STANDARD_HEADER_SIZE + (dtoh32(header.specific.catalog) * sizeof(Bit32u));
     bitmap_offset += (Bit64s)512 * dtoh32(catalog[extent_index]) * (extent_blocks + bitmap_blocks);
-    ::lseek(fd, (off_t)bitmap_offset, SEEK_SET);
-    for (i=0; i<bitmap_blocks; i++) {
-      ::write(fd, zerobuffer, 512);
-    }
-    // Write extent
-    for (i=0; i<extent_blocks; i++) {
-      ::write(fd, zerobuffer, 512);
-    }
+    bx_write_image(fd, (off_t)bitmap_offset, zerobuffer, zsize);
+    // Write just one byte at the end of the extent
+    block_offset   = bitmap_offset + ((Bit64s)512 * (bitmap_blocks + extent_blocks)) - 1;
+    bx_write_image(fd, (off_t)block_offset, zerobuffer, 1);
 
     delete [] zerobuffer;
+
+    // the cached bitmap now belongs to the new (empty) extent
+    memset(bitmap, 0, dtoh32(header.specific.bitmap));
+    bitmap_update = 0;
 
     update_catalog = 1;
   }
@@ -2115,7 +2116,11 @@ ssize_t redolog_t::write(const void* buf, size_t count)
   // If bloc does not belong to extent yet
   if (((bitmap[extent_offset/8] >> (extent_offset%8)) & 0x01) == 0x00) {
     bitmap[extent_offset/8] |= 1 << (extent_offset%8);
-    bx_write_image(fd, (off_t)bitmap_offset, bitmap,  dtoh32(header.specific.bitmap));
+    // write back only the 512 byte block of the bitmap containing the changed bit
+    Bit32u bitmap_block_offset = (extent_offset / 8) & ~511;
+    Bit32u bitmap_write_size = dtoh32(header.specific.bitmap) - bitmap_block_offset;
+    if (bitmap_write_size > 512) bitmap_write_size = 512;
+    bx_write_image(fd, (off_t)bitmap_offset + bitmap_block_offset, bitmap + bitmap_block_offset, bitmap_write_size);
   }
 
   // Write catalog

@@ -103,6 +103,9 @@ class vmware4_image_t : public device_image_t
         off_t tlb_file_offset;
         off_t current_offset;
         bool is_dirty;
+        Bit32u *gd;       // grain directory (cached)
+        Bit32u *gd_copy;  // redundant grain directory (cached)
+        Bit32u gd_count;
         const char *pathname;
 };
 
