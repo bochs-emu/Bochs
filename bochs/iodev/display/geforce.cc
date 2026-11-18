@@ -5777,10 +5777,10 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
               stencil &= ch->d3d_stencil_mask;
               dma_write8(ch->d3d_zeta_obj, draw_offset_zeta[fi], stencil);
             }
-            stencils[fi] = stencil;
             if (!stencil_test_pass)
               discard[fi] = true;
           }
+          stencils[fi] = stencil;
           if (!depth_test_pass)
             discard[fi] = true;
         }
