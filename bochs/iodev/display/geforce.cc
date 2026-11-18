@@ -5738,30 +5738,38 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
               stencil_op = ch->d3d_stencil_op_sfail;
             }
             switch (stencil_op) {
+              case 1:      // KEEP
               case 0x1e00: // KEEP
               default:
                 break;
+              case 2:      // ZERO
               case 0x0000: // ZERO
                 stencil = 0x00;
                 break;
+              case 3:      // REPLACE
               case 0x1e01: // REPLACE
                 stencil = ch->d3d_stencil_func_ref;
                 break;
-              case 0x1e02: // INCRSAT
+              case 4:      // INCRSAT
+              case 0x1e02: // INCR
                 if (stencil < 0xff)
                   stencil++;
                 break;
-              case 0x1e03: // DECRSAT
+              case 5:      // DECRSAT
+              case 0x1e03: // DECR
                 if (stencil > 0x00)
                   stencil--;
                 break;
+              case 6:      // INVERT
               case 0x150a: // INVERT
                 stencil = ~stencil;
                 break;
-              case 0x8507: // INCR
+              case 7:      // INCR
+              case 0x8507: // INCR_WRAP
                 stencil++;
                 break;
-              case 0x8508: // DECR
+              case 8:      // DECR
+              case 0x8508: // DECR_WRAP
                 stencil--;
                 break;
             }
