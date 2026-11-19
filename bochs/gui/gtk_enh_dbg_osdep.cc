@@ -706,9 +706,9 @@ void VSizeChange()
     if (ShowIOWindows == FALSE)
     {
         gtk_widget_hide(IOVbox);
-//#if BX_HAVE_GTK_VERSION == 2
+#if BX_HAVE_GTK_VERSION == 2
         gtk_table_resize(GTK_TABLE(TreeTbl), 3, 1);  // IO windows do not exist, so total table rows = 3
-//#endif
+#endif
     }
     else
     {
@@ -718,9 +718,9 @@ void VSizeChange()
         gcp = gtk_entry_get_text(GTK_ENTRY(IEntry));
         strcpy (tmpcb, gcp);
         gtk_entry_set_text(GTK_ENTRY(IEntry),"");
-//#if BX_HAVE_GTK_VERSION == 2
+#if BX_HAVE_GTK_VERSION == 2
         gtk_table_resize(GTK_TABLE(TreeTbl), 4, 1);  // IO windows exist, so total table rows = 4
-//#endif
+#endif
         gtk_widget_show(IOVbox);
         gtk_widget_grab_focus(IEntry);  // Input window loses focus while it is hidden
         gtk_entry_set_text(GTK_ENTRY(IEntry),tmpcb);
@@ -2305,13 +2305,15 @@ bool OSInit()
     gtk_box_pack_start(GTK_BOX(MainVbox), menubar, FALSE, FALSE, 0);
     gtk_box_pack_end(GTK_BOX(MainVbox), StatHbox, FALSE, FALSE, 0);
 
-    // build the table that holds the TreeView/Input&Output windows
-    TreeTbl = gtk_table_new(4, 1, TRUE);    // proportion the remaining space in quarters, vertically
+    // build the table / grid that holds the TreeView/Input&Output windows
 #if BX_HAVE_GTK_VERSION == 2
+    TreeTbl = gtk_table_new(4, 1, TRUE);    // proportion the remaining space in quarters, vertically
     sep8 = gtk_vseparator_new();            // vertical separators between the ListViews
     sep9 = gtk_vseparator_new();
 #else
-//    TreeTbl = gtk_grid_new();              // TODO
+    TreeTbl = gtk_grid_new();
+    gtk_grid_set_row_homogeneous(GTK_GRID(TreeTbl), TRUE);    // proportion the remaining space in quarters, vertically
+    gtk_grid_set_column_homogeneous(GTK_GRID(TreeTbl), TRUE);
     sep8 = gtk_separator_new(GTK_ORIENTATION_VERTICAL);
     sep9 = gtk_separator_new(GTK_ORIENTATION_VERTICAL);
 #endif
@@ -2403,13 +2405,17 @@ bool OSInit()
 
     gtk_box_pack_end(GTK_BOX(MainVbox), TreeTbl, TRUE, TRUE, 0);
 
-//#if BX_HAVE_GTK_VERSION == 2
+#if BX_HAVE_GTK_VERSION == 2
     gtk_table_attach_defaults(GTK_TABLE(TreeTbl), LVEvtBox, 0, 1, 0, 3);  // order = LRTB
     gtk_table_attach_defaults(GTK_TABLE(TreeTbl), IOVbox, 0, 1, 3, 4);
-//#else
-//    gtk_grid_attach(GTK_GRID(TreeTbl), LVEvtBox, 0, 0, 3, 3);  // order = LTWH
-//    gtk_grid_attach(GTK_GRID(TreeTbl), IOVbox, 0, 3, 3, 1);
-//#endif
+#else
+    gtk_grid_attach(GTK_GRID(TreeTbl), LVEvtBox, 0, 0, 1, 3);  // order = LTWH
+    gtk_grid_attach(GTK_GRID(TreeTbl), IOVbox, 0, 3, 1, 1);
+    gtk_widget_set_hexpand(LVEvtBox, TRUE);
+    gtk_widget_set_vexpand(LVEvtBox, TRUE);
+    gtk_widget_set_hexpand(IOVbox, TRUE);
+    gtk_widget_set_vexpand(IOVbox, TRUE);
+#endif
     VSizeChange();
 
     // build the 3 ListView windows
