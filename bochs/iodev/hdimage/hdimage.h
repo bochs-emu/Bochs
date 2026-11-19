@@ -572,6 +572,7 @@ class undoable_image_t : public device_image_t
 };
 
 
+#ifndef BXIMAGE
 // VOLATILE MODE
 class volatile_image_t : public device_image_t
 {
@@ -601,11 +602,9 @@ class volatile_image_t : public device_image_t
       // Get image capabilities
       virtual Bit32u get_capabilities() {return caps;}
 
-#ifndef BXIMAGE
       // Save/restore support
       bool save_state(const char *backup_fname);
       void restore_state(const char *backup_fname);
-#endif
 
   private:
       redolog_t       *redolog;       // Redolog instance
@@ -616,8 +615,6 @@ class volatile_image_t : public device_image_t
       bool            ro_disk_synced; // ro_disk position matches redolog position
 };
 
-
-#ifndef BXIMAGE
 
 #define DEV_hdimage_init_image(a,b,c) bx_hdimage_ctl.init_image(a,b,c)
 #define DEV_hdimage_init_cdrom(a)     bx_hdimage_ctl.init_cdrom(a)

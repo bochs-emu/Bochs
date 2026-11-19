@@ -29,6 +29,7 @@
 #endif
 
 #include "config.h"
+#include "bxversion.h"
 #include "bxcompat.h"
 
 #if defined(WIN32) && !defined(__CYGWIN__)
@@ -79,7 +80,6 @@ const char *bx_src_imgmode;
 
 const char *EOF_ERR = "ERROR: End of input";
 const char *SECTSIZE_ERR = "ERROR: sector size not supported by this image mode";
-const char *svnid = "$Id$";
 const char *divider = "========================================================================";
 const char *main_menu_prompt =
 "\n"
@@ -114,18 +114,6 @@ const char *sectsize_menu = "\nChoose the size of hard disk sectors.\nPlease typ
 const char *sectsize_choices[] = { "512","1024","4096" };
 int sectsize_n_choices = 3;
 
-#if !BX_HAVE_MKSTEMP
-int bx_mkstemp(char *tpl)
-{
-  mktemp(tpl);
-  return ::open(tpl, O_RDWR | O_CREAT | O_TRUNC
-#ifdef O_BINARY
-                | O_BINARY
-#endif
-                , S_IWUSR | S_IRUSR | S_IRGRP | S_IWGRP);
-}
-#endif // !BX_HAVE_MKSTEMP
-
 void myexit(int code)
 {
 #if defined(WIN32) && !defined(__CYGWIN__)
@@ -150,7 +138,7 @@ void print_banner()
   printf("%s\n", divider);
   bx_center_print(stdout, "bximage\n", 72);
   bx_center_print(stdout, "Disk Image Creation / Conversion / Resize and Commit Tool for Bochs\n", 72);
-  bx_center_print(stdout, svnid, 72);
+  bx_center_print(stdout, "Bochs " VERSION, 72);
   printf("\n%s\n", divider);
 }
 
@@ -758,7 +746,9 @@ int parse_cmdline(int argc, char *argv[])
     arg++;
   }
   if (bximage_func == BXIMAGE_FUNC_NULL) {
-    printf("\nERROR: Parameter -func missing - switching to interactive mode.\n\n");
+    if (argc > 1) {
+      printf("\nERROR: Parameter -func missing - switching to interactive mode.\n\n");
+    }
     bx_interactive = 1;
   } else {
     set_default_values();

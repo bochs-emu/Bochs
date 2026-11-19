@@ -2543,7 +2543,6 @@ void undoable_image_t::restore_state(const char *backup_fname)
     }
   }
 }
-#endif
 
 /*** volatile_image_t function definitions ***/
 
@@ -2708,7 +2707,6 @@ ssize_t volatile_image_t::write(const void* buf, size_t count)
   return (ret < 0) ? ret : count;
 }
 
-#ifndef BXIMAGE
 bool volatile_image_t::save_state(const char *backup_fname)
 {
   return redolog->save_state(backup_fname);
