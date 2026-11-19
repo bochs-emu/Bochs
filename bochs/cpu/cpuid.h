@@ -722,7 +722,9 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 
 // CPUID defines - features CPUID[0x00000007].ECX  [subleaf 1]
 // -----------------------------
-//    [0:4]   reserved
+//    [0:0]   reserved
+//    [1:1]   USER_DOITM (User Data Operand Independent Timing)
+//    [4:2]   reserved
 //    [5:5]   Support immediate forms of RDMSR and WRMSRNS instructions
 //    [7:6]   reserved
 //    [8:8]   Support IA32_SOC_CAPABILITIES MSR
@@ -730,6 +732,8 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //  [11:11]   ACE support
 //  [31:12]   reserved
 
+#define BX_CPUID_STD7_SUBLEAF1_ECX_USER_DOITM             (1 <<  1)
+// ...
 #define BX_CPUID_STD7_SUBLEAF1_ECX_MSR_IMM                (1 <<  5)
 // ...
 #define BX_CPUID_STD7_SUBLEAF1_ECX_IA32_SOC_CAP_MSR       (1 <<  8)
