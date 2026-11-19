@@ -1412,21 +1412,27 @@ void bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           //        adjust result height
           //   else
           //        adjust result width based upon virt_height=yres
-          Bit16u new_width=value;
-          Bit16u new_height;
+          Bit32u new_width=value;
+          Bit32u new_height;
           if (new_width == 0) {
             new_width = BX_VGA_THIS vbe.xres;
-            BX_INFO(("VBE reset virtual width to xres %d", new_width));
+            BX_INFO(("VBE reset virtual width to xres %u", new_width));
+          } else if (new_width < BX_VGA_THIS vbe.xres) {
+            new_width = BX_VGA_THIS vbe.xres;
+            BX_ERROR(("VBE virtual width %u smaller than xres, set to %u", value, new_width));
           }
           if (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4) {
             new_height = (BX_VGA_THIS s.memsize / BX_VGA_THIS vbe.bpp_multiplier) / new_width;
           } else {
             new_height = (BX_VGA_THIS s.memsize << 1) / new_width;
           }
+          if (new_height > 0xffff) {
+            new_height = 0xffff;
+          }
           if (new_height >=BX_VGA_THIS vbe.yres)
           {
             // we have a decent virtual width & new_height
-            BX_INFO(("VBE decent virtual height %d",new_height));
+            BX_INFO(("VBE decent virtual height %u",new_height));
           }
           else
           {
@@ -1437,8 +1443,11 @@ void bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
             } else {
               new_width = (BX_VGA_THIS s.memsize << 1) / new_height;
             }
+            if (new_width > 0xffff) {
+              new_width = 0xffff;
+            }
 
-            BX_INFO(("VBE recalc virtual width %d height %d",new_width, new_height));
+            BX_INFO(("VBE recalc virtual width %u height %u",new_width, new_height));
           }
 
           BX_VGA_THIS vbe.virtual_xres=new_width;
