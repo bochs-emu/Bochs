@@ -48,14 +48,14 @@
 
 #ifdef BXIMAGE
 #define BX_DEBUG(x)
-#define BX_INFO(x)  { if (bx_interactive) { (printf) x ; printf("\n"); } }
-#define BX_ERROR(x) { (printf) x ; printf("\n"); }
-#define BX_PANIC(x) { (printf) x ; printf("\n"); myexit(1); }
-#define BX_FATAL(x) { (printf) x ; printf("\n"); myexit(1); }
+#define BX_INFO(x)  do { if (bx_interactive) { (printf) x ; printf("\n"); } } while (0)
+#define BX_ERROR(x) do { (printf) x ; printf("\n"); } while (0)
+#define BX_PANIC(x) do { (printf) x ; printf("\n"); myexit(1); } while (0)
+#define BX_FATAL(x) do { (printf) x ; printf("\n"); myexit(1); } while (0)
 #else
-#define BX_DEBUG(x) { if (bx_loglev == 3) { (bx_printf) x ; } }
-#define BX_INFO(x)  { if (bx_loglev >= 2) { (bx_printf) x ; } }
-#define BX_ERROR(x) { if (bx_loglev >= 1) { (bx_printf) x ; } }
+#define BX_DEBUG(x) do { if (bx_loglev == 3) { (bx_printf) x ; } } while (0)
+#define BX_INFO(x)  do { if (bx_loglev >= 2) { (bx_printf) x ; } } while (0)
+#define BX_ERROR(x) do { if (bx_loglev >= 1) { (bx_printf) x ; } } while (0)
 #endif
 #define BX_ASSERT(x)
 
