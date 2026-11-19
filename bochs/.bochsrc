@@ -528,6 +528,10 @@ mouse: enabled=0
 #  subsystem of the i440BX chipset.
 #  If PCI is enabled, the 'nofdc' option disables the FDC if no floppy drive
 #  is configured.
+#  The option 'ich7ide' makes the PCI IDE controller report the ICH7 IDE
+#  device ID instead of the PIIX3/PIIX4 one (required by Mac OS X guests,
+#  which have no PIIX IDE driver). The controller still works in the legacy
+#  compatibility mode. This option is not supported by the i430FX chipset.
 #
 # Example:
 #   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k, advopts=noacpi

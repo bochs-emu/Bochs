@@ -1,6 +1,6 @@
 Changes after Bochs 3.1 release:
 
-(up to date with commits done till 15 Nov 2026)
+(up to date with commits done till 19 Nov 2026)
 
 - CPU emulation and instrumentation
   ! CPUDB: Added AMD Zen3 (Vermeer) CPUID model (features X2APIC, CLWB, UMIP, PKU, CET, VAES, RDPID + introduces CPUID 0x80000021: AMD Extended Feature Identification 2)
@@ -98,6 +98,7 @@ Changes after Bochs 3.1 release:
     - Fixed vertical timer stall when vertical retrace end is beyond vertical total
     - Fixed 256-color word mode screen update address calculation
     - Writing the DAC read index (3C7h) also sets the write index (wrong palette colors in Star Control II) (#974)
+    - VBE: virtual width smaller than the X resolution is rejected (host heap over-read), fixed virtual height truncation
   - Voodoo
     - Fixed crash when the screen is redrawn (e.g. by the debugger) before a display mode is set (#666)
   - Banshee
@@ -130,6 +131,7 @@ Changes after Bochs 3.1 release:
       - #998: Fix X8R8G8B8 pixel reads in SIFM command (blur effect in Minecraft main menu with NV40)
       - #1001: Fix projective texture lookup for cubemaps and implement LIF pixel shader operation (bump mapping and marble demos with NV40)
       - #1005: Implement LIT and TIMESWTEX pixel shader operations (shading in marble and bump mapping demos with NV35)
+      - #1012: Add Direct3D stencil operation values (stencil buffer demos with NV40)
   - Hard drive / HD image
     - VVFAT: Fixed LongName handling in vvfat disks
     - VVFAT: Adding path prefix "fat32:" forces using FAT32 file system
@@ -145,6 +147,10 @@ Changes after Bochs 3.1 release:
       part boundaries (data corruption on requests spanning two parts)
     - VVFAT: do not crash on blank or malformed lines in vvfat_attr.cfg
     - IDE: save/restore the LBA48 flag (disk corruption after restoring a state saved during an LBA48 transfer) (#963)
+    - Faster access to growing, undoable, volatile, VBOX, VMWARE4, VHDX and VPC images
+    - Undoable/volatile images: fixed multi-sector reads mixing changed and unchanged sectors (wrong data read from the base image)
+    - VBOX, VMWARE4: cached data is written to the image before saving the simulation state
+    - VVFAT: guest-written directory and FAT data is bounds checked when committing changes (host memory corruption)
   - CD-ROM
     - Model parameter now supports format "VENDOR:PRODUCT:REV" for ATAPI inquiry
     - Fixed MODE SENSE(6) header and response lengths and GET PERFORMANCE maximum number of descriptors
@@ -164,6 +170,8 @@ Changes after Bochs 3.1 release:
     - ACPI: unmap the PM/SMBus I/O windows when reset clears their BARs
     - ACPI: fixed SMBus register decoding, written SMBus register values are kept
     - Fixed spurious rejection of read-only memory handlers (e.g. PCI option ROM) after other memory handlers were unregistered (#932)
+    - Added 'ich7ide' choice to pci advopts (pci: advopts=ich7ide)
+      Report the PCI IDE controller as ICH7 IDE (stock Mac OS X has no driver for PIIX IDE)
   - Interrupt controllers and timers
     - IOAPIC: implemented Remote IRR for level triggered interrupts
     - IOAPIC: a level triggered entry programmed while its input line is already asserted now delivers the interrupt
@@ -280,6 +288,8 @@ Changes after Bochs 3.1 release:
     - Faster text mode character drawing
     - Fixed heap overflow on clipboard copy
     - Fixed absolute mouse (USB tablet) coordinates in stretched modes (small modes, autoscale, fullscreen)
+    - Fixed crash when the Bochs window is closed from the taskbar (#1011)
+    - Bochs window position is saved (registry key HKEY_CURRENT_USER\Software\Bochs) and restored on the next start
   - textconfig
     - Fixed stack overflows in the runtime options menu and string input, 64-bit hex parameters are no
       longer truncated
@@ -320,6 +330,11 @@ Changes after Bochs 3.1 release:
   - rombios32: do not write IA32_FEATURE_CONTROL MSR when it is already locked (fixed guest triple fault and
     reset on every restart) (#954)
   - rombios: PCI BIOS function B10Eh reads the route buffer pointer from the right offset (Windows 2000 Setup hang) (#982)
+
+- Misc
+  - bximage: faster image convert/resize, read or write errors abort the conversion (unreadable sectors became zero),
+    using the same name for source and destination no longer damages the image, resize can no longer make the image smaller
+  - bximage: Win32 flat images are created as sparse files instead of NTFS compressed files (faster disk access)
 
 -------------------------------------------------------------------------
 Changes in 3.1 (August 23, 2026):
