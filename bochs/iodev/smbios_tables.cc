@@ -16,10 +16,13 @@
 // against Apple directly -- double check it if boot behavior looks
 // model-mismatched. Serial number and UUID are deliberately NOT real
 // hardware identifiers: UUID is left at the SMBIOS spec's own "not
-// present" sentinel (all-zero), and serial number is a configurable
-// placeholder (see smbios_options_parser), same spirit as how the Apple
-// SMC's OSK key is handled -- these are per-machine identifiers that
-// shouldn't be invented and hardcoded.
+// present" sentinel (all-zero), and serial number is a placeholder
+// (smbios_set_serial_number() can replace it, but no bochsrc option calls
+// it yet, so it is always "Bochs000000000") -- these are per-machine
+// identifiers that shouldn't be invented and hardcoded.
+//
+// The tables are only generated when the applesmc device is configured
+// (see bx_fw_cfg_c::init()), other guests get the OVMF default tables.
 /////////////////////////////////////////////////////////////////////////
 
 #define BX_PLUGGABLE

@@ -229,9 +229,13 @@ void bx_fw_cfg_c::init(void)
   // Generate and add ACPI tables (critical for OVMF/Windows)
   generate_acpi_tables();
 
-  // Generate and add SMBIOS tables (identifies the guest as a Mac model,
-  // needed for macOS guests -- harmless for everything else)
-  generate_smbios_tables();
+  // SMBIOS tables identify the guest as a Mac model and are needed only by
+  // macOS guests. Generate them only when the Apple SMC is configured (the
+  // other macOS requirement), otherwise OVMF installs its own default tables.
+#if BX_SUPPORT_APPLESMC
+  if (PLUG_device_present(BX_PLUGIN_APPLESMC, false))
+    generate_smbios_tables();
+#endif
 
   BX_INFO(("fw_cfg device initialized (ports 0x510-0x511, DMA 0x514)"));
 }
@@ -735,6 +739,7 @@ void bx_fw_cfg_c::generate_acpi_tables(void)
 }
 
 // Generate SMBIOS tables identifying the guest as a Mac model
+// (only when applesmc is configured)
 void bx_fw_cfg_c::generate_smbios_tables(void)
 {
   bx_smbios_tables_c smbios_gen;
