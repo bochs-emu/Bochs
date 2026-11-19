@@ -2,7 +2,7 @@
 // $Id: sb16ctrl.c,v 1.7 2009-02-08 09:05:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -90,11 +90,14 @@ void enableport()
 void command(int cmd, char *arg);
 void checkemulator();
 
-/* Convert a string into a number */
+/* Convert a string into a number. If no digits were found, *endptr is
+   set to the start of the string. */
 int strtoi(char *nptr, char **endptr, int base)
 {
   int value, digit;
   int sign = 1;
+  int found = 0;
+  char *start = nptr;
 
   /* Skip leading white space */
   while( isspace(*nptr) )
@@ -125,7 +128,10 @@ int strtoi(char *nptr, char **endptr, int base)
 	      base = 16;
 	    }
 	  else
-	    base = 8;
+	    {
+	      base = 8;
+	      found = 1;   /* the leading 0 is a digit */
+	    }
 	}
       else
 	base = 10;
@@ -145,11 +151,12 @@ int strtoi(char *nptr, char **endptr, int base)
 	break;     /* Isn't a valid char, abort conversion */
 
       value = value * base + digit;
+      found = 1;
       nptr++;
     }
 
   if (endptr != NULL)
-    *endptr = nptr;
+    *endptr = found ? nptr : start;
 
   return sign * value;
 }
@@ -265,24 +272,40 @@ void procstr(char *str)
 /* Upload a mapping to the emulator */
 void loadmap(char *map)
 {
-  int i;
+  int i, value;
   int trans[6];
-  char *nextnum;
+  char *nextnum, *end;
 
   procstr(map);
 
+  /* missing values are 255 (no change) */
+  for (i=0;i<6;i++)
+    trans[i] = 255;
+
   nextnum = map;
   for (i=0;i<6;i++) {
-    if (nextnum) {
-      trans[i] = strtoi(nextnum, &nextnum, 0);
-      if ( (!nextnum) ||
-	   ( (trans[i] > 127) && (trans[i] < 255) ) ||
-	   (trans[i] > 255) )
-	printf("Parse error in value %d%s. Command ignored.", i, ofline);
-    }
-    if (!nextnum)
-      trans[i] = 255;
+    value = strtoi(nextnum, &end, 0);
+    if (end == nextnum)
+      break;       /* no more values */
+    if ( (value < 0) ||
+	 ( (value > 127) && (value < 255) ) ||
+	 (value > 255) )
+      {
+	printf("Parse error in value %d%s. Command ignored.\n", i, ofline);
+	return;
+      }
+    trans[i] = value;
+    nextnum = end;
   }
+
+  /* only white space may follow the values */
+  while ( (*nextnum == ' ') || (*nextnum == 9) )
+    nextnum++;
+  if (*nextnum)
+    {
+      printf("Parse error in value %d%s. Command ignored.\n", i, ofline);
+      return;
+    }
 
   /* Load the remap into the emulator, command 4 */
   emulcommand(4);   /* 4 load remap */
@@ -305,11 +328,23 @@ void resettable()
 void loadmidi(char *msg)
 {
   int i;
+  char *end;
 
   procstr(msg);
 
-  while ( (msg) && (*msg) ) {
-    i = strtoi(msg, &msg, 0);
+  while (1) {
+    while ( (*msg == ' ') || (*msg == 9) )
+      msg++;
+    if (*msg == 0)
+      break;
+
+    i = strtoi(msg, &end, 0);
+    if (end == msg)
+      {
+	printf("Parse error in midi data%s. Rest of command ignored.\n", ofline);
+	break;
+      }
+    msg = end;
 
     emulcommand(11);     /* 11: Send midi data byte */
     writeemul(i);
@@ -325,6 +360,7 @@ void loadfile(char *filename)
   char *pos;
   char msg[256];
   int lineno = 0;
+  int len;
 
   filelevel++;
   if (filelevel > 10)
@@ -340,11 +376,11 @@ void loadfile(char *filename)
 
   if (!file) {
     printf("File %s not found.\n", filename);
+    filelevel--;
     return;
   }
 
-  while (!feof(file)) {
-    fgets(msg, sizeof msg, file);
+  while (fgets(msg, sizeof msg, file) != NULL) {
     lineno++;
 
     pos = msg;
@@ -364,7 +400,14 @@ void loadfile(char *filename)
     while ( (*pos == ' ') || (*pos == 9) )
       pos++;
 
-    sprintf(ofline, " in line %d of file %s", lineno, filename);
+    /* remove trailing white space (procstr() turned the newline into a
+       space), so that e.g. a file name argument is used as typed */
+    len = strlen(pos);
+    while ( (len > 0) && ( (pos[len-1] == ' ') || (pos[len-1] == 9) ) )
+      pos[--len] = 0;
+
+    /* file name is truncated to keep the message within ofline[] */
+    sprintf(ofline, " in line %d of file %.200s", lineno, filename);
 
     command(cmd, pos);
   }
