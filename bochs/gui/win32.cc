@@ -938,10 +938,11 @@ void resize_main_window(BOOL disable_fullscreen)
 // name -> 'Window Name' which will be appended with "Left" or "Top"
 // ipLeft and ipTop, if this function is successful, will be updated with
 //  the top left corner of the window.
-void SetWindowPositionFromLast(const char *name, int *ipLeft, int *ipTop)
+void LoadWindowPosition(const char *name, int *ipLeft, int *ipTop)
 {
-  DWORD Left, LeftSize = sizeof(DWORD);
-  DWORD Top, TopSize = sizeof(DWORD);
+  LONG Left, Top;
+  DWORD LeftSize = sizeof(LONG);
+  DWORD TopSize = sizeof(LONG);
   char SubKey[128];
 
   // read from the registry
@@ -950,15 +951,22 @@ void SetWindowPositionFromLast(const char *name, int *ipLeft, int *ipTop)
   sprintf(SubKey, "%sTop", name);
   LONG resTop = RegGetValue(HKEY_CURRENT_USER, szRegLocation, SubKey, RRF_RT_DWORD, NULL, &Top, &TopSize);
   if ((resLeft == ERROR_SUCCESS) && (resTop == ERROR_SUCCESS)) {
+    // check to make sure we don't move clear off the right/bottom of screen
+    //  (this can happen if the user changes the Host screen size to a smaller size)
+    if (Left > ((LONG)desktop_x - 25) || Top > ((LONG)desktop_y - 25))
+      return;
+
     // send the new values
     if (ipLeft) *ipLeft = (int) Left;
     if (ipTop) *ipTop = (int) Top;
   }
 }
 
+static_assert(sizeof(LONG) == sizeof(DWORD), "On Windows platform LONG should be the same size as DWORD (32 bits)");
+
 // Save the coord's of the specified window to the registry so that next time
 //  we can place the window in the same place
-void GetWindowPostitionForNext(HWND Wnd, const char *name)
+void SaveWindowPosition(HWND Wnd, const char *name)
 {
   char SubKey[128];
   HKEY hKey;
@@ -967,24 +975,10 @@ void GetWindowPostitionForNext(HWND Wnd, const char *name)
   if (result == ERROR_SUCCESS) {
     RECT Rect;
     if (GetWindowRect(Wnd, &Rect)) {
-      // LONG might not be the same size as DWORD
-      // (We can't make Left/Top integers since sizeof(int) might not be the same size as sizeof(DWORD))
-      DWORD Left = (DWORD) Rect.left;
-      DWORD Top = (DWORD) Rect.top;
-
-      // Make sure we don't move off the left/top of the screen
-      if ((int) Left < 0) Left = 0; 
-      if ((int) Top < 0) Top = 0;
-
-      // check to make sure we don't move clear off the right/bottom of screen
-      //  (this can happen if the user changes the Host screen size to a smaller size)
-      if (Left > (desktop_x - 25)) Left = (desktop_x - 25);
-      if (Top > (desktop_y - 25)) Top = (desktop_y - 25);
-
       sprintf(SubKey, "%sLeft", name);
-      RegSetValueEx(hKey, SubKey, 0, REG_DWORD, (const BYTE *) &Left, sizeof(DWORD));
+      RegSetValueEx(hKey, SubKey, 0, REG_DWORD, (const BYTE *) &Rect.left, sizeof(LONG));
       sprintf(SubKey, "%sTop", name);
-      RegSetValueEx(hKey, SubKey, 0, REG_DWORD, (const BYTE *) &Top, sizeof(DWORD));
+      RegSetValueEx(hKey, SubKey, 0, REG_DWORD, (const BYTE *) &Rect.top, sizeof(LONG));
     }
     RegCloseKey(hKey);
   }
@@ -1033,7 +1027,7 @@ DWORD WINAPI UIThread(LPVOID)
   AdjustWindowRectEx(&wndRect, sim_style, FALSE, sim_exstyle);
   DWORD main_style = WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
   AdjustWindowRect(&wndRect, main_style, FALSE);
-  SetWindowPositionFromLast("MainWin", &left, &top);
+  LoadWindowPosition("MainWin", &left, &top);
   stInfo.mainWnd = CreateWindow (szAppName,
                      szWindowName,
                      main_style,
@@ -1224,6 +1218,8 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     return 0;
 
   case WM_CLOSE:
+    // Save the coord's of the window for next time
+    SaveWindowPosition(stInfo.mainWnd, "MainWin");
     SendMessage(stInfo.simWnd, WM_CLOSE, 0, 0);
     break;
 
@@ -2227,10 +2223,7 @@ void bx_win32_gui_c::exit(void)
   }
 #endif
 
-  // Save the coord's of the window for next time
-  GetWindowPostitionForNext(stInfo.mainWnd, "MainWin");
-
-  // kill thread first...
+  // kill thread first (window position is saved by WM_CLOSE handler)...
   PostMessage(stInfo.mainWnd, WM_CLOSE, 0, 0);
 
   // Wait until it dies
