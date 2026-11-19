@@ -3191,6 +3191,10 @@ void bx_banshee_c::blt_screen_to_screen_stretch()
   if ((BLT.dst_fmt != BLT.src_fmt) && !yuv_src) {
     BX_ERROR(("Pixel format conversion not supported yet"));
   }
+  if ((w0 == 0) || (h0 == 0) || (w1 == 0) || (h1 == 0)) {
+    BLT.busy = 0;
+    return;
+  }
   BX_LOCK(render_mutex);
   dy = BLT.dst_y;
   if (yuv_src) {
@@ -3569,6 +3573,10 @@ void bx_banshee_c::blt_host_to_screen_stretch()
             w0, h0, w1, h1, BLT.rop[0]));
   if (BLT.dst_fmt != BLT.src_fmt) {
     BX_ERROR(("Pixel format conversion not supported yet"));
+  }
+  if ((w0 == 0) || (h0 == 0) || (w1 == 0) || (h1 == 0)) {
+    BLT.busy = 0;
+    return;
   }
   BX_LOCK(render_mutex);
   dy = BLT.dst_y;
