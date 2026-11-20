@@ -2242,7 +2242,7 @@ void bx_banshee_c::blt_launch_area_setup()
           BLT.lacnt = pbytes >> 2;
       }
       if (pxpack != 0) {
-        BLT.lacnt = (BLT.h2s_pitch * BLT.dst_h + 3) >> 2;
+        BLT.lacnt = (BLT.h2s_pitch * src_h + 3) >> 2;
       }
       BLT.lamem = new Bit8u[BLT.lacnt * 4];
       break;
@@ -3573,7 +3573,7 @@ void bx_banshee_c::blt_host_to_screen_stretch()
   Bit8u colorkey_en = BLT.reg[blt_commandExtra] & 3;
   Bit8u rop = 0;
   int nrows, stepy;
-  int dx, dy, x2, x3, y2, y3, w0, h0, w1, h1;
+  int dx, dy, x2, x3, y2, y3, w0, h0, w1, h1, soffset;
   double fx, fy;
 #ifdef BANSHEE_TILED_FB
   Bit32u doffset;
@@ -3612,10 +3612,12 @@ void bx_banshee_c::blt_host_to_screen_stretch()
     dst_ptr1 = dst_ptr;
     x2 = 0;
     for (dx = BLT.dst_x; dx < (BLT.dst_x + w1); dx++) {
-      if (blt_clip_check(dx, dy)) {
-        x3 = (int)((double)x2 / fx + 0.49f);
-        y3 = (int)((double)y2 / fy + 0.49f);
-        src_ptr1 = src_ptr + (y3 * spitch + x3 * dpxsize);
+      x3 = (int)((double)x2 / fx + 0.49f);
+      y3 = (int)((double)y2 / fy + 0.49f);
+      // source pixel must be inside the received launch area data
+      soffset = BLT.h2s_pxstart + y3 * spitch + x3 * dpxsize;
+      if (blt_clip_check(dx, dy) && (soffset >= 0) && ((soffset + dpxsize) <= (int)BLT.laidx)) {
+        src_ptr1 = src_ptr + soffset;
         if (colorkey_en & 1) {
           rop = blt_colorkey_check(src_ptr1, dpxsize, 0);
         }
