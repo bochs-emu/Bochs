@@ -149,6 +149,7 @@ Changes after Bochs 3.1:
 - SVM: SVM VMEXIT loading host state should reset debug_trap and inhibit_mask
 - SVM: interrupt shadow lost at a #DB intercept, after STI in the guest a #DB intercept at the next boundary saved VMCB INTERRUPT_SHADOW = 0 in Bochs, 1 on real Zen 4
 + SVM: V_IRQ never taken when the guest is entered with IF = 1 (VMRUN loads the guest RFLAGS before in_svm_guest = true, so handleInterruptMaskChange() evaluated the masks as the host)
+- SVM: VMRUN must accept guest CR4.PCIDE=1 with EFER.LMA=0 (AMD), MOV to CR4 #GP only when PCIDE changes 0->1 outside of long mode
 + SVM: AMD hardware doesn't enforce TSS386 to enter long mode (Debian 12 amd64 running kvm_amd with npt=1 fails: kvm_amd leaves TR = TSS286_BUSY and its 64-bit guest triple-faults while booting)
 - SVM: an intercepted exception must save the guest's RFLAGS.RF unchanged, and an intercepted #DB must also find DR6 already updated
 - SVM: EXITINTINFO was not recorded for INTn, ICEBP, external/virtual interrupt and NMI delivery (stale value reported) and recorded 2nd exception instead of prior event on intercepted #DF
