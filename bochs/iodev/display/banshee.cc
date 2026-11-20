@@ -3055,7 +3055,7 @@ void bx_banshee_c::blt_screen_to_screen_pattern()
   bool patrow0 = (BLT.reg[blt_commandExtra] & 0x08) > 0;
   Bit8u colorkey_en = BLT.reg[blt_commandExtra] & 3;
   Bit8u *patcolor;
-  int ncols, nrows, dx, dy, x, sx, sy, w, h;
+  int ncols, nrows, dx, dy, x, sx, sy, w, h, px, py;
   Bit8u pmask = 0, rop = 0, patline;
   bool set;
 #ifdef BANSHEE_TILED_FB
@@ -3091,12 +3091,14 @@ void bx_banshee_c::blt_screen_to_screen_pattern()
 #ifdef BANSHEE_TILED_FB
   y = 0;
 #endif
+  // the pattern is aligned to the destination pixel coordinates
+  py = dy;
   nrows = h;
   do {
     src_ptr1 = src_ptr;
     dst_ptr1 = dst_ptr;
     if (!patrow0) {
-      patline = (dy + BLT.patsy) & 7;
+      patline = (py + BLT.patsy) & 7;
       if (patmono) {
         pat_ptr1 = pat_ptr + patline;
       } else {
@@ -3106,6 +3108,7 @@ void bx_banshee_c::blt_screen_to_screen_pattern()
       pat_ptr1 = pat_ptr;
     }
     x = 0;
+    px = dx;
     ncols = w;
     do {
 #ifdef BANSHEE_TILED_FB
@@ -3123,8 +3126,8 @@ void bx_banshee_c::blt_screen_to_screen_pattern()
       }
 #endif
       if (patmono) {
-        pmask = 0x80 >> ((x + BLT.patsx) & 7);
-        set = (*pat_ptr & pmask) > 0;
+        pmask = 0x80 >> ((px + BLT.patsx) & 7);
+        set = (*pat_ptr1 & pmask) > 0;
         if (set) {
           patcolor = &BLT.fgcolor[0];
         } else {
@@ -3137,7 +3140,7 @@ void bx_banshee_c::blt_screen_to_screen_pattern()
           bx_ternary_rop(BLT.rop[rop], dst_ptr1, src_ptr1, patcolor, abs(dpxsize));
         }
       } else {
-        pat_ptr2 = pat_ptr1 + ((x + BLT.patsx) & 7) * dpxsize;
+        pat_ptr2 = pat_ptr1 + ((px + BLT.patsx) & 7) * dpxsize;
         patcolor = pat_ptr2;
         if (colorkey_en & 1) {
           rop = blt_colorkey_check(src_ptr1, abs(dpxsize), 0);
@@ -3150,9 +3153,19 @@ void bx_banshee_c::blt_screen_to_screen_pattern()
       src_ptr1 += dpxsize;
       dst_ptr1 += dpxsize;
       x++;
+      if (BLT.x_dir) {
+        px--;
+      } else {
+        px++;
+      }
     } while (--ncols);
     src_ptr += spitch;
     dst_ptr += dpitch;
+    if (BLT.y_dir) {
+      py--;
+    } else {
+      py++;
+    }
 #ifdef BANSHEE_TILED_FB
     if (BLT.y_dir) {
       y--;
