@@ -2098,9 +2098,11 @@ void bx_banshee_c::blt_reg_write(Bit8u reg, Bit32u value)
       BLT.cmd = (value & 0x0f);
       BLT.immed = (value >> 8) & 1;
       BLT.x_dir = (value >> 14) & 1;
-      // Y direction only applies to screen-to-screen and host-to-screen
-      // blits (not to stretch blits, fills, lines and polygons)
-      BLT.y_dir = ((BLT.cmd == 1) || (BLT.cmd == 3)) && ((value >> 15) & 1);
+      // The specs say: Y direction only applies to screen-to-screen and
+      // host-to-screen blits (not to stretch blits, fills, lines and polygons)
+      // UNDOCUMENTED: Original Banshee driver for Win95 draws stretched icons
+      // screen-to-screen with bit 15 set.
+      BLT.y_dir = ((BLT.cmd >= 1) && (BLT.cmd <= 3)) && ((value >> 15) & 1);
       BLT.transp = (value >> 16) & 1;
       BLT.patsx = (value >> 17) & 7;
       BLT.patsy = (value >> 20) & 7;
