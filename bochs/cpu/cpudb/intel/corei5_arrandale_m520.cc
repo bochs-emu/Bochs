@@ -183,32 +183,6 @@ Bit32u corei5_arrandale_m520_t::get_vmx_extensions_bitmask(void) const
 
 #endif
 
-// leaf 0x00000000 //
-
-// leaf 0x00000001 //
-// leaf 0x00000002 - Cache and TLB Descriptors //
-// leaf 0x00000003 - Processor Serial Number (not supported) //
-
-// leaf 0x00000004 - Deterministic Cache Parameters //
-// leaf 0x00000005 MONITOR/MWAIT Leaf                //
-// leaf 0x00000006 Thermal and Power Management Leaf //
-// leaf 0x00000007 not supported                     //
-// leaf 0x00000008 reserved                          //
-// leaf 0x00000009 direct cache access not supported //
-
-// leaf 0x0000000A //
-
-// leaf 0x80000000 //
-
-// leaf 0x80000001 //
-// leaf 0x80000002 //
-// leaf 0x80000003 //
-// leaf 0x80000004 //
-// leaf 0x80000005 - L1 Cache and TLB Identifiers (reserved for Intel)
-// leaf 0x80000006 - L2 Cache and TLB Identifiers
-// leaf 0x80000007 - Advanced Power Management
-// leaf 0x80000008 //
-
 bx_cpuid_t *create_corei5_arrandale_m520_cpuid(BX_CPU_C *cpu) { return new corei5_arrandale_m520_t(cpu); }
 
 #endif

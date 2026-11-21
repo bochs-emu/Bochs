@@ -82,11 +82,6 @@ unsigned amd_k6_2_chomper_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u sub
   return cpuid_table->get_leaf(function, subfunction, leaf);
 }
 
-// leaf 0x00000000 //
-// leaf 0x00000001 //
-// leaf 0x80000000 //
-// leaf 0x80000001 //
-// leaf 0x80000005 - L1 Cache and TLB Identifiers //
 bx_cpuid_t *create_amd_k6_2_chomper_cpuid(BX_CPU_C *cpu) { return new amd_k6_2_chomper_t(cpu); }
 
 #endif

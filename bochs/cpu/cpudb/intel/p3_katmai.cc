@@ -70,12 +70,6 @@ unsigned p3_katmai_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunctio
   return cpuid_table->get_leaf(function, subfunction, leaf);
 }
 
-// leaf 0x00000000 //
-
-// leaf 0x00000001 //
-// leaf 0x00000002 - Cache and TLB Descriptors //
-// leaf 0x00000003 - Processor Serial Number   //
-
 bx_cpuid_t *create_p3_katmai_cpuid(BX_CPU_C *cpu) { return new p3_katmai_t(cpu); }
 
 #endif

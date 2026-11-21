@@ -96,13 +96,6 @@ unsigned athlon_xp_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunctio
   return cpuid_table->get_leaf(function, subfunction, leaf);
 }
 
-// leaf 0x00000000 //
-// leaf 0x00000001 //
-// leaf 0x80000000 //
-// leaf 0x80000001 //
-// leaf 0x80000005 - L1 Cache and TLB Identifiers //
-// leaf 0x80000006 - L2 Cache and TLB Identifiers //
-// leaf 0x80000007 - Advanced Power Management //
 bx_cpuid_t *create_athlon_xp_cpuid(BX_CPU_C *cpu) { return new athlon_xp_t(cpu); }
 
 #endif

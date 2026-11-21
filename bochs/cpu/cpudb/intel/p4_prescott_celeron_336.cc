@@ -107,24 +107,6 @@ unsigned p4_prescott_celeron_336_t::get_hardware_cpuid_leaf(Bit32u function, Bit
   return cpuid_table->get_leaf(function, subfunction, leaf);
 }
 
-// leaf 0x00000000 //
-
-// leaf 0x00000001 //
-// leaf 0x00000002 - Cache and TLB Descriptors //
-// leaf 0x00000003 - Processor Serial Number   //
-
-// leaf 0x80000000 //
-
-// leaf 0x80000001 //
-// leaf 0x80000002 //
-// leaf 0x80000003 //
-// leaf 0x80000004 //
-
-// leaf 0x80000005 - L1 Cache and TLB Identifiers (reserved for Intel)
-// leaf 0x80000006 - L2 Cache and TLB Identifiers
-// leaf 0x80000007 - Advanced Power Management
-// leaf 0x80000008 //
-
 bx_cpuid_t *create_p4_prescott_celeron_336_cpuid(BX_CPU_C *cpu) { return new p4_prescott_celeron_336_t(cpu); }
 
 #endif
