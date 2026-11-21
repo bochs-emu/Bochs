@@ -149,9 +149,9 @@ corei7_sandy_bridge_2600k_t::corei7_sandy_bridge_2600k_t(BX_CPU_C *cpu): bx_cpui
 #endif
 }
 
-void corei7_sandy_bridge_2600k_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+unsigned corei7_sandy_bridge_2600k_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  cpuid_table->get_leaf(function, subfunction, leaf);
+  return cpuid_table->get_leaf(function, subfunction, leaf);
 }
 
 #if BX_SUPPORT_VMX >= 2

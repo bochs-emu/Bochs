@@ -80,9 +80,9 @@ p4_willamette_t::p4_willamette_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_XAPIC);
 }
 
-void p4_willamette_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+unsigned p4_willamette_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  cpuid_table->get_leaf(function, subfunction, leaf);
+  return cpuid_table->get_leaf(function, subfunction, leaf);
 }
 
 // leaf 0x00000000 //

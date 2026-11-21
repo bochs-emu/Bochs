@@ -102,9 +102,9 @@ p4_prescott_celeron_336_t::p4_prescott_celeron_336_t(BX_CPU_C *cpu): bx_cpuid_t(
   enable_cpu_extension(BX_ISA_CMPXCHG16B);
 }
 
-void p4_prescott_celeron_336_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+unsigned p4_prescott_celeron_336_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  cpuid_table->get_leaf(function, subfunction, leaf);
+  return cpuid_table->get_leaf(function, subfunction, leaf);
 }
 
 // leaf 0x00000000 //

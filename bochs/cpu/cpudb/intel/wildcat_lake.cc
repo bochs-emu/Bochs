@@ -301,9 +301,9 @@ wildcat_lake_t::wildcat_lake_t(BX_CPU_C *cpu):
   enable_cpu_extension(BX_ISA_SPEC_CTRL);
 }
 
-void wildcat_lake_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+unsigned wildcat_lake_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  cpuid_table->get_leaf(function, subfunction, leaf);
+  return cpuid_table->get_leaf(function, subfunction, leaf);
 }
 
 #if BX_SUPPORT_VMX >= 2

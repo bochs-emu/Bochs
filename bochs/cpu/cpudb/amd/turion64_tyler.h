@@ -36,7 +36,7 @@ public:
   // return CPU name
   virtual const char *get_name(void) const { return "turion64_tyler"; }
 
-  virtual void get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
+  virtual unsigned get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
 
 private:
   bx_cpuid_table_t *cpuid_table;

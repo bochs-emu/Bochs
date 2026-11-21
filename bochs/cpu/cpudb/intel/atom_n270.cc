@@ -115,9 +115,9 @@ atom_n270_t::atom_n270_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_MOVBE);
 }
 
-void atom_n270_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+unsigned atom_n270_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  cpuid_table->get_leaf(function, subfunction, leaf);
+  return cpuid_table->get_leaf(function, subfunction, leaf);
 }
 
 // leaf 0x00000000 //
