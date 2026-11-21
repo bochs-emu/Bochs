@@ -79,7 +79,7 @@ const Bit16s beep_vol_table[16] = {0, 56, 84, 126, 189, 284, 426, 639, 959, 1438
 
 BX_MUTEX(beep_mutex);
 
-Bit32u beep_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
+Bit32u beep_callback(void *dev, Bit32u rate, Bit8u *buffer, Bit32u len);
 #endif
 
 // builtin configuration handling functions
@@ -277,7 +277,7 @@ void bx_speaker_c::reset(unsigned type)
 }
 
 #if BX_SUPPORT_SOUNDLOW
-Bit32u bx_speaker_c::beep_generator(Bit16u rate, Bit8u *buffer, Bit32u len)
+Bit32u bx_speaker_c::beep_generator(Bit32u rate, Bit8u *buffer, Bit32u len)
 {
   Bit32u j = 0, ret = 0;
   Bit16u beep_samples;
@@ -315,7 +315,7 @@ Bit32u bx_speaker_c::beep_generator(Bit16u rate, Bit8u *buffer, Bit32u len)
 }
 
 #if BX_SUPPORT_SOUNDLOW && BX_HAVE_REALTIME_USEC
-Bit32u bx_speaker_c::dsp_generator(Bit16u rate, Bit8u *buffer, Bit32u len)
+Bit32u bx_speaker_c::dsp_generator(Bit32u rate, Bit8u *buffer, Bit32u len)
 {
   Bit32u i = 0, j = 0;
   double tmp_dsp_usec, step_usec;
@@ -347,7 +347,7 @@ Bit32u bx_speaker_c::dsp_generator(Bit16u rate, Bit8u *buffer, Bit32u len)
 }
 #endif
 
-Bit32u beep_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len)
+Bit32u beep_callback(void *dev, Bit32u rate, Bit8u *buffer, Bit32u len)
 {
   return ((bx_speaker_c*)dev)->beep_generator(rate, buffer, len);
 }

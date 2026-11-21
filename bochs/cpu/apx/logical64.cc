@@ -42,6 +42,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_BqGqEqR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// XOR Eq, Gq with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_XOR_EqGqM(bxInstruction_c *i)
+{
+  Bit64u op1_64, op2_64;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
+
+  op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
+  op2_64 = BX_READ_64BIT_REG(i->src());
+  op1_64 ^= op2_64;
+  write_RMW_linear_qword(op1_64);
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_BqEqIdR(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64 = (Bit32s) i->Id();
@@ -56,6 +71,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_BqEqIdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// XOR Eq, Id with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_XOR_EqIdM(bxInstruction_c *i)
+{
+  Bit64u op1_64, op2_64 = (Bit32s) i->Id();
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
+
+  op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
+  op1_64 ^= op2_64;
+  write_RMW_linear_qword(op1_64);
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_BqEqIdR(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64 = (Bit32s) i->Id();
@@ -66,6 +95,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_BqEqIdR(bxInstruction_c *i)
 
   if (! i->getApxEvexNF())
     SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
+
+  BX_NEXT_INSTR(i);
+}
+
+// OR Eq, Id with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_OR_EqIdM(bxInstruction_c *i)
+{
+  Bit64u op1_64, op2_64 = (Bit32s) i->Id();
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
+
+  op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
+  op1_64 |= op2_64;
+  write_RMW_linear_qword(op1_64);
 
   BX_NEXT_INSTR(i);
 }
@@ -95,6 +138,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_BqGqEqR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// OR Eq, Gq with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_OR_EqGqM(bxInstruction_c *i)
+{
+  Bit64u op1_64, op2_64;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
+
+  op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
+  op2_64 = BX_READ_64BIT_REG(i->src());
+  op1_64 |= op2_64;
+  write_RMW_linear_qword(op1_64);
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_BqGqEqR(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64;
@@ -111,6 +169,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_BqGqEqR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// AND Eq, Gq with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_AND_EqGqM(bxInstruction_c *i)
+{
+  Bit64u op1_64, op2_64;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
+
+  op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
+  op2_64 = BX_READ_64BIT_REG(i->src());
+  op1_64 &= op2_64;
+  write_RMW_linear_qword(op1_64);
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_BqEqIdR(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64 = (Bit32s) i->Id();
@@ -121,6 +194,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_BqEqIdR(bxInstruction_c *i)
 
   if (! i->getApxEvexNF())
     SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
+
+  BX_NEXT_INSTR(i);
+}
+
+// AND Eq, Id with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_AND_EqIdM(bxInstruction_c *i)
+{
+  Bit64u op1_64, op2_64 = (Bit32s) i->Id();
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
+
+  op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
+  op1_64 &= op2_64;
+  write_RMW_linear_qword(op1_64);
 
   BX_NEXT_INSTR(i);
 }

@@ -24,6 +24,7 @@
 #include "bochs.h"
 #include "cpu.h"
 #include "cpuid.h"
+#include "msr.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 extern void flushICaches(void);
@@ -314,9 +315,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 #endif
     laddr = agen_read_execute32(i->seg(), (Bit32u)eaddr, 1);
 
-  tickle_read_linear(i->seg(), laddr);
+  tickle_read_linear(i->seg(), laddr, 1);
 
   BX_INSTR_CLFLUSH(BX_CPU_ID, laddr, BX_CPU_THIS_PTR address_xlation.paddress1);
+
+#if BX_X86_DEBUGGER
+  hwbreakpoint_match(laddr, 1, BX_READ);
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -764,7 +769,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
 
 Bit64u BX_CPU_C::get_TSC(void)
 {
-  Bit64u tsc = bx_pc_system.time_ticks() + BX_CPU_THIS_PTR tsc_adjust;
+  Bit64u tsc = bx_pc_system.time_ticks() - BX_CPU_THIS_PTR tsc_last_reset + BX_CPU_THIS_PTR tsc_adjust;
   return tsc;
 }
 
@@ -839,9 +844,8 @@ void BX_CPU_C::set_TSC(Bit64u newval)
 {
   BX_INFO(("WRMSR: write 0x%08x%08x to MSR_IA32_TSC", GET32H(newval), GET32L(newval)));
 
-  // compute the correct setting of tsc_adjust so that a get_TSC()
-  // will return newval
-  BX_CPU_THIS_PTR tsc_adjust = newval - bx_pc_system.time_ticks();
+  // change of the TSC by value X also adds X to IA32_TSC_ADJUST
+  BX_CPU_THIS_PTR tsc_adjust += newval - get_TSC();
 
   // verify
   BX_ASSERT(get_TSC() == newval);
@@ -944,6 +948,45 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPID_Ed(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPRU(bxInstruction_c *i)
+{
+#if BX_CPU_LEVEL >= 6
+  // RDPRU is not allowed outside of CPL0 when CR4.TSD is set
+  if (BX_CPU_THIS_PTR cr4.get_TSD() && CPL != 0) {
+    BX_ERROR(("%s: not allowed to use instruction !", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest)
+    if (SVM_INTERCEPT(SVM_INTERCEPT1_RDPRU)) Svm_Vmexit(SVM_VMEXIT_RDPRU);
+#endif
+
+  // ECX selects the register: 0 - MPERF, 1 - APERF
+  // unsupported ECX values return zero and clear CF
+  Bit64u val = 0;
+  clearEFlagsOSZAPC();
+
+  switch(ECX) {
+  case 0:
+    rdmsr(BX_MSR_IA32_MPERF, &val);
+    assert_CF();
+    break;
+  case 1:
+    rdmsr(BX_MSR_IA32_APERF, &val);
+    assert_CF();
+    break;
+  default:
+    break;
+  }
+
+  RAX = GET32L(val);
+  RDX = GET32H(val);
+#endif
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
@@ -974,7 +1017,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
   }
 #endif
 
-  if ((BX_CPU_THIS_PTR msr.sysenter_cs_msr & BX_SELECTOR_RPL_MASK) == 0) {
+  if (BX_IS_NULL_SELECTOR(BX_CPU_THIS_PTR msr.sysenter_cs_msr)) {
     BX_ERROR(("SYSENTER with zero sysenter_cs_msr !"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -1061,7 +1104,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
     BX_ERROR(("SYSEXIT from real mode or with CPL<>0 !"));
     exception(BX_GP_EXCEPTION, 0);
   }
-  if ((BX_CPU_THIS_PTR msr.sysenter_cs_msr & BX_SELECTOR_RPL_MASK) == 0) {
+  if (BX_IS_NULL_SELECTOR(BX_CPU_THIS_PTR msr.sysenter_cs_msr)) {
     BX_ERROR(("SYSEXIT with zero sysenter_cs_msr !"));
     exception(BX_GP_EXCEPTION, 0);
   }

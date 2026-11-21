@@ -90,6 +90,10 @@ int CDECL main(int argc, char **argv)
         // Now look up the address
         PacketGetAdapterNames = (PGetAdapterNames)GetProcAddress(hPacket, "PacketGetAdapterNames");
         PacketGetVersion = (PGetVersion)GetProcAddress(hPacket, "PacketGetVersion");
+        if ((PacketGetAdapterNames == NULL) || (PacketGetVersion == NULL)) {
+            printf("PACKET.DLL does not provide the required functions!\n");
+            myexit(1);
+        }
     } else {
         printf("Could not load WinPCap driver!\n");
         printf ("You can download them for free from\n");
@@ -98,14 +102,15 @@ int CDECL main(int argc, char **argv)
     }
 
     // Get DLL Version and Tokenize
-    strcpy(dllVersion, PacketGetVersion());
+    strncpy(dllVersion, PacketGetVersion(), sizeof(dllVersion) - 1);
+    dllVersion[sizeof(dllVersion) - 1] = '\0';
     nDLLMajorVersion = -1;
     nDLLMinorVersion = -1;
     for (testString = strtok(dllVersion, ",. ");
               testString != NULL; testString = strtok(NULL, ",. "))
     {
-        // If Single Character, Convert
-        if (strlen( testString ) == 1)
+        // first two numbers are major and minor version (any number of digits)
+        if (strspn(testString, "0123456789") == strlen(testString))
         {
             // Check Major First
             if (nDLLMajorVersion == -1)
@@ -131,10 +136,12 @@ int CDECL main(int argc, char **argv)
         nAdapterCount = 0;
         while ((*wstrName))
         {
-            // store pointer to name
-            niNT[nAdapterCount].wstrName=wstrName;
+            // store pointer to name (only the first MAX_ADAPTERS are listed)
+            if (nAdapterCount < MAX_ADAPTERS) {
+                niNT[nAdapterCount].wstrName=wstrName;
+                nAdapterCount++;
+            }
             wstrName += lstrlenW(wstrName) +1;
-            nAdapterCount++;
         }
 
         strDesc = (LPSTR)++wstrName;
@@ -165,10 +172,12 @@ int CDECL main(int argc, char **argv)
         nAdapterCount = 0;
         while ((*strName))
         {
-            // store pointer to name
-            ni9X[nAdapterCount].strName=strName;
+            // store pointer to name (only the first MAX_ADAPTERS are listed)
+            if (nAdapterCount < MAX_ADAPTERS) {
+                ni9X[nAdapterCount].strName=strName;
+                nAdapterCount++;
+            }
             strName += lstrlen(strName) +1;
-            nAdapterCount++;
         }
 
         strDesc = (LPSTR)++strName;

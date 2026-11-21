@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2025 Stanislav Shwartsman
+//   Copyright (c) 2005-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -34,7 +34,7 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
   Bit32u dword1, dword2;
 
   /* destination selector is not null else #GP(0) */
-  if ((cs_raw & 0xfffc) == 0) {
+  if (BX_IS_NULL_SELECTOR(cs_raw)) {
     BX_ERROR(("jump_protected: cs == 0"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -60,31 +60,31 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
     // call gate DPL must be >= CPL else #GP(gate selector)
     if (descriptor.dpl < CPL) {
       BX_ERROR(("jump_protected: call gate.dpl < CPL"));
-      exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
+      exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
     }
 
     // call gate DPL must be >= gate selector RPL else #GP(gate selector)
     if (descriptor.dpl < selector.rpl) {
       BX_ERROR(("jump_protected: call gate.dpl < selector.rpl"));
-      exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
+      exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
     }
 
 #if BX_SUPPORT_X86_64
     if (long_mode()) {
       if (descriptor.type != BX_386_CALL_GATE) {
         BX_ERROR(("jump_protected: gate type %u unsupported in long mode", (unsigned) descriptor.type));
-        exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
+        exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
       }
 #if BX_SUPPORT_FRED
       if (BX_CPU_THIS_PTR cr4.get_FRED()) {
         BX_ERROR(("jump_protected: call gate not allowed when FRED is enabled"));
-        exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
+        exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
       }
 #endif
       // gate must be present else #NP(gate selector)
       if (! IS_PRESENT(descriptor)) {
         BX_ERROR(("jump_protected: call gate not present!"));
-        exception(BX_NP_EXCEPTION, cs_raw & 0xfffc);
+        exception(BX_NP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
       }
 
       jmp_call_gate64(&selector);
@@ -103,13 +103,13 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 
         if (descriptor.valid==0 || selector.ti) {
           BX_ERROR(("jump_protected: jump to bad TSS selector !"));
-          exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
+          exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
         }
 
         // TSS must be present, else #NP(TSS selector)
         if (! IS_PRESENT(descriptor)) {
           BX_ERROR(("jump_protected: jump to not present TSS !"));
-          exception(BX_NP_EXCEPTION, cs_raw & 0xfffc);
+          exception(BX_NP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
         }
 
         // SWITCH_TASKS _without_ nesting to TSS
@@ -117,7 +117,12 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         return;
 
       case BX_TASK_GATE:
-        task_gate(i, &selector, &descriptor, BX_TASK_FROM_JUMP);
+        // task gate must be present else #NP(gate selector)
+        if (! IS_PRESENT(descriptor)) {
+          BX_ERROR(("jump_protected: task gate not present"));
+          exception(BX_NP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
+        }
+        task_gate(i, &descriptor, BX_TASK_FROM_JUMP);
         return;
 
       case BX_286_CALL_GATE:
@@ -127,23 +132,20 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 
       default:
         BX_ERROR(("jump_protected: gate type %u unsupported", (unsigned) descriptor.type));
-        exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
+        exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(cs_raw));
     }
   }
 }
 
-void BX_CPU_C::task_gate(bxInstruction_c *i, bx_selector_t *selector, bx_descriptor_t *gate_descriptor, unsigned source)
+// Switch task through task gate (far CALL/JMP or interrupt/exception), the caller
+// already checked the task gate itself (type, DPL and present bit).
+// push_error/error_code: error code of an exception pushed onto the new task stack.
+void BX_CPU_C::task_gate(bxInstruction_c *i, bx_descriptor_t *gate_descriptor, unsigned source, bool push_error, Bit32u error_code)
 {
   Bit16u          raw_tss_selector;
   bx_selector_t   tss_selector;
   bx_descriptor_t tss_descriptor;
   Bit32u dword1, dword2;
-
-  // task gate must be present else #NP(gate selector)
-  if (! gate_descriptor->p) {
-    BX_ERROR(("task_gate: task gate not present"));
-    exception(BX_NP_EXCEPTION, selector->value & 0xfffc);
-  }
 
   // examine selector to TSS, given in Task Gate descriptor
   // must specify global in the local/global bit else #GP(TSS selector)
@@ -152,7 +154,7 @@ void BX_CPU_C::task_gate(bxInstruction_c *i, bx_selector_t *selector, bx_descrip
 
   if (tss_selector.ti) {
     BX_ERROR(("task_gate: tss_selector.ti=1"));
-    exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc);
+    exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_tss_selector));
   }
 
   // index must be within GDT limits else #GP(TSS selector)
@@ -164,23 +166,23 @@ void BX_CPU_C::task_gate(bxInstruction_c *i, bx_selector_t *selector, bx_descrip
 
   if (tss_descriptor.valid==0 || tss_descriptor.segment) {
     BX_ERROR(("task_gate: TSS selector points to bad TSS"));
-    exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc);
+    exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_tss_selector));
   }
   if (tss_descriptor.type!=BX_SYS_SEGMENT_AVAIL_286_TSS &&
       tss_descriptor.type!=BX_SYS_SEGMENT_AVAIL_386_TSS)
   {
     BX_ERROR(("task_gate: TSS selector points to bad TSS"));
-    exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc);
+    exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_tss_selector));
   }
 
   // task state segment must be present, else #NP(tss selector)
   if (! IS_PRESENT(tss_descriptor)) {
     BX_ERROR(("task_gate: TSS descriptor.p == 0"));
-    exception(BX_NP_EXCEPTION, raw_tss_selector & 0xfffc);
+    exception(BX_NP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_tss_selector));
   }
 
-  // SWITCH_TASKS _without_ nesting to TSS
-  task_switch(i, &tss_selector, &tss_descriptor, source, dword1, dword2);
+  // SWITCH_TASKS to TSS (nesting depends on the source)
+  task_switch(i, &tss_selector, &tss_descriptor, source, dword1, dword2, push_error, error_code);
 }
 
   void BX_CPP_AttrRegparmN(2)
@@ -188,32 +190,21 @@ BX_CPU_C::jmp_call_gate(bx_selector_t *selector, bx_descriptor_t *gate_descripto
 {
   bx_selector_t gate_cs_selector;
   bx_descriptor_t gate_cs_descriptor;
-  Bit32u dword1, dword2;
 
   if (gate_descriptor->type==BX_286_CALL_GATE)
     BX_DEBUG(("jmp_call_gate: jump to 286 CALL GATE"));
   else
     BX_DEBUG(("jmp_call_gate: jump to 386 CALL GATE"));
 
-  // task gate must be present else #NP(gate selector)
+  // call gate must be present else #NP(gate selector)
   if (! gate_descriptor->p) {
     BX_ERROR(("jmp_call_gate: call gate not present!"));
-    exception(BX_NP_EXCEPTION, selector->value & 0xfffc);
+    exception(BX_NP_EXCEPTION, BX_SELECTOR_ERROR_CODE(selector->value));
   }
 
   // examine selector to code segment given in call gate descriptor
-  // selector must not be null, else #GP(0)
   Bit16u gate_cs_raw = gate_descriptor->u.gate.dest_selector;
-
-  if ((gate_cs_raw & 0xfffc) == 0) {
-    BX_ERROR(("jmp_call_gate: CS selector null"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
-  parse_selector(gate_cs_raw, &gate_cs_selector);
-  // selector must be within its descriptor table limits else #GP(CS selector)
-  fetch_raw_descriptor(&gate_cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
-  parse_descriptor(dword1, dword2, &gate_cs_descriptor);
+  fetch_cs_descriptor(gate_cs_raw, &gate_cs_selector, &gate_cs_descriptor);
 
   // check code-segment descriptor
   check_cs(&gate_cs_descriptor, gate_cs_raw, 0, CPL);
@@ -241,17 +232,7 @@ BX_CPU_C::jmp_call_gate64(bx_selector_t *gate_selector)
   parse_descriptor(dword1, dword2, &gate_descriptor);
 
   Bit16u dest_selector = gate_descriptor.u.gate.dest_selector;
-  // selector must not be null else #GP(0)
-  if ((dest_selector & 0xfffc) == 0) {
-    BX_ERROR(("jmp_call_gate64: selector in gate null"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
-  parse_selector(dest_selector, &cs_selector);
-  // selector must be within its descriptor table limits,
-  //   else #GP(code segment selector)
-  fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
-  parse_descriptor(dword1, dword2, &cs_descriptor);
+  fetch_cs_descriptor(dest_selector, &cs_selector, &cs_descriptor);
 
   // find the RIP in the gate_descriptor
   Bit64u new_RIP = GET64_FROM_HI32_LO32(dword3, gate_descriptor.u.gate.dest_offset);
@@ -262,7 +243,7 @@ BX_CPU_C::jmp_call_gate64(bx_selector_t *gate_selector)
       IS_DATA_SEGMENT(cs_descriptor.type))
   {
     BX_ERROR(("jmp_call_gate64: not code segment in 64-bit call gate"));
-    exception(BX_GP_EXCEPTION, dest_selector & 0xfffc);
+    exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(dest_selector));
   }
 
   // In long mode, only 64-bit call gates are allowed, and they must point
@@ -270,7 +251,7 @@ BX_CPU_C::jmp_call_gate64(bx_selector_t *gate_selector)
   if (! IS_LONG64_SEGMENT(cs_descriptor) || cs_descriptor.u.segment.d_b)
   {
     BX_ERROR(("jmp_call_gate64: not 64-bit code segment in 64-bit call gate"));
-    exception(BX_GP_EXCEPTION, dest_selector & 0xfffc);
+    exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(dest_selector));
   }
 
   // check code-segment descriptor

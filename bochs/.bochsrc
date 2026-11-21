@@ -138,6 +138,7 @@
 #  trinity_apu                AMD A8-5600K APU (Trinity)
 #  ryzen                      AMD Ryzen 7 1700
 #  zen3_vermeer               AMD Ryzen 7 5800X (Vermeer)
+#  zen4_raphael               AMD Ryzen 9 7950X (Raphael)
 #  corei7_ivy_bridge_3770k    Intel(R) Core(TM) i7-3770K CPU (Ivy Bridge)
 #  corei7_haswell_4770        Intel(R) Core(TM) i7-4770 CPU (Haswell)
 #  broadwell_ult              Intel(R) Processor 5Y70 CPU (Broadwell)
@@ -527,6 +528,10 @@ mouse: enabled=0
 #  subsystem of the i440BX chipset.
 #  If PCI is enabled, the 'nofdc' option disables the FDC if no floppy drive
 #  is configured.
+#  The option 'ich7ide' makes the PCI IDE controller report the ICH7 IDE
+#  device ID instead of the PIIX3/PIIX4 one (required by Mac OS X guests,
+#  which have no PIIX IDE driver). The controller still works in the legacy
+#  compatibility mode. This option is not supported by the i430FX chipset.
 #
 # Example:
 #   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k, advopts=noacpi

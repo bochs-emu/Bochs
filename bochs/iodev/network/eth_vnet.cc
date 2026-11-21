@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2021  The Bochs Project
+//  Copyright (C) 2004-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -408,7 +408,9 @@ void bx_vnet_pktmover_c::rx_timer(void)
     // check for another pending packet
     host_to_guest();
   } else {
-    BX_ERROR(("device not ready to receive data"));
+    // keep the packet and try again later
+    BX_DEBUG(("device not ready to receive data, retrying"));
+    bx_pc_system.activate_timer(this->rx_timer_index, 1000, 0);
   }
 }
 

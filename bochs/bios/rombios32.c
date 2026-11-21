@@ -602,8 +602,10 @@ void smp_probe(void)
         /* enable VMX for CPU #0 in IA32_FEATURE_CONTROL */
         if ((cpuid_ext_features & CPUID_EXT_VMX) > 0) {
             val64 = rdmsr(MSR_FEATURE_CTRL);
-            val64 |= (FEATURE_CTRL_LOCK | FEATURE_CTRL_VMX);
-            wrmsr(MSR_FEATURE_CTRL, val64);
+            if (!(val64 & FEATURE_CTRL_LOCK)) {
+                val64 |= (FEATURE_CTRL_LOCK | FEATURE_CTRL_VMX);
+                wrmsr(MSR_FEATURE_CTRL, val64);
+            }
         }
     }
     BX_INFO("Found %d cpu(s)\n", readw(&smp_cpus));
@@ -1006,7 +1008,8 @@ static void pci_bios_init_pcirom(PCIDevice *d, uint32_t paddr)
 {
     PCIDevice d1, *i440fx = &d1;
     uint32_t tmpaddr, size;
-    uint8_t cmd, reg, v;
+    uint8_t reg, v;
+    uint16_t cmd;
     int copied, shift, tmpsize;
 
     i440fx->bus = 0;
@@ -1069,8 +1072,9 @@ static void pci_bios_init_device(PCIDevice *d)
         if (vendor_id == PCI_VENDOR_ID_INTEL &&
            (device_id == PCI_DEVICE_ID_INTEL_82371FB_1 ||
             device_id == PCI_DEVICE_ID_INTEL_82371SB_1 ||
-            device_id == PCI_DEVICE_ID_INTEL_82371AB)) {
-            /* PIIX3/PIIX4 IDE */
+            device_id == PCI_DEVICE_ID_INTEL_82371AB ||
+            device_id == PCI_DEVICE_ID_INTEL_ICH7_IDE)) {
+            /* PIIX3/PIIX4 IDE, ICH7 PATA (Bochs PCI option 'ich7ide') */
             pci_config_writew(d, 0x40, 0x8000); // enable IDE0
             pci_config_writew(d, 0x42, 0x8000); // enable IDE1
             goto default_map;

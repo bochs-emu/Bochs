@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2025  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -103,6 +103,7 @@ cdrom_win32_c::cdrom_win32_c(const char *dev)
     path = strdup(dev);
   }
   using_file = 0;
+  hFile = INVALID_HANDLE_VALUE;
   cdrom_type = CDROM_TYPE_DATA;  // assume a data CD
 #if LOWLEVEL_CDAUDIO
   tot_tracks = 0;
@@ -176,7 +177,16 @@ bool cdrom_win32_c::insert_cdrom(const char *dev)
   CDROM_TOC *toc_table;
 
   // Load CD-ROM. Returns 0 if CD is not ready.
-  if (dev != NULL) path = strdup(dev);
+  if (dev != NULL) {
+    if (path != NULL) free(path);
+    path = strdup(dev);
+  }
+  if (hFile != INVALID_HANDLE_VALUE) {
+    // inserted again without eject
+    CloseHandle(hFile);
+    hFile = INVALID_HANDLE_VALUE;
+    fd = -1;
+  }
   BX_INFO (("load cdrom with path='%s'", path));
   char drive[256];
   if ((path[1] == ':') && (strlen(path) == 2))
@@ -244,6 +254,7 @@ bool cdrom_win32_c::insert_cdrom(const char *dev)
       // check all of the tracks to see if they are all one type
       // (the returned list will include the AA track)
       tot_tracks = toc_table->LastTrack - toc_table->FirstTrack + 1;
+      if (tot_tracks > 99) tot_tracks = 99;
       bool data = FALSE, audio = FALSE;
       for (int i=0; i<tot_tracks + 1; i++) {
         switch (toc_table->TrackData[i].Control & 0b1101) {
@@ -252,9 +263,11 @@ bool cdrom_win32_c::insert_cdrom(const char *dev)
           case 0b1000:
           case 0b1001:
 #if LOWLEVEL_CDAUDIO
-            // if is an audio track, store the information
-            track_info[i].address = msf2lba(toc_table->TrackData[i].Address[1], toc_table->TrackData[i].Address[2], toc_table->TrackData[i].Address[3]);
-            track_info[i].length = msf2lba(toc_table->TrackData[i+1].Address[1], toc_table->TrackData[i+1].Address[2], toc_table->TrackData[i+1].Address[3]) - track_info[i].address;
+            // if is an audio track, store the information (entry tot_tracks is the lead-out)
+            if (i < tot_tracks) {
+              track_info[i].address = msf2lba(toc_table->TrackData[i].Address[1], toc_table->TrackData[i].Address[2], toc_table->TrackData[i].Address[3]);
+              track_info[i].length = msf2lba(toc_table->TrackData[i+1].Address[1], toc_table->TrackData[i+1].Address[2], toc_table->TrackData[i+1].Address[3]) - track_info[i].address;
+            }
             audio = TRUE;
 #endif
             break;
@@ -275,7 +288,7 @@ bool cdrom_win32_c::insert_cdrom(const char *dev)
       } else if (data && !audio) {
         // I just see if I can read a sector to verify that a CD is in the drive and readable.
         fd = (read_block(buffer, 0x10, BX_CD_FRAMESIZE)) ? 1 : -1;
-        if (fd && (memcmp(buffer, "\x00\x42\x45\x41\x30\x31\x01\x00", 8) == 0)) {
+        if ((fd == 1) && (memcmp(buffer, "\x00\x42\x45\x41\x30\x31\x01\x00", 8) == 0)) {
           BX_INFO(("* Direct Media Access detected a Universal Disk Format (UDF) file system. (DVD?)"));
           BX_INFO(("* Older Guests may not recognize the volume, giving a false indication that"));
           BX_INFO(("*  Bochs' Direct Disk access is malfunctioning."));
@@ -355,11 +368,10 @@ void cdrom_win32_c::eject_cdrom()
       mciSendCommand(wDeviceID, MCI_CLOSE, 0, NULL);
 #endif
 #endif
-    } else {
-      if (hFile != INVALID_HANDLE_VALUE) {
-        CloseHandle(hFile);
-        hFile = INVALID_HANDLE_VALUE;
-      }
+    }
+    if (hFile != INVALID_HANDLE_VALUE) {
+      CloseHandle(hFile);
+      hFile = INVALID_HANDLE_VALUE;
     }
     fd = -1;
   }
@@ -412,7 +424,10 @@ Bit32u cdrom_win32_c::capacity()
   } else {  /* direct device access */
     LARGE_INTEGER length;
     DWORD iBytesReturned;
-    DeviceIoControl(hFile, IOCTL_DISK_GET_LENGTH_INFO, NULL, 0, &length, sizeof(length), &iBytesReturned, NULL);
+    if (!DeviceIoControl(hFile, IOCTL_DISK_GET_LENGTH_INFO, NULL, 0, &length, sizeof(length), &iBytesReturned, NULL)) {
+      BX_ERROR(("capacity: IOCTL_DISK_GET_LENGTH_INFO failed"));
+      return 0;
+    }
     return (Bit32u)(length.QuadPart / 2048);
   }
 }

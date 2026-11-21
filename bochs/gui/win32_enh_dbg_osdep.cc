@@ -556,12 +556,7 @@ LRESULT CALLBACK LVProc(HWND hh, UINT mm, WPARAM ww, LPARAM ll)
                             // SelectedBID is the breakpoint ID, if a breakpoint was clicked
                             if (SelectedEntry < WWP_BaseEntry && SelectedEntry < 256)
                             {
-                                i = 0;
-                                if (SelectedEntry > EndPhyEntry)
-                                    i = 0x10000;                    // bit flag for Virtual Brk
-                                else if (SelectedEntry > EndLinEntry)
-                                    i = 0x20000;                    // bit flag for Phy Brkpt
-                                SelectedBID = BrkpIDMap[SelectedEntry] | i;
+                                SelectedBID = BrkpIDMap[SelectedEntry];
                             }
                             else if (SelectedEntry >= WWP_BaseEntry && SelectedEntry < WWP_BaseEntry +  WWPSnapCount)
                             {
@@ -705,13 +700,13 @@ void SetSizeIOS(int WinSizeX, int WinSizeY)
     GetTextMetrics (hdc, &tm);
     ReleaseDC (hS_S, hdc);
     OneCharWide = tm.tmAveCharWidth;
-    j= tm.tmAveCharWidth * 72;  // status bar contains about 72 char positions (without eflags)
-    if (j > WinSizeX/2)         // leave half the status bar for the eflags
-        j = WinSizeX/2;
-    i = j*5 / 12;           // predefined proportions of Status "subwindows" = 2:5:5
-    int modepos = j/6;
-    int ptimepos = modepos + i;
-    int eflpos = ptimepos + i;
+    j= tm.tmAveCharWidth * 86;  // status bar contains about 86 char positions (without eflags)
+    if (j > (WinSizeX*2)/3)     // leave a third of the status bar for the eflags
+        j = (WinSizeX*2)/3;
+    // predefined proportions of Status "subwindows" = 12:50:24 chars
+    int modepos = (j*12) / 86;
+    int ptimepos = modepos + (j*50) / 86;
+    int eflpos = ptimepos + (j*24) / 86;
     int p[4] = {modepos,ptimepos,eflpos,-1};
 
     // then set the dimensions of the I, O, and S child windows
@@ -1690,11 +1685,11 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
                     d->clrTextBk = RGB(255,255,255);
 
                     // RitemToRnum converts a ListView row number to the corresponding Register number.
-                    // RegColor has the 0x80 bit set if the register is supposed to be red.
+                    // RegColor has the RCLR_CHANGED bit set if the register is supposed to be red.
                     // Background color index is in the low nibble of ClrFlgs/RegColor.
                     if (SeeRegColors != FALSE)
                         d->clrTextBk = ColorList[ClrFlgs &7];
-                    if ((ClrFlgs & 0x80) != 0)      // should this register be red?
+                    if ((ClrFlgs & RCLR_CHANGED) != 0)      // should this register be red?
                         d->clrText = RGB(255,0,0);
                     if (!AtBreak)
                         d->clrTextBk = RGB(210,210,210);    // gray out the background if "running"
@@ -1717,10 +1712,10 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
                     if (DViewMode == VIEW_MEMDUMP)  // Change values in memory locations
                     {
                         if (GetKeyState(VK_SHIFT) < 0)
-                            SetWatchpoint(&num_write_watchpoints,write_watchpoint);
+                            SetWatchpointWr();
 
                         else if (GetKeyState(VK_MENU) < 0)  // ALT keys
-                            SetWatchpoint(&num_read_watchpoints,read_watchpoint);
+                            SetWatchpointRd();
 
                         else
                         {
@@ -1735,27 +1730,13 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
                         // HIHI -- the BID variable is not making my life easier
                         i = SelectedBID & 0xf;
                         if (SelectedBID >= 0x80000)         // read watchpoint
-                        {
-                            if (RWP_Snapshot[i] == read_watchpoint[i].addr)
-                                DelWatchpoint(read_watchpoint, &num_read_watchpoints, i);
-                        }
+                            bx_dbg_unwatch_rd(RWP_Snapshot[i]);
                         else if (SelectedBID >= 0x40000)    // write watchpoint
-                        {
-                            if (WWP_Snapshot[i] == write_watchpoint[i].addr)
-                                DelWatchpoint(write_watchpoint, &num_write_watchpoints, i);
-                        }
+                            bx_dbg_unwatch_wr(WWP_Snapshot[i]);
                         else
                         {
-                            i = SelectedBID & 0xffff;
-                            if (i != 0) // determine the breakpoint TYPE
-                            {
-                                if (SelectedBID > 0x20000)
-                                    bx_dbg_del_pbreak(i);
-                                else if (SelectedBID > 0x10000)
-                                    bx_dbg_del_vbreak(i);
-                                else    // linear brkpt
-                                    bx_dbg_del_lbreak(SelectedBID);
-                            }
+                            if (SelectedBID != 0)
+                                bx_dbg_del_breakpoint_command(SelectedBID);
                             ParseBkpt();
                             InvalidateRect(hL[ASM_WND],0,TRUE); // breakpoint colors may have changed
                         }

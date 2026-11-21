@@ -95,6 +95,19 @@ Bit32u xsave_area_last_byte(Bit32u requested_feature_bitmap)
 
   return max_size;
 }
+
+// Returns the offset of the first byte to access in XSAVE area: x87 state, MXCSR or XSAVE header
+// if neither of them is accessed, standard format accesses MXCSR also when AVX state is requested
+BX_CPP_INLINE Bit32u xsave_area_first_byte(Bit32u requested_feature_bitmap, bool compaction)
+{
+  if ((requested_feature_bitmap & BX_XCR0_FPU_MASK) != 0)
+    return XSAVE_FPU_STATE_OFFSET;
+  if ((requested_feature_bitmap & BX_XCR0_SSE_MASK) != 0)
+    return 24; // MXCSR
+  if (! compaction && (requested_feature_bitmap & BX_XCR0_YMM_MASK) != 0)
+    return 24; // MXCSR
+  return 512;  // XSAVE header
+}
 #endif
 
 /* 0F AE /4 */
@@ -110,29 +123,30 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   bx_address laddr = get_laddr(i->seg(), eaddr);
 
-#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  if (BX_CPU_THIS_PTR alignment_check()) {
-    if (laddr & 0x3) {
-      BX_ERROR(("%s: access not aligned to 4-byte cause model specific #AC(0)", i->getIaOpcodeNameShort()));
-      exception(BX_AC_EXCEPTION, 0);
-    }
-  }
-#endif
-
   if (laddr & 0x3f) {
-    BX_ERROR(("%s: access not aligned to 64-byte", i->getIaOpcodeNameShort()));
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+    if (BX_CPU_THIS_PTR alignment_check()) {
+      if (laddr & 0x3) {
+        BX_ERROR(("%s: access not aligned to 4-byte cause model specific #AC(0)", i->getIaOpcodeNameShort()));
+        exception(BX_AC_EXCEPTION, 0);
+      }
+    }
+#endif
+    BX_ERROR(("%s: access not aligned to 64-byte boundary", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
   bx_address asize_mask = i->asize_mask();
-  Bit64u xstate_bv = read_virtual_qword(i->seg(), (eaddr + 512) & asize_mask);
+  // XSTATE_BV is read-modify-write, check for write access before anything is written (no lock)
+  Bit64u xstate_bv = read_RMW_virtual_qword(i->seg(), (eaddr + 512) & asize_mask);
   Bit32u requested_feature_bitmap = BX_CPU_THIS_PTR xcr0.get32() & EAX;
   Bit32u xinuse = get_xinuse_vector(requested_feature_bitmap);
 
   if (requested_feature_bitmap) {
-    // check that we would not fault while attempting to write, check that we can write-access last byte of the XSAVE area to be written
-    // touch the memory but no write actually occurs
+    // check that we would not fault while attempting to write, check that we can write-access last and first bytes of the XSAVE area
+    // to be written, touch the memory but no write actually occurs
     tickle_write_virtual(i->seg(), (eaddr + xsave_area_last_byte(requested_feature_bitmap) - 1) & asize_mask, 1);
+    tickle_write_virtual(i->seg(), (eaddr + xsave_area_first_byte(requested_feature_bitmap, false)) & asize_mask, 1);
 
     /////////////////////////////////////////////////////////////////////////////
     if ((requested_feature_bitmap & BX_XCR0_FPU_MASK) != 0)
@@ -209,17 +223,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   bx_address laddr = get_laddr(i->seg(), eaddr);
 
-#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  if (BX_CPU_THIS_PTR alignment_check()) {
-    if (laddr & 0x3) {
-      BX_ERROR(("%s: access not aligned to 4-byte cause model specific #AC(0)", i->getIaOpcodeNameShort()));
-      exception(BX_AC_EXCEPTION, 0);
-    }
-  }
-#endif
-
   if (laddr & 0x3f) {
-    BX_ERROR(("%s: access not aligned to 64-byte", i->getIaOpcodeNameShort()));
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+    if (BX_CPU_THIS_PTR alignment_check()) {
+      if (laddr & 0x3) {
+        BX_ERROR(("%s: access not aligned to 4-byte cause model specific #AC(0)", i->getIaOpcodeNameShort()));
+        exception(BX_AC_EXCEPTION, 0);
+      }
+    }
+#endif
+    BX_ERROR(("%s: access not aligned to 64-byte boundary", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -234,6 +247,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
   Bit64u xstate_bv = requested_feature_bitmap & xinuse;
   Bit64u xcomp_bv = requested_feature_bitmap | XSAVEC_COMPACTION_ENABLED;
 
+  // check that we would not fault while attempting to write, check that we can write-access last (at least the XSAVE header)
+  // and first bytes of the XSAVE area before anything is written, touch the memory but no write actually occurs
+  tickle_write_virtual(i->seg(), (eaddr + xsave_area_last_byte_compaction(requested_feature_bitmap, requested_feature_bitmap) - 1) & asize_mask, 1);
+  tickle_write_virtual(i->seg(), (eaddr + xsave_area_first_byte(requested_feature_bitmap, true)) & asize_mask, 1);
+
   if ((xstate_bv & BX_XCR0_FPU_MASK) != 0)
   {
     xsave_x87_state(i, eaddr);
@@ -246,10 +264,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
   }
 
   if (requested_feature_bitmap & ~(BX_XCR0_FPU_MASK | BX_XCR0_SSE_MASK)) {
-    // check that we would not fault while attempting to write, check that we can write-access last byte of the XSAVE area to be written
-    // touch the memory but no write actually occurs
-    tickle_write_virtual(i->seg(), (eaddr + xsave_area_last_byte_compaction(requested_feature_bitmap, requested_feature_bitmap) - 1) & asize_mask, 1);
-
     Bit32u offset = XSAVE_YMM_STATE_OFFSET;
 
     /////////////////////////////////////////////////////////////////////////////
@@ -372,7 +386,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
       exception(BX_GP_EXCEPTION, 0);
     }
 
-    if (xstate_bv & ~xcomp_bv) {
+    // XCOMP_BV[63] is the compaction flag, XSTATE_BV[63] must be 0
+    if (xstate_bv & ~(xcomp_bv & ~XSAVEC_COMPACTION_ENABLED)) {
       BX_ERROR(("%s: xstate_bv set a bit which is not in xcomp_bv state", i->getIaOpcodeNameShort()));
       exception(BX_GP_EXCEPTION, 0);
     }
@@ -396,6 +411,28 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   if (! requested_feature_bitmap) {
     BX_NEXT_INSTR(i);
     return;
+  }
+
+  // check that we would not fault while attempting to read, check that we can access last and first bytes of the XSAVE area
+  // before any state is modified, touch the memory but no read actually occurs
+  // in compacted format the components layout is defined by XCOMP_BV, not by RFBM
+  if (compaction) {
+    tickle_read_virtual(i->seg(), (eaddr + xsave_area_last_byte_compaction((Bit32u) xcomp_bv, requested_feature_bitmap) - 1) & asize_mask, 1);
+    tickle_read_virtual(i->seg(), (eaddr + xsave_area_first_byte(requested_feature_bitmap & (Bit32u) xcomp_bv, true)) & asize_mask, 1);
+  }
+  else {
+    tickle_read_virtual(i->seg(), (eaddr + xsave_area_last_byte(requested_feature_bitmap) - 1) & asize_mask, 1);
+    tickle_read_virtual(i->seg(), (eaddr + xsave_area_first_byte(requested_feature_bitmap, false)) & asize_mask, 1);
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Legacy form of XRSTOR loads the MXCSR register from memory whenever the
+  // RFBM[1](SSE) or RFBM[2](AVX) is set, regardless of the values of XSTATE_BV[1] and XSTATE_BV[2]
+  // MXCSR is restored (and checked for reserved bits) before any other state is modified
+  // For compaction form and XRSTORS, MXCSR is part of SSE state and handled together with it
+  if ((requested_feature_bitmap & (BX_XCR0_SSE_MASK|BX_XCR0_YMM_MASK)) != 0 && ! compaction && ! xrstors)
+  {
+    xrstor_mxcsr_state(i, eaddr);
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -425,15 +462,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // Legacy form of XRSTOR loads the MXCSR register from memory whenever the
-  // RFBM[1](SSE) or RFBM[2](AVX) is set, regardless of the values of XSTATE_BV[1] and XSTATE_BV[2]
-  // For compaction form and XRSTORS, MXCSR is part of SSE state and handled together with it
-  if ((requested_feature_bitmap & (BX_XCR0_SSE_MASK|BX_XCR0_YMM_MASK)) != 0 && ! compaction && ! xrstors)
-  {
-    xrstor_mxcsr_state(i, eaddr);
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
   if ((requested_feature_bitmap & BX_XCR0_SSE_MASK) != 0)
   {
     if (restore_mask & BX_XCR0_SSE_MASK) {
@@ -444,11 +472,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   }
 
   if (compaction) {
-    // check that we would not fault while attempting to read, check that we can access last byte of the XSAVE area
-    // touch the memory but no read actually occurs
-    // in compacted format the components layout is defined by XCOMP_BV, not by RFBM
-    tickle_read_virtual(i->seg(), (eaddr + xsave_area_last_byte_compaction((Bit32u) xcomp_bv, requested_feature_bitmap) - 1) & asize_mask);
-
     Bit32u offset = XSAVE_YMM_STATE_OFFSET;
 
     /////////////////////////////////////////////////////////////////////////////
@@ -473,10 +496,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
     }
   }
   else {
-    // check that we would not fault while attempting to read, check that we can access last byte of the XSAVE area
-    // touch the memory but no read actually occurs
-    tickle_read_virtual(i->seg(), (eaddr + xsave_area_last_byte(requested_feature_bitmap) - 1) & asize_mask);
-
     /////////////////////////////////////////////////////////////////////////////
     for (unsigned feature = xcr0_t::BX_XCR0_YMM_BIT; feature < xcr0_t::BX_XCR0_LAST; feature++)
     {
@@ -508,6 +527,81 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
 
 // x87 state management //
+
+#if BX_SUPPORT_FPU
+Bit8u BX_CPU_C::pack_FPU_TW(Bit16u twd)
+{
+  Bit8u tag_byte = 0;
+
+  if((twd & 0x0003) != 0x0003) tag_byte |= 0x01;
+  if((twd & 0x000c) != 0x000c) tag_byte |= 0x02;
+  if((twd & 0x0030) != 0x0030) tag_byte |= 0x04;
+  if((twd & 0x00c0) != 0x00c0) tag_byte |= 0x08;
+  if((twd & 0x0300) != 0x0300) tag_byte |= 0x10;
+  if((twd & 0x0c00) != 0x0c00) tag_byte |= 0x20;
+  if((twd & 0x3000) != 0x3000) tag_byte |= 0x40;
+  if((twd & 0xc000) != 0xc000) tag_byte |= 0x80;
+
+  return tag_byte;
+}
+
+Bit16u unpack_FPU_TW(const i387_t *i387, Bit16u tag_byte)
+{
+  Bit32u twd = 0;
+
+  /*                                 FTW
+   *
+   * Note that the original format for FTW can be recreated from the stored
+   * FTW valid bits and the stored 80-bit FP data (assuming the stored data
+   * was not the contents of MMX registers) using the following table:
+
+     | Exponent | Exponent | Fraction | J,M bits | FTW valid | x87 FTW |
+     |  all 1s  |  all 0s  |  all 0s  |          |           |         |
+     -------------------------------------------------------------------
+     |    0     |    0     |    0     |    0x    |     1     | S    10 |
+     |    0     |    0     |    0     |    1x    |     1     | V    00 |
+     -------------------------------------------------------------------
+     |    0     |    0     |    1     |    00    |     1     | S    10 |
+     |    0     |    0     |    1     |    10    |     1     | V    00 |
+     -------------------------------------------------------------------
+     |    0     |    1     |    0     |    0x    |     1     | S    10 |
+     |    0     |    1     |    0     |    1x    |     1     | S    10 |
+     -------------------------------------------------------------------
+     |    0     |    1     |    1     |    00    |     1     | Z    01 |
+     |    0     |    1     |    1     |    10    |     1     | S    10 |
+     -------------------------------------------------------------------
+     |    1     |    0     |    0     |    1x    |     1     | S    10 |
+     |    1     |    0     |    0     |    1x    |     1     | S    10 |
+     -------------------------------------------------------------------
+     |    1     |    0     |    1     |    00    |     1     | S    10 |
+     |    1     |    0     |    1     |    10    |     1     | S    10 |
+     -------------------------------------------------------------------
+     |        all combinations above             |     0     | E    11 |
+
+   *
+   * The J-bit is defined to be the 1-bit binary integer to the left of
+   * the decimal place in the significand.
+   *
+   * The M-bit is defined to be the most significant bit of the fractional
+   * portion of the significand (i.e., the bit immediately to the right of
+   * the decimal place). When the M-bit is the most significant bit of the
+   * fractional portion  of the significand, it must be  0 if the fraction
+   * is all 0's.
+   */
+
+  for(int index = 7;index >= 0; index--, twd <<= 2, tag_byte <<= 1)
+  {
+      if(tag_byte & 0x80) {
+         const floatx80 &fpu_reg = i387->st_space[index];
+         twd |= FPU_tagof(fpu_reg);
+      }
+      else {
+         twd |= FPU_Tag_Empty;
+      }
+  }
+
+  return (twd >> 2);
+}
 
 void BX_CPU_C::xsave_x87_state(bxInstruction_c *i, bx_address offset)
 {
@@ -556,15 +650,14 @@ void BX_CPU_C::xsave_x87_state(bxInstruction_c *i, bx_address offset)
    *   + 16 bit, in 16/32 bit mode only
    */
 #if BX_SUPPORT_X86_64
-  // write cannot cause any boundary cross because XSAVE image is 64-byte aligned
   if (i->os64L()) {
-    write_virtual_qword(i->seg(), offset + 16, BX_CPU_THIS_PTR the_i387.fdp);
+    write_virtual_qword(i->seg(), (offset + 16) & asize_mask, BX_CPU_THIS_PTR the_i387.fdp);
   }
   else
 #endif
   {
-    write_virtual_dword(i->seg(), offset + 16, (Bit32u) BX_CPU_THIS_PTR the_i387.fdp);
-    write_virtual_dword(i->seg(), offset + 20, x87_get_FDS());
+    write_virtual_dword(i->seg(), (offset + 16) & asize_mask, (Bit32u) BX_CPU_THIS_PTR the_i387.fdp);
+    write_virtual_dword(i->seg(), (offset + 20) & asize_mask, x87_get_FDS());
   }
   /* do not touch MXCSR state */
 
@@ -616,8 +709,8 @@ void BX_CPU_C::xrstor_x87_state(bxInstruction_c *i, bx_address offset)
 
   Bit32u tag_byte = xmm.xmmubyte(4);
 
-  /* Restore x87 FPU DP - read cannot cause any boundary cross because XSAVE image is 64-byte aligned */
-  read_virtual_xmmword(i->seg(), offset + 16, &xmm);
+  /* Restore x87 FPU DP */
+  read_virtual_xmmword(i->seg(), (offset + 16) & asize_mask, &xmm);
 
 #if BX_SUPPORT_X86_64
   if (i->os64L()) {
@@ -682,20 +775,22 @@ bool BX_CPU_C::xsave_x87_state_xinuse(void)
 
   return false;
 }
+#endif
 
 // MXCSR state management //
 
 void BX_CPU_C::xsave_mxcsr_state(bxInstruction_c *i, bx_address eaddr)
 {
-  // store MXCSR - write cannot cause any boundary cross because XSAVE image is 64-byte aligned
-  write_virtual_dword(i->seg(), eaddr + 24, BX_MXCSR_REGISTER);
-  write_virtual_dword(i->seg(), eaddr + 28, MXCSR_MASK);
+  bx_address asize_mask = i->asize_mask();
+
+  // store MXCSR
+  write_virtual_dword(i->seg(), (eaddr + 24) & asize_mask, BX_MXCSR_REGISTER);
+  write_virtual_dword(i->seg(), (eaddr + 28) & asize_mask, MXCSR_MASK);
 }
 
 void BX_CPU_C::xrstor_mxcsr_state(bxInstruction_c *i, bx_address eaddr)
 {
-  // read cannot cause any boundary cross because XSAVE image is 64-byte aligned
-  Bit32u new_mxcsr = read_virtual_dword(i->seg(), eaddr + 24);
+  Bit32u new_mxcsr = read_virtual_dword(i->seg(), (eaddr + 24) & i->asize_mask());
   if(new_mxcsr & ~MXCSR_MASK) {
      BX_ERROR(("%s: corrupted MXCSR state restored new_mxcsr=0x%08x", i->getIaOpcodeNameShort(), new_mxcsr));
      exception(BX_GP_EXCEPTION, 0);

@@ -33,6 +33,11 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#if defined(_WIN32) && !defined(__CYGWIN__)
+#include <io.h>
+#include <share.h>
+#endif
+
 // Missing defines for open (copied from osdep.h)
 #ifndef S_IRUSR
 #define S_IRUSR 0400
@@ -181,6 +186,20 @@ static struct tftp_t *tftp_prep_mbuf_data(struct tftp_session *spt,
     return tp;
 }
 
+static size_t tftp_room(struct tftp_session *spt)
+{
+    size_t room = spt->slirp->if_mtu;
+
+    if (spt->client_addr.ss_family == AF_INET6) {
+        room -= sizeof(struct ip6);
+    } else {
+        room -= sizeof(struct ip);
+    }
+    room -= sizeof(struct udphdr);
+
+    return room;
+}
+
 static void tftp_udp_output(struct tftp_session *spt, struct mbuf *m,
                             struct tftphdr *hdr)
 {
@@ -210,6 +229,7 @@ static int tftp_send_oack(struct tftp_session *spt, struct tftp_t *recv_tp)
     struct mbuf *m;
     struct tftp_t *tp;
     int i, n = 0;
+    size_t room;
 
     m = m_get(spt->slirp);
 
@@ -217,14 +237,16 @@ static int tftp_send_oack(struct tftp_session *spt, struct tftp_t *recv_tp)
         return -1;
 
     tp = tftp_prep_mbuf_data(spt, m);
+    room = tftp_room(spt);
+    room -= sizeof(tp->hdr.tp_op);
 
     tp->hdr.tp_op = htons(TFTP_OACK);
     for (i = 0; i < spt->nb_options; i++) {
-        n += snprintf(tp->x.tp_buf + n, sizeof(tp->x.tp_buf) - n, "%s", spt->option_name[i]) + 1;
-        n += snprintf(tp->x.tp_buf + n, sizeof(tp->x.tp_buf) - n, "%u", spt->option_value[i]) + 1;
+        n += slirp_fmt0(tp->x.tp_buf + n, room - n, "%s", spt->option_name[i]);
+        n += slirp_fmt0(tp->x.tp_buf + n, room - n, "%u", spt->option_value[i]);
     }
 
-    m->m_len = G_SIZEOF_MEMBER(struct tftp_t, hdr.tp_op) + n;
+    m->m_len = sizeof(tp->hdr.tp_op) + n;
     tftp_udp_output(spt, m, &recv_tp->hdr);
 
     return 0;
@@ -257,6 +279,7 @@ static void tftp_send_error(struct tftp_session *spt, uint16_t errorcode,
 {
   struct mbuf *m;
   struct tftp_t *tp;
+  size_t room;
 
   DEBUG_TFTP("tftp error msg: %s", msg);
 
@@ -267,14 +290,17 @@ static void tftp_send_error(struct tftp_session *spt, uint16_t errorcode,
   }
 
   tp = tftp_prep_mbuf_data(spt, m);
+  room = tftp_room(spt);
+  room -= sizeof(tp->hdr.tp_op);
+  room -= sizeof(tp->x.tp_error.tp_error_code);
 
   tp->hdr.tp_op = htons(TFTP_ERROR);
   tp->x.tp_error.tp_error_code = htons(errorcode);
-  slirp_pstrcpy((char *)tp->x.tp_error.tp_msg, sizeof(tp->x.tp_error.tp_msg),
-                msg);
+  slirp_pstrcpy((char *)tp->x.tp_error.tp_msg, room, msg);
 
-  m->m_len = sizeof(struct tftp_t) - (TFTP_BLOCKSIZE_MAX + 2) + 3 +
-                    strlen(msg) - sizeof(struct udphdr);
+  m->m_len = sizeof(tp->hdr.tp_op)
+             + sizeof(tp->x.tp_error.tp_error_code)
+             + strlen((char*)tp->x.tp_error.tp_msg) + 1;
   tftp_udp_output(spt, m, &recv_tp->hdr);
 
 out:
@@ -287,6 +313,7 @@ static void tftp_send_next_block(struct tftp_session *spt,
   struct mbuf *m;
   struct tftp_t *tp;
   int nobytes;
+  size_t room;
 
   m = m_get(spt->slirp);
 
@@ -295,11 +322,15 @@ static void tftp_send_next_block(struct tftp_session *spt,
   }
 
   tp = tftp_prep_mbuf_data(spt, m);
+  room = tftp_room(spt);
+  room -= sizeof(tp->hdr.tp_op);
+  room -= sizeof(tp->x.tp_data.tp_block_nr);
 
   tp->hdr.tp_op = htons(TFTP_DATA);
   tp->x.tp_data.tp_block_nr = htons((spt->block_nr + 1) & 0xffff);
 
-  nobytes = tftp_read_data(spt, spt->block_nr, tp->x.tp_data.tp_buf, spt->blksize_val);
+  nobytes = tftp_read_data(spt, spt->block_nr, tp->x.tp_data.tp_buf,
+                           MIN(room, spt->blksize_val));
 
   if (nobytes < 0) {
     /* send "file not found" error back */
@@ -311,8 +342,9 @@ static void tftp_send_next_block(struct tftp_session *spt,
     return;
   }
 
-  m->m_len = sizeof(struct tftp_t) - (TFTP_BLOCKSIZE_MAX - nobytes) -
-                    sizeof(struct udphdr);
+  m->m_len = sizeof(tp->hdr.tp_op)
+             + sizeof(tp->x.tp_data.tp_block_nr)
+             + nobytes;
   tftp_udp_output(spt, m, hdr);
 
   if (nobytes == (int)spt->blksize_val) {
@@ -365,7 +397,7 @@ static void tftp_parse_options(struct tftp_session *spt, struct tftp_t *tp, int 
     } else if (strcasecmp(key, "blksize") == 0) {
       int blksize = atoi(value);
       spt->blksize_val = blksize;
-      if (spt->blksize_val > TFTP_BLOCKSIZE_MAX) {
+      if ((blksize < 1) || (blksize > 65535)) {
         spt->blksize_val = TFTP_DEFAULT_BLKSIZE;
       }
 
@@ -392,17 +424,18 @@ static void tftp_handle_rrq(Slirp *slirp, struct sockaddr_storage *srcsas,
     struct tftp_session *spt;
     int s, k;
     size_t prefix_len;
+    size_t fname_len;
     char *req_fname;
 
     /* check if a session already exists and if so terminate it */
     s = tftp_session_find(slirp, srcsas, &tp->hdr);
-    if (s >= 0) {
+    if (have_valid_socket(s)) {
         tftp_session_terminate(&slirp->tftp_sessions[s]);
     }
 
     s = tftp_session_allocate(slirp, srcsas, &tp->hdr);
 
-    if (s < 0) {
+    if (not_valid_socket(s)) {
         return;
     }
 
@@ -454,13 +487,14 @@ static void tftp_handle_rrq(Slirp *slirp, struct sockaddr_storage *srcsas,
     k += 6; /* skipping octet */
 
     /* do sanity checks on the filename */
-    if (
+    fname_len = strlen(req_fname);
+    if (fname_len == 0 ||
 #ifdef _WIN32
         strstr(req_fname, "..\\") ||
-        req_fname[strlen(req_fname) - 1] == '\\' ||
+        req_fname[fname_len - 1] == '\\' ||
 #endif
         strstr(req_fname, "../") ||
-        req_fname[strlen(req_fname) - 1] == '/') {
+        req_fname[fname_len - 1] == '/') {
         tftp_send_error(spt, 2, "Access violation", tp);
         return;
     }
@@ -626,7 +660,7 @@ static void tftp_handle_ack(Slirp *slirp, struct sockaddr_storage *srcsas,
 
     s = tftp_session_find(slirp, srcsas, hdr);
 
-    if (s < 0) {
+    if (not_valid_socket(s)) {
         return;
     }
 
@@ -640,7 +674,7 @@ static void tftp_handle_error(Slirp *slirp, struct sockaddr_storage *srcsas,
 
     s = tftp_session_find(slirp, srcsas, hdr);
 
-    if (s < 0) {
+    if (not_valid_socket(s)) {
         return;
     }
 

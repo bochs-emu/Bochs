@@ -1594,7 +1594,8 @@ static const Bit64u BxOpcodeTable0F01[] = {
   form_opcode(ATTR_NNN7 | ATTR_RRR1 | ATTR_MODC0, BX_IA_RDTSCP),                  // 0F 01 F9
   form_opcode(ATTR_NNN7 | ATTR_RRR2 | ATTR_MODC0, BX_IA_MONITORX),                // 0F 01 FA
   form_opcode(ATTR_NNN7 | ATTR_RRR3 | ATTR_MODC0, BX_IA_MWAITX),                  // 0F 01 FB
-  last_opcode(ATTR_NNN7 | ATTR_RRR4 | ATTR_MODC0, BX_IA_CLZERO)                   // 0F 01 FC
+  form_opcode(ATTR_NNN7 | ATTR_RRR4 | ATTR_MODC0, BX_IA_CLZERO),                  // 0F 01 FC
+  last_opcode(ATTR_NNN7 | ATTR_RRR5 | ATTR_MODC0, BX_IA_RDPRU)                    // 0F 01 FD
 };
 
 // opcode 0F 02

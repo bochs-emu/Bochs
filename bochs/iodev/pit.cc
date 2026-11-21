@@ -192,10 +192,11 @@ void bx_pit_c::after_restore_state(void)
 void bx_pit_c::timer_handler(void *this_ptr)
 {
   bx_pit_c * class_ptr = (bx_pit_c *) this_ptr;
-  class_ptr->handle_timer();
+  // the virtual timer is one-shot, always re-arm it from the timer callback
+  class_ptr->handle_timer(1);
 }
 
-void bx_pit_c::handle_timer()
+void bx_pit_c::handle_timer(bool force_rearm)
 {
   Bit64u my_time_usec = bx_virt_timer.time_usec(BX_PIT_THIS is_realtime);
   Bit64u time_passed = my_time_usec-BX_PIT_THIS s.last_usec;
@@ -207,21 +208,29 @@ void bx_pit_c::handle_timer()
     periodic(time_passed32);
   }
   BX_PIT_THIS s.last_usec = BX_PIT_THIS s.last_usec + time_passed;
-  if (time_passed || (BX_PIT_THIS s.last_next_event_time != BX_PIT_THIS s.timer.get_next_event_time())) {
+  rearm_timer(force_rearm);
+}
+
+// re-program the virtual timer only if the next PIT event moved
+void bx_pit_c::rearm_timer(bool force)
+{
+  Bit32u next_event_time = BX_PIT_THIS s.timer.get_next_event_time();
+
+  if (force || (BX_PIT_THIS s.last_next_event_time != next_event_time)) {
     BX_DEBUG(("RESETting timer"));
     bx_virt_timer.deactivate_timer(BX_PIT_THIS s.timer_handle[0]);
     BX_DEBUG(("deactivated timer"));
-    if(BX_PIT_THIS s.timer.get_next_event_time()) {
+    if (next_event_time) {
       bx_virt_timer.activate_timer(BX_PIT_THIS s.timer_handle[0],
-                                   (Bit32u)BX_MAX(1,TICKS_TO_USEC(BX_PIT_THIS s.timer.get_next_event_time())),
+                                   (Bit32u)BX_MAX(1,TICKS_TO_USEC(next_event_time)),
                                    0);
       BX_DEBUG(("activated timer"));
     }
-    BX_PIT_THIS s.last_next_event_time = BX_PIT_THIS s.timer.get_next_event_time();
+    BX_PIT_THIS s.last_next_event_time = next_event_time;
   }
   BX_DEBUG(("s.last_usec=" FMT_LL "d", BX_PIT_THIS s.last_usec));
   BX_DEBUG(("s.timer_id=%d", BX_PIT_THIS s.timer_handle[0]));
-  BX_DEBUG(("s.timer.get_next_event_time=%x", BX_PIT_THIS s.timer.get_next_event_time()));
+  BX_DEBUG(("s.timer.get_next_event_time=%x", next_event_time));
   BX_DEBUG(("s.last_next_event_time=%d", BX_PIT_THIS s.last_next_event_time));
 }
 
@@ -243,7 +252,7 @@ Bit32u bx_pit_c::read(Bit32u address, unsigned io_len)
   bool refresh_clock_div2;
   Bit8u value = 0;
 
-  handle_timer();
+  handle_timer(0);
 
   switch (address) {
 
@@ -358,23 +367,7 @@ void bx_pit_c::write(Bit32u address, Bit32u dvalue, unsigned io_len)
       BX_PANIC(("unsupported io write to port 0x%04x = 0x%02x", address, value));
   }
 
-  if (time_passed || (BX_PIT_THIS s.last_next_event_time != BX_PIT_THIS s.timer.get_next_event_time())) {
-    BX_DEBUG(("RESETting timer"));
-    bx_virt_timer.deactivate_timer(BX_PIT_THIS s.timer_handle[0]);
-    BX_DEBUG(("deactivated timer"));
-    if(BX_PIT_THIS s.timer.get_next_event_time()) {
-      bx_virt_timer.activate_timer(BX_PIT_THIS s.timer_handle[0],
-                                   (Bit32u)BX_MAX(1,TICKS_TO_USEC(BX_PIT_THIS s.timer.get_next_event_time())),
-                                   0);
-      BX_DEBUG(("activated timer"));
-    }
-    BX_PIT_THIS s.last_next_event_time = BX_PIT_THIS s.timer.get_next_event_time();
-  }
-  BX_DEBUG(("s.last_usec=" FMT_LL "d", BX_PIT_THIS s.last_usec));
-  BX_DEBUG(("s.timer_id=%d", BX_PIT_THIS s.timer_handle[0]));
-  BX_DEBUG(("s.timer.get_next_event_time=%x", BX_PIT_THIS s.timer.get_next_event_time()));
-  BX_DEBUG(("s.last_next_event_time=%d", BX_PIT_THIS s.last_next_event_time));
-
+  rearm_timer(0);
 }
 
 bool bx_pit_c::periodic(Bit32u usec_delta)
@@ -384,6 +377,14 @@ bool bx_pit_c::periodic(Bit32u usec_delta)
   BX_PIT_THIS s.total_usec += usec_delta;
   ticks_delta = (Bit32u)((USEC_TO_TICKS((Bit64u)(BX_PIT_THIS s.total_usec)))-BX_PIT_THIS s.total_ticks);
   BX_PIT_THIS s.total_ticks += ticks_delta;
+
+  // track the armed event time, if no event fired and no counter was
+  // re-programmed it stays equal to the next event time of the counters
+  if (BX_PIT_THIS s.last_next_event_time > ticks_delta) {
+    BX_PIT_THIS s.last_next_event_time -= ticks_delta;
+  } else {
+    BX_PIT_THIS s.last_next_event_time = 0;
+  }
 
   while ((BX_PIT_THIS s.total_ticks >= TICKS_PER_SECOND) && (BX_PIT_THIS s.total_usec >= USEC_PER_SECOND)) {
     BX_PIT_THIS s.total_ticks -= TICKS_PER_SECOND;

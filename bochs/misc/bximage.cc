@@ -29,6 +29,7 @@
 #endif
 
 #include "config.h"
+#include "bxversion.h"
 #include "bxcompat.h"
 
 #if defined(WIN32) && !defined(__CYGWIN__)
@@ -58,6 +59,8 @@
 
 #define SECTOR_SIZE 512
 
+#define CONVERT_CHUNK_SIZE (128 * 512) // 64 KB per read during convert/resize
+
 const int bx_max_hd_megs = (int)(((1 << BX_MAX_CYL_BITS) - 1) * 16.0 * 63.0 / 2048.0);
 
 int  bximage_func;
@@ -65,16 +68,18 @@ int  bx_hdimage;
 int  bx_fdsize_idx;
 int  bx_min_hd_megs = 10;
 int  bx_hdsize;
-int  bx_imagemode;
+int  bx_dst_imgmode;
 int  bx_backup;
+int  bx_tmpfile;
 int  bx_interactive;
 int  bx_sectsize_idx;
 Bit16u bx_sectsize_val;
-char bx_filename_1[512];
-char bx_filename_2[522];
+char bx_filename_1[BX_PATHNAME_LEN];
+char bx_filename_2[BX_PATHNAME_LEN];
+const char *bx_src_imgmode;
 
 const char *EOF_ERR = "ERROR: End of input";
-const char *svnid = "$Id$";
+const char *SECTSIZE_ERR = "ERROR: sector size not supported by this image mode";
 const char *divider = "========================================================================";
 const char *main_menu_prompt =
 "\n"
@@ -109,18 +114,6 @@ const char *sectsize_menu = "\nChoose the size of hard disk sectors.\nPlease typ
 const char *sectsize_choices[] = { "512","1024","4096" };
 int sectsize_n_choices = 3;
 
-#if !BX_HAVE_MKSTEMP
-int bx_mkstemp(char *tpl)
-{
-  mktemp(tpl);
-  return ::open(tpl, O_RDWR | O_CREAT | O_TRUNC
-#ifdef O_BINARY
-                | O_BINARY
-#endif
-                , S_IWUSR | S_IRUSR | S_IRGRP | S_IWGRP);
-}
-#endif // !BX_HAVE_MKSTEMP
-
 void myexit(int code)
 {
 #if defined(WIN32) && !defined(__CYGWIN__)
@@ -145,7 +138,7 @@ void print_banner()
   printf("%s\n", divider);
   bx_center_print(stdout, "bximage\n", 72);
   bx_center_print(stdout, "Disk Image Creation / Conversion / Resize and Commit Tool for Bochs\n", 72);
-  bx_center_print(stdout, svnid, 72);
+  bx_center_print(stdout, "Bochs " VERSION, 72);
   printf("\n%s\n", divider);
 }
 
@@ -156,9 +149,28 @@ void fatal(const char *c)
   myexit(1);
 }
 
+// copy a file name, abort if it does not fit into a BX_PATHNAME_LEN buffer
+// (src and dst may overlap)
+void copy_filename(char *dst, const char *src)
+{
+  size_t len = strlen(src);
+  if (len >= BX_PATHNAME_LEN)
+    fatal("ERROR: file name too long");
+  memmove(dst, src, len + 1);
+}
+
+// build a file name from a base name and a suffix, abort if it does not fit
+// into a BX_PATHNAME_LEN buffer
+void make_filename(char *dst, const char *base, const char *suffix)
+{
+  if ((strlen(base) + strlen(suffix)) >= BX_PATHNAME_LEN)
+    fatal("ERROR: file name too long");
+  sprintf(dst, "%s%s", base, suffix);
+}
+
 /* check if the argument string is present in the list -
    returns index on success, -1 on failure. */
-int get_menu_index(char *arg, int n_choices, const char *choice[])
+int get_menu_index(const char *arg, int n_choices, const char *choice[])
 {
   int i;
   for (i=0; i<n_choices; i++) {
@@ -290,11 +302,19 @@ int ask_string(const char *prompt, char *the_default, char *out)
   clean = clean_string(buffer);
   if (strlen(clean) < 1) {
     // empty line, use the default
-    strcpy(out, the_default);
+    copy_filename(out, the_default);
     return 0;
   }
-  strcpy(out, clean);
+  copy_filename(out, clean);
   return 0;
+}
+
+// only these image modes support sector sizes other than 512
+bool sectsize_supported(const char *imgmode)
+{
+  return (!strcmp(imgmode, "flat") ||
+          !strcmp(imgmode, "sparse") ||
+          !strcmp(imgmode, "growing"));
 }
 
 device_image_t* init_image(const char *imgmode)
@@ -349,7 +369,6 @@ void create_flat_image_win32(const char *filename, Bit64u size)
   HANDLE hFile;
   LARGE_INTEGER pos;
   DWORD dwCount, errCode;
-  USHORT mode;
   char buffer[1024];
 
   hFile = CreateFile(filename, GENERIC_WRITE|GENERIC_READ, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -363,12 +382,13 @@ void create_flat_image_win32(const char *filename, Bit64u size)
   }
 
   SetLastError(NO_ERROR);
-  mode = COMPRESSION_FORMAT_DEFAULT;
   dwCount = 0;
   memset(buffer, 0, 512);
   WriteFile(hFile, buffer, 512, &dwCount, NULL); // set the first sector to 0, Win98 doesn't zero out the file
                                                  // if there is a write at/over the end
-  DeviceIoControl(hFile, FSCTL_SET_COMPRESSION, &mode, sizeof(mode), NULL, 0, &dwCount, NULL);
+  // sparse file: creation does not zero fill the whole image and, unlike NTFS
+  // compression, disk accesses of the emulator stay fast
+  DeviceIoControl(hFile, FSCTL_SET_SPARSE, NULL, 0, NULL, 0, &dwCount, NULL);
   pos.u.LowPart = (unsigned long)((size - 512));
   pos.u.HighPart = (unsigned long)((size - 512) >> 32);
   pos.u.LowPart = SetFilePointer(hFile, pos.u.LowPart, &pos.u.HighPart, FILE_BEGIN);
@@ -391,63 +411,76 @@ void create_flat_image_win32(const char *filename, Bit64u size)
 
 device_image_t* create_hard_disk_image(const char *filename, const char *imgmode, Bit64u size)
 {
+  // images can only be created in the modes offered by the image mode menu
+  if (get_menu_index(imgmode, hdmode_n_choices, hdmode_choices) < 0)
+    fatal("image mode not implemented yet");
+
   device_image_t *hdimage = init_image(imgmode);
-  if(!strcmp(imgmode, "flat")) {
+  if (!strcmp(imgmode, "flat")) {
 #ifndef WIN32
     create_flat_image(filename, size);
 #else
     create_flat_image_win32(filename, size);
 #endif
-  } else if(!strcmp(imgmode, "growing")) {
-    hdimage->create_image(filename, size);
-  } else if(!strcmp(imgmode, "sparse")) {
-    hdimage->create_image(filename, size);
-  } else if(!strcmp(imgmode, "vpc")) {
-    hdimage->create_image(filename, size);
-  } else if(!strcmp(imgmode, "vhdx")) {
-    hdimage->create_image(filename, size);
-  } else if(!strcmp(imgmode, "vmware4")) {
-    hdimage->create_image(filename, size);
   } else {
-    fatal("image mode not implemented yet");
+    hdimage->create_image(filename, size);
   }
   return hdimage;
+}
+
+// returns true if all bytes of the 512-byte sector are zero
+bool is_null_sector(const Bit8u *sector)
+{
+  // first byte is zero and every byte equals its successor
+  return (sector[0] == 0) && !memcmp(sector, sector + 1, 511);
+}
+
+// copy the non-null sectors of a chunk at 'offset' to the destination image;
+// runs of adjacent non-null sectors are written with a single call
+bool write_chunk(device_image_t *dest_image, Bit64u offset, const Bit8u *buffer, unsigned len)
+{
+  unsigned start = 0, end;
+
+  while (start < len) {
+    if (is_null_sector(buffer + start)) {
+      start += 512;
+      continue;
+    }
+    end = start + 512;
+    while ((end < len) && !is_null_sector(buffer + end))
+      end += 512;
+    if (dest_image->lseek(offset + start, SEEK_SET) < 0)
+      return false;
+    if (dest_image->write(buffer + start, end - start) != (ssize_t)(end - start))
+      return false;
+    start = end;
+  }
+  return true;
 }
 
 void convert_image(const char *newimgmode, Bit64u newsize)
 {
   device_image_t *source_image, *dest_image;
-  Bit64u i, sc, s;
-  char buffer[512], null_sector[512];
-  const char *imgmode = NULL;
+  Bit64u offset, size;
+  Bit8u *buffer;
+  unsigned len;
+  int percent = -1, new_percent;
   bool error = false;
 
   printf("\n");
-  memset(null_sector, 0, 512);
-  if (newsize == 0) {
-    if (!strncmp(bx_filename_1, "concat:", 7)) {
-      imgmode = "concat";
-      strcpy(bx_filename_1, &bx_filename_1[7]);
-#ifdef WIN32
-    } else if (!strncmp(bx_filename_1, "dll:", 4)) {
-      imgmode = "dll";
-      strcpy(bx_filename_1, &bx_filename_1[4]);
-#endif
-    }
-  }
   if (access(bx_filename_1, F_OK) < 0) {
     fatal("source disk image doesn't exist");
   }
-  if (imgmode == NULL) {
-    hdimage_detect_image_mode(bx_filename_1, &imgmode);
+  if (bx_src_imgmode == NULL) {
+    hdimage_detect_image_mode(bx_filename_1, &bx_src_imgmode);
   }
-  if (imgmode == NULL) {
+  if (bx_src_imgmode == NULL) {
     fatal("source disk image mode not detected");
   } else {
-    printf("source image mode = '%s'\n", imgmode);
+    printf("source image mode = '%s'\n", bx_src_imgmode);
   }
 
-  source_image = init_image(imgmode);
+  source_image = init_image(bx_src_imgmode);
   if (source_image->open(bx_filename_1, O_RDONLY) < 0)
     fatal("cannot open source disk image");
 
@@ -461,28 +494,29 @@ void convert_image(const char *newimgmode, Bit64u newsize)
 
   printf("\nConverting image file: [  0%%]");
 
-  sc = source_image->hd_size / 512;
-  s = 0;
-  for (i = 0; i < source_image->hd_size; i+=512) {
-    printf("\x8\x8\x8\x8\x8%3d%%]", (int)((s+1)*100/sc));
-    fflush(stdout);
-    if (source_image->lseek(i, SEEK_SET) < 0) {
+  // copy whole sectors in chunks, skip null sectors to keep the destination small
+  size = source_image->hd_size & ~(Bit64u)511;
+  buffer = new Bit8u[CONVERT_CHUNK_SIZE];
+  for (offset = 0; offset < size; offset += len) {
+    len = ((size - offset) < CONVERT_CHUNK_SIZE) ? (unsigned)(size - offset) : CONVERT_CHUNK_SIZE;
+    if ((source_image->lseek(offset, SEEK_SET) < 0) ||
+        (source_image->read(buffer, len) != (ssize_t)len)) {
       error = true;
       break;
     }
-    if ((source_image->read(buffer, 512) == 512) &&
-        (memcmp(buffer, null_sector, 512) != 0)) {
-      if (dest_image->lseek(i, SEEK_SET) < 0) {
-        error = true;
-        break;
-      }
-      if (dest_image->write(buffer, 512) < 0) {
-        error = true;
-        break;
-      }
+    if (!write_chunk(dest_image, offset, buffer, len)) {
+      error = true;
+      break;
     }
-    s++;
+    // update the progress display only when the value changes
+    new_percent = (int)((offset + len) * 100 / size);
+    if (new_percent != percent) {
+      percent = new_percent;
+      printf("\x8\x8\x8\x8\x8%3d%%]", percent);
+      fflush(stdout);
+    }
   }
+  delete [] buffer;
 
   source_image->close();
   dest_image->close();
@@ -492,6 +526,10 @@ void convert_image(const char *newimgmode, Bit64u newsize)
   if (error) {
     fatal("image conversion failed");
   } else {
+    if (bx_tmpfile) {
+      if (unlink(bx_filename_1) != 0)
+        fatal("ERROR: while removing the temp file !\n");
+    }
     printf(" Done.\n");
   }
 }
@@ -501,16 +539,15 @@ void commit_redolog()
   device_image_t *base_image;
   redolog_t *redolog;
   int ret;
-  const char *imgmode = NULL;
 
   printf("\n");
   if (access(bx_filename_1, F_OK) < 0) {
     fatal("base disk image doesn't exist");
   }
-  if (!hdimage_detect_image_mode(bx_filename_1, &imgmode))
+  if (!hdimage_detect_image_mode(bx_filename_1, &bx_src_imgmode))
     fatal("base disk image mode not detected");
 
-  base_image = init_image(imgmode);
+  base_image = init_image(bx_src_imgmode);
   if (base_image->open(bx_filename_1) < 0)
     fatal("cannot open base disk image");
 
@@ -566,8 +603,8 @@ void set_default_values()
       bx_interactive = 1;
     }
     if (bx_hdimage == 1) {
-      if (bx_imagemode == -1) {
-        bx_imagemode = 0;
+      if (bx_dst_imgmode == -1) {
+        bx_dst_imgmode = 0;
         bx_interactive = 1;
       }
       if (bx_hdsize == 0) {
@@ -581,8 +618,8 @@ void set_default_values()
       }
     }
   } else if (bximage_func == BXIMAGE_FUNC_CONVERT_IMAGE) {
-    if (bx_imagemode == -1) {
-      bx_imagemode = 0;
+    if (bx_dst_imgmode == -1) {
+      bx_dst_imgmode = 0;
       bx_interactive = 1;
     }
   } else if (bximage_func == BXIMAGE_FUNC_RESIZE_IMAGE) {
@@ -603,18 +640,20 @@ int parse_cmdline(int argc, char *argv[])
   bx_hdimage = -1;
   bx_fdsize_idx = -1;
   bx_hdsize = 0;
-  bx_imagemode = -1;
+  bx_dst_imgmode = -1;
   bx_backup = 0;
+  bx_tmpfile = 0;
   bx_interactive = 1;
   bx_sectsize_idx = 0;
   bx_sectsize_val = 512;
   bx_filename_1[0] = 0;
   bx_filename_2[0] = 0;
+  bx_src_imgmode = NULL;
   while ((arg < argc) && (ret == 1)) {
     // parse next arg
     if (!strcmp("--help", argv[arg]) || !strncmp("/?", argv[arg], 2)) {
       print_usage();
-      ret = 0;
+      return 0;
     }
     else if (!strncmp("-func=", argv[arg], 6)) {
       if (bximage_func != BXIMAGE_FUNC_NULL) {
@@ -639,31 +678,39 @@ int parse_cmdline(int argc, char *argv[])
       bx_hdimage = 0;
       bx_fdsize_idx = get_menu_index(&argv[arg][4], fdsize_n_choices, fdsize_choices);
       if (bx_fdsize_idx < 0) {
-        printf("Unknown floppy image size: %s\n\n", &argv[arg][6]);
+        printf("Unknown floppy image size: %s\n\n", &argv[arg][4]);
         ret = 0;
       }
     }
     else if (!strncmp("-hd=", argv[arg], 4)) {
       bx_hdimage = 1;
-      bx_imagemode = 0;
-      bx_hdsize = (int)strtol(&argv[arg][4], &suffix, 10);
-      if (bx_hdsize <= 0) {
+      if (bx_dst_imgmode == -1) {
+        bx_dst_imgmode = 0;
+      }
+      long megs = strtol(&argv[arg][4], &suffix, 10);
+      if (megs <= 0) {
         printf("Error in hard disk image size argument: %s\n\n", &argv[arg][4]);
         ret = 0;
       } else if (!strcmp(suffix, "G")) {
-        bx_hdsize <<= 10;
+        if (megs > (bx_max_hd_megs >> 10)) {
+          megs = (long)bx_max_hd_megs + 1; // too big, fails the range check below
+        } else {
+          megs <<= 10;
+        }
       } else if ((strlen(suffix) > 0) && strcmp(suffix, "M")) {
         printf("Error in hard disk image size suffix: %s\n\n", &argv[arg][4]);
         ret = 0;
       }
-      if ((bx_hdsize < bx_min_hd_megs) || (bx_hdsize > bx_max_hd_megs)) {
+      if ((megs < bx_min_hd_megs) || (megs > bx_max_hd_megs)) {
         printf("Hard disk image size out of range\n\n");
         ret = 0;
+      } else {
+        bx_hdsize = (int)megs;
       }
     }
     else if (!strncmp("-imgmode=", argv[arg], 9)) {
-      bx_imagemode = get_menu_index(&argv[arg][9], hdmode_n_choices, hdmode_choices);
-      if (bx_imagemode < 0) {
+      bx_dst_imgmode = get_menu_index(&argv[arg][9], hdmode_n_choices, hdmode_choices);
+      if (bx_dst_imgmode < 0) {
         printf("Unknown image mode: %s\n\n", &argv[arg][9]);
         ret = 0;
       }
@@ -688,9 +735,9 @@ int parse_cmdline(int argc, char *argv[])
       ret = 0;
     } else {
       if (fnargs == 0) {
-        strcpy(bx_filename_1, argv[arg]);
+        copy_filename(bx_filename_1, argv[arg]);
       } else if (fnargs == 1) {
-        strcpy(bx_filename_2, argv[arg]);
+        copy_filename(bx_filename_2, argv[arg]);
       } else {
         printf("Ignoring extra parameter: %s\n\n", argv[arg]);
       }
@@ -699,7 +746,9 @@ int parse_cmdline(int argc, char *argv[])
     arg++;
   }
   if (bximage_func == BXIMAGE_FUNC_NULL) {
-    printf("\nERROR: Parameter -func missing - switching to interactive mode.\n\n");
+    if (argc > 1) {
+      printf("\nERROR: Parameter -func missing - switching to interactive mode.\n\n");
+    }
     bx_interactive = 1;
   } else {
     set_default_values();
@@ -708,7 +757,7 @@ int parse_cmdline(int argc, char *argv[])
       printf("\nERROR; Filename missing - switching to interactive mode.\n\n");
     }
     if ((bximage_func == BXIMAGE_FUNC_COMMIT_UNDOABLE) && (fnargs == 1)) {
-      snprintf(bx_filename_2, 520, "%s%s", bx_filename_1, UNDOABLE_REDOLOG_EXTENSION);
+      make_filename(bx_filename_2, bx_filename_1, UNDOABLE_REDOLOG_EXTENSION);
     }
   }
   return ret;
@@ -716,7 +765,7 @@ int parse_cmdline(int argc, char *argv[])
 
 void image_overwrite_check(const char *filename)
 {
-  char buffer[512];
+  char buffer[620];
 
   int fd = hdimage_open_file(filename, O_RDONLY, NULL, NULL);
   if (fd >= 0) {
@@ -732,16 +781,34 @@ void image_overwrite_check(const char *filename)
 
 void check_image_names()
 {
-  char backup_fname[520];
+  char backup_fname[BX_PATHNAME_LEN];
 
+  if (bximage_func == BXIMAGE_FUNC_CONVERT_IMAGE) {
+    if (!strncmp(bx_filename_1, "concat:", 7)) {
+      bx_src_imgmode = "concat";
+      copy_filename(bx_filename_1, &bx_filename_1[7]);
+#ifdef WIN32
+    } else if (!strncmp(bx_filename_1, "dll:", 4)) {
+      bx_src_imgmode = "dll";
+      copy_filename(bx_filename_1, &bx_filename_1[4]);
+#endif
+    }
+  }
   if (!strlen(bx_filename_2)) {
     strcpy(bx_filename_2, bx_filename_1);
   }
-  if ((!strcmp(bx_filename_1, bx_filename_2)) && bx_backup) {
-    snprintf(backup_fname, 517, "%s%s", bx_filename_1, ".orig");
-    if (hdimage_copy_file(bx_filename_1, backup_fname) != 1)
-      fatal("backup of source image file failed");
-  } else if (strcmp(bx_filename_1, bx_filename_2)) {
+  if (!strcmp(bx_filename_1, bx_filename_2)) {
+    if (bx_backup) {
+      make_filename(backup_fname, bx_filename_1, ".orig");
+      if (hdimage_copy_file(bx_filename_1, backup_fname) != 1)
+        fatal("backup of source image file failed");
+    }
+    make_filename(backup_fname, bx_filename_1, ".tmp");
+    if (rename(bx_filename_1, backup_fname) != 0)
+      fatal("rename of source image file failed");
+    strcpy(bx_filename_1, backup_fname);
+    bx_tmpfile = 1;
+  } else {
     image_overwrite_check(bx_filename_2);
   }
 }
@@ -751,35 +818,34 @@ int get_image_mode_and_hdsize(const char *filename, const char **image_mode)
   device_image_t *source_image;
   int hdsize_megs = 0;
 
-  if (!hdimage_detect_image_mode(bx_filename_1, image_mode))
+  if (!hdimage_detect_image_mode(filename, image_mode))
     fatal("source disk image mode not detected");
   source_image = init_image(*image_mode);
-  if (source_image->open(bx_filename_1, O_RDONLY) < 0) {
+  if (source_image->open(filename, O_RDONLY) < 0) {
     fatal("cannot open source disk image");
   } else {
-    hdsize_megs = (int)(source_image->hd_size >> 20);
+    // round up, so that a resized image is never smaller than the source
+    hdsize_megs = (int)((source_image->hd_size + 0xfffff) >> 20);
     source_image->close();
   }
+  delete source_image;
   return hdsize_megs;
 }
 
 void print_partitiontable(device_image_t *hdimage)
 {
-  size_t ret = 0;
   unsigned int n = 0;
   Bit8u data[SECTOR_SIZE];
 
-  ret = hdimage->lseek(0, SEEK_SET);
-  if (ret < 0) {
+  if (hdimage->lseek(0, SEEK_SET) < 0) {
     fatal("lseek() to MBR failed");
   }
-  ret = hdimage->read(data, SECTOR_SIZE);
-  if (ret != SECTOR_SIZE) {
+  if (hdimage->read(data, SECTOR_SIZE) != SECTOR_SIZE) {
     fatal("failed to read MBR");
   }
 
   // check bootsector ID, not present = no partition table present
-  if ((data[0x1FE] != 0x55) && (data[0x1FE] != 0xAA)) {
+  if ((data[0x1FE] != 0x55) || (data[0x1FF] != 0xAA)) {
     printf("No partition-table detected.\n\n");
     return;
   }
@@ -791,8 +857,8 @@ void print_partitiontable(device_image_t *hdimage)
     Bit8u *p = &data[0x1BE + (16 * n)];
     Bit8u bootable = p[0x00];	// 0x80 = bootable, 0x00 = not bootable
     Bit8u type = p[0x04];
-    Bit32u start = *((Bit32u *)&p[0x08]);
-    Bit32u size  = *((Bit32u *)&p[0x0C]);
+    Bit32u start = ReadHostDWordFromLittleEndian((Bit32u *)&p[0x08]);
+    Bit32u size  = ReadHostDWordFromLittleEndian((Bit32u *)&p[0x0C]);
 
     if (type > 0) {
       // print partition number
@@ -817,9 +883,24 @@ void print_partitiontable(device_image_t *hdimage)
   printf("\n");
 }
 
+// interactive mode: ask for the source and the new image name (convert / resize)
+void ask_convert_filenames()
+{
+  if (!strlen(bx_filename_1)) {
+    strcpy(bx_filename_1, "c.img");
+  }
+  if (ask_string("\nWhat is the name of the source image?\n", bx_filename_1, bx_filename_1) < 0)
+    fatal(EOF_ERR);
+  if (!strlen(bx_filename_2)) {
+    strcpy(bx_filename_2, bx_filename_1);
+  }
+  if (ask_string("\nWhat should be the name of the new image?\n", bx_filename_2, bx_filename_2) < 0)
+    fatal(EOF_ERR);
+}
+
 int CDECL main(int argc, char *argv[])
 {
-  char bochsrc_line[1024], prompt[80], tmpfname[528];
+  char bochsrc_line[1024], prompt[80], tmpfname[BX_PATHNAME_LEN];
   Bit64u hdsize = 0;
   device_image_t *hdimage;
   const char *image_mode = NULL;
@@ -852,17 +933,15 @@ int CDECL main(int argc, char *argv[])
           if (ask_string("\nWhat should be the name of the image?\n", bx_filename_1, bx_filename_1) < 0)
             fatal(EOF_ERR);
         } else { // hard disk
-          if (ask_menu(hdmode_menu, hdmode_n_choices, hdmode_choices, bx_imagemode, &bx_imagemode) < 0)
+          if (ask_menu(hdmode_menu, hdmode_n_choices, hdmode_choices, bx_dst_imgmode, &bx_dst_imgmode) < 0)
             fatal(EOF_ERR);
-          image_mode = hdmode_choices[bx_imagemode];
-          if (!strcmp(image_mode, "flat") ||
-              !strcmp(image_mode, "sparse") ||
-              !strcmp(image_mode, "growing")) {
+          image_mode = hdmode_choices[bx_dst_imgmode];
+          if (sectsize_supported(image_mode)) {
             if (ask_menu(sectsize_menu, sectsize_n_choices, sectsize_choices, bx_sectsize_idx, &bx_sectsize_idx) < 0)
               fatal(EOF_ERR);
             bx_sectsize_val = atoi(sectsize_choices[bx_sectsize_idx]);
           } else if (bx_sectsize_val != 512) {
-            fatal(EOF_ERR);
+            fatal(SECTSIZE_ERR);
           }
           sprintf(prompt, "\nEnter the hard disk size in megabytes, between %d and %d\n",
                   bx_min_hd_megs, bx_max_hd_megs);
@@ -878,40 +957,18 @@ int CDECL main(int argc, char *argv[])
 
       case BXIMAGE_FUNC_CONVERT_IMAGE:
         printf("\nConvert image\n");
-        if (!strlen(bx_filename_1)) {
-          strcpy(bx_filename_1, "c.img");
-        }
-        if (ask_string("\nWhat is the name of the source image?\n", bx_filename_1, bx_filename_1) < 0)
-          fatal(EOF_ERR);
-        if (!strlen(bx_filename_2)) {
-          strcpy(tmpfname, bx_filename_1);
-        } else {
-          strcpy(tmpfname, bx_filename_2);
-        }
-        if (ask_string("\nWhat should be the name of the new image?\n", tmpfname, bx_filename_2) < 0)
-          fatal(EOF_ERR);
-        if (ask_menu(hdmode_menu, hdmode_n_choices, hdmode_choices, bx_imagemode, &bx_imagemode) < 0)
+        ask_convert_filenames();
+        if (ask_menu(hdmode_menu, hdmode_n_choices, hdmode_choices, bx_dst_imgmode, &bx_dst_imgmode) < 0)
           fatal(EOF_ERR);
         if (!strcmp(bx_filename_1, bx_filename_2)) {
-          if (ask_yn("\nShould I create a backup of the source image\n", 0, &bx_backup) < 0)
+          if (ask_yn("\nShould I create a backup of the source image\n", 1, &bx_backup) < 0)
             fatal(EOF_ERR);
         }
         break;
 
       case BXIMAGE_FUNC_RESIZE_IMAGE:
         printf("\nResize image\n");
-        if (!strlen(bx_filename_1)) {
-          strcpy(bx_filename_1, "c.img");
-        }
-        if (ask_string("\nWhat is the name of the source image?\n", bx_filename_1, bx_filename_1) < 0)
-          fatal(EOF_ERR);
-        if (!strlen(bx_filename_2)) {
-          strcpy(tmpfname, bx_filename_1);
-        } else {
-          strcpy(tmpfname, bx_filename_2);
-        }
-        if (ask_string("\nWhat should be the name of the new image?\n", tmpfname, bx_filename_2) < 0)
-          fatal(EOF_ERR);
+        ask_convert_filenames();
         bx_min_hd_megs = get_image_mode_and_hdsize(bx_filename_1, &image_mode);
         sprintf(prompt, "\nEnter the new hard disk size in megabytes, between %d and %d\n",
                 bx_min_hd_megs, bx_max_hd_megs);
@@ -932,7 +989,7 @@ int CDECL main(int argc, char *argv[])
         if (ask_string("\nWhat is the name of the base image?\n", bx_filename_1, bx_filename_1) < 0)
           fatal(EOF_ERR);
         if (!strlen(bx_filename_2)) {
-          snprintf(tmpfname, 520, "%s%s", bx_filename_1, UNDOABLE_REDOLOG_EXTENSION);
+          make_filename(tmpfname, bx_filename_1, UNDOABLE_REDOLOG_EXTENSION);
         } else {
           strcpy(tmpfname, bx_filename_2);
         }
@@ -965,14 +1022,16 @@ int CDECL main(int argc, char *argv[])
         } else {
           int heads = 16, spt = 63;
 
+          if ((bx_sectsize_val != 512) && !sectsize_supported(hdmode_choices[bx_dst_imgmode]))
+            fatal(SECTSIZE_ERR);
           if (bx_sectsize_val == 512) {
             sprintf(bochsrc_line, "ata0-master: type=disk, path=\"%s\", mode=%s",
-                    bx_filename_1, hdmode_choices[bx_imagemode]);
+                    bx_filename_1, hdmode_choices[bx_dst_imgmode]);
           } else {
             sprintf(bochsrc_line, "ata0-master: type=disk, path=\"%s\", mode=%s, sect_size=%d",
-                    bx_filename_1, hdmode_choices[bx_imagemode], bx_sectsize_val);
+                    bx_filename_1, hdmode_choices[bx_dst_imgmode], bx_sectsize_val);
           }
-          image_mode = hdmode_choices[bx_imagemode];
+          image_mode = hdmode_choices[bx_dst_imgmode];
           hdsize = ((Bit64u)bx_hdsize) << 20;
           Bit64u cyl = (Bit64u)(hdsize/16.0/63.0/bx_sectsize_val);
           if (cyl >= (1 << BX_MAX_CYL_BITS))
@@ -988,21 +1047,30 @@ int CDECL main(int argc, char *argv[])
 #ifdef WIN32
         if (OpenClipboard(NULL)) {
           HGLOBAL hgClip;
+          char *clip_text;
+          bool stored = false;
           EmptyClipboard();
-          hgClip = GlobalAlloc(GMEM_DDESHARE, (strlen(bochsrc_line) + 1));
-          strcpy((char *)GlobalLock(hgClip), bochsrc_line);
-          GlobalUnlock(hgClip);
-          SetClipboardData(CF_TEXT, hgClip);
+          hgClip = GlobalAlloc(GMEM_MOVEABLE, (strlen(bochsrc_line) + 1));
+          if (hgClip != NULL) {
+            clip_text = (char *)GlobalLock(hgClip);
+            if (clip_text != NULL) {
+              strcpy(clip_text, bochsrc_line);
+              GlobalUnlock(hgClip);
+              stored = (SetClipboardData(CF_TEXT, hgClip) != NULL);
+            }
+            // the clipboard owns the memory only after a successful SetClipboardData()
+            if (!stored) GlobalFree(hgClip);
+          }
           CloseClipboard();
-          printf("(The line is stored in your windows clipboard, use CTRL-V to paste)\n");
+          if (stored)
+            printf("(The line is stored in your windows clipboard, use CTRL-V to paste)\n");
         }
 #endif
         break;
 
       case BXIMAGE_FUNC_CONVERT_IMAGE:
         check_image_names();
-        image_mode = hdmode_choices[bx_imagemode];
-        convert_image(image_mode, 0);
+        convert_image(hdmode_choices[bx_dst_imgmode], 0);
         break;
 
       case BXIMAGE_FUNC_RESIZE_IMAGE:
@@ -1016,13 +1084,13 @@ int CDECL main(int argc, char *argv[])
 
       case BXIMAGE_FUNC_COMMIT_UNDOABLE:
         if (bx_backup) {
-          snprintf(tmpfname, 517, "%s%s", bx_filename_1, ".orig");
+          make_filename(tmpfname, bx_filename_1, ".orig");
           if (hdimage_copy_file(bx_filename_1, tmpfname) != 1)
             fatal("backup of base image file failed");
         }
         commit_redolog();
         if (bx_backup) {
-          snprintf(tmpfname, 527, "%s%s", bx_filename_2, ".orig");
+          make_filename(tmpfname, bx_filename_2, ".orig");
           if (rename(bx_filename_2, tmpfname) != 0)
             fatal("rename of redolog file failed");
         } else {
@@ -1052,6 +1120,7 @@ int CDECL main(int argc, char *argv[])
           print_partitiontable(hdimage);
           hdimage->close();
         }
+        delete hdimage;
         break;
   }
   myexit(0);

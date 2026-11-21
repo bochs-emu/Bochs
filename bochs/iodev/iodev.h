@@ -128,6 +128,7 @@ class cdrom_base_c;
 #define BX_PCI_ADVOPT_ALTDEVMAP 0x04
 #define BX_PCI_ADVOPT_NOAGP     0x08
 #define BX_PCI_ADVOPT_NOFDC     0x10
+#define BX_PCI_ADVOPT_ICH7IDE   0x20
 
 enum {
   BX_PCI_BAR_TYPE_NONE = 0,
@@ -461,6 +462,7 @@ public:
                        const Bit8u *iomask, const char *name, bool ioae);
 #endif
   bool is_agp_present();
+  bool is_ich7_ide();
 
   static void timer_handler(void *);
   void timer(void);
@@ -629,61 +631,11 @@ private:
   bool is_harddrv_enabled();
 };
 
-// memory stub has an assumption that there are no memory accesses splitting 4K page
-BX_CPP_INLINE void DEV_MEM_READ_PHYSICAL(bx_phy_address phy_addr, unsigned len, Bit8u *ptr)
-{
-  unsigned remainingInPage = 0x1000 - (phy_addr & 0xfff);
-  if (len <= remainingInPage) {
-    BX_MEM(0)->readPhysicalPage(NULL, phy_addr, len, ptr);
-  }
-  else {
-    BX_MEM(0)->readPhysicalPage(NULL, phy_addr, remainingInPage, ptr);
-    ptr += remainingInPage;
-    phy_addr += remainingInPage;
-    len -= remainingInPage;
-    BX_MEM(0)->readPhysicalPage(NULL, phy_addr, len, ptr);
-  }
-}
-
-BX_CPP_INLINE void DEV_MEM_READ_PHYSICAL_DMA(bx_phy_address phy_addr, unsigned len, Bit8u *ptr)
-{
-  while(len > 0) {
-    unsigned remainingInPage = 0x1000 - (phy_addr & 0xfff);
-    if (len < remainingInPage) remainingInPage = len;
-    BX_MEM(0)->dmaReadPhysicalPage(phy_addr, remainingInPage, ptr);
-    ptr += remainingInPage;
-    phy_addr += remainingInPage;
-    len -= remainingInPage;
-  }
-}
-
-// memory stub has an assumption that there are no memory accesses splitting 4K page
-BX_CPP_INLINE void DEV_MEM_WRITE_PHYSICAL(bx_phy_address phy_addr, unsigned len, Bit8u *ptr)
-{
-  unsigned remainingInPage = 0x1000 - (phy_addr & 0xfff);
-  if (len <= remainingInPage) {
-    BX_MEM(0)->writePhysicalPage(NULL, phy_addr, len, ptr);
-  }
-  else {
-    BX_MEM(0)->writePhysicalPage(NULL, phy_addr, remainingInPage, ptr);
-    ptr += remainingInPage;
-    phy_addr += remainingInPage;
-    len -= remainingInPage;
-    BX_MEM(0)->writePhysicalPage(NULL, phy_addr, len, ptr);
-  }
-}
-
-BX_CPP_INLINE void DEV_MEM_WRITE_PHYSICAL_DMA(bx_phy_address phy_addr, unsigned len, Bit8u *ptr)
-{
-  while(len > 0) {
-    unsigned remainingInPage = 0x1000 - (phy_addr & 0xfff);
-    if (len < remainingInPage) remainingInPage = len;
-    BX_MEM(0)->dmaWritePhysicalPage(phy_addr, remainingInPage, ptr);
-    ptr += remainingInPage;
-    phy_addr += remainingInPage;
-    len -= remainingInPage;
-  }
-}
+// device accesses to guest physical memory of any length, split into 4K page accesses
+BOCHSAPI void DEV_MEM_READ_PHYSICAL(bx_phy_address phy_addr, unsigned len, Bit8u *ptr);
+BOCHSAPI void DEV_MEM_READ_PHYSICAL_DMA(bx_phy_address phy_addr, unsigned len, Bit8u *ptr);
+BOCHSAPI void DEV_MEM_WRITE_PHYSICAL(bx_phy_address phy_addr, unsigned len, Bit8u *ptr);
+BOCHSAPI void DEV_MEM_WRITE_PHYSICAL_DMA(bx_phy_address phy_addr, unsigned len, Bit8u *ptr);
 
 BOCHSAPI extern bx_devices_c bx_devices;
 

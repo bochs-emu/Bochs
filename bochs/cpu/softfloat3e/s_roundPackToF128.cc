@@ -95,6 +95,9 @@ float128_t
           case softfloat_round_max:
             inc = ! sign && sticky;
             break;
+          case softfloat_round_odd:
+            inc = sticky && ! (sig0 & ulp);
+            break;
         }
         sig0 &= ~(ulp - 1);
         sigExtra = 0;
@@ -179,9 +182,12 @@ float128_t
         }
     }
     /*------------------------------------------------------------------------
+    | Round to odd preserves inexactness for a later rounding to a format at
+    | least two bits narrower by setting the least significant retained bit.
     *------------------------------------------------------------------------*/
     if (sigExtra) {
         softfloat_raiseFlags(status, softfloat_flag_inexact);
+        if (roundingMode == softfloat_round_odd) sig0 |= 1;
     }
     if (doIncrement) {
         uint64_t sig64Exact = sig64, sig0Exact = sig0;

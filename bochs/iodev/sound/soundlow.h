@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2011-2025  The Bochs Project
+//  Copyright (C) 2011-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -39,7 +39,7 @@
 #define BX_MAX_WAVE_CALLBACKS 3
 
 typedef struct {
-  Bit16u samplerate;
+  Bit32u samplerate;
   Bit8u  bits;
   Bit8u  channels;
   Bit8u  format;
@@ -49,7 +49,7 @@ typedef struct {
 const bx_pcm_param_t default_pcm_param = { 44100, 16, 2, 1, 0xffff };
 
 typedef Bit32u (*sound_record_handler_t)(void *arg, Bit32u len);
-typedef Bit32u (*get_wave_cb_t)(void *arg, Bit16u rate, Bit8u *buffer, Bit32u len);
+typedef Bit32u (*get_wave_cb_t)(void *arg, Bit32u rate, Bit8u *buffer, Bit32u len);
 
 // audio buffer support
 
@@ -82,12 +82,7 @@ private:
 };
 
 void convert_float_to_s16le(float *src, unsigned srcsize, Bit8u *dst);
-BOCHSAPI Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
-
-extern BX_MUTEX(resampler_mutex);
-#ifndef __ANDROID__
-extern BX_MUTEX(mixer_mutex);
-#endif
+BOCHSAPI Bit32u pcm_callback(void *dev, Bit32u rate, Bit8u *buffer, Bit32u len);
 
 // the waveout class
 
@@ -113,8 +108,15 @@ public:
 
   virtual bool mixer_common(Bit8u *buffer, int len);
 
+  void stop_threads(void);
+
   bool resampler_running() {return res_thread_start;}
   bool mixer_running() {return mix_thread_start;}
+  void lock_resampler() {BX_LOCK(resampler_mutex);}
+  void unlock_resampler() {BX_UNLOCK(resampler_mutex);}
+  // protect data used by the wave callbacks (mixer thread)
+  virtual void lock_mixer() {BX_LOCK(mixer_mutex);}
+  virtual void unlock_mixer() {BX_UNLOCK(mixer_mutex);}
 
   bx_audio_buffer_c *get_audio_buffer(int n) {return audio_buffers[n];}
 
@@ -123,6 +125,8 @@ protected:
   void start_mixer_thread(void);
   Bit32u resampler_common(audio_buffer_t *inbuffer, float **fbuffer);
 
+  BX_MUTEX(resampler_mutex);
+  BX_MUTEX(mixer_mutex);
   bx_pcm_param_t real_pcm_param;
   bool res_thread_start;
   bool mix_thread_start;

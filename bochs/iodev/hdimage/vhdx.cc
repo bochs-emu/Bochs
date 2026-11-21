@@ -6,7 +6,7 @@
 // Based on VHDX Format Specification v1.00 and QEMU implementation
 //
 // Copyright (c) 2013 Red Hat, Inc. (original QEMU code)
-// Copyright (C) 2025 The Bochs Project
+// Copyright (C) 2025-2026 The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -200,6 +200,14 @@ int vhdx_image_t::parse_header()
 
   BX_DEBUG(("VHDX: using header with sequence %llu",
             (unsigned long long)le64_to_cpu(active_header->sequence_number)));
+
+  // A non-zero log GUID means the log has entries that must be replayed
+  // before the image can be used (image was not closed cleanly)
+  static const Bit8u zero_guid[16] = {0};
+  if (!guid_eq(active_header->log_guid, zero_guid)) {
+    BX_ERROR(("VHDX: image log is not empty (not closed cleanly), log replay is not supported"));
+    return -1;
+  }
 
   return 0;
 }
@@ -735,16 +743,11 @@ Bit64s vhdx_image_t::alloc_payload_block(Bit64u bat_payload_index)
     return -1;
   }
 
-  // Pad to alignment and zero-initialize the new payload block.
-  if (new_block_off > file_end) {
-    if (!zero_fill(file_end, new_block_off - file_end)) {
-      BX_ERROR(("VHDX: failed to pad file to alignment"));
-      return -1;
-    }
-  }
-
-  if (!zero_fill(new_block_off, (Bit64u)block_size)) {
-    BX_ERROR(("VHDX: failed to zero-fill new payload block"));
+  // The new block starts at or after the end of the file, so the alignment
+  // padding and the block itself read back as zeros once the file is extended
+  // up to the end of the block: only the last sector has to be written.
+  if (!zero_fill(new_block_off + (Bit64u)block_size - logical_sector_size, logical_sector_size)) {
+    BX_ERROR(("VHDX: failed to extend file for new payload block"));
     return -1;
   }
 
@@ -832,24 +835,33 @@ ssize_t vhdx_image_t::read(void* buf, size_t count)
   Bit64s sectors_to_read = count / logical_sector_size;
 
   while (sectors_to_read > 0) {
+    // sectors of one payload block are contiguous in the file:
+    // transfer all of them up to the end of the block at once
+    const Bit64s sector_in_block = cur_sector % (Bit64s)sectors_per_block;
+    Bit64s sectors_left_in_block = (Bit64s)sectors_per_block - sector_in_block;
+    if (sectors_left_in_block > sectors_to_read) {
+      sectors_left_in_block = sectors_to_read;
+    }
+    const int bytes = (int)(sectors_left_in_block * (Bit64s)logical_sector_size);
+
     Bit64s offset = get_sector_offset(cur_sector);
 
     if (offset == -2) {
       // Zero/unallocated block, return zeros
-      memset(cbuf, 0, logical_sector_size);
+      memset(cbuf, 0, bytes);
     } else if (offset < 0) {
       return -1;
     } else {
-      int ret = bx_read_image(fd, offset, cbuf, logical_sector_size);
-      if (ret != (int)logical_sector_size) {
+      int ret = bx_read_image(fd, offset, cbuf, bytes);
+      if (ret != bytes) {
         BX_ERROR(("VHDX: read error at sector %llu", (unsigned long long)cur_sector));
         return -1;
       }
     }
 
-    cur_sector++;
-    cbuf += logical_sector_size;
-    sectors_to_read--;
+    cur_sector += sectors_left_in_block;
+    cbuf += bytes;
+    sectors_to_read -= sectors_left_in_block;
   }
 
   return count;

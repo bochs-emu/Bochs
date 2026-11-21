@@ -1366,11 +1366,6 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::check_CR4(bx_address cr4_val)
     }
   }
   else {
-    if (temp_cr4.get_PCIDE()) {
-      BX_ERROR(("check_CR4(): attempt to set CR4.PCIDE when EFER.LMA=0"));
-      return false;
-    }
-
 #if BX_SUPPORT_FRED
     if (temp_cr4.get_FRED()) {
       BX_ERROR(("check_CR4(): attempt to set CR4.FRED when EFER.LMA=0"));
@@ -1421,6 +1416,20 @@ bool BX_CPU_C::SetCR4(bxInstruction_c *i, bx_address val)
   }
 #endif
 
+#if BX_SUPPORT_X86_64
+  // if trying to enable CR4.PCIDE
+  if (! BX_CPU_THIS_PTR cr4.get_PCIDE() && temp_cr4.get_PCIDE()) {
+    if (! long_mode()) {
+      BX_ERROR(("SetCR4(): attempt to set CR4.PCIDE when EFER.LMA=0"));
+      return false;
+    }
+    if (BX_CPU_THIS_PTR cr3 & 0xfff) {
+      BX_ERROR(("SetCR4(): Attempt to enable CR4.PCIDE with non-zero PCID !"));
+      return false;
+    }
+  }
+#endif
+
 #if BX_CPU_LEVEL >= 6
   // Modification of PGE,PAE,PSE,PCIDE,SMEP and etc flushes TLB cache according to docs.
   if ((val ^ BX_CPU_THIS_PTR cr4.get()) & BX_CR4_FLUSH_TLB_MASK) {
@@ -1433,17 +1442,6 @@ bool BX_CPU_C::SetCR4(bxInstruction_c *i, bx_address val)
         }
       }
     }
-#if BX_SUPPORT_X86_64
-    else {
-      // if trying to enable CR4.PCIDE
-      if (! BX_CPU_THIS_PTR cr4.get_PCIDE() && temp_cr4.get_PCIDE()) {
-        if (BX_CPU_THIS_PTR cr3 & 0xfff) {
-          BX_ERROR(("SetCR4(): Attempt to enable CR4.PCIDE with non-zero PCID !"));
-          return false;
-        }
-      }
-    }
-#endif
     TLB_flush(); // Flush Global entries also.
   }
 #endif
@@ -1723,8 +1721,7 @@ void BX_CPU_C::hwbreakpoint_match(bx_address laddr, unsigned len, unsigned rw)
   }
 }
 
-Bit32u BX_CPU_C::hwdebug_compare(bx_address laddr_0, unsigned size,
-                          unsigned opa, unsigned opb)
+Bit32u BX_CPU_C::hwdebug_compare(bx_address laddr_0, unsigned size, unsigned opa, unsigned opb)
 {
   Bit32u dr7 = BX_CPU_THIS_PTR dr7.get32();
 
@@ -1761,6 +1758,10 @@ Bit32u BX_CPU_C::hwdebug_compare(bx_address laddr_0, unsigned size,
          (laddr_0 <= dr_end) &&
          (laddr_n >= dr_start)) {
       dr6_mask |= (1<<n);
+      // instruction breakpoint with LENn != 00b (undefined in SDM) never triggers #DB
+      // (Intel behavior), its Bn bit is still reported in DR6 if #DB is delivered
+      if (dr_op[n] == BX_HWDebugInstruction && dr_len[n] != 0)
+        continue;
       // tell if breakpoint was enabled
       if (dr7 & (3 << n*2)) {
         dr6_mask |= BX_DEBUG_TRAP_HIT;

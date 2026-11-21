@@ -143,7 +143,7 @@ class vvfat_image_t : public device_image_t
     void set_file_attributes(void);
     Bit32u fat_get_next(Bit32u current);
     bool write_file(const char *path, direntry_t *entry, bool create);
-    direntry_t* read_direntry(Bit8u *buffer, char *filename);
+    direntry_t* read_direntry(Bit8u *buffer, Bit8u *buffer_end, char *filename);
     void parse_directory(const char *path, Bit32u start_cluster);
     void commit_changes(void);
     void close_current_file(void);

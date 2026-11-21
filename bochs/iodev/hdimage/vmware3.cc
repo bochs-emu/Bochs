@@ -215,20 +215,25 @@ int vmware3_image_t::write_ints(int fd, Bit32u *buffer, size_t count)
 
 char* vmware3_image_t::generate_cow_name(const char * filename, unsigned chain)
 {
-  char * name = new char[strlen(filename) + 4];
+  // room for the chain suffix: '-' and up to 10 digits
+  char * name = new char[strlen(filename) + 12];
   if (name == NULL)
-    BX_PANIC(("unable to allocate %u bytes for vmware3 COW file name (base: %s, chain: %u)", (unsigned)strlen(filename) + 4, filename, chain));
+    BX_PANIC(("unable to allocate %u bytes for vmware3 COW file name (base: %s, chain: %u)", (unsigned)strlen(filename) + 12, filename, chain));
   strcpy(name, filename);
   if (chain != 0) {
     char chainstr[12];
     sprintf(chainstr, "-%02u", chain + 1);
+    // insert the suffix before the extension of the file name (not at a dot of a directory name)
     char * period = strrchr(name, '.');
-    if (period != 0) {
-      char temp[1024];
-      strcpy(temp, period);
-      *period = 0;
-      strcat(name, chainstr);
-      strcat(name, temp);
+    char * sep = strrchr(name, '/');
+#ifdef WIN32
+    char * sep2 = strrchr(name, '\\');
+    if ((sep2 != NULL) && ((sep == NULL) || (sep2 > sep))) sep = sep2;
+#endif
+    if ((period != NULL) && ((sep == NULL) || (period > sep))) {
+      size_t chainlen = strlen(chainstr);
+      memmove(period + chainlen, period, strlen(period) + 1);
+      memcpy(period, chainstr, chainlen);
     } else {
       strcat(name, chainstr);
     }
@@ -239,7 +244,8 @@ char* vmware3_image_t::generate_cow_name(const char * filename, unsigned chain)
 vmware3_image_t::~vmware3_image_t()
 {
   close();
-  bx_close_image(file_descriptor, pathname);
+  if (file_descriptor != -1)
+    bx_close_image(file_descriptor, pathname);
 }
 
 /*
@@ -286,11 +292,8 @@ int vmware3_image_t::open(const char* _pathname, int flags)
     char* filename = generate_cow_name(pathname, i);
     current = &images[i];
 
-    current->fd = ::open(filename, flags
-#ifdef O_BINARY
-                         | O_BINARY
-#endif
-                         );
+    current->fd = hdimage_open_file(filename, flags, NULL, NULL);
+    current->filename = filename;
     if (current->fd < 0)
       BX_PANIC(("unable to open vmware3 COW Disk file '%s'", filename));
 
@@ -336,7 +339,6 @@ int vmware3_image_t::open(const char* _pathname, int flags)
 
     current->offset = INVALID_OFFSET;
     current->synced = true;
-    delete [] filename;
   }
   current = &images[0];
   requested_offset = 0;
@@ -549,31 +551,29 @@ Bit64s vmware3_image_t::lseek(Bit64s offset, int whence)
 
 void vmware3_image_t::close()
 {
-  if (file_descriptor == -1)
-    return;
-    
-  if(current == 0)
+  if ((images == NULL) || (current == NULL))
     return;
 
-  unsigned count = current->header.number_of_chains;
+  // write back the last modified tlb
+  if (!sync())
+    BX_ERROR(("could not sync vmware3 COW image on close"));
+
+  unsigned count = images[0].header.number_of_chains;
   if (count < 1) count = 1;
   for(unsigned i = 0; i < count; ++i)
   {
-    if (images != NULL)
-    {
-      current = &images[i];
-      for(unsigned j = 0; j < current->header.flb_count; ++j)
-          delete[] current->slb[j];
-      delete[] current->flb;
-      delete[] current->slb;
-      delete[] current->tlb;
-      ::close(current->fd);
-    delete[] images;
-    images = NULL;
-    }
+    current = &images[i];
+    for(unsigned j = 0; j < current->header.flb_count; ++j)
+        delete[] current->slb[j];
+    delete[] current->flb;
+    delete[] current->slb;
+    delete[] current->tlb;
+    bx_close_image(current->fd, current->filename);
+    delete[] current->filename;
   }
-  current = 0;
-  file_descriptor = -1;
+  delete[] images;
+  images = NULL;
+  current = NULL;
 }
 
 Bit32u vmware3_image_t::get_capabilities(void)
@@ -586,6 +586,10 @@ bool vmware3_image_t::save_state(const char *backup_fname)
 {
   bool ret = 1;
   char tempfn[BX_PATHNAME_LEN];
+
+  // write back the last modified tlb before taking the backup
+  if (!sync())
+    return 0;
 
   unsigned count = current->header.number_of_chains;
   if (count < 1) count = 1;

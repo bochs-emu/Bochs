@@ -227,14 +227,21 @@ int execute_script(logfunctions *netdev, const char* scriptname, char* arg1)
   int pid,status;
 
   if (!(pid=fork())) {
-    char filename[BX_PATHNAME_LEN];
+    char filename[BX_PATHNAME_LEN], cwd[BX_PATHNAME_LEN];
+    int len;
     if (scriptname[0]=='/') {
-      strcpy(filename, scriptname);
+      len = snprintf(filename, sizeof(filename), "%s", scriptname);
     }
     else {
-      getcwd(filename, BX_PATHNAME_LEN);
-      strcat(filename, "/");
-      strcat(filename, scriptname);
+      if (getcwd(cwd, sizeof(cwd)) == NULL) {
+        BX_ERROR(("cannot get the current directory for script '%s'", scriptname));
+        exit(-1);
+      }
+      len = snprintf(filename, sizeof(filename), "%s/%s", cwd, scriptname);
+    }
+    if ((len < 0) || (len >= (int)sizeof(filename))) {
+      BX_ERROR(("script path too long: '%s'", scriptname));
+      exit(-1);
     }
 
     // execute the script

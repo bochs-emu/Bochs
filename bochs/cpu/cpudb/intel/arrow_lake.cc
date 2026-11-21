@@ -23,8 +23,6 @@
 
 #include "bochs.h"
 #include "cpu/cpu.h"
-#include "gui/siminterface.h"
-#include "param_names.h"
 #include "arrow_lake.h"
 
 #define LOG_THIS cpu->
@@ -33,6 +31,104 @@
 
 #define VMCS_REVISION_ID 0x04
 
+// CPUID dump of the real CPU (taken from arrow_lake.txt), several rows of the same leaf are its subleafs
+static const cpuid_function_t std_leafs[] = {
+  /* leaf 0x00000000 */ { 0x00000023, 0x756E6547, 0x6C65746E, 0x49656E69 },
+  /* leaf 0x00000001 */ { 0x000C0662, 0x00800800, 0x7FFAFBFF, 0xBFEBFBFF },
+  /* leaf 0x00000002 */ { 0x00FEFF01, 0x000000F0, 0x00000000, 0x00000000 },
+  /* leaf 0x00000003 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000004 */ { 0xFC004121, 0x02C0003F, 0x0000003F, 0x00000000 }, // [SL 00] [L1D: 48 KB]
+  /* leaf 0x00000004 */ { 0xFC004122, 0x03C0003F, 0x0000003F, 0x00000000 }, // [SL 01] [L1I: 64 KB]
+  /* leaf 0x00000004 */ { 0xFC01C143, 0x02C0003F, 0x00000FFF, 0x00000000 }, // [SL 02] [L2U: 3 MB]
+  /* leaf 0x00000004 */ { 0xFC1FC163, 0x02C0003F, 0x00007FFF, 0x00000004 }, // [SL 03] [L3U: 24 MB]
+  /* leaf 0x00000005 */ { 0x00000040, 0x00000040, 0x00000003, 0x10102020 },
+  /* leaf 0x00000006 */ { 0x00880075, 0x00000002, 0x00000401, 0x00000003 },
+  /* leaf 0x00000007 */ { 0x00000002, 0x239CA7EB, 0x994027AC, 0xFC18C430 }, // [SL 00]
+  /* leaf 0x00000007 */ { 0x44C009D7, 0x00000001, 0x00000000, 0x00040430 }, // [SL 01]
+  /* leaf 0x00000007 */ { 0x00000000, 0x00000000, 0x00000000, 0x000000BF }, // [SL 02]
+  /* leaf 0x00000008 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000009 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000000A */ { 0x0D300806, 0x00000280, 0x00000007, 0x00008603 },
+  /* leaf 0x0000000B */ { 0x00000001, 0x00000001, 0x00000100, 0x00000000 }, // [SL 00]
+  /* leaf 0x0000000B */ { 0x00000007, 0x0000000E, 0x00000201, 0x00000000 }, // [SL 01]
+  /* leaf 0x0000000C */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000000D */ { 0x00000207, 0x00000340, 0x00000A88, 0x00000000 }, // [SL 00] [x87]
+  /* leaf 0x0000000D */ { 0x0000000F, 0x000003D0, 0x0000D900, 0x00000000 }, // [SL 01] [SSE]
+  /* leaf 0x0000000D */ { 0x00000100, 0x00000240, 0x00000000, 0x00000000 }, // [SL 02] [AVX]
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 03] not in dump
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 04] not in dump
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 05] not in dump
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 06] not in dump
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 07] not in dump
+  /* leaf 0x0000000D */ { 0x00000080, 0x00000000, 0x00000001, 0x00000000 }, // [SL 08] [PT]
+  /* leaf 0x0000000D */ { 0x00000008, 0x00000A80, 0x00000000, 0x00000000 }, // [SL 09] [PKRU]
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 0A] not in dump
+  /* leaf 0x0000000D */ { 0x00000010, 0x00000000, 0x00000001, 0x00000000 }, // [SL 0B] [CET_U]
+  /* leaf 0x0000000D */ { 0x00000018, 0x00000000, 0x00000001, 0x00000000 }, // [SL 0C] [CET_S]
+  /* leaf 0x0000000D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 0D] not in dump
+  /* leaf 0x0000000D */ { 0x00000030, 0x00000000, 0x00000001, 0x00000000 }, // [SL 0E] [UINTR]
+  /* leaf 0x0000000D */ { 0x00000328, 0x00000000, 0x00000001, 0x00000000 }, // [SL 0F] [LBR]
+  /* leaf 0x0000000E */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000000F */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x0000000F */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 01]
+  /* leaf 0x00000010 */ { 0x00000000, 0x00000040, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x00000010 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 01]
+  /* leaf 0x00000011 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000012 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x00000012 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 01]
+  /* leaf 0x00000013 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000014 */ { 0x00000001, 0x0000015F, 0x00000007, 0x00000000 }, // [SL 00]
+  /* leaf 0x00000014 */ { 0x02490002, 0x003F003F, 0x00000000, 0x00000000 }, // [SL 01]
+  /* leaf 0x00000015 */ { 0x00000002, 0x000000DA, 0x0249F000, 0x00000000 },
+  /* leaf 0x00000016 */ { 0x00001068, 0x00001450, 0x00000064, 0x00000000 },
+  /* leaf 0x00000017 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x00000018 */ { 0x00000008, 0x00000000, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x00000018 */ { 0x00000000, 0x00080001, 0x00000020, 0x00004022 }, // [SL 01]
+  /* leaf 0x00000018 */ { 0x00000000, 0x00080006, 0x00000004, 0x00004022 }, // [SL 02]
+  /* leaf 0x00000018 */ { 0x00000000, 0x0010000F, 0x00000001, 0x00004125 }, // [SL 03]
+  /* leaf 0x00000018 */ { 0x00000000, 0x00080001, 0x00000010, 0x00004024 }, // [SL 04]
+  /* leaf 0x00000018 */ { 0x00000000, 0x00040006, 0x00000008, 0x00004024 }, // [SL 05]
+  /* leaf 0x00000018 */ { 0x00000000, 0x00080008, 0x00000001, 0x00004124 }, // [SL 06]
+  /* leaf 0x00000018 */ { 0x00000000, 0x00080007, 0x00000080, 0x00004043 }, // [SL 07]
+  /* leaf 0x00000018 */ { 0x00000000, 0x00080009, 0x00000080, 0x00004043 }, // [SL 08]
+  /* leaf 0x00000019 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000001A */ { 0x40000003, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x0000001B */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // not in dump
+  /* leaf 0x0000001C */ { 0x4000000B, 0x00000007, 0x000F0007, 0x00000000 },
+  /* leaf 0x0000001D */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x0000001E */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x0000001F */ { 0x00000001, 0x00000001, 0x00000100, 0x00000000 }, // [SL 00]
+  /* leaf 0x0000001F */ { 0x00000003, 0x00000001, 0x00000201, 0x00000000 }, // [SL 01]
+  /* leaf 0x0000001F */ { 0x00000007, 0x0000000E, 0x00000302, 0x00000000 }, // [SL 02]
+  /* leaf 0x00000020 */ { 0x00000000, 0x00000001, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x00000021 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000022 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x00000023 */ { 0x0000000B, 0x00000003, 0x00000000, 0x00000000 }, // [SL 00]
+  /* leaf 0x00000023 */ { 0x000003FF, 0x0000000F, 0x00000000, 0x00000000 }, // [SL 01]
+  /* leaf 0x00000023 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 02]
+  /* leaf 0x00000023 */ { 0x00001DFF, 0x00000000, 0x00000000, 0x00000000 }, // [SL 03]
+  /* leaf 0x00000023 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 04]
+  /* leaf 0x00000023 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 05]
+  /* leaf 0x00000023 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 06]
+  /* leaf 0x00000023 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 07]
+  /* leaf 0x00000023 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 08]
+  /* leaf 0x00000023 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 09]
+  /* leaf 0x00000023 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, // [SL 0A]
+  /* leaf 0x00000023 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }  // [SL 0B]
+};
+
+static const cpuid_function_t ext_leafs[] = {
+  /* leaf 0x80000000 */ { 0x80000008, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000001 */ { 0x00000000, 0x00000000, 0x00000121, 0x2C100000 },
+  /* leaf 0x80000002 */ { 0x65746E49, 0x2952286C, 0x726F4320, 0x4D542865 },
+  /* leaf 0x80000003 */ { 0x6C552029, 0x20617274, 0x34322035, 0x00004B35 },
+  /* leaf 0x80000004 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000005 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+  /* leaf 0x80000006 */ { 0x00000000, 0x00000000, 0x0C007040, 0x00000000 },
+  /* leaf 0x80000007 */ { 0x00000000, 0x00000000, 0x00000000, 0x00000100 },
+  /* leaf 0x80000008 */ { 0x0000302E, 0x00000200, 0x00000000, 0x00000000 }
+};
+
 arrow_lake_t::arrow_lake_t(BX_CPU_C *cpu):
 #if BX_SUPPORT_VMX
     bx_cpuid_t(cpu, VMCS_REVISION_ID)
@@ -40,6 +136,55 @@ arrow_lake_t::arrow_lake_t(BX_CPU_C *cpu):
     bx_cpuid_t(cpu)
 #endif
 {
+  set_max_leaf(0x20, 0x80000008);
+
+  cpuid_table = new bx_cpuid_table_t(max_std_leaf, max_ext_leaf);
+
+  cpuid_table->register_leaf(0x00000000,  1, std_leafs +  0);
+  cpuid_table->register_leaf(0x00000001,  1, std_leafs +  1);
+  cpuid_table->register_leaf(0x00000002,  1, std_leafs +  2);
+  cpuid_table->register_leaf(0x00000003,  1, std_leafs +  3);
+  cpuid_table->register_leaf(0x00000004,  4, std_leafs +  4);
+  cpuid_table->register_leaf(0x00000005,  1, std_leafs +  8);
+  cpuid_table->register_leaf(0x00000006,  1, std_leafs +  9);
+  cpuid_table->register_leaf(0x00000007,  3, std_leafs + 10);
+  cpuid_table->register_leaf(0x00000008,  1, std_leafs + 13);
+  cpuid_table->register_leaf(0x00000009,  1, std_leafs + 14);
+  cpuid_table->register_leaf(0x0000000A,  1, std_leafs + 15);
+  cpuid_table->register_leaf(0x0000000B,  2, std_leafs + 16);
+  cpuid_table->register_leaf(0x0000000C,  1, std_leafs + 18);
+  cpuid_table->register_leaf(0x0000000D, 16, std_leafs + 19);
+  cpuid_table->register_leaf(0x0000000E,  1, std_leafs + 35);
+  cpuid_table->register_leaf(0x0000000F,  2, std_leafs + 36);
+  cpuid_table->register_leaf(0x00000010,  2, std_leafs + 38);
+  cpuid_table->register_leaf(0x00000011,  1, std_leafs + 40);
+  cpuid_table->register_leaf(0x00000012,  2, std_leafs + 41);
+  cpuid_table->register_leaf(0x00000013,  1, std_leafs + 43);
+  cpuid_table->register_leaf(0x00000014,  2, std_leafs + 44);
+  cpuid_table->register_leaf(0x00000015,  1, std_leafs + 46);
+  cpuid_table->register_leaf(0x00000016,  1, std_leafs + 47);
+  cpuid_table->register_leaf(0x00000017,  1, std_leafs + 48);
+  cpuid_table->register_leaf(0x00000018,  9, std_leafs + 49);
+  cpuid_table->register_leaf(0x00000019,  1, std_leafs + 58);
+  cpuid_table->register_leaf(0x0000001A,  1, std_leafs + 59);
+  cpuid_table->register_leaf(0x0000001B,  1, std_leafs + 60);
+  cpuid_table->register_leaf(0x0000001C,  1, std_leafs + 61);
+  cpuid_table->register_leaf(0x0000001D,  1, std_leafs + 62);
+  cpuid_table->register_leaf(0x0000001E,  1, std_leafs + 63);
+  cpuid_table->register_leaf(0x0000001F,  3, std_leafs + 64);
+  cpuid_table->register_leaf(0x00000020,  1, std_leafs + 67);
+  // leafs 0x00000021 .. 0x00000023 are in the dump only, above max_std_leaf
+
+  cpuid_table->register_leaf(0x80000000, 1, ext_leafs + 0);
+  cpuid_table->register_leaf(0x80000001, 1, ext_leafs + 1);
+  cpuid_table->register_leaf(0x80000002, 1, ext_leafs + 2);
+  cpuid_table->register_leaf(0x80000003, 1, ext_leafs + 3);
+  cpuid_table->register_leaf(0x80000004, 1, ext_leafs + 4);
+  cpuid_table->register_leaf(0x80000005, 1, ext_leafs + 5);
+  cpuid_table->register_leaf(0x80000006, 1, ext_leafs + 6);
+  cpuid_table->register_leaf(0x80000007, 1, ext_leafs + 7);
+  cpuid_table->register_leaf(0x80000008, 1, ext_leafs + 8);
+
   if (BX_SUPPORT_VMX == 1)
     BX_INFO(("You must compile with --enable-vmx=2 for Intel Core Arrow Lake VMX configuration"));
 
@@ -49,6 +194,7 @@ arrow_lake_t::arrow_lake_t(BX_CPU_C *cpu):
   enable_cpu_extension(BX_ISA_X87);
   enable_cpu_extension(BX_ISA_486);
   enable_cpu_extension(BX_ISA_PENTIUM);
+  enable_cpu_extension(BX_ISA_MSR);
   enable_cpu_extension(BX_ISA_P6);
   enable_cpu_extension(BX_ISA_MMX);
   enable_cpu_extension(BX_ISA_SYSENTER_SYSEXIT);
@@ -141,123 +287,11 @@ arrow_lake_t::arrow_lake_t(BX_CPU_C *cpu):
   enable_cpu_extension(BX_ISA_UINTR);
 #endif
   enable_cpu_extension(BX_ISA_SPEC_CTRL);
-
-  max_std_leaf = 0x20;
-  max_ext_leaf = 0x80000008;
 }
 
-void arrow_lake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void arrow_lake_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  static const char* brand_string = "Intel(R) Core(TM) Ultra 5 245K\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
-
-  static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
-  if (cpuid_limit_winnt)
-    if (function > 2 && function < 0x80000000) function = 2;
-
-  switch(function) {
-  case 0x80000000:
-    get_leaf_0(max_ext_leaf, NULL, leaf); // highest extended function understood by CPUID
-    return;
-  case 0x80000001:
-    get_ext_cpuid_leaf_1(leaf);
-    return;
-  case 0x80000002:
-  case 0x80000003:
-  case 0x80000004:
-    get_ext_cpuid_brand_string_leaf(brand_string, function, leaf);
-    return;
-  case 0x80000005:
-    get_reserved_leaf(leaf);
-    return;
-  case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
-    get_leaf(leaf, 0x00000000, 0x00000000, 0x0c007040, 0x00000000);
-    return;
-  case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management leaf
-    get_leaf(leaf, 0x00000000, 0x00000000, 0x00000000, 0x00000100); // EDX[8] - invariant TSC
-    return;
-  case 0x80000008:
-    get_ext_cpuid_leaf_8(leaf);
-    return;
-  case 0x00000000:
-    get_leaf_0(max_std_leaf, "GenuineIntel", leaf);
-    return;
-  case 0x00000001:
-    get_std_cpuid_leaf_1(leaf);
-    return;
-  case 0x00000002: // CPUID leaf 0x00000002 - Cache and TLB Descriptors
-    get_leaf(leaf, 0x00feff01, 0x000000f0, 0x00000000, 0x00000000);
-    return;
-  case 0x00000003:
-    get_reserved_leaf(leaf);
-    return;
-  case 0x00000004:
-    get_std_cpuid_leaf_4(subfunction, leaf);
-    return;
-  case 0x00000005: // CPUID leaf 0x00000005 - MONITOR/MWAIT leaf
-    get_std_cpuid_monitor_mwait_leaf(leaf, 0x10102020);
-    return;
-  case 0x00000006: // CPUID leaf 0x00000006 - Thermal and Power Management Leaf
-    get_leaf(leaf, 0x00880075, 0x00000002, 0x00000401, 0x00000003);
-    return;
-  case 0x00000007:
-    get_std_cpuid_leaf_7(subfunction, leaf);
-    return;
-  case 0x00000008:
-  case 0x00000009:
-    get_reserved_leaf(leaf);
-    return;
-  case 0x0000000A: // CPUID leaf 0x0000000A - Architectural Performance Monitor
-    get_std_cpuid_leaf_A(leaf);
-    return;
-  case 0x0000000B:
-    get_std_cpuid_extended_topology_leaf(subfunction, leaf);
-    return;
-  case 0x0000000C:
-    get_reserved_leaf(leaf);
-    return;
-  case 0x0000000D:
-    get_std_cpuid_xsave_leaf(subfunction, leaf);
-    return;
-  case 0x0000000E:
-  case 0x0000000F: // CPUID leaf 0x0000000F - Intel Resource Director Technonology
-  case 0x00000010: // CPUID leaf 0x00000010 - Intel Resource Director Technonology
-  case 0x00000011:
-  case 0x00000012: // SGX Capability
-  case 0x00000013:
-  case 0x00000014: // Processor Trace
-    get_reserved_leaf(leaf);
-    return;
-  case 0x00000015: // CPUID leaf 0x00000015 - Time Stamp Counter and Core Crystal Clock Information Leaf
-    get_freq_leaf_15(leaf, 0x00000002, 0x000000da, 0x0249f000);
-    return;
-  case 0x00000016: // CPUID leaf 0x00000016 - Processor Frequency Information Leaf
-    get_freq_leaf_16(leaf, 0x00001068, 0x00001450, 0x00000064);
-    return;
-  case 0x00000017:
-    get_reserved_leaf(leaf);
-    return;
-  case 0x00000018: // TLB Descriptors
-    get_std_cpuid_leaf_18(subfunction, leaf);
-    return;
-  case 0x00000019: // CPUID leaf 0x00000019 - Keylocker Leaf (not supported)
-  case 0x0000001A: // CPUID leaf 0x0000001A - native Model ID Enumeration leaf (for Hybrid) - HYBRID not supported yet
-  case 0x0000001B: // PCONFIG Information
-  case 0x0000001C: // CPUID leaf 0x0000001C - Last Branch Record (Architectural LBR) leaf (not supported)
-    get_reserved_leaf(leaf);
-    return;
-  case 0x0000001D: // AMX
-  case 0x0000001E: // AMX: TMUL Information Main leaf
-    get_reserved_leaf(leaf);
-    return;
-  case 0x0000001F: // V2 Extended Topology Enumberation leaf
-    get_reserved_leaf(leaf); // until figured it out
-    return;
-  case 0x00000020: // HRESET Information
-  case 0x00000023: // Arch Perfmon Leaf Information (not supported)
-  default:
-    get_reserved_leaf(leaf);
-    return;
-  }
+  cpuid_table->get_leaf(function, subfunction, leaf);
 }
 
 #if BX_SUPPORT_VMX >= 2
@@ -297,376 +331,17 @@ Bit32u arrow_lake_t::get_vmx_extensions_bitmask(void) const
 // leaf 0x00000000 //
 
 // leaf 0x00000001 //
-void arrow_lake_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
-{
-  // EAX:       CPU Version Information
-  //   [3:0]   Stepping ID
-  //   [7:4]   Model: starts at 1
-  //   [11:8]  Family: 4=486, 5=Pentium, 6=PPro, ...
-  //   [13:12] Type: 0=OEM, 1=overdrive, 2=dual cpu, 3=reserved
-  //   [19:16] Extended Model
-  //   [27:20] Extended Family
-  leaf->eax = 0x000c0662;
-
-  // EBX:
-  //   [7:0]   Brand ID
-  //   [15:8]  CLFLUSH cache line size (value*8 = cache line size in bytes)
-  //   [23:16] Number of logical processors in one physical processor
-  //   [31:24] Local Apic ID
-
-  unsigned n_logical_processors = ncores*nthreads;
-  leaf->ebx = ((CACHE_LINE_SIZE / 8) << 8) |
-              (n_logical_processors << 16);
-#if BX_SUPPORT_APIC
-  leaf->ebx |= ((cpu->get_apic_id() & 0xff) << 24);
-#endif
-
-  // ECX: Extended Feature Flags
-  // * [0:0]   SSE3: SSE3 Instructions
-  // * [1:1]   PCLMULQDQ Instruction support
-  // * [2:2]   DTES64: 64-bit DS area
-  // * [3:3]   MONITOR/MWAIT support
-  // * [4:4]   DS-CPL: CPL qualified debug store
-  // * [5:5]   VMX: Virtual Machine Technology
-  // * [6:6]   SMX: Secure Virtual Machine Technology
-  // * [7:7]   EST: Enhanced Intel SpeedStep Technology
-  // * [8:8]   TM2: Thermal Monitor 2
-  // * [9:9]   SSSE3: SSSE3 Instructions
-  //   [10:10] CNXT-ID: L1 context ID
-  // * [11:11] reserved
-  // * [12:12] FMA Instructions support
-  // * [13:13] CMPXCHG16B: CMPXCHG16B instruction support
-  // * [14:14] xTPR update control
-  // * [15:15] PDCM - Perfon and Debug Capability MSR
-  //   [16:16] reserved
-  // * [17:17] PCID: Process Context Identifiers
-  //   [18:18] DCA - Direct Cache Access
-  // * [19:19] SSE4.1 Instructions
-  // * [20:20] SSE4.2 Instructions
-  // * [21:21] X2APIC
-  // * [22:22] MOVBE instruction
-  // * [23:23] POPCNT instruction
-  // * [24:24] TSC Deadline
-  // * [25:25] AES Instructions
-  // * [26:26] XSAVE extensions support
-  // * [27:27] OSXSAVE support
-  // * [28:28] AVX extensions support
-  // * [29:29] AVX F16C - Float16 conversion support
-  // * [30:30] RDRAND instruction
-  //   [31:31] reserved
-  leaf->ecx = get_std_cpuid_leaf_1_ecx(BX_CPUID_STD1_ECX_DTES64 |
-                                       BX_CPUID_STD1_ECX_DS_CPL |
-                                       BX_CPUID_STD1_ECX_EST |
-                                       BX_CPUID_STD1_ECX_THERMAL_MONITOR2 |
-                                       BX_CPUID_STD1_ECX_xTPR |
-                                       BX_CPUID_STD1_ECX_PDCM);
-
-  // EDX: Standard Feature Flags
-  // * [0:0]   FPU on chip
-  // * [1:1]   VME: Virtual-8086 Mode enhancements
-  // * [2:2]   DE: Debug Extensions (I/O breakpoints)
-  // * [3:3]   PSE: Page Size Extensions
-  // * [4:4]   TSC: Time Stamp Counter
-  // * [5:5]   MSR: RDMSR and WRMSR support
-  // * [6:6]   PAE: Physical Address Extensions
-  // * [7:7]   MCE: Machine Check Exception
-  // * [8:8]   CXS: CMPXCHG8B instruction
-  // * [9:9]   APIC: APIC on Chip
-  //   [10:10] Reserved
-  // * [11:11] SYSENTER/SYSEXIT support
-  // * [12:12] MTRR: Memory Type Range Reg
-  // * [13:13] PGE/PTE Global Bit
-  // * [14:14] MCA: Machine Check Architecture
-  // * [15:15] CMOV: Cond Mov/Cmp Instructions
-  // * [16:16] PAT: Page Attribute Table
-  // * [17:17] PSE-36: Physical Address Extensions
-  //   [18:18] PSN: Processor Serial Number
-  // * [19:19] CLFLUSH: CLFLUSH Instruction support
-  //   [20:20] Reserved
-  // * [21:21] DS: Debug Store
-  // * [22:22] ACPI: Thermal Monitor and Software Controlled Clock Facilities
-  // * [23:23] MMX Technology
-  // * [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
-  // * [25:25] SSE: SSE Extensions
-  // * [26:26] SSE2: SSE2 Extensions
-  // * [27:27] Self Snoop
-  // * [28:28] Hyper Threading Technology
-  // * [29:29] TM: Thermal Monitor
-  //   [30:30] Reserved
-  // * [31:31] PBE: Pending Break Enable
-  leaf->edx = get_std_cpuid_leaf_1_edx(BX_CPUID_STD1_EDX_DEBUG_STORE |
-                                       BX_CPUID_STD1_EDX_ACPI |
-                                       BX_CPUID_STD1_EDX_SELF_SNOOP |
-#if BX_SUPPORT_SMP
-                                       BX_CPUID_STD1_EDX_HT |
-#endif
-                                       BX_CPUID_STD1_EDX_THERMAL_MONITOR |
-                                       BX_CPUID_STD1_EDX_PBE);
-}
-
 // leaf 0x00000003 - Processor Serial Number (not supported) //
 
-// leaf 0x00000004 //
-void arrow_lake_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000004 - Deterministic Cache Parameters
-  switch(subfunction) {
-  case 0:
-    leaf->eax = 0xfc004121;
-    leaf->ebx = 0x02c0003f;
-    leaf->ecx = 0x0000003f;
-    leaf->edx = 0x00000000;
-    return;
-  case 1:
-    leaf->eax = 0xfc004122;
-    leaf->ebx = 0x03c0003f;
-    leaf->ecx = 0x0000003f;
-    leaf->edx = 0x00000000;
-    return;
-  case 2:
-    leaf->eax = 0xfc01c143;
-    leaf->ebx = 0x02c0003f;
-    leaf->ecx = 0x00000fff;
-    leaf->edx = 0x00000000;
-    return;
-  case 3:
-    leaf->eax = 0xfc1fc163;
-    leaf->ebx = 0x02c0003f;
-    leaf->ecx = 0x00007fff;
-    leaf->edx = 0x00000004;
-    return;
-  default:
-    leaf->eax = 0;
-    leaf->ebx = 0;
-    leaf->ecx = 0;
-    leaf->edx = 0;
-  }
-}
-
+// leaf 0x00000004 - Deterministic Cache Parameters //
 // leaf 0x00000005 MONITOR/MWAIT Leaf                //
 // leaf 0x00000006 Thermal and Power Management Leaf //
 
 // leaf 0x00000007 //
-void arrow_lake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const
-{
-  switch(subfunction) {
-  case 0:
-    leaf->eax = 2; /* report max sub-leaf that supported in leaf 7 */
-
-    // * [0:0]   FS/GS BASE access instructions
-    // * [1:1]   Support for IA32_TSC_ADJUST MSR
-    //   [2:2]   SGX: Intel Software Guard Extensions
-    // * [3:3]   BMI1: Advanced Bit Manipulation Extensions
-    //   [4:4]   HLE: Hardware Lock Elision
-    // * [5:5]   AVX2
-    // * [6:6]   FDP Deprecation
-    // * [7:7]   SMEP: Supervisor Mode Execution Protection
-    // * [8:8]   BMI2: Advanced Bit Manipulation Extensions
-    // * [9:9]   Support for Enhanced REP MOVSB/STOSB
-    // * [10:10] Support for INVPCID instruction
-    //   [11:11] RTM: Restricted Transactional Memory
-    //   [12:12] Supports Quality of Service (QoS) capability
-    // * [13:13] Deprecates FPU CS and FPU DS values
-    //   [14:14] Intel Memory Protection Extensions
-    // ! [15:15] Supports Platform Quality of Service Enforcement (PQE) capability
-    //   [16:16] AVX512F instructions support
-    //   [17:17] AVX512DQ instructions support
-    // * [18:18] RDSEED instruction support
-    // * [19:19] ADCX/ADOX instructions support
-    // * [20:20] SMAP: Supervisor Mode Access Prevention
-    //   [21:21] AVX512IFMA52 instructions support
-    //   [22:22] reserved
-    // * [23:23] CLFLUSHOPT instruction
-    // * [24:24] CLWB instruction
-    // ! [25:25] Intel Processor Trace
-    //   [26:26] AVX512PF instructions support
-    //   [27:27] AVX512ER instructions support
-    //   [28:28] AVX512CD instructions support
-    // * [29:29] SHA instructions support
-    //   [30:30] AVX512BW instructions support
-    //   [31:31] AVX512VL variable vector length support
-    leaf->ebx = get_std_cpuid_leaf_7_ebx(BX_CPUID_STD7_SUBLEAF0_EBX_ENCHANCED_REP_STRINGS);
-
-    //   [0:0]   PREFETCHW1 instruction
-    //   [1:1]   AVX512 VBMI instructions
-    // * [2:2]   UMIP: Supports user-mode instruction prevention
-    // * [3:3]   PKU: Protection keys for user-mode pages
-    //   [4:4]   OSPKE: OS has set CR4.PKE to enable protection keys
-    // * [5:5]   WAITPKG (TPAUSE/UMONITOR/UMWAIT) support
-    //   [6:6]   AVX512 VBMI2 instructions support
-    // * [7:7]   CET_SS: Support CET Shadow Stack
-    // * [8:8]   GFNI instructions support
-    // * [9:9]   VAES instructions support
-    // * [10:10] VPCLMULQDQ instruction support
-    //   [11:11] AVX512 VNNI instructions support
-    //   [12:12] AVX512 BITALG instructions support
-    // ! [13:13] TME_EN: indicates support for MSRs: IA32_TME_CAPABILITY, IA32_TME_ACTIVATE, IA32_TME_EXCLUDE_MASK, and IA32_TME_EXCLUDE_BASE
-    //   [14:14] AVX512 VPOPCNTDQ: AVX512 VPOPCNTD/VPOPCNTQ instructions
-    //   [15:15] reserved
-    //   [16:16] LA57: LA57 and 5-level paging
-    //   [21:17] MPX User Address-Width Adjust (MAWAU)
-    // * [22:22] RDPID: Read Processor ID support
-    //   [23:23] Keylocker support
-    // ! [24:24] BUS_LOCK_DETECT: Indicates support for bus lock debug exceptions
-    //   [25:25] CLDEMOTE: CLDEMOTE instruction support
-    //   [26:26] reserved
-    // * [27:27] MOVDIRI: MOVDIRI instruction support
-    // * [28:28] MOVDIR64B: MOVDIR64B instruction support
-    //   [29:29] ENQCMD: Enqueue Stores support
-    //   [30:30] SGX_LC: SGX Launch Configuration
-    // * [31:31] PKS: Protection keys for supervisor-mode pages
-    leaf->ecx = get_std_cpuid_leaf_7_ecx();
-
-    //   [0:0]   reserved
-    //   [1:1]   reserved
-    //   [2:2]   AVX512_4VNNIW support
-    //   [3:3]   AVX512_4FMAPS support
-    // * [4:4]   Fast Short REP MOV support
-    // * [5:5]   UINTR: User interrupts support
-    //   [6:6]   reserved
-    //   [7:7]   reserved
-    //   [8:8]   AVX512_VP2INTERSECT support
-    //   [9:9]   reserved
-    // * [10:10] MD clear support
-    //   [11:11] reserved
-    //   [12:12] reserved
-    //   [13:13] reserved
-    // * [14:14] SERIALIZE instruction support
-    // ! [15:15] Hybrid processor
-    //   [16:16] TSXLDTRK: TSX suspent load tracking support
-    //   [17:17] reserved
-    //   [18:18] PCONFIG support
-    // ! [19:19] Architectural LBRs support
-    // * [20:20] CET IBT: Support CET indirect branch tracking
-    //   [21:21] reserved
-    //   [22:22] AMX BF16 support
-    //   [23:23] AVX512_FP16 instructions support
-    //   [24:24] AMX TILE architecture support
-    //   [25:25] AMX INT8 support
-    // * [26:26] IBRS: indirect branch restricted speculation
-    // * [27:27] STIBP: single thread indirect branch predictors
-    // * [28:28] L1D_FLUSH support
-    // * [29:29] Support for the IA32_ARCH_CAPABILITIES MSR
-    // * [30:30] Support for the IA32_CORE_CAPABILITIES MSR
-    // * [31:31] SSBD: Speculative Store Bypass Disable
-    leaf->edx = get_std_cpuid_leaf_7_edx(BX_CPUID_STD7_SUBLEAF0_EDX_FAST_SHORT_REP_MOV);
-
-    if (is_cpu_extension_supported(BX_ISA_SPEC_CTRL))
-      leaf->edx |= BX_CPUID_STD7_SUBLEAF0_EDX_MD_CLEAR |
-                   BX_CPUID_STD7_SUBLEAF0_EDX_SCA_IBRS_IBPB |
-                   BX_CPUID_STD7_SUBLEAF0_EDX_SCA_STIBP |
-                   BX_CPUID_STD7_SUBLEAF0_EDX_L1D_FLUSH |
-                   BX_CPUID_STD7_SUBLEAF0_EDX_ARCH_CAPABILITIES_MSR |
-                   BX_CPUID_STD7_SUBLEAF0_EDX_CORE_CAPABILITIES_MSR |
-                   BX_CPUID_STD7_SUBLEAF0_EDX_SCA_SSBD;
-    break;
-
-  case 1:
-    // * [0:0]   SHA-512 instructions support
-    // * [1:1]   SM3 instructions support
-    // * [2:2]   SM4 instructions support
-    //   [3:3]   RAO-INT
-    // * [4:4]   AVX VNNI
-    //   [5:5]   AVX512_BF16 conversion instructions support
-    // * [6:6]   LASS: Linear Address Space Separation support
-    // * [7:7]   CMPCCXADD
-    // ! [8:8]   Arch Perfmon
-    //   [9:9]   Reserved
-    //   [10:10] Fast zero-length REP MOVSB
-    // * [11:11] Fast zero-length REP STOSB
-    //   [12:12] Fast zero-length REP CMPSB/SCASB
-    //   [13:16] Reserved
-    //   [17:17] Flexible Return and Event Delivery (FRED) support
-    //   [18:18] LKGS instruction support
-    //   [19:19] WRMSRNS instruction
-    //   [20:20] NMI source reporting
-    //   [21:21] AMX-FB16 support
-    // ! [22:22] HRESET and CPUID leaf 0x20 support
-    // * [23:23] AVX IFMA support
-    //   [24:24] Reserved
-    //   [25:25] Reserved
-    // ! [26:26] LAM: Linear Address Masking
-    //   [27:27] MSRLIST: RDMSRLIST/WRMSRLIST instructions and the IA32_BARRIER MSR
-    //   [28:28] Reserved
-    //   [29:29] Reserved
-    // ! [30:30] Prevent INVD execution after BIOS is done
-    //   [31:31] Reserved
-    leaf->eax = get_std_cpuid_leaf_7_subleaf_1_eax(BX_CPUID_STD7_SUBLEAF1_EAX_FAST_ZEROLEN_REP_STOSB);
-
-    // ! [00:00] IA32_PPIN and IA32_PPIN_CTL MSRs
-    //   [01:01] TSE: PBNDKB instruction and existence of the IA32_TSE_CAPABILITY MSR
-    //   [02:02] Reserved
-    //   [03:03] CPUIDMAXVAL_LIM_RMV: IA32_MISC_ENABLE[22] cannot be set to 1 to limit the value returned by CPUID.00H:EAX[7:0]
-    //   [31:04] Reserved
-    leaf->ebx = 0;
-
-    //   [31:00] Reserved
-    leaf->ecx = 0;
-
-    //   [0:3]   Reserved
-    // * [4:4]   AVX-VNNI-INT8: AVX-VNNI-INT8 instructions support
-    // * [5:5]   AVX-NE-CONVERT: AVX-NE-CONVERT instructions support
-    //   [6:6]   Reserved
-    //   [7:7]   Reserved
-    //   [8:8]   AMX-COMPLEX: AMX-COMPLEX instructions support
-    //   [9:9]   Reserved
-    // * [10:10] AVX-VNNI-INT16: AVX-VNNI-INT16 instructions support
-    //   [11:13] Reserved
-    //   [14:14] PREFETCHI: PREFETCHIT0/1 instructions support
-    //   [15:15] USER_MSR: Support for the URDMSR and UWRMSR instructions
-    //   [16:16] Reserved
-    //   [17:17] Flexible UIRET: UIRET sets UIF to the RFLAGS[1] image loaded from the stack
-    // * [18:18] CET_SSS: Supervisor Shadow Stacks support indication for OS
-    //   [19:19] AVX10 support and CPUID leaf 0x24
-    //   [20:20] Reserved
-    //   [21:21] Reserved
-    //   [22:22] Reserved
-    //   [23:23] MWAIT and CPUID LEAF5 support (to be used by VMM)
-    //   [31:24] Reserved
-    leaf->edx = get_std_cpuid_leaf_7_subleaf_1_edx();
-    break;
-
-  case 2:
-    leaf->eax = 0;
-    leaf->ebx = 0;
-    leaf->ecx = 0;
-    leaf->edx = 0;
-    // * [00:00] PSFD: IA32_SPEC_CTRL MSR is supported
-    // * [01:01] IPRED_CTRL: bits 3 (IPRED_DIS_USER) and 4 (IPRED_DIS_SUP) of the IA32_SPEC_CTRL MSR are supported
-    // * [02:02] RRSBA_CTRL: bits 5 (RRSBA_USER) and 6 (RRSBA_SUP) of the IA32_SPEC_CTRL MSR are supported
-    // * [03:03] DDPD_U: bit 8 (Data Dep Prefetcher) of the IA32_SPEC_CTRL MSR are supported
-    // * [04:04] BHI_CTRL: bit 10 (BHI_DIS_S) of the IA32_SPEC_CTRL MSR are supported
-    // * [05:05] MCDT_NO: do not exhibit MXCSR Configuration Dependent Timing (MCDT) behavior and do not need to be 
-    //                    mitigated to avoid data-dep behavior for certain instructions
-    //   [06:06] support for UC-lock disable feature (UC lock causes #AC)
-    // * [07:07] MONITOR_MITG_NO: MONITOR/UMONITOR instructions are not affected by performance or power issues due to 
-    //                            MONITOR/UMONITOR instructions exceeding the capacity of an internal monitor tracking table
-    if (is_cpu_extension_supported(BX_ISA_SPEC_CTRL))
-      leaf->edx = 0xBF;
-    break;
-
-  default:
-    leaf->eax = 0;
-    leaf->ebx = 0;
-    leaf->ecx = 0;
-    leaf->edx = 0;
-  }
-}
-
 // leaf 0x00000008 reserved                          //
 // leaf 0x00000009 direct cache access not supported //
 
 // leaf 0x0000000A //
-void arrow_lake_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x0000000A - Architectural Performance Monitoring Leaf
-  leaf->eax = 0x0d300806;
-  leaf->ebx = 0x00000280;
-  leaf->ecx = 0x00000007;
-  leaf->edx = 0x00008603;
-
-  BX_INFO(("WARNING: Architectural Performance Monitoring is not implemented"));
-}
 
 // leaf 0x0000000C - reserved //
 // leaf 0x0000000D - XSAVE //
@@ -682,116 +357,10 @@ void arrow_lake_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
 // leaf 0x00000016 - Processor Frequency Information Leaf
 // leaf 0x00000017 - System-On-Chip Vendor Attribute Enumeration //
 
-// leaf 0x00000018
-void arrow_lake_t::get_std_cpuid_leaf_18(Bit32u subfunction, cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000018 - Deterministic Address Translation Parameters
-  switch(subfunction) {
-  case 0:
-    leaf->eax = 0x00000008;
-    leaf->ebx = 0x00000000;
-    leaf->ecx = 0x00000000;
-    leaf->edx = 0x00000000;
-    return;
-  case 1:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x00080001;
-    leaf->ecx = 0x00000020;
-    leaf->edx = 0x00004022;
-    return;
-  case 2:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x00080006;
-    leaf->ecx = 0x00000004;
-    leaf->edx = 0x00004022;
-    return;
-  case 3:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x0010000f;
-    leaf->ecx = 0x00000001;
-    leaf->edx = 0x00004125;
-    return;
-  case 4:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x00080001;
-    leaf->ecx = 0x00000010;
-    leaf->edx = 0x00004024;
-    return;
-  case 5:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x00040006;
-    leaf->ecx = 0x00000008;
-    leaf->edx = 0x00004024;
-    return;
-  case 6:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x00080008;
-    leaf->ecx = 0x00000001;
-    leaf->edx = 0x00004124;
-    return;
-  case 7:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x00080007;
-    leaf->ecx = 0x00000080;
-    leaf->edx = 0x00004043;
-    return;
-  case 8:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x00080009;
-    leaf->ecx = 0x00000080;
-    leaf->edx = 0x00004043;
-    return;
-  default:
-    leaf->eax = 0;
-    leaf->ebx = 0;
-    leaf->ecx = 0;
-    leaf->edx = 0;
-  }
-}
-
+// leaf 0x00000018 - Deterministic Address Translation Parameters //
 // leaf 0x80000000 //
 
 // leaf 0x80000001 //
-void arrow_lake_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
-{
-  // EAX:       CPU Version Information (reserved for Intel)
-  leaf->eax = 0;
-
-  // EBX:       Brand ID (reserved for Intel)
-  leaf->ebx = 0;
-
-  // ECX:
-  // * [0:0]   LAHF/SAHF instructions support in 64-bit mode
-  //   [1:1]   CMP_Legacy: Core multi-processing legacy mode (AMD)
-  //   [2:2]   SVM: Secure Virtual Machine (AMD)
-  //   [3:3]   Extended APIC Space
-  //   [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
-  // * [5:5]   LZCNT: LZCNT instruction support
-  //   [6:6]   SSE4A: SSE4A Instructions support (deprecated?)
-  //   [7:7]   Misaligned SSE support
-  // * [8:8]   PREFETCHW: PREFETCHW instruction support
-  //   [9:9]   OSVW: OS visible workarounds (AMD)
-  //   [11:10] reserved
-  //   [12:12] SKINIT support
-  //   [13:13] WDT: Watchdog timer support
-  //   [31:14] reserved
-  leaf->ecx = get_ext_cpuid_leaf_1_ecx(BX_CPUID_EXT1_ECX_PREFETCHW);
-
-  // EDX:
-  //    [10:0] Reserved for Intel
-  // * [11:11] SYSCALL/SYSRET support
-  //   [19:12] Reserved for Intel
-  // * [20:20] No-Execute page protection
-  //   [25:21] Reserved
-  // * [26:26] 1G paging support
-  // * [27:27] Support RDTSCP Instruction
-  //   [28:28] Reserved
-  // * [29:29] Long Mode
-  //   [30:30] AMD 3DNow! Extensions
-  //   [31:31] AMD 3DNow! Instructions
-  leaf->edx = get_ext_cpuid_leaf_1_edx_intel();
-}
-
 // leaf 0x80000002 //
 // leaf 0x80000003 //
 // leaf 0x80000004 //
@@ -799,11 +368,6 @@ void arrow_lake_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000006 //
 // leaf 0x80000007 - Advanced Power Management //
 // leaf 0x80000008 //
-
-void arrow_lake_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(max_std_leaf, max_ext_leaf);
-}
 
 bx_cpuid_t *create_arrow_lake_cpuid(BX_CPU_C *cpu) { return new arrow_lake_t(cpu); }
 

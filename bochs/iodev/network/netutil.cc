@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2021  The Bochs Project
+//  Copyright (C) 2004-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -100,7 +100,7 @@ Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len)
 #define ARP_OPCODE_REV_REQUEST 3
 #define ARP_OPCODE_REV_REPLY   4
 
-#define ICMP_ECHO_PACKET_MAX  128
+#define ICMP_ECHO_PACKET_MAX  BX_PACKET_BUFSIZE
 
 #define INET_PORT_FTPDATA 20
 #define INET_PORT_FTP 21
@@ -176,6 +176,9 @@ Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len)
 #define TFTP_DEFAULT_TIMEOUT   5
 
 #define TFTP_BUFFER_SIZE     1432
+
+// DNS server: maximum query size over UDP (RFC 1035)
+#define DNS_QUERY_MAX 512
 
 static const Bit8u mcast_ipv6_mac_prefix[2] = {0x33,0x33};
 
@@ -458,6 +461,10 @@ void vnet_server_c::process_ipv4(Bit8u clientid, const Bit8u *buf, unsigned len)
   }
 
   total_len = ntohs(iphdr->total_len);
+  if ((total_len < l3header_len) || (total_len > (len - 14U))) {
+    BX_ERROR(("ip: invalid total length %u (frame length %u)", total_len, len));
+    return;
+  }
 
   if (!memcmp(&iphdr->dst_addr, dhcp->srv_ipv4addr[VNET_DNS], 4)) {
     srv_id = VNET_DNS;
@@ -703,6 +710,10 @@ void vnet_server_c::process_tcpipv4(Bit8u clientid, Bit8u srv_id,
   tcp_seq_num = ntohl(tcphdr->seq_num);
   tcp_ack_num = ntohl(tcphdr->ack_num);
   tcphdr_len = tcphdr->data_offset << 2;
+  if ((tcphdr_len < 20) || (tcphdr_len > l4pkt_len)) {
+    BX_ERROR(("tcp: invalid header length %u", tcphdr_len));
+    return;
+  }
   tcp_window = ntohs(tcphdr->window);
   tcpdata_len = l4pkt_len - tcphdr_len;
   tcp_data = (Bit8u*)tcphdr + tcphdr_len;
@@ -714,12 +725,21 @@ void vnet_server_c::process_tcpipv4(Bit8u clientid, Bit8u srv_id,
       if (option < 2) {
         optlen = 1;
       } else {
+        if ((unsigned)(20+i+1) >= tcphdr_len) {
+          BX_ERROR(("TCP: option %d truncated", option));
+          break;
+        }
         optlen = l4pkt[20+i+1];
+        // a length below 2 would never advance, the option must fit in the header
+        if ((optlen < 2) || ((unsigned)(20+i+optlen) > tcphdr_len)) {
+          BX_ERROR(("TCP: option %d with invalid length %d", option, optlen));
+          break;
+        }
       }
       if (option == 0) { // EOL
         break;
       }
-      if (option == 2) {
+      if ((option == 2) && (optlen == 4)) {
         value16 = get_net2(&l4pkt[20+i+2]);
         if (value16 != 1460) {
           BX_ERROR(("TCP: MSS = %d (unhandled)", value16));
@@ -818,8 +838,7 @@ void vnet_server_c::process_tcpipv4(Bit8u clientid, Bit8u srv_id,
     tcprhdr->window = 0;
     BX_ERROR(("tcp - port %u unhandled or in use", tcp_dst_port));
   }
-  host_to_guest_tcpipv4(clientid, srv_id, tcp_dst_port, tcp_src_port, replybuf, 0,
-                        tcprhdr_len);
+  host_to_guest_tcpipv4(clientid, srv_id, tcp_dst_port, tcp_src_port, replybuf, 0, tcprhdr_len);
 }
 
 void vnet_server_c::host_to_guest_tcpipv4(Bit8u clientid, Bit8u srv_id,
@@ -929,6 +948,36 @@ void vnet_server_c::tcpipv4_send_fin(tcp_conn_t *tcp_conn, bool host_fin)
   tcp_conn->host_port_fin = host_fin;
   host_to_guest_tcpipv4(tcp_conn->clientid, VNET_MISC, tcp_conn->dst_port,
                         tcp_conn->src_port, replybuf, 0, tcphdr_len);
+}
+
+// TFTP / FTP: a path from the guest must stay inside the server root, so
+// no path component may consist only of dots (two or more) and spaces
+// (Windows drops trailing dots and spaces) and no drive letter on Windows
+static bool vnet_path_is_safe(const char *path)
+{
+  const char *p = path;
+  unsigned dots;
+  bool only_dots;
+
+  if (path == NULL) return 1;
+  while (*p != 0) {
+    dots = 0;
+    only_dots = 1;
+    while ((*p != 0) && (*p != '/') && (*p != '\\')) {
+      if (*p == '.') {
+        dots++;
+      } else if (*p != ' ') {
+        only_dots = 0;
+      }
+#ifdef WIN32
+      if (*p == ':') return 0;
+#endif
+      p++;
+    }
+    if (only_dots && (dots >= 2)) return 0;
+    while ((*p == '/') || (*p == '\\')) p++;
+  }
+  return 1;
 }
 
 // FTP support
@@ -1127,16 +1176,24 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
       ftpcmd = new char[data_len + 1];
       memcpy(ftpcmd, data, data_len);
       ftpcmd[data_len] = 0;
-      cmdstr = strtok(ftpcmd, " \r");
-      arg = strtok(NULL, "\r");
-      if (arg[0] == '\n') arg++;
+      cmdstr = strtok(ftpcmd, " \r\n");
+      if (cmdstr == NULL) {
+        // empty line
+        delete [] ftpcmd;
+        return;
+      }
+      arg = strtok(NULL, "\r\n");
+      if (arg == NULL) {
+        // command without argument: use the empty string at the end of the buffer
+        arg = &ftpcmd[data_len];
+      }
       fs = (ftp_session_t*)tcpc_cmd->data;
       fs->cmdcode = ftp_get_command(cmdstr, fs->anonymous);
       if (fs->state == FTP_STATE_LOGIN) {
         if (fs->cmdcode == FTPCMD_USER) {
           fs->anonymous = !strcmp(arg, "anonymous");
           if (!strcmp(arg, "bochs") || fs->anonymous) {
-            sprintf(reply, "331 Password required for %s.", arg);
+            snprintf(reply, sizeof(reply), "331 Password required for %s.", arg);
             ftp_send_reply(tcpc_cmd, reply);
             fs->state = FTP_STATE_ASKPASS;
           } else {
@@ -1164,12 +1221,16 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
             BX_ERROR(("FTP data connection not found"));
           }
         }
-        switch (fs->cmdcode) {
+        if (!vnet_path_is_safe(arg)) {
+          ftp_send_reply(tcpc_cmd, "550 Access outside of the FTP root denied.");
+        } else switch (fs->cmdcode) {
           case FTPCMD_ABOR:
             if (fs->data_xfer_fd >= 0) {
               close(fs->data_xfer_fd);
               fs->data_xfer_fd = -1;
-              tcpipv4_send_fin(tcpc_data, 1);
+              if (tcpc_data != NULL) {
+                tcpipv4_send_fin(tcpc_data, 1);
+              }
               ftp_send_reply(tcpc_cmd, "426 Transfer aborted.");
               ftp_send_reply(tcpc_cmd, "226 Transfer abort complete.");
             } else {
@@ -1231,10 +1292,13 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
             break;
           case FTPCMD_MKD:
             if (!ftp_subdir_exists(tcpc_cmd, arg, tmp_path)) {
-              if (ftp_mkdir(tmp_path)) {
-                ftp_send_reply(tcpc_cmd, "257 New directory created.");
-              } else {
-                ftp_send_reply(tcpc_cmd, "550 Directory creation failed.");
+              // empty path: error already reported
+              if (tmp_path[0] != 0) {
+                if (ftp_mkdir(tmp_path)) {
+                  ftp_send_reply(tcpc_cmd, "257 New directory created.");
+                } else {
+                  ftp_send_reply(tcpc_cmd, "550 Directory creation failed.");
+                }
               }
             } else {
               ftp_send_reply(tcpc_cmd, "550 Directory already exists.");
@@ -1244,7 +1308,7 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
             ftp_send_reply(tcpc_cmd, "200 Command OK.");
             break;
           case FTPCMD_OPTS:
-            sprintf(reply, "501 Feature '%s' not supported.", arg);
+            snprintf(reply, sizeof(reply), "501 Feature '%s' not supported.", arg);
             ftp_send_reply(tcpc_cmd, reply);
             break;
           case FTPCMD_EPSV:
@@ -1267,7 +1331,7 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
             ftp_send_reply(tcpc_cmd, reply);
             break;
           case FTPCMD_PWD:
-            sprintf(reply, "257 \"%s\" is current directory.", fs->rel_path);
+            snprintf(reply, sizeof(reply), "257 \"%s\" is current directory.", fs->rel_path);
             ftp_send_reply(tcpc_cmd, reply);
             break;
           case FTPCMD_QUIT:
@@ -1296,6 +1360,9 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
             break;
           case FTPCMD_RNFR:
             if (ftp_file_exists(tcpc_cmd, arg, tmp_path, NULL)) {
+              if (fs->last_fname != NULL) {
+                delete [] fs->last_fname;
+              }
               fs->last_fname = new char[strlen(tmp_path)+1];
               strcpy(fs->last_fname, tmp_path);
               ftp_send_reply(tcpc_cmd, "350 File exists. Ready for new name.");
@@ -1333,24 +1400,24 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
             break;
           case FTPCMD_TYPE:
             if (!stricmp(arg, "A") || !stricmp(arg, "I")) {
-              sprintf(reply, "200 Type set to %s.", arg);
+              snprintf(reply, sizeof(reply), "200 Type set to %s.", arg);
               fs->ascii_mode = !stricmp(arg, "A");
             } else {
-              sprintf(reply, "501 Type %s not supported.", arg);
+              snprintf(reply, sizeof(reply), "501 Type %s not supported.", arg);
             }
             ftp_send_reply(tcpc_cmd, reply);
             break;
           case FTPCMD_EPRT:
           case FTPCMD_PORT:
-            sprintf(reply, "502 %s command not supported by server", cmdstr);
+            snprintf(reply, sizeof(reply), "502 %s command not supported by server", cmdstr);
             ftp_send_reply(tcpc_cmd, reply);
             break;
           case FTPCMD_NOPERM:
-            sprintf(reply, "550 %s operation not permitted.", cmdstr);
+            snprintf(reply, sizeof(reply), "550 %s operation not permitted.", cmdstr);
             ftp_send_reply(tcpc_cmd, reply);
             break;
           default:
-            sprintf(reply, "502 Command '%s' not implemented.", cmdstr);
+            snprintf(reply, sizeof(reply), "502 Command '%s' not implemented.", cmdstr);
             ftp_send_reply(tcpc_cmd, reply);
         }
       }
@@ -1360,8 +1427,9 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
     // FTP data port
     tcpc_data = tcp_conn;
     fs = ftp_find_cmd_session(tcpc_data->dst_port);
-    tcpc_cmd = tcp_find_connection(tcpc_data->clientid, fs->client_cmd_port,
-                                   INET_PORT_FTP);
+    if (fs != NULL) {
+      tcpc_cmd = tcp_find_connection(tcpc_data->clientid, fs->client_cmd_port, INET_PORT_FTP);
+    }
     if ((fs == NULL) || (tcpc_cmd == NULL)) {
       BX_ERROR(("FTP command connection not found"));
       return;
@@ -1374,7 +1442,7 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
         close(fs->data_xfer_fd);
         fs->data_xfer_fd = -1;
         if (fs->last_fname != NULL) {
-          sprintf(reply, "226 Transfer complete (unique file name %s).",
+          snprintf(reply, sizeof(reply), "226 Transfer complete (unique file name %s).",
                   fs->last_fname);
           ftp_send_reply(tcpc_cmd, reply);
           delete [] fs->last_fname;
@@ -1403,8 +1471,7 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
   }
 }
 
-bool vnet_server_c::ftp_file_exists(tcp_conn_t *tcpc_cmd, const char *arg,
-                                       char *path, unsigned *size)
+bool vnet_server_c::ftp_file_exists(tcp_conn_t *tcpc_cmd, const char *arg, char *path, unsigned *size)
 {
   ftp_session_t *fs = (ftp_session_t*)tcpc_cmd->data;
   bool exists = 0, notfile = 1;
@@ -1416,10 +1483,16 @@ bool vnet_server_c::ftp_file_exists(tcp_conn_t *tcpc_cmd, const char *arg,
     *size = 0;
   }
   if (arg != NULL) {
+    int len;
     if (arg[0] != '/') {
-      sprintf(path, "%s%s/%s", tftp_root, fs->rel_path, arg);
+      len = snprintf(path, BX_PATHNAME_LEN, "%s%s/%s", tftp_root, fs->rel_path, arg);
     } else {
-      sprintf(path, "%s%s", tftp_root, arg);
+      len = snprintf(path, BX_PATHNAME_LEN, "%s%s", tftp_root, arg);
+    }
+    if ((len < 0) || (len >= BX_PATHNAME_LEN)) {
+      path[0] = 0;
+      ftp_send_reply(tcpc_cmd, "550 Path too long.");
+      return 0;
     }
   }
 #ifdef WIN32
@@ -1481,19 +1554,28 @@ bool vnet_server_c::ftp_subdir_exists(tcp_conn_t *tcpc_cmd, const char *arg,
   DIR *dir;
 #endif
 
+  int len;
+
+  path[0] = 0;
   if (arg[0] != '/') {
     if (!strcmp(fs->rel_path, "/")) {
-      sprintf(relpath, "/%s", arg);
+      len = snprintf(relpath, sizeof(relpath), "/%s", arg);
     } else {
-      sprintf(relpath, "%s/%s", fs->rel_path, arg);
+      len = snprintf(relpath, sizeof(relpath), "%s/%s", fs->rel_path, arg);
     }
   } else {
-    strcpy(relpath, arg);
+    len = snprintf(relpath, sizeof(relpath), "%s", arg);
   }
-  if (!strcmp(relpath, "/")) {
-    strcpy(abspath, tftp_root);
-  } else {
-    sprintf(abspath, "%s%s", tftp_root, relpath);
+  if ((len >= 0) && (len < (int)sizeof(relpath))) {
+    if (!strcmp(relpath, "/")) {
+      len = snprintf(abspath, sizeof(abspath), "%s", tftp_root);
+    } else {
+      len = snprintf(abspath, sizeof(abspath), "%s%s", tftp_root, relpath);
+    }
+  }
+  if ((len < 0) || (len >= (int)sizeof(abspath))) {
+    ftp_send_reply(tcpc_cmd, "550 Path too long.");
+    return 0;
   }
 #ifndef WIN32
   dir = opendir(abspath);
@@ -1640,7 +1722,10 @@ void vnet_server_c::ftp_list_directory(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_da
   if (!strcmp(subdir, "/")) {
     strcpy(abspath, tftp_root);
   } else {
-    sprintf(abspath, "%s%s", tftp_root, subdir);
+    int len = snprintf(abspath, sizeof(abspath), "%s%s", tftp_root, subdir);
+    if ((len < 0) || (len >= (int)sizeof(abspath))) {
+      abspath[0] = 0; // too long: list nothing
+    }
   }
   strcpy(fs->dirlist_tmp, "dirlist.XXXXXX");
 #if BX_HAVE_MKSTEMP
@@ -1715,8 +1800,7 @@ void vnet_server_c::ftp_list_directory(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_da
               sprintf(tmptime, "%s %d %02d:%02d", month[systime.wMonth-1], systime.wDay,
                       systime.wHour, systime.wMinute);
             } else {
-              sprintf(tmptime, "%s %d %d", month[systime.wMonth-1], systime.wDay,
-                      systime.wYear);
+              sprintf(tmptime, "%s %d %d", month[systime.wMonth-1], systime.wDay, systime.wYear);
             }
             if (finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
               sprintf(linebuf, "drwxrwxr-x 1 ftp ftp %ld %s %s%c%c", 0, tmptime,
@@ -1742,20 +1826,30 @@ void vnet_server_c::ftp_list_directory(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_da
   ftp_send_data_prep(tcpc_cmd, tcpc_data, fs->dirlist_tmp, size);
 }
 
-void vnet_server_c::ftp_recv_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
-                                  const char *fname)
+void vnet_server_c::ftp_recv_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data, const char *fname)
 {
   char path[BX_PATHNAME_LEN], tmp_path[BX_PATHNAME_LEN+4], *cptr, reply[80];
   ftp_session_t *fs = (ftp_session_t*)tcpc_cmd->data;
   int fd = -1;
   bool exists;
-  Bit8u n = 1;
+  unsigned n = 1;
 
   exists = ftp_file_exists(tcpc_cmd, fname, path, NULL);
+  if (path[0] == 0) {
+    return; // path too long, error already reported
+  }
   if (exists && (fs->cmdcode == FTPCMD_STOU)) {
     do {
-      sprintf(tmp_path, "%s.%d", path, n++);
+      if (n > 999) {
+        ftp_send_reply(tcpc_cmd, "550 No unique file name available.");
+        return;
+      }
+      sprintf(tmp_path, "%s.%u", path, n++);
     } while (ftp_file_exists(tcpc_cmd, NULL, tmp_path, NULL));
+    if (strlen(tmp_path) >= BX_PATHNAME_LEN) {
+      ftp_send_reply(tcpc_cmd, "550 Path too long.");
+      return;
+    }
     strcpy(path, tmp_path);
     cptr = strrchr(path, '/');
     cptr++;
@@ -1798,11 +1892,10 @@ void vnet_server_c::ftp_get_filesize(tcp_conn_t *tcp_conn, const char *arg)
   char reply[20];
   unsigned size = 0;
 
+  // on failure ftp_file_exists() has already sent the error reply
   if (ftp_file_exists(tcp_conn, arg, path, &size)) {
-    sprintf(reply, "213 %d", size);
+    sprintf(reply, "213 %u", size);
     ftp_send_reply(tcp_conn, reply);
-  } else {
-    ftp_send_reply(tcp_conn, "550 File not found.");
   }
 }
 
@@ -2239,9 +2332,11 @@ tftp_session_t *tftp_new_session(Bit16u req_tid, bool mode, const char *tpath, c
   s->options = 0;
   s->blksize_val = TFTP_DEFAULT_BLKSIZE;
   s->timeout_val = TFTP_DEFAULT_TIMEOUT;
+  s->block_nr = 0;
   s->next = tftp_sessions;
   tftp_sessions = s;
-  if ((strlen(tname) > 0) && ((strlen(tpath) + strlen(tname)) < BX_PATHNAME_LEN)) {
+  if ((strlen(tname) > 0) && ((strlen(tpath) + 1 + strlen(tname)) < BX_PATHNAME_LEN) &&
+      vnet_path_is_safe(tname)) {
     sprintf(s->filename, "%s/%s", tpath, tname);
   } else {
     s->filename[0] = 0;
@@ -2347,6 +2442,7 @@ int tftp_send_data(Bit8u *buffer, unsigned block_nr, tftp_session_t *s)
 
   put_net2(buffer, TFTP_DATA);
   put_net2(buffer + 2, block_nr);
+  s->block_nr = block_nr;
   if (rd < (int)s->blksize_val) {
     tftp_remove_session(s);
   } else {
@@ -2389,28 +2485,39 @@ int tftp_send_optack(Bit8u *buffer, tftp_session_t *s)
 void vnet_server_c::tftp_parse_options(const char *mode, const Bit8u *data,
                                        unsigned data_len, tftp_session_t *s)
 {
-  while (mode < (const char*)data + data_len) {
-    if (memcmp(mode, "octet\0", 6) == 0) {
+  const char *end = (const char*)data + data_len;
+
+  // the request ends with a NUL byte (checked by the caller), so strlen()
+  // and atoi() stay inside the packet
+  while (mode < end) {
+    size_t left = end - mode;
+    if ((left >= 6) && (memcmp(mode, "octet\0", 6) == 0)) {
       s->options |= TFTP_OPTION_OCTET;
       mode += 6;
-    } else if (memcmp(mode, "tsize\0", 6) == 0) {
+    } else if ((left >= 6) && (memcmp(mode, "tsize\0", 6) == 0)) {
       s->options |= TFTP_OPTION_TSIZE;             // size needed
       mode += 6;
       if (s->iswrite) {
         s->tsize_val = atoi(mode);
       }
       mode += strlen(mode)+1;
-    } else if (memcmp(mode, "blksize\0", 8) == 0) {
+    } else if ((left >= 8) && (memcmp(mode, "blksize\0", 8) == 0)) {
       s->options |= TFTP_OPTION_BLKSIZE;
       mode += 8;
       s->blksize_val = atoi(mode);
-      if (s->blksize_val > TFTP_BUFFER_SIZE) {
+      if (s->blksize_val < 8) {
+        // RFC 2348: valid values are 8 and up - ignore the option
+        BX_ERROR(("tftp req: blksize value %d not valid - option ignored",
+                  s->blksize_val));
+        s->options &= ~TFTP_OPTION_BLKSIZE;
+        s->blksize_val = TFTP_DEFAULT_BLKSIZE;
+      } else if (s->blksize_val > TFTP_BUFFER_SIZE) {
         BX_ERROR(("tftp req: blksize value %d not supported - using %d instead",
                   s->blksize_val, TFTP_BUFFER_SIZE));
         s->blksize_val = TFTP_BUFFER_SIZE;
       }
       mode += strlen(mode)+1;
-    } else if (memcmp(mode, "timeout\0", 8) == 0) {
+    } else if ((left >= 8) && (memcmp(mode, "timeout\0", 8) == 0)) {
       s->options |= TFTP_OPTION_TIMEOUT;
       mode += 8;
       s->timeout_val = atoi(mode);
@@ -2446,6 +2553,11 @@ int vnet_server_c::udpipv4_tftp_handler_ns(const Bit8u *ipheader,
   tftp_session_t *s;
   char msg[BX_PATHNAME_LEN + 16];
 
+  // opcode + 2 bytes is the shortest valid TFTP packet
+  if (data_len < 4) {
+    BX_ERROR(("tftp: packet too short (%u bytes)", data_len));
+    return 0;
+  }
   tftp_timeout_check();
   s = tftp_find_session(req_tid);
   switch (get_net2(data)) {
@@ -2453,6 +2565,9 @@ int vnet_server_c::udpipv4_tftp_handler_ns(const Bit8u *ipheader,
       {
         if (s != NULL) {
           tftp_remove_session(s);
+        }
+        if (data[data_len - 1] != 0) {
+          return tftp_send_error(reply, 4, "Illegal request", NULL);
         }
         strncpy((char*)reply, (const char*)data + 2, data_len - 2);
         reply[data_len - 4] = 0;
@@ -2498,6 +2613,9 @@ int vnet_server_c::udpipv4_tftp_handler_ns(const Bit8u *ipheader,
         if (s != NULL) {
           tftp_remove_session(s);
         }
+        if (data[data_len - 1] != 0) {
+          return tftp_send_error(reply, 4, "Illegal request", NULL);
+        }
         strncpy((char*)reply, (const char*)data + 2, data_len - 2);
         reply[data_len - 4] = 0;
 
@@ -2538,20 +2656,24 @@ int vnet_server_c::udpipv4_tftp_handler_ns(const Bit8u *ipheader,
       if (s != NULL) {
         if (s->iswrite == 1) {
           block_nr = get_net2(data + 2);
-          strncpy((char*)reply, (const char*)data + 4, data_len - 4);
           tftp_len = data_len - 4;
-          reply[tftp_len] = 0;
+          if (block_nr == (s->block_nr & 0xffff)) {
+            // retransmission of the block written last: acknowledge again
+            tftp_update_timestamp(s);
+            return tftp_send_ack(reply, block_nr);
+          }
+          if (block_nr != ((s->block_nr + 1) & 0xffff)) {
+            return tftp_send_error(reply, 4, "Illegal request", s);
+          }
           if (tftp_len <= s->blksize_val) {
+            // blocks arrive in order, so appending is correct
             fp = fopen(s->filename, "ab");
             if (!fp) {
               return tftp_send_error(reply, 2, "Access violation", s);
             }
-            if (fseek(fp, (block_nr - 1) * TFTP_BUFFER_SIZE, SEEK_SET) < 0) {
-              fclose(fp);
-              return tftp_send_error(reply, 3, "Block not seekable", s);
-            }
-            fwrite(reply, 1, tftp_len, fp);
+            fwrite(data + 4, 1, tftp_len, fp);
             fclose(fp);
+            s->block_nr++;
             if (tftp_len < s->blksize_val) {
               tftp_remove_session(s);
             } else {
@@ -2572,7 +2694,15 @@ int vnet_server_c::udpipv4_tftp_handler_ns(const Bit8u *ipheader,
     case TFTP_ACK:
       if (s != NULL) {
         if (s->iswrite == 0) {
-          return tftp_send_data(reply, get_net2(data + 2) + 1, s);
+          // the block number is 16-bit and wraps, track it in the session
+          block_nr = get_net2(data + 2);
+          if (block_nr == (s->block_nr & 0xffff)) {
+            return tftp_send_data(reply, s->block_nr + 1, s);
+          } else if (block_nr == ((s->block_nr - 1) & 0xffff)) {
+            // the last data block was lost: send it again
+            return tftp_send_data(reply, s->block_nr, s);
+          }
+          return 0;
         } else {
           return tftp_send_error(reply, 4, "Illegal request", s);
         }
@@ -2604,12 +2734,16 @@ int vnet_server_c::udpipv4_dns_handler_ns(const Bit8u *ipheader,
     const Bit8u *data, unsigned data_len, Bit8u *reply)
 {
   char host[256], suffix[16];
-  Bit8u len1, p1, p2;
+  Bit8u len1;
+  unsigned p1, p2;
   Bit8u ipaddr[4];
   Bit16u val16[6], qtype, qclass;
   bool host_found = 0;
   int i, n, rlen = 0, tmpval[4];
 
+  // the reply (query + answer) must fit into the UDP reply buffer
+  if ((data_len < 12) || (data_len > DNS_QUERY_MAX))
+    return 0;
   for (i = 0; i < 6; i++) {
     val16[i] = get_net2(&data[i * 2]);
   }
@@ -2617,8 +2751,16 @@ int vnet_server_c::udpipv4_dns_handler_ns(const Bit8u *ipheader,
     return 0;
   p1 = 12;
   p2 = 0;
-  while (data[p1] != 0) {
+  while (1) {
+    if (p1 >= data_len)
+      return 0;
     len1 = data[p1];
+    if (len1 == 0)
+      break;
+    // labels are up to 63 bytes (no compression in queries), name up to 255
+    if ((len1 > 63) || ((p1 + 1 + len1) > data_len) ||
+        ((p2 + len1 + 1) >= sizeof(host)))
+      return 0;
     if (p2 > 0) {
       host[p2++] = '.';
     }
@@ -2627,6 +2769,8 @@ int vnet_server_c::udpipv4_dns_handler_ns(const Bit8u *ipheader,
     p1 += (len1 + 1);
   };
   host[p2] = 0;
+  if ((p1 + 5) > data_len)
+    return 0;
   qtype = get_net2(&data[p1 + 1]);
   qclass = get_net2(&data[p1 + 3]);
   if (((qtype != 1) && (qtype != 12)) || (qclass != 1)) {
@@ -2635,7 +2779,7 @@ int vnet_server_c::udpipv4_dns_handler_ns(const Bit8u *ipheader,
     return data_len;
   }
   if (qtype == 12) {
-    n = sscanf(host, "%d.%d.%d.%d.%s", &tmpval[3], &tmpval[2], &tmpval[1], &tmpval[0], suffix);
+    n = sscanf(host, "%d.%d.%d.%d.%15s", &tmpval[3], &tmpval[2], &tmpval[1], &tmpval[0], suffix);
     if ((n == 5) && (!strcmp(suffix, "in-addr.arpa"))) {
       for (i = 0; i < 4; i++) {
         ipaddr[i] = (Bit8u)tmpval[i];

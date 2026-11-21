@@ -533,7 +533,7 @@ void bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
           if ((dcc & 0x06) == 0x06) {
             BX_INFO(("CRA: divider chain RESET"));
           } else if (dcc > 0x02) {
-            BX_PANIC(("CRA: divider chain control 0x%02x", dcc));
+            BX_ERROR(("CRA: divider chain test mode 0x%02x not supported", dcc));
           }
           BX_CMOS_THIS s.reg[REG_STAT_A] &= 0x80;
           BX_CMOS_THIS s.reg[REG_STAT_A] |= (value & 0x7f);

@@ -1307,8 +1307,11 @@ Bit32u bx_svga_cirrus_c::svga_read(Bit32u address, unsigned io_len)
     return value;
   }
 
-  if (io_len != 1) {
-    BX_PANIC(("SVGA read: io_len != 1"));
+  if (io_len != 1) {   // a word at an odd port, or a dword: byte cycles, low byte first
+    Bit32u value = 0;
+    for (unsigned i = 0; i < io_len; i++)
+      value |= ((Bit32u)SVGA_READ(address + i, 1) & 0xff) << (8 * i);
+    return value;
   }
 
   switch (address) {
@@ -1397,8 +1400,10 @@ void bx_svga_cirrus_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
     return;
   }
 
-  if (io_len != 1) {
-    BX_PANIC(("SVGA write: io_len != 1"));
+  if (io_len != 1) {   // a word at an odd port, or a dword: byte cycles, low byte first
+    for (unsigned i = 0; i < io_len; i++)
+      SVGA_WRITE(address + i, (value >> (8 * i)) & 0xff, 1);
+    return;
   }
 
   switch (address) {

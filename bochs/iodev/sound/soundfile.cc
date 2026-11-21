@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -98,6 +98,7 @@ int bx_soundlow_waveout_file_c::openwaveoutput(const char *wavedev)
     wavefile = fopen(wavedev, "wb");
     if (wavefile == NULL) {
       BX_ERROR(("Failed to open WAVE output file %s.", wavedev));
+      return BX_SOUNDLOW_ERR;
     } else if (type == BX_SOUNDFILE_VOC) {
       VOC_init_file();
     } else if (type == BX_SOUNDFILE_WAV) {
@@ -125,7 +126,8 @@ int bx_soundlow_waveout_file_c::set_pcm_params(bx_pcm_param_t *param)
 int bx_soundlow_waveout_file_c::output(int length, Bit8u data[])
 {
   Bit8u temparray[12] =
-   { (Bit8u)(real_pcm_param.samplerate & 0xff), (Bit8u)(real_pcm_param.samplerate >> 8), 0, 0,
+   { (Bit8u)(real_pcm_param.samplerate & 0xff), (Bit8u)(real_pcm_param.samplerate >> 8),
+     (Bit8u)(real_pcm_param.samplerate >> 16), (Bit8u)(real_pcm_param.samplerate >> 24),
      (Bit8u)real_pcm_param.bits, real_pcm_param.channels, 0, 0, 0, 0, 0, 0 };
 
   if (wavefile != NULL) {
@@ -305,8 +307,9 @@ int bx_soundlow_midiout_file_c::sendmidicommand(int delta, int command, int leng
       writedeltatime(delta);
     }
     fputc(command, midifile);
-    if ((command == 0xf0) ||
-        (command == 0xf7))    // write event length for sysex/meta events
+    if ((type == BX_SOUNDFILE_MID) &&
+        ((command == 0xf0) ||
+         (command == 0xf7)))  // write event length for sysex/meta events
       writedeltatime(length);
 
     fwrite(data, 1, length, midifile);

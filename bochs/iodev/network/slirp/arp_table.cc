@@ -35,7 +35,7 @@ void arp_table_add(Slirp *slirp, uint32_t ip_addr,
     const uint32_t broadcast_addr =
         ~slirp->vnetwork_mask.s_addr | slirp->vnetwork_addr.s_addr;
     ArpTable *arptbl = &slirp->arp_table;
-    int i;
+    size_t i;
     char ethaddr_str[ETH_ADDRSTRLEN];
     char addr[INET_ADDRSTRLEN];
 
@@ -45,8 +45,11 @@ void arp_table_add(Slirp *slirp, uint32_t ip_addr,
     DEBUG_ARG("hw addr = %s", slirp_ether_ntoa(ethaddr, ethaddr_str,
                                                sizeof(ethaddr_str)));
 
-    if (ip_addr == 0 || ip_addr == 0xffffffff || ip_addr == broadcast_addr) {
-        /* Do not register broadcast addresses */
+    if (ip_addr == 0 || ip_addr == 0xffffffff || ip_addr == broadcast_addr
+        || IN_MULTICAST(ntohl(ip_addr))
+        || ip_addr == slirp->vhost_addr.s_addr
+        || ip_addr == slirp->vnameserver_addr.s_addr) {
+        /* Do not register broadcast, multicast, or our addresses */
         return;
     }
 
@@ -71,7 +74,7 @@ bool arp_table_search(Slirp *slirp, uint32_t ip_addr,
     const uint32_t broadcast_addr =
         ~slirp->vnetwork_mask.s_addr | slirp->vnetwork_addr.s_addr;
     ArpTable *arptbl = &slirp->arp_table;
-    int i;
+    size_t i;
     char ethaddr_str[ETH_ADDRSTRLEN];
     char addr[INET_ADDRSTRLEN];
 

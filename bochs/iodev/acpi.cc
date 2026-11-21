@@ -405,6 +405,7 @@ Bit32u bx_acpi_ctrl_c::read(Bit32u address, unsigned io_len)
         ((BX_ACPI_THIS pci_conf[0xd2] & 0x01) == 0)) {
       return value;
     }
+    reg = address & 0x0f; // SM base is 16 byte aligned
     switch (reg) {
       case 0x00:
         value = BX_ACPI_THIS s.smbus.stat;
@@ -531,27 +532,28 @@ void bx_acpi_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
         ((BX_ACPI_THIS pci_conf[0xd2] & 0x01) == 0)) {
       return;
     }
+    reg = address & 0x0f; // SM base is 16 byte aligned
     BX_DEBUG(("write to SMBus register 0x%02x, value = 0x%04x", reg, value));
     switch (reg) {
-      case 0x00:
-        BX_ACPI_THIS s.smbus.stat = 0;
+      case 0x00: // status bits are write 1 to clear
+        BX_ACPI_THIS s.smbus.stat &= ~(Bit8u)value;
         BX_ACPI_THIS s.smbus.index = 0;
         break;
       case 0x02:
-        BX_ACPI_THIS s.smbus.ctl = 0;
+        BX_ACPI_THIS s.smbus.ctl = (Bit8u)value;
         // TODO: execute SMBus command
         break;
       case 0x03:
-        BX_ACPI_THIS s.smbus.cmd = 0;
+        BX_ACPI_THIS s.smbus.cmd = (Bit8u)value;
         break;
       case 0x04:
-        BX_ACPI_THIS s.smbus.addr = 0;
+        BX_ACPI_THIS s.smbus.addr = (Bit8u)value;
         break;
       case 0x05:
-        BX_ACPI_THIS s.smbus.data0 = 0;
+        BX_ACPI_THIS s.smbus.data0 = (Bit8u)value;
         break;
       case 0x06:
-        BX_ACPI_THIS s.smbus.data1 = 0;
+        BX_ACPI_THIS s.smbus.data1 = (Bit8u)value;
         break;
       case 0x07:
         BX_ACPI_THIS s.smbus.data[BX_ACPI_THIS s.smbus.index++] = value;

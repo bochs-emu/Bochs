@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2021  The Bochs Project
+//  Copyright (C) 2004-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -184,6 +184,7 @@ typedef struct tftp_session {
   unsigned blksize_val;
   unsigned timeout_val;
   unsigned timestamp;
+  unsigned block_nr;  // last data block sent (read) or written (write)
   struct tftp_session *next;
 } tftp_session_t;
 

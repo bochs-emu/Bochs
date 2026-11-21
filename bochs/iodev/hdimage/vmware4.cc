@@ -16,7 +16,7 @@
  * Copyright (C) 2004 Fabrice Bellard
  * Copyright (C) 2005 Filip Navara
  *
- * Copyright (C) 2006-2021  The Bochs Project
+ * Copyright (C) 2006-2026  The Bochs Project
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -89,8 +89,12 @@ vmware4_image_t::vmware4_image_t()
   : file_descriptor(-1),
   tlb(0),
   tlb_offset(INVALID_OFFSET),
+  tlb_file_offset(0),
   current_offset(INVALID_OFFSET),
-  is_dirty(0)
+  is_dirty(0),
+  gd(0),
+  gd_copy(0),
+  gd_count(0)
 {
   if (sizeof(_VM4_Header) != 77) {
     BX_FATAL(("system error: invalid header structure size"));
@@ -123,6 +127,22 @@ int vmware4_image_t::open(const char* _pathname, int flags)
   if (tlb == 0)
     BX_PANIC(("unable to allocate " FMT_LL "d bytes for vmware4 image's tlb", header.tlb_size_sectors * SECTOR_SIZE));
 
+  // cache both grain directories, they are not modified at runtime
+  Bit64u grains_per_gd_entry = header.tlb_size_sectors * header.slb_count;
+  gd_count = (Bit32u)((header.total_sectors + grains_per_gd_entry - 1) / grains_per_gd_entry);
+  gd = new Bit32u[gd_count];
+  gd_copy = new Bit32u[gd_count];
+  int gd_size = (int)(gd_count * sizeof(Bit32u));
+  if ((bx_read_image(file_descriptor, header.flb_offset_sectors * SECTOR_SIZE, gd, gd_size) != gd_size) ||
+      (bx_read_image(file_descriptor, header.flb_copy_offset_sectors * SECTOR_SIZE, gd_copy, gd_size) != gd_size)) {
+    BX_PANIC(("unable to read vmware4 grain directory from file '%s'", pathname));
+    return -1;
+  }
+  for (Bit32u i = 0; i < gd_count; i++) {
+    gd[i] = dtoh32(gd[i]);
+    gd_copy[i] = dtoh32(gd_copy[i]);
+  }
+
   tlb_offset = INVALID_OFFSET;
   current_offset = 0;
   is_dirty = 0;
@@ -150,6 +170,8 @@ void vmware4_image_t::close()
 
   flush();
   delete [] tlb; tlb = 0;
+  delete [] gd; gd = 0;
+  delete [] gd_copy; gd_copy = 0;
 
   bx_close_image(file_descriptor, pathname);
   file_descriptor = -1;
@@ -315,8 +337,12 @@ off_t vmware4_image_t::perform_seek()
   Bit32u slb_index = (Bit32u)(index % header.slb_count);
   Bit32u flb_index = (Bit32u)(index / header.slb_count);
 
-  Bit32u slb_sector = read_block_index(header.flb_offset_sectors, flb_index);
-  Bit32u slb_copy_sector = read_block_index(header.flb_copy_offset_sectors, flb_index);
+  if (flb_index >= gd_count) {
+    BX_DEBUG(("vmware4 seek beyond end of disk"));
+    return INVALID_OFFSET;
+  }
+  Bit32u slb_sector = gd[flb_index];
+  Bit32u slb_copy_sector = gd_copy[flb_index];
 
   if (slb_sector == 0 && slb_copy_sector == 0) {
     BX_DEBUG(("loaded vmware4 disk image requires un-implemented feature"));
@@ -338,18 +364,15 @@ off_t vmware4_image_t::perform_seek()
     // ftruncate but it is not portable.
     //
     off_t eof = ((::lseek(file_descriptor, 0, SEEK_END) + SECTOR_SIZE - 1) / SECTOR_SIZE) * SECTOR_SIZE;
-    ::write(file_descriptor, tlb, (unsigned)header.tlb_size_sectors * SECTOR_SIZE);
+    bx_write_image(file_descriptor, eof, tlb, (int)(header.tlb_size_sectors * SECTOR_SIZE));
     tlb_sector = (Bit32u)(eof / SECTOR_SIZE);
 
     write_block_index(slb_sector, slb_index, tlb_sector);
     write_block_index(slb_copy_sector, slb_index, tlb_sector);
-
-    ::lseek(file_descriptor, eof, SEEK_SET);
   } else {
-    ::lseek(file_descriptor, (off_t)tlb_sector * SECTOR_SIZE, SEEK_SET);
-    ::read(file_descriptor, tlb, (unsigned)header.tlb_size_sectors * SECTOR_SIZE);
-    ::lseek(file_descriptor, (off_t)tlb_sector * SECTOR_SIZE, SEEK_SET);
+    bx_read_image(file_descriptor, (off_t)tlb_sector * SECTOR_SIZE, tlb, (int)(header.tlb_size_sectors * SECTOR_SIZE));
   }
+  tlb_file_offset = (off_t)tlb_sector * SECTOR_SIZE;
 
   return (header.tlb_size_sectors * SECTOR_SIZE) - (current_offset - tlb_offset);
 }
@@ -360,10 +383,9 @@ void vmware4_image_t::flush()
     return;
 
   //
-  // Write dirty sectors to disk first. Assume that the file is already at the
-  // position for the current tlb.
+  // Write dirty sectors of the current tlb to disk.
   //
-  ::write(file_descriptor, tlb, (unsigned)header.tlb_size_sectors * SECTOR_SIZE);
+  bx_write_image(file_descriptor, tlb_file_offset, tlb, (int)(header.tlb_size_sectors * SECTOR_SIZE));
   is_dirty = 0;
 }
 
@@ -503,6 +525,7 @@ int vmware4_image_t::create_image(const char *pathname, Bit64u size)
 #else
 bool vmware4_image_t::save_state(const char *backup_fname)
 {
+  flush();
   return hdimage_backup_file(file_descriptor, backup_fname);
 }
 

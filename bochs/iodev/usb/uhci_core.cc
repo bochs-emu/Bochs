@@ -181,6 +181,8 @@ void bx_uhci_core_c::reset_uhci(unsigned type)
     usb_cancel_packet(&packets->packet);
     remove_async_packet(&packets, packets);
   }
+
+  update_irq();
 }
 
 void bx_uhci_core_c::uhci_register_state(const char *pname, bx_list_c *parent)
@@ -445,9 +447,9 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_DEBUG(("Schedule bit clear in Command register"));
       }
 
-      // If Debug mode set, panic.  Not implemented
+      // Debug mode is not implemented (the bit is ignored)
       if (hub.usb_command.debug)
-        BX_PANIC(("Software set DEBUG bit in Command register. Not implemented"));
+        BX_ERROR(("Software set DEBUG bit in Command register. Not implemented"));
 
       break;
 
@@ -795,6 +797,15 @@ void bx_uhci_core_c::uhci_timer(void)
             SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_COMMAND, 0, address, USB_LPARAM_FLAG_AFTER);
           }
 #endif
+          // if the TD is still active, the device NAKed it. Leave the queue's
+          //  element pointer on this TD (so it is tried again in a later frame)
+          //  and move on to the next queue (or the next item if not in a queue)
+          if (td.dword1 & (1<<23)) {
+            item = (queue_addr != 0) ? queue.horz : td.dword0;
+            queue_addr = 0;
+            continue;
+          }
+
           // we processed another td within this queue line
           td_count++;
           bytes_processed += r_actlen;

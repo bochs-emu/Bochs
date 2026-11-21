@@ -96,6 +96,15 @@ bx_fw_cfg_c::bx_fw_cfg_c()
   put("fw_cfg", "FWCFG");
   file_dir = NULL;
   file_count = 0;
+  // entries must be valid even if init() returns early (device disabled)
+  for (int i = 0; i < FW_CFG_MAX_ENTRY; i++) {
+    entries[i].data = NULL;
+    entries[i].len = 0;
+  }
+  for (int i = 0; i < FW_CFG_ARCH_MAX_ENTRY; i++) {
+    arch_entries[i].data = NULL;
+    arch_entries[i].len = 0;
+  }
 }
 
 // Destructor
@@ -108,6 +117,12 @@ bx_fw_cfg_c::~bx_fw_cfg_c()
         delete [] entries[i].data;
       }
       entries[i].data = NULL;
+    }
+  }
+  for (int i = 0; i < FW_CFG_ARCH_MAX_ENTRY; i++) {
+    if (arch_entries[i].data != NULL) {
+      delete [] arch_entries[i].data;
+      arch_entries[i].data = NULL;
     }
   }
   if (file_dir != NULL) {
@@ -131,12 +146,6 @@ void bx_fw_cfg_c::init(void)
   if (SIM->get_param_enum(BXPN_PCI_CHIPSET)->get() != BX_PCI_CHIPSET_I440FX) {
     BX_PANIC(("The fw_cfg device only supports the i440FX chipset"));
   }
-  // Initialize all entries
-  for (int i = 0; i < FW_CFG_MAX_ENTRY; i++) {
-    entries[i].data = NULL;
-    entries[i].len = 0;
-  }
-
   // Register I/O ports (0x510 = selector, 0x511 = data)
   DEV_register_ioread_handler(this, read_handler, FW_CFG_IO_BASE, "fw_cfg selector", 1);
   DEV_register_iowrite_handler(this, write_handler, FW_CFG_IO_BASE, "fw_cfg selector", 3);
@@ -246,25 +255,38 @@ void bx_fw_cfg_c::reset(unsigned type)
   first_reset = false;
 }
 
+// Map a selector key to its entry. Arch-local keys (FW_CFG_ARCH_LOCAL set)
+// have their own table, so they do not alias the standard keys.
+bx_fw_cfg_entry_t *bx_fw_cfg_c::get_entry(Bit16u key)
+{
+  if (key == FW_CFG_INVALID)
+    return NULL;
+  Bit16u index = key & FW_CFG_ENTRY_MASK;
+  if (key & FW_CFG_ARCH_LOCAL) {
+    return (index < FW_CFG_ARCH_MAX_ENTRY) ? &arch_entries[index] : NULL;
+  }
+  return (index < FW_CFG_MAX_ENTRY) ? &entries[index] : NULL;
+}
+
 void bx_fw_cfg_c::add_bytes(Bit16u key, Bit8u *data, Bit32u len)
 {
-  // Mask the key to get the actual array index (strip control bits)
-  Bit16u index = key & (FW_CFG_MAX_ENTRY - 1);
+  bx_fw_cfg_entry_t *entry = get_entry(key);
 
-  if (index >= FW_CFG_MAX_ENTRY) {
-    BX_ERROR(("fw_cfg: key 0x%04x (index 0x%04x) out of range", key, index));
+  if (entry == NULL) {
+    BX_ERROR(("fw_cfg: key 0x%04x out of range", key));
+    delete [] data;
     return;
   }
 
   // Free existing data if any
-  if (entries[index].data != NULL) {
-    delete [] entries[index].data;
+  if (entry->data != NULL) {
+    delete [] entry->data;
   }
 
-  entries[index].data = data;
-  entries[index].len = len;
+  entry->data = data;
+  entry->len = len;
 
-  BX_DEBUG(("fw_cfg: added entry 0x%04x (index 0x%04x), len=%u", key, index, len));
+  BX_DEBUG(("fw_cfg: added entry 0x%04x, len=%u", key, len));
 }
 
 void bx_fw_cfg_c::add_i8(Bit16u key, Bit8u value)
@@ -372,20 +394,21 @@ void bx_fw_cfg_c::process_dma(Bit64u dma_addr)
 
   // Handle READ operation
   if (control & FW_CFG_DMA_CTL_READ) {
-    Bit16u key = cur_entry & FW_CFG_ENTRY_MASK;
+    Bit16u key = cur_entry;
+    bx_fw_cfg_entry_t *entry = get_entry(key);
 
-    if (key < FW_CFG_MAX_ENTRY && entries[key].data != NULL) {
+    if ((entry != NULL) && (entry->data != NULL)) {
       Bit32u to_read = 0;
       // cur_offset may be past the end after a SKIP operation
-      if (cur_offset < entries[key].len) {
-        to_read = entries[key].len - cur_offset;
+      if (cur_offset < entry->len) {
+        to_read = entry->len - cur_offset;
         if (to_read > length) to_read = length;
       }
 
       // Write data to guest memory in page-sized chunks
       // (dmaWritePhysicalPage doesn't support cross-page accesses)
       Bit32u bytes_written = 0;
-      Bit8u* src_ptr = &entries[key].data[cur_offset];
+      Bit8u* src_ptr = entry->data + cur_offset;
       Bit64u dst_addr = address;
 
       while (bytes_written < to_read) {
@@ -470,10 +493,8 @@ Bit32u bx_fw_cfg_c::read(Bit32u address, unsigned io_len)
   }
   else if (address == FW_CFG_IO_BASE + 1) {
     // Read from data port
-    if (BX_FW_CFG_THIS cur_entry != FW_CFG_INVALID &&
-        BX_FW_CFG_THIS cur_entry < FW_CFG_MAX_ENTRY) {
-      bx_fw_cfg_entry_t *entry = &BX_FW_CFG_THIS entries[BX_FW_CFG_THIS cur_entry];
-
+    bx_fw_cfg_entry_t *entry = BX_FW_CFG_THIS get_entry(BX_FW_CFG_THIS cur_entry);
+    if (entry != NULL) {
       if (entry->data != NULL && BX_FW_CFG_THIS cur_offset < entry->len) {
         retval = entry->data[BX_FW_CFG_THIS cur_offset];
         BX_FW_CFG_THIS cur_offset++;
@@ -516,7 +537,7 @@ void bx_fw_cfg_c::write(Bit32u address, Bit32u value, unsigned io_len)
       // Log fw_cfg selector accesses to track what OVMF is reading
       if (key < FW_CFG_FILE_FIRST) {
         BX_DEBUG(("fw_cfg: Select standard entry 0x%04x", key));
-      } else if (key >= FW_CFG_FILE_FIRST && BX_FW_CFG_THIS entries[key].len > 0) {
+      } else if ((key < FW_CFG_MAX_ENTRY) && (BX_FW_CFG_THIS entries[key].len > 0)) {
         BX_DEBUG(("fw_cfg: Select file entry 0x%04x (%u bytes)", key, BX_FW_CFG_THIS entries[key].len));
       }
       BX_DEBUG(("fw_cfg: selected entry 0x%04x", key));

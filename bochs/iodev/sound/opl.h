@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 /*
  *  Copyright (C) 2002-2013  The DOSBox Team
- *  Copyright (C) 2015-2021  The Bochs Project
+ *  Copyright (C) 2015-2026  The Bochs Project
  *  OPL2/OPL3 emulation library
  *
  *  This library is free software; you can redistribute it and/or
@@ -196,7 +196,7 @@ static Bit32u generator_add; // should be a chip parameter
 // general functions
 void adlib_init(Bit32u samplerate);
 void adlib_write(Bitu idx, Bit8u val);
-bool adlib_getsample(Bit16u rate, Bit16s* sndptr, Bits numsamples, Bit16u volume);
+bool adlib_getsample(Bit32u rate, Bit16s* sndptr, Bits numsamples, Bit16u volume);
 
 Bitu adlib_reg_read(Bitu port);
 void adlib_write_index(Bitu port, Bit8u val);

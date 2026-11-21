@@ -44,6 +44,9 @@
 // hit the unclear completely full buffer condition.
 #define BX_NE2K_NEVER_FULL_RING (1)
 
+// ring pages used by a maximum size frame (1514 bytes + header + CRC)
+#define BX_NE2K_MAX_FRAME_PAGES ((BX_PACKET_BUFSIZE + 4 + 4 + 255) / 256)
+
 #define LOG_THIS NE2kDevMain->
 
 bx_ne2k_main_c *NE2kDevMain = NULL;
@@ -474,11 +477,10 @@ void bx_ne2k_c::reset(unsigned type)
     BX_NE2K_THIS s.CR.stop      = 1;
     BX_NE2K_THIS s.CR.rdma_cmd  = 4;
     BX_NE2K_THIS s.DCR.longaddr = 1;
-
-    set_irq_level(0);
   }
   memset(&BX_NE2K_THIS s.ISR, 0, sizeof(BX_NE2K_THIS s.ISR));
   BX_NE2K_THIS s.ISR.reset = 1;
+  set_irq_level(0);
 }
 
 void bx_ne2k_c::ne2k_register_state(bx_list_c *parent, Bit8u card)
@@ -644,7 +646,14 @@ void bx_ne2k_c::write_cr(Bit32u value)
     if (BX_NE2K_THIS s.TCR.loop_cntl != 1) {
       BX_INFO(("Loop mode %d not supported.", BX_NE2K_THIS s.TCR.loop_cntl));
     } else {
-      rx_frame (& BX_NE2K_THIS s.mem[BX_NE2K_THIS s.tx_page_start*256 - BX_NE2K_MEMSTART],
+      Bit32u lb_start_ofs = BX_NE2K_THIS s.tx_page_start*256;
+      if ((lb_start_ofs < BX_NE2K_MEMSTART) ||
+          ((lb_start_ofs + BX_NE2K_THIS s.tx_bytes) > BX_NE2K_MEMEND)) {
+        BX_PANIC(("loopback tx with start offset %u and byte count %u is outside of memory",
+                  lb_start_ofs, BX_NE2K_THIS s.tx_bytes));
+        return;
+      }
+      rx_frame (& BX_NE2K_THIS s.mem[lb_start_ofs - BX_NE2K_MEMSTART],
                 BX_NE2K_THIS s.tx_bytes);
     }
   } else if (value & 0x04) {
@@ -657,8 +666,6 @@ void bx_ne2k_c::write_cr(Bit32u value)
     if (BX_NE2K_THIS s.tx_bytes == 0)
       BX_PANIC(("CR write - tx start, tx bytes == 0"));
 
-    // Send the packet to the system driver
-    BX_NE2K_THIS s.CR.tx_packet = 1;
     Bit16u tx_start_ofs = BX_NE2K_THIS s.tx_page_start*256;
     // The following test and decrement is required for Novell Netware
     // 3.11-3.12, see
@@ -666,9 +673,15 @@ void bx_ne2k_c::write_cr(Bit32u value)
     // for the corresponding change in QEMU.
     if (tx_start_ofs >= BX_NE2K_MEMEND)
       tx_start_ofs -= BX_NE2K_MEMSIZ;
-    if (tx_start_ofs + BX_NE2K_THIS s.tx_bytes > BX_NE2K_MEMEND)
-      BX_PANIC(("tx start with start offset %d and byte count %d would overrun memory",
+    if ((tx_start_ofs < BX_NE2K_MEMSTART) ||
+        (tx_start_ofs + BX_NE2K_THIS s.tx_bytes > BX_NE2K_MEMEND)) {
+      BX_PANIC(("tx start with start offset %d and byte count %d is outside of memory",
                 tx_start_ofs, BX_NE2K_THIS s.tx_bytes));
+      return;
+    }
+
+    // Send the packet to the system driver
+    BX_NE2K_THIS s.CR.tx_packet = 1;
     BX_NE2K_THIS ethdev->sendpkt(& BX_NE2K_THIS s.mem[tx_start_ofs - BX_NE2K_MEMSTART], BX_NE2K_THIS s.tx_bytes);
 
     // some more debug
@@ -718,7 +731,7 @@ bx_ne2k_c::chipmem_read(Bit32u address, unsigned int io_len)
     BX_PANIC(("unaligned chipmem word read"));
 
   // ROM'd MAC address
-  if ((address >=0) && (address <= 31)) {
+  if ((address + io_len) <= 32) {
     retval = BX_NE2K_THIS s.macaddr[address];
     if ((io_len == 2) || (io_len == 4)) {
       retval |= (BX_NE2K_THIS s.macaddr[address + 1] << 8);
@@ -730,7 +743,7 @@ bx_ne2k_c::chipmem_read(Bit32u address, unsigned int io_len)
     return (retval);
   }
 
-  if ((address >= BX_NE2K_MEMSTART) && (address < BX_NE2K_MEMEND)) {
+  if ((address >= BX_NE2K_MEMSTART) && ((address + io_len) <= BX_NE2K_MEMEND)) {
     retval = BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART];
     if ((io_len == 2) || (io_len == 4)) {
       retval |= (BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART + 1] << 8);
@@ -753,7 +766,7 @@ bx_ne2k_c::chipmem_write(Bit32u address, Bit32u value, unsigned io_len)
   if ((io_len == 2) && (address & 0x1))
     BX_PANIC(("unaligned chipmem word write"));
 
-  if ((address >= BX_NE2K_MEMSTART) && (address < BX_NE2K_MEMEND)) {
+  if ((address >= BX_NE2K_MEMSTART) && ((address + io_len) <= BX_NE2K_MEMEND)) {
     BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART] = value & 0xff;
     if ((io_len == 2) || (io_len == 4)) {
       BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART + 1] = value >> 8;
@@ -765,6 +778,59 @@ bx_ne2k_c::chipmem_write(Bit32u address, Bit32u value, unsigned io_len)
   } else
     BX_DEBUG(("out-of-bounds chipmem write, %04X", address));
 }
+
+#if BX_SUPPORT_REPEAT_SPEEDUPS
+//
+// rdma_bulk - word mode remote DMA for REP INSW/OUTSW: copy whole words
+// between the packet memory and the host buffer of the string instruction.
+// Remote address, byte count, ring wrap and remote DMA complete behave as
+// for single word accesses. Accesses outside the packet memory, at an odd
+// address or with less than one word left use the normal path (returns 0).
+//
+unsigned bx_ne2k_c::rdma_bulk(Bit8u *host, unsigned words, bool write)
+{
+  unsigned count = 0;
+
+  while (count < words) {
+    Bit32u addr = BX_NE2K_THIS s.remote_dma;
+    if ((addr & 1) || (addr < BX_NE2K_MEMSTART) || (addr >= BX_NE2K_MEMEND) ||
+        (BX_NE2K_THIS s.remote_bytes < 2))
+      break;
+    // contiguous run up to the end of memory, the ring stop page and the byte count
+    Bit32u end = BX_NE2K_MEMEND;
+    Bit32u stop = (Bit32u) BX_NE2K_THIS s.page_stop << 8;
+    if ((stop > addr) && (stop < end))
+      end = stop;
+    unsigned len = end - addr;
+    if (len > (unsigned)(BX_NE2K_THIS s.remote_bytes & ~1))
+      len = BX_NE2K_THIS s.remote_bytes & ~1;
+    if (len > ((words - count) * 2))
+      len = (words - count) * 2;
+    len &= ~1;
+    if (len == 0)
+      break;
+    if (write) {
+      memcpy(&BX_NE2K_THIS s.mem[addr - BX_NE2K_MEMSTART], host, len);
+    } else {
+      memcpy(host, &BX_NE2K_THIS s.mem[addr - BX_NE2K_MEMSTART], len);
+    }
+    host += len;
+    count += len / 2;
+    BX_NE2K_THIS s.remote_dma += len;
+    BX_NE2K_THIS s.remote_bytes -= len;
+    if (BX_NE2K_THIS s.remote_dma == stop) {
+      BX_NE2K_THIS s.remote_dma = BX_NE2K_THIS s.page_start << 8;
+    }
+  }
+  if ((count > 0) && (BX_NE2K_THIS s.remote_bytes == 0)) {
+    BX_NE2K_THIS s.ISR.rdma_done = 1;
+    if (BX_NE2K_THIS s.IMR.rdma_inte) {
+      set_irq_level(1);
+    }
+  }
+  return count;
+}
+#endif
 
 //
 // asic_read/asic_write - This is the high 16 bytes of i/o space
@@ -788,6 +854,17 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
     // and the source-address and length registers must
     // have been initialised.
     //
+#if BX_SUPPORT_REPEAT_SPEEDUPS
+    // REP INSW: move as many words as possible in one go
+    if ((io_len == 2) && BX_NE2K_THIS s.DCR.wdsize && DEV_bulk_io_quantum_requested()) {
+      unsigned count = rdma_bulk(DEV_bulk_io_host_addr(), DEV_bulk_io_quantum_requested(), 0);
+      if (count > 0) {
+        DEV_bulk_io_quantum_transferred() = count;
+        DEV_bulk_io_host_addr() += count * 2;
+        break; // value returned not important
+      }
+    }
+#endif
     if (io_len > BX_NE2K_THIS s.remote_bytes) {
       BX_ERROR(("ne2K: dma read underrun iolen=%d remote_bytes=%d",io_len,BX_NE2K_THIS s.remote_bytes));
       //return 0;
@@ -849,6 +926,17 @@ void bx_ne2k_c::asic_write(Bit32u offset, Bit32u value, unsigned io_len)
       BX_PANIC(("dma write length %d on byte mode operation", io_len));
       break;
     }
+#if BX_SUPPORT_REPEAT_SPEEDUPS
+    // REP OUTSW: move as many words as possible in one go
+    if ((io_len == 2) && DEV_bulk_io_quantum_requested()) {
+      unsigned count = rdma_bulk(DEV_bulk_io_host_addr(), DEV_bulk_io_quantum_requested(), 1);
+      if (count > 0) {
+        DEV_bulk_io_quantum_transferred() = count;
+        DEV_bulk_io_host_addr() += count * 2;
+        break;
+      }
+    }
+#endif
     if (BX_NE2K_THIS s.remote_bytes == 0) {
       BX_ERROR(("ne2K: dma write, byte count 0"));
     }
@@ -985,16 +1073,19 @@ Bit32u bx_ne2k_c::page0_read(Bit32u offset, unsigned int io_len)
              (Bit8u)BX_NE2K_THIS s.RSR.rx_ok);
     break;
 
-  case 0xd:  // CNTR0
+  case 0xd:  // CNTR0 (cleared when read)
     value = BX_NE2K_THIS s.tallycnt_0;
+    BX_NE2K_THIS s.tallycnt_0 = 0;
     break;
 
-  case 0xe:  // CNTR1
+  case 0xe:  // CNTR1 (cleared when read)
     value = BX_NE2K_THIS s.tallycnt_1;
+    BX_NE2K_THIS s.tallycnt_1 = 0;
     break;
 
-  case 0xf:  // CNTR2
+  case 0xf:  // CNTR2 (cleared when read)
     value = BX_NE2K_THIS s.tallycnt_2;
+    BX_NE2K_THIS s.tallycnt_2 = 0;
     break;
 
   default:
@@ -1147,7 +1238,7 @@ void bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
       BX_PANIC(("TCR write, auto transmit disable not supported"));
 
     // Allow collision-offset to be set, although not used
-    BX_NE2K_THIS s.TCR.coll_prio = ((value & 0x08) > 0);
+    BX_NE2K_THIS s.TCR.coll_prio = ((value & 0x10) > 0);
     break;
 
   case 0xe:  // DCR
@@ -1168,7 +1259,7 @@ void bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
     BX_NE2K_THIS s.DCR.longaddr = (value & 0x04) > 0; // illegal ?
     BX_NE2K_THIS s.DCR.loop     = (value & 0x08) > 0;
     BX_NE2K_THIS s.DCR.auto_rx  = (value & 0x10) > 0; // also illegal ?
-    BX_NE2K_THIS s.DCR.fifo_size = (value & 0x50) >> 5;
+    BX_NE2K_THIS s.DCR.fifo_size = (value & 0x60) >> 5;
     break;
 
   case 0xf:  // IMR
@@ -1654,16 +1745,63 @@ Bit32u bx_ne2k_c::rx_status_handler(void *arg)
   return class_ptr->rx_status();
 }
 
+/*
+ * The receive ring registers are guest-controlled: the ring and the
+ * current/boundary pointers must lie inside the packet memory
+ */
+bool bx_ne2k_c::rx_ring_valid(void)
+{
+  return ((BX_NE2K_THIS s.page_start >= (BX_NE2K_MEMSTART >> 8)) &&
+          (BX_NE2K_THIS s.page_stop <= (BX_NE2K_MEMEND >> 8)) &&
+          (BX_NE2K_THIS s.page_start < BX_NE2K_THIS s.page_stop) &&
+          (BX_NE2K_THIS s.curr_page >= BX_NE2K_THIS s.page_start) &&
+          (BX_NE2K_THIS s.curr_page < BX_NE2K_THIS s.page_stop) &&
+          (BX_NE2K_THIS s.bound_ptr >= BX_NE2K_THIS s.page_start) &&
+          (BX_NE2K_THIS s.bound_ptr < BX_NE2K_THIS s.page_stop));
+}
+
 Bit32u bx_ne2k_c::rx_status()
 {
   Bit32u status = BX_NETDEV_10MBIT;
   if ((BX_NE2K_THIS s.CR.stop == 0) &&
-      (BX_NE2K_THIS s.page_start != 0) &&
+      rx_ring_valid() &&
+      (rx_ring_avail() > BX_NE2K_MAX_FRAME_PAGES) &&
       (BX_NE2K_THIS s.DCR.loop ||
        (BX_NE2K_THIS s.TCR.loop_cntl == 0))) {
     status |= BX_NETDEV_RXREADY;
   }
   return status;
+}
+
+/*
+ * Number of free pages in the receive ring (ring must be valid)
+ */
+int bx_ne2k_c::rx_ring_avail(void)
+{
+  if (BX_NE2K_THIS s.curr_page < BX_NE2K_THIS s.bound_ptr) {
+    return BX_NE2K_THIS s.bound_ptr - BX_NE2K_THIS s.curr_page;
+  } else {
+    return (BX_NE2K_THIS s.page_stop - BX_NE2K_THIS s.page_start) -
+      (BX_NE2K_THIS s.curr_page - BX_NE2K_THIS s.bound_ptr);
+  }
+}
+
+/*
+ * A frame was lost because the receive ring is full: set RSR.MPA and
+ * count it in CNTR2 (stops at 192), CNT is set when the counter MSB is set
+ */
+void bx_ne2k_c::rx_missed(void)
+{
+  BX_NE2K_THIS s.RSR.rx_missed = 1;
+  if (BX_NE2K_THIS s.tallycnt_2 < 192) {
+    BX_NE2K_THIS s.tallycnt_2++;
+  }
+  if (BX_NE2K_THIS s.tallycnt_2 & 0x80) {
+    BX_NE2K_THIS s.ISR.cnt_oflow = 1;
+    if (BX_NE2K_THIS s.IMR.cofl_inte) {
+      set_irq_level(1);
+    }
+  }
 }
 
 /*
@@ -1699,10 +1837,16 @@ void bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 
 
   if ((BX_NE2K_THIS s.CR.stop != 0) ||
-      (BX_NE2K_THIS s.page_start == 0) ||
       (!BX_NE2K_THIS s.DCR.loop &&
        (BX_NE2K_THIS s.TCR.loop_cntl != 0))) {
 
+    return;
+  }
+
+  if (!rx_ring_valid()) {
+    BX_DEBUG(("rx ring outside of packet memory (PSTART=0x%02x PSTOP=0x%02x CURR=0x%02x BNRY=0x%02x), frame dropped",
+              BX_NE2K_THIS s.page_start, BX_NE2K_THIS s.page_stop,
+              BX_NE2K_THIS s.curr_page, BX_NE2K_THIS s.bound_ptr));
     return;
   }
 
@@ -1710,13 +1854,7 @@ void bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   // out how many 256-byte pages the frame would occupy
   pages = (io_len + 4 + 4 + 255)/256;
 
-  if (BX_NE2K_THIS s.curr_page < BX_NE2K_THIS s.bound_ptr) {
-    avail = BX_NE2K_THIS s.bound_ptr - BX_NE2K_THIS s.curr_page;
-  } else {
-    avail = (BX_NE2K_THIS s.page_stop - BX_NE2K_THIS s.page_start) -
-      (BX_NE2K_THIS s.curr_page - BX_NE2K_THIS s.bound_ptr);
-//  wrapped = 1;
-  }
+  avail = rx_ring_avail();
 
   // Avoid getting into a buffer overflow condition by not attempting
   // to do partial receives. The emulation to handle this condition
@@ -1726,6 +1864,7 @@ void bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
       || (avail == pages)
 #endif
       ) {
+    rx_missed();
     return;
   }
 
@@ -1787,12 +1926,17 @@ void bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   } else {
     int endbytes = (BX_NE2K_THIS s.page_stop - BX_NE2K_THIS s.curr_page)
       * 256;
+    // frame bytes before the end of the ring (only the CRC room may wrap)
+    unsigned firstbytes = endbytes - 4;
+    if (firstbytes > io_len)
+      firstbytes = io_len;
     memcpy(startptr, pkthdr, 4);
-    memcpy(startptr + 4, buf, endbytes - 4);
-    startptr = & BX_NE2K_THIS s.mem[BX_NE2K_THIS s.page_start * 256 -
-				 BX_NE2K_MEMSTART];
-    memcpy(startptr, (void *)(pktbuf + endbytes - 4),
-	   io_len - endbytes + 8);
+    memcpy(startptr + 4, buf, firstbytes);
+    if (io_len > firstbytes) {
+      startptr = & BX_NE2K_THIS s.mem[BX_NE2K_THIS s.page_start * 256 -
+				   BX_NE2K_MEMSTART];
+      memcpy(startptr, (void *)(pktbuf + firstbytes), io_len - firstbytes);
+    }
     BX_NE2K_THIS s.curr_page = nextpage;
   }
 

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2023  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -237,6 +237,9 @@ private:
   Bit32u page3_read(Bit32u offset, unsigned io_len);
 
   void chipmem_write(Bit32u address, Bit32u value, unsigned io_len) BX_CPP_AttrRegparmN(3);
+#if BX_SUPPORT_REPEAT_SPEEDUPS
+  unsigned rdma_bulk(Bit8u *host, unsigned words, bool write);
+#endif
   void asic_write(Bit32u address, Bit32u value, unsigned io_len);
   void page0_write(Bit32u address, Bit32u value, unsigned io_len);
   void page1_write(Bit32u address, Bit32u value, unsigned io_len);
@@ -250,6 +253,9 @@ private:
   Bit32u rx_status(void);
   static void rx_handler(void *arg, const void *buf, unsigned len);
   unsigned mcast_index(const void *dst);
+  bool rx_ring_valid(void);
+  int  rx_ring_avail(void);
+  void rx_missed(void);
   void rx_frame(const void *buf, unsigned io_len);
 
 #if BX_SUPPORT_PCI

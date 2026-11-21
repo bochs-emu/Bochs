@@ -265,7 +265,7 @@ bxdisasm: bxdisasm@EXE@
 	@:
 
 # compile with console CXXFLAGS, not gui CXXFLAGS
-misc/bximage.o: $(srcdir)/misc/bximage.cc $(srcdir)/misc/bswap.h \
+misc/bximage.o: $(srcdir)/misc/bximage.cc $(srcdir)/misc/bswap.h config.h bxversion.h \
   $(srcdir)/misc/bxcompat.h $(srcdir)/iodev/hdimage/hdimage.h
 	$(CXX) @DASH@c $(BX_INCDIRS) $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/misc/bximage.cc @OFP@$@
 

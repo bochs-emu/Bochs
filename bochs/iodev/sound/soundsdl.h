@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2021  The Bochs Project
+//  Copyright (C) 2012-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -37,6 +37,8 @@ public:
   virtual int set_pcm_params(bx_pcm_param_t *param);
 
   virtual void unregister_wave_callback(int callback_id);
+  virtual void lock_mixer() {SDL_LockAudio();}
+  virtual void unlock_mixer() {SDL_UnlockAudio();}
 
   virtual void resampler(audio_buffer_t *inbuffer, audio_buffer_t *outbuffer);
   virtual bool mixer_common(Bit8u *buffer, int len);

@@ -65,7 +65,11 @@ int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpDa
   char path[MAX_PATH];
 
   if (uMsg == BFFM_INITIALIZED) {
-    GetCurrentDirectory(MAX_PATH, path);
+    if ((lpData != 0) && (((const char*)lpData)[0] != 0)) {
+      lstrcpyn(path, (const char*)lpData, MAX_PATH);
+    } else {
+      GetCurrentDirectory(MAX_PATH, path);
+    }
     SendMessage(hwnd, BFFM_SETSELECTION, TRUE, (LPARAM)path);
   }
   return 0;
@@ -75,8 +79,8 @@ int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpDa
 #define BIF_NEWDIALOGSTYLE 0
 #endif
 
-// result must point to a buffer of at least MAX_PATH chars.
-// It is only modified on success.
+// result must point to a buffer of at least MAX_PATH chars. If not empty,
+// it is used as initial folder. It is only modified on success.
 int BrowseDir(const char *Title, char *result)
 {
   BROWSEINFO browseInfo;
@@ -90,6 +94,7 @@ int BrowseDir(const char *Title, char *result)
   browseInfo.lpszTitle = (LPCSTR)Title;
   browseInfo.ulFlags = BIF_NEWDIALOGSTYLE | BIF_RETURNONLYFSDIRS;
   browseInfo.lpfn = BrowseCallbackProc;
+  browseInfo.lParam = (LPARAM)result;
   ItemIDList = SHBrowseForFolder(&browseInfo);
   if (ItemIDList != NULL) {
     path[0] = 0;
@@ -109,10 +114,17 @@ int BrowseDir(const char *Title, char *result)
   return r;
 }
 
+static void LogAskAddChoice(HWND hDlg, const char *text, int choice)
+{
+  LRESULT idx = SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)text);
+  SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_SETITEMDATA, idx, choice);
+}
+
 static BOOL CALLBACK LogAskProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   BxEvent *event;
   int level;
+  LRESULT idx;
 
   switch (msg) {
     case WM_INITDIALOG:
@@ -121,14 +133,16 @@ static BOOL CALLBACK LogAskProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
       SetWindowText(hDlg, SIM->get_log_level_name(level));
       SetWindowText(GetDlgItem(hDlg, IDASKDEV), event->u.logmsg.prefix);
       SetWindowText(GetDlgItem(hDlg, IDASKMSG), event->u.logmsg.msg);
-      SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Continue");
-      SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Continue and don't ask again");
+      LogAskAddChoice(hDlg, "Continue", BX_LOG_ASK_CHOICE_CONTINUE);
+      LogAskAddChoice(hDlg, "Continue and don't ask again", BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS);
       if (event->u.logmsg.mode == BX_LOG_DLG_ASK) {
-        SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Kill simulation");
-        SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Abort (dump core)");
+        LogAskAddChoice(hDlg, "Kill simulation", BX_LOG_ASK_CHOICE_DIE);
+#if BX_HAVE_ABORT
+        LogAskAddChoice(hDlg, "Abort (dump core)", BX_LOG_ASK_CHOICE_DUMP_CORE);
+#endif
 #if BX_DEBUGGER
         if (SIM->debugger_activation_allowed()) {
-          SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Continue and return to debugger");
+          LogAskAddChoice(hDlg, "Continue and return to debugger", BX_LOG_ASK_CHOICE_ENTER_DEBUG);
         }
 #endif
         SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_SETCURSEL, 2, 0);
@@ -143,7 +157,12 @@ static BOOL CALLBACK LogAskProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
     case WM_COMMAND:
       switch (LOWORD(wParam)) {
         case IDOK:
-          EndDialog(hDlg, SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_GETCURSEL, 0, 0));
+          idx = SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_GETCURSEL, 0, 0);
+          if (idx == LB_ERR) {
+            EndDialog(hDlg, BX_LOG_ASK_CHOICE_DIE);
+          } else {
+            EndDialog(hDlg, SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_GETITEMDATA, idx, 0));
+          }
           break;
         case IDCANCEL:
           EndDialog(hDlg, BX_LOG_ASK_CHOICE_DIE);
@@ -156,7 +175,8 @@ static BOOL CALLBACK LogAskProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
 static BOOL CALLBACK StringParamProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   static bx_param_string_c *param;
-  char buffer[512];
+  static int maxlen;
+  char *buffer;
   const char *title;
 
   switch (msg) {
@@ -167,8 +187,18 @@ static BOOL CALLBACK StringParamProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
         title = param->get_name();
       }
       SetWindowText(hDlg, title);
-      SetWindowText(GetDlgItem(hDlg, IDSTRING), param->getptr());
-      SendMessage(GetDlgItem(hDlg, IDSTRING), EM_SETLIMITTEXT, param->get_maxsize(), 0);
+      if (param->get_type() == BXT_PARAM_BYTESTRING) {
+        // hex bytes with separator
+        maxlen = param->get_maxsize() * 3;
+        buffer = new char[maxlen + 1];
+        param->dump_param(buffer, maxlen + 1);
+        SetWindowText(GetDlgItem(hDlg, IDSTRING), buffer);
+        delete [] buffer;
+      } else {
+        maxlen = param->get_maxsize();
+        SetWindowText(GetDlgItem(hDlg, IDSTRING), param->getptr());
+      }
+      SendMessage(GetDlgItem(hDlg, IDSTRING), EM_SETLIMITTEXT, maxlen, 0);
       return TRUE;
     case WM_CLOSE:
       EndDialog(hDlg, -1);
@@ -176,8 +206,18 @@ static BOOL CALLBACK StringParamProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
     case WM_COMMAND:
       switch (LOWORD(wParam)) {
         case IDOK:
-          GetDlgItemText(hDlg, IDSTRING, buffer, param->get_maxsize() + 1);
-          param->set(buffer);
+          buffer = new char[maxlen + 1];
+          GetDlgItemText(hDlg, IDSTRING, buffer, maxlen + 1);
+          if (param->get_type() == BXT_PARAM_BYTESTRING) {
+            if (param->parse_param(buffer) == 0) {
+              MessageBox(hDlg, "Illegal raw byte format", "Error", MB_ICONERROR);
+              delete [] buffer;
+              break;
+            }
+          } else {
+            param->set(buffer);
+          }
+          delete [] buffer;
           EndDialog(hDlg, 1);
           break;
         case IDCANCEL:
@@ -228,7 +268,7 @@ BOOL HandlePluginCtrl(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   int i;
   long code;
-  char plugname[20], message[80];
+  char plugname[BX_PATHNAME_LEN], message[BX_PATHNAME_LEN + 32];
   BOOL changed = FALSE;
 
   switch (msg) {
@@ -251,6 +291,10 @@ BOOL HandlePluginCtrl(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
           break;
         case IDLOAD:
           i = SendMessage(GetDlgItem(hDlg, IDPLUGLIST1), LB_GETCURSEL, 0, 0);
+          if ((i == LB_ERR) ||
+              (SendMessage(GetDlgItem(hDlg, IDPLUGLIST1), LB_GETTEXTLEN, i, 0) >= (LRESULT)sizeof(plugname))) {
+            break;
+          }
           SendMessage(GetDlgItem(hDlg, IDPLUGLIST1), LB_GETTEXT, i, (LPARAM)plugname);
           if (SIM->opt_plugin_ctrl(plugname, 1)) {
             wsprintf(message, "Plugin '%s' loaded", plugname);
@@ -263,6 +307,10 @@ BOOL HandlePluginCtrl(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
           break;
         case IDUNLOAD:
           i = SendMessage(GetDlgItem(hDlg, IDPLUGLIST2), LB_GETCURSEL, 0, 0);
+          if ((i == LB_ERR) ||
+              (SendMessage(GetDlgItem(hDlg, IDPLUGLIST2), LB_GETTEXTLEN, i, 0) >= (LRESULT)sizeof(plugname))) {
+            break;
+          }
           SendMessage(GetDlgItem(hDlg, IDPLUGLIST2), LB_GETTEXT, i, (LPARAM)plugname);
           if (SIM->opt_plugin_ctrl(plugname, 0)) {
             wsprintf(message, "Plugin '%s' unloaded", plugname);
@@ -391,6 +439,9 @@ void BuildLogModulesList(HWND hDlg)
   }
 }
 
+// controls for the "log" parameter list created (start menu only)
+static BOOL log_param_list = FALSE;
+
 void InitLogOptions(HWND hDlg, BOOL advanced)
 {
   BuildLogModulesList(hDlg);
@@ -402,6 +453,7 @@ void InitLogOptions(HWND hDlg, BOOL advanced)
     SetStandardLogOptions(hDlg);
     CreateParamList(hDlg, 0, 0, 206, 135, false, (bx_list_c*)SIM->get_param("log"), 2);
     CreateParamDlgTooltip(hDlg);
+    log_param_list = TRUE;
   }
 }
 
@@ -460,7 +512,7 @@ UINT HandleLogOptions(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
               break;
             case IDAPPLY:
             case IDREVERT:
-              if (SIM->get_param("log") != NULL) {
+              if (log_param_list && (SIM->get_param("log") != NULL)) {
                 ret = HandleChildWindowEvents(hDlg, 0, LOWORD(wParam), noticode, (bx_list_c*)SIM->get_param("log"));
               }
               if (LOWORD(wParam) == IDAPPLY) {
@@ -482,7 +534,7 @@ UINT HandleLogOptions(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
               }
               break;
             default:
-              if (SIM->get_param("log") != NULL) {
+              if (log_param_list && (SIM->get_param("log") != NULL)) {
                 ret = HandleChildWindowEvents(hDlg, 0, LOWORD(wParam), noticode, (bx_list_c*)SIM->get_param("log"));
               }
           }
@@ -517,7 +569,7 @@ void ShowLogOptions(HWND hDlg, bool show, bool refresh)
   ShowWindow(GetDlgItem(hDlg, IDREVERT), show ? SW_NORMAL : SW_HIDE);
   EnableWindow(GetDlgItem(hDlg, IDAPPLY), FALSE);
   EnableWindow(GetDlgItem(hDlg, IDREVERT), show ? FALSE : TRUE);
-  if (SIM->get_param("log") != NULL) {
+  if (log_param_list && (SIM->get_param("log") != NULL)) {
     ShowParamList(hDlg, 0, show, (bx_list_c*)SIM->get_param("log"));
   }
 }
@@ -683,6 +735,7 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
       optedit = FALSE;
       plugin_update = FALSE;
       optnum = -1;
+      log_param_list = FALSE;
       if (runtime) {
         SetWindowText(hDlg, "Bochs Runtime Menu");
         EnableWindow(GetDlgItem(hDlg, IDREADRC), FALSE);
@@ -734,8 +787,12 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
           rcfile->set_extension("bxrc");
           if (AskFilename(hDlg, rcfile, NULL) > 0) {
             SIM->reset_all_param();
-            SIM->read_rc(rcfile->getptr());
-            MainMenuSetTitle(hDlg, rcfile->getptr());
+            if (SIM->read_rc(rcfile->getptr()) >= 0) {
+              MainMenuSetTitle(hDlg, rcfile->getptr());
+            } else {
+              MessageBox(hDlg, "Failed to read configuration file!", "ERROR", MB_ICONERROR);
+              MainMenuSetTitle(hDlg, "");
+            }
             RefreshStartOptions(hDlg);
           }
           delete rcfile;
@@ -746,8 +803,11 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
           rcfile->set_extension("bxrc");
           rcfile->set_options(rcfile->SAVE_FILE_DIALOG);
           if (AskFilename(hDlg, rcfile, NULL) > 0) {
-            SIM->write_rc(rcfile->getptr(), 1);
-            MainMenuSetTitle(hDlg, rcfile->getptr());
+            if (SIM->write_rc(rcfile->getptr(), 1) >= 0) {
+              MainMenuSetTitle(hDlg, rcfile->getptr());
+            } else {
+              MessageBox(hDlg, "Failed to write configuration file!", "ERROR", MB_ICONERROR);
+            }
           }
           delete rcfile;
           break;
@@ -1012,7 +1072,11 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
       return event;
     case BX_SYNC_EVT_ML_MSG_BOX_KILL:
       if (event->param0) {
+        HFONT font = (HFONT)SendMessage((HWND) event->param0, WM_GETFONT, 0, 0);
         DestroyWindow((HWND) event->param0);
+        if (font != NULL) {
+          DeleteObject(font);
+        }
         event->param0 = NULL;
       }
       return event;
@@ -1023,7 +1087,7 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
         opts = sparam->get_options();
         if (opts & sparam->IS_FILENAME) {
           if (opts & sparam->SELECT_FOLDER_DLG) {
-            pname[0] = 0;
+            lstrcpyn(pname, sparam->getptr(), MAX_PATH);
             event->retcode = BrowseDir(sparam->get_label(), pname);
             if (event->retcode >= 0) {
               sparam->set(pname);

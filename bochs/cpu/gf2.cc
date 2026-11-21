@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2017-2018 Stanislav Shwartsman
+//   Copyright (c) 2017-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -63,18 +63,16 @@ static const Bit8u GF256_Inv[256] = {
   0xdd, 0x9c, 0x7d, 0xa0, 0xcd, 0x1a, 0x41, 0x1c
 };
 
-#include "scalar_arith.h"
-
+// result bit i is parity of (matrix byte 7-i AND src1byte), compute all 8 parities at once:
+// AND src1byte with every matrix byte, fold each byte to its parity in bit 0 of the byte,
+// then gather the 8 parity bits into one byte with byte j going to result bit 7-j
 BX_CPP_INLINE Bit8u affine_byte(Bit64u src2, Bit8u src1byte, Bit8u imm8)
 {
-  BxPackedRegister src2qw(src2);
-  Bit8u result = 0;
-  for (int i=0; i < 8; i++) {
-    // the parity_byte used for arithmetic flags calculation has exactly opposite meaning
-    // it would be set if result contains an even number of '1 bits; cleared otherwise
-    // therefore use not
-    result |= !parity_byte(src2qw.ubyte(7-i) & src1byte) << i;
-  }
+  Bit64u tmp = src2 & (src1byte * BX_CONST64(0x0101010101010101));
+  tmp ^= tmp >> 4;
+  tmp ^= tmp >> 2;
+  tmp ^= tmp >> 1;
+  Bit8u result = (Bit8u)(((tmp & BX_CONST64(0x0101010101010101)) * BX_CONST64(0x8040201008040201)) >> 56);
   return result ^ imm8;
 }
 

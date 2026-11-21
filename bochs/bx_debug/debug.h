@@ -124,6 +124,8 @@ void bx_dbg_watchpoint_continue(bool watch_continue);
 void bx_dbg_watch(int type, bx_phy_address address, Bit32u len);
 void bx_dbg_unwatch_all(void);
 void bx_dbg_unwatch(bx_phy_address handle);
+bool bx_dbg_unwatch_rd(bx_phy_address address);
+bool bx_dbg_unwatch_wr(bx_phy_address address);
 void bx_dbg_continue_command(bool expression);
 void bx_dbg_stepN_command(int cpu, Bit32u count);
 int  bx_dbg_run_to_laddr(bx_address addr);
@@ -181,6 +183,7 @@ void bx_dbg_info_device(const char *, const char *);
 void bx_dbg_print_help(void);
 void bx_dbg_calc_command(Bit64u value);
 void bx_dbg_dump_table(void);
+bool bx_dbg_eval_expression(const char *expr, unsigned cpu, Bit64u *value);
 bool bx_dbg_eval_condition(char *condition, unsigned cpu);
 
 // callbacks from CPU

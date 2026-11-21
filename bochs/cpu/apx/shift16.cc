@@ -36,6 +36,8 @@
 //   <op>_BwEwR      : ND=1, dst = vvvv, src = rm (or TMP after LOAD_Ew), flags updated unless NF=1,
 //                     the upper part of the destination register is always cleared
 //   APX_NF_<op>_EwR : ND=0 NF=1 register form, dst = rm, flags are not updated
+//   APX_NF_SHxD_EwGwM : ND=0 NF=1 memory form, src = reg, flags are not updated
+//   APX_NF_<op>_EwM : ND=0 NF=1 memory form, flags are not updated
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_BwEwGwR(bxInstruction_c *i)
 {
@@ -102,6 +104,40 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHLD_EwGwR(bxInstruction_c *i)
     result_16 = (Bit16u)(result_32 >> 16);
 
     BX_WRITE_16BIT_REG(i->dst(), result_16);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+// SHLD Ew, Gw with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHLD_EwGwM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_SHLD_EwGw)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0x1f; // use only 5 LSB's
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit32u op1_16 = (Bit32u) read_RMW_virtual_word(i->seg(), eaddr);
+
+  if (count) {
+    Bit32u op2_16 = (Bit32u) BX_READ_16BIT_REG(i->src());
+
+    Bit32u temp_32 = (op1_16 << 16) | (op2_16); // double formed by op1:op2
+    Bit32u result_32 = temp_32 << count;
+
+    // count > 16: act like P6 and later (shift op1:op2:op1, undefined behavior)
+    if (count > 16)
+      result_32 |= (op1_16 << (count - 16));
+
+    Bit16u result_16 = (Bit16u)(result_32 >> 16);
+
+    write_RMW_linear_word(result_16);
   }
 
   BX_NEXT_INSTR(i);
@@ -178,6 +214,40 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHRD_EwGwR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// SHRD Ew, Gw with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHRD_EwGwM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_SHRD_EwGw)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0x1f; // use only 5 LSB's
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit32u op1_16 = (Bit32u) read_RMW_virtual_word(i->seg(), eaddr);
+
+  if (count) {
+    Bit32u op2_16 = (Bit32u) BX_READ_16BIT_REG(i->src());
+
+    Bit32u temp_32 = (op2_16 << 16) | op1_16; // double formed by op2:op1
+    Bit32u result_32 = temp_32 >> count;
+
+    // count > 16: act like P6 and later (shift op1:op2:op1, undefined behavior)
+    if (count > 16)
+      result_32 |= (op1_16 << (32 - count));
+
+    Bit16u result_16 = (Bit16u) result_32;
+
+    write_RMW_linear_word(result_16);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_BwEwR(bxInstruction_c *i)
 {
   unsigned count;
@@ -228,6 +298,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_ROL_EwR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// ROL Ew with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_ROL_EwM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_ROL_Ew)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0xf; // only the rotate count matters, flags are not updated
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit16u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+
+  if (count) {
+    Bit16u result_16 = rol16(op1_16, count);
+
+    write_RMW_linear_word(result_16);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_BwEwR(bxInstruction_c *i)
 {
   unsigned count;
@@ -273,6 +368,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_ROR_EwR(bxInstruction_c *i)
     Bit16u op1_16 = BX_READ_16BIT_REG(i->dst());
     Bit16u result_16 = ror16(op1_16, count);
     BX_WRITE_16BIT_REG(i->dst(), result_16);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+// ROR Ew with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_ROR_EwM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_ROR_Ew)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0xf; // only the rotate count matters, flags are not updated
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit16u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+
+  if (count) {
+    Bit16u result_16 = ror16(op1_16, count);
+
+    write_RMW_linear_word(result_16);
   }
 
   BX_NEXT_INSTR(i);
@@ -408,6 +528,33 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHL_EwR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// SHL Ew with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHL_EwM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_SHL_Ew)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0x1f;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit16u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+
+  if (count) {
+    Bit16u result_16 = 0;
+    if (count <= 16)
+      result_16 = (op1_16 << count);
+
+    write_RMW_linear_word(result_16);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_BwEwR(bxInstruction_c *i)
 {
   unsigned count;
@@ -462,6 +609,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHR_EwR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// SHR Ew with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHR_EwM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_SHR_Ew)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0x1f;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit16u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+
+  if (count) {
+    Bit16u result_16 = (op1_16 >> count);
+
+    write_RMW_linear_word(result_16);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_BwEwR(bxInstruction_c *i)
 {
   unsigned count;
@@ -509,6 +681,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SAR_EwR(bxInstruction_c *i)
     Bit16u op1_16 = BX_READ_16BIT_REG(i->dst());
     Bit16u result_16 = ((Bit16s) op1_16) >> count;
     BX_WRITE_16BIT_REG(i->dst(), result_16);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+// SAR Ew with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SAR_EwM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_SAR_Ew)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0x1f;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit16u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
+
+  if (count) {
+    Bit16u result_16 = ((Bit16s) op1_16) >> count;
+
+    write_RMW_linear_word(result_16);
   }
 
   BX_NEXT_INSTR(i);

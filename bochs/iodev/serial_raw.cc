@@ -57,6 +57,9 @@ serial_raw::serial_raw(const char *devname)
   dcb.StopBits = ONESTOPBIT;
   dcb.BaudRate = CBR_115200;
   DCBchanged = FALSE;
+  memset(&tx_ovl, 0, sizeof(OVERLAPPED));
+  tx_pending = FALSE;
+  tx_byte = 0;
   if (lstrlen(devname) > 0) {
     wsprintf(portstr, "\\\\.\\%s", devname);
     hCOM = CreateFile(portstr, GENERIC_READ|GENERIC_WRITE, 0, NULL,
@@ -67,10 +70,12 @@ serial_raw::serial_raw(const char *devname)
       SetupComm(hCOM, 8192, 2048);
       PurgeComm(hCOM, PURGE_TXABORT | PURGE_RXABORT |
                 PURGE_TXCLEAR | PURGE_RXCLEAR);
+      // one event for all writes, unnamed to keep multiple raw ports apart
+      tx_ovl.hEvent = CreateEvent(NULL,TRUE,FALSE,NULL);
 #ifdef WIN32_RECEIVE_RAW
       SetCommMask(hCOM, EV_BREAK | EV_CTS | EV_DSR | EV_ERR | EV_RING | EV_RLSD | EV_RXCHAR);
       memset(&rx_ovl, 0, sizeof(OVERLAPPED));
-      rx_ovl.hEvent = CreateEvent(NULL,TRUE,FALSE,"receive");
+      rx_ovl.hEvent = CreateEvent(NULL,TRUE,FALSE,NULL);
       InitializeCriticalSection(&serialCS);
       hRawSerialThread = CreateThread(NULL, 0, RawSerialThread, this, 0, &threadID);
 #endif
@@ -98,10 +103,12 @@ serial_raw::~serial_raw(void)
     SetCommMask(hCOM, 0);
     while (thread_active) Sleep(10);
     DeleteCriticalSection(&serialCS);
-    CloseHandle(thread_ovl.hEvent);
+    // thread_ovl.hEvent is closed by the receive thread when it exits
     CloseHandle(rx_ovl.hEvent);
     CloseHandle(hRawSerialThread);
 #endif
+    tx_complete();
+    CloseHandle(tx_ovl.hEvent);
     CloseHandle(hCOM);
 #endif
   }
@@ -222,6 +229,8 @@ void serial_raw::setup_port()
   DWORD DErr;
   COMMTIMEOUTS ctmo;
 
+  // do not abort the last transmitted byte
+  tx_complete();
   ClearCommError(hCOM, &DErr, NULL);
   PurgeComm(hCOM, PURGE_TXABORT | PURGE_RXABORT |
             PURGE_TXCLEAR | PURGE_RXCLEAR);
@@ -238,8 +247,7 @@ void serial_raw::setup_port()
 void serial_raw::transmit(Bit8u byte)
 {
 #ifdef WIN32
-  DWORD DErr, Len2;
-  OVERLAPPED tx_ovl;
+  DWORD DErr, Len2 = 0;
 #endif
 
   BX_DEBUG(("transmit %d", byte));
@@ -250,20 +258,39 @@ void serial_raw::transmit(Bit8u byte)
     } else {
       ClearCommError(hCOM, &DErr, NULL);
     }
-    memset(&tx_ovl, 0, sizeof(OVERLAPPED));
-    tx_ovl.hEvent = CreateEvent(NULL,TRUE,TRUE,"transmit");
-    if (!WriteFile(hCOM, &byte, 1, &Len2, &tx_ovl)) {
-      if (GetLastError() == ERROR_IO_PENDING) {
-        if (WaitForSingleObject(tx_ovl.hEvent, 100) == WAIT_OBJECT_0) {
-          GetOverlappedResult(hCOM, &tx_ovl, &Len2, FALSE);
-        }
-      }
+    // the write buffer and the overlapped structure are reused
+    tx_complete();
+    tx_byte = byte;
+    if (WriteFile(hCOM, &tx_byte, 1, &Len2, &tx_ovl)) {
+      if (Len2 != 1) BX_ERROR(("transmit failed: len = %u", (unsigned) Len2));
+    } else if (GetLastError() == ERROR_IO_PENDING) {
+      // do not wait for the host port, the write completes in the background
+      tx_pending = TRUE;
+    } else {
+      BX_ERROR(("transmit failed: error = %u", (unsigned) GetLastError()));
     }
-    if (Len2 != 1) BX_ERROR(("transmit failed: len = %d", Len2));
     ClearCommError(hCOM, &DErr, NULL);
-    CloseHandle(tx_ovl.hEvent);
 #endif
   }
+}
+
+// finish the pending overlapped write, this only waits if the guest
+// transmits faster than the host port
+void serial_raw::tx_complete()
+{
+#ifdef WIN32
+  DWORD Len2 = 0;
+
+  if (tx_pending) {
+    if (WaitForSingleObject(tx_ovl.hEvent, 100) != WAIT_OBJECT_0) {
+      // host port stalled, abort the write before the structure is reused
+      PurgeComm(hCOM, PURGE_TXABORT);
+    }
+    GetOverlappedResult(hCOM, &tx_ovl, &Len2, TRUE);
+    if (Len2 != 1) BX_ERROR(("transmit failed: len = %u", (unsigned) Len2));
+    tx_pending = FALSE;
+  }
+#endif
 }
 
 bool serial_raw::ready_transmit()
@@ -364,7 +391,7 @@ void serial_raw::serial_thread()
   thread_active = TRUE;
   thread_quit = FALSE;
   memset(&thread_ovl, 0, sizeof(OVERLAPPED));
-  thread_ovl.hEvent = CreateEvent(NULL,TRUE,TRUE,"thread");
+  thread_ovl.hEvent = CreateEvent(NULL,TRUE,TRUE,NULL);
   thread_rxdata_count = 0;
   while (!thread_quit) {
     if ((rxdata_count == 0) && (thread_rxdata_count > 0)) {

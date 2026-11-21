@@ -105,13 +105,13 @@ static floatx80 fpatan_finish(float128_t f, float128_t g, int sflag, int sx, int
     float128_t val;
 
     if (! sx && ! sflag) {
-        val = f128_add(f, g, &status);                 /* add_e(f, g) */
+        val = f128_add(f, g, softfloat_round_odd, &status); /* add_e(f, g) */
     }
     else {
         float128_t a = sflag ? fpatan_piby2 : fpatan_pi;   /* (-1)^sy * (pi/2 or pi) */
         if (sy) a.v64 ^= FPATAN_SIGNBIT;
         float128_t fg = f128_add_67_chop(f, g, &status);
-        val = f128_add(a, fg, &status);                 /* add_e(a, f+g) */
+        val = f128_add(a, fg, softfloat_round_odd, &status); /* add_e(a, f+g) */
     }
 
     softfloat_clearRoundingUp(&status);

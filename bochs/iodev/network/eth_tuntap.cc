@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -47,6 +47,9 @@ PLUGIN_ENTRY_FOR_NET_MODULE(tuntap)
 // network driver implementation
 
 #define LOG_THIS netdev->
+
+// maximum number of frames delivered per rx poll
+#define BX_RX_FRAMES_PER_POLL 32
 
 #include <signal.h>
 #include <sys/param.h>
@@ -96,7 +99,7 @@ private:
   int fd;
   int rx_timer_index;
   static void rx_timer_handler(void *);
-  void rx_timer ();
+  bool rx_timer(void);
   Bit8u guest_macaddr[6];
 #if BX_ETH_TUNTAP_LOGGING
   FILE *txlog, *txlog_txt, *rxlog, *rxlog_txt;
@@ -292,15 +295,23 @@ void bx_tuntap_pktmover_c::sendpkt(void *buf, unsigned io_len)
 void bx_tuntap_pktmover_c::rx_timer_handler (void *this_ptr)
 {
   bx_tuntap_pktmover_c *class_ptr = (bx_tuntap_pktmover_c *) this_ptr;
-  class_ptr->rx_timer();
+
+  // deliver queued frames while the NIC can take them; frames stay
+  // in the host queue while it cannot
+  for (int n = 0; n < BX_RX_FRAMES_PER_POLL; n++) {
+    if (!(class_ptr->rxstat(class_ptr->netdev) & BX_NETDEV_RXREADY))
+      break;
+    if (!class_ptr->rx_timer())
+      break;
+  }
 }
 
-void bx_tuntap_pktmover_c::rx_timer()
+bool bx_tuntap_pktmover_c::rx_timer(void)
 {
   int nbytes;
   Bit8u buf[BX_PACKET_BUFSIZE];
   Bit8u *rxbuf;
-  if (fd<0) return;
+  if (fd<0) return 0;
 
 #ifdef __APPLE__ //FIXME:hack
   nbytes = 14;
@@ -340,7 +351,7 @@ void bx_tuntap_pktmover_c::rx_timer()
 #endif
     if (errno != EAGAIN)
       BX_ERROR(("tuntap read error: %s", strerror(errno)));
-    return;
+    return 0;
   }
 #if BX_ETH_TUNTAP_LOGGING
   if (nbytes > 0) {
@@ -358,6 +369,7 @@ void bx_tuntap_pktmover_c::rx_timer()
   BX_DEBUG(("eth_tuntap: got packet: %d bytes, dst=%02x:%02x:%02x:%02x:%02x:%02x, src=%02x:%02x:%02x:%02x:%02x:%02x", nbytes, rxbuf[0], rxbuf[1], rxbuf[2], rxbuf[3], rxbuf[4], rxbuf[5], rxbuf[6], rxbuf[7], rxbuf[8], rxbuf[9], rxbuf[10], rxbuf[11]));
   if (nbytes < MIN_RX_PACKET_LEN) {
     BX_INFO(("packet too short (%d), padding to %d", nbytes, MIN_RX_PACKET_LEN));
+    memset(rxbuf + nbytes, 0, MIN_RX_PACKET_LEN - nbytes);
     nbytes = MIN_RX_PACKET_LEN;
   }
   if (this->rxstat(this->netdev) & BX_NETDEV_RXREADY) {
@@ -365,6 +377,7 @@ void bx_tuntap_pktmover_c::rx_timer()
   } else {
     BX_ERROR(("device not ready to receive data"));
   }
+  return 1;
 }
 
 int tun_alloc(char *dev)

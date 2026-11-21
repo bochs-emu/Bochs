@@ -54,11 +54,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSR_GwEwR(bxInstruction_c *i)
     assert_ZF(); /* op1_16 undefined */
   }
   else {
-    Bit16u op1_16 = 15;
-    while ((op2_16 & 0x8000) == 0) {
-      op1_16--;
-      op2_16 <<= 1;
-    }
+    Bit16u op1_16 = most_significant_bitw(op2_16);
 
     SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
     clear_ZF();

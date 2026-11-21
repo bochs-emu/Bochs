@@ -68,7 +68,7 @@ static BOOTPClient *get_new_addr(Slirp *slirp, struct in_addr *paddr,
  found:
     bc = &slirp->bootp_clients[i];
     bc->allocated = 1;
-    paddr->s_addr = slirp->vdhcp_startaddr.s_addr + htonl(i);
+    paddr->s_addr = htonl(ntohl(slirp->vdhcp_startaddr.s_addr) + i);
     return bc;
 }
 
@@ -285,7 +285,7 @@ static void bootp_reply(Slirp *slirp,
     memcpy(rbp->bp_hwaddr, bp->bp_hwaddr, ETH_ALEN);
 
     rbp->bp_yiaddr = daddr.sin_addr; /* Client IP address */
-    rbp->bp_siaddr = saddr.sin_addr; /* Server IP address */
+    rbp->bp_siaddr = saddr.sin_addr; /* Next server IP address */
 
     q = rbp->bp_vend;
     end = rbp->bp_vend + DHCP_OPT_LEN;
@@ -296,6 +296,27 @@ static void bootp_reply(Slirp *slirp,
         DPRINTF("%s addr=%08x",
                 (dhcp_opts.msg_type == DHCPDISCOVER) ? "offered" : "ack'ed",
                 ntohl(daddr.sin_addr.s_addr));
+
+        if (slirp->tftp_server_name) {
+            struct addrinfo hints;
+            struct addrinfo *ai = NULL;
+            int gaierrno;
+
+            memset(&hints, 0, sizeof(hints));
+            hints.ai_family = AF_INET;  /* must be IPv4 */
+
+            if ((gaierrno = getaddrinfo(slirp->tftp_server_name,
+                                        NULL, &hints, &ai))) {
+                slirplog_error("Failed to resolve tftp-server-name '%s': %s. "
+                               "Sending DHCP server as next server address.",
+                               slirp->tftp_server_name,
+                               gai_strerror(gaierrno));
+            } else {
+                /* only use the first candidate */
+                rbp->bp_siaddr = ((struct sockaddr_in*)ai->ai_addr)->sin_addr;
+            }
+            freeaddrinfo(ai);
+        }
 
         if (dhcp_opts.msg_type == DHCPDISCOVER) {
             *q++ = RFC2132_MSG_TYPE;
@@ -452,7 +473,8 @@ static void bootp_reply(Slirp *slirp,
            we assume that, if the bootfile parameter was configured as an http
            URL, the user intends to perform UEFI HTTP boot, so send this option
            automatically */
-        if (slirp->bootp_filename && !strncmp(slirp->bootp_filename, "http://", 7)) {
+        if (slirp->bootp_filename && (!strncmp(slirp->bootp_filename, "http://", 7) ||
+                                      !strncmp(slirp->bootp_filename, "https://", 8))) {
             val = strlen(UEFI_HTTP_VENDOR_CLASS_ID);
             if (q + val + 2 >= end) {
                 slirplog_error("DHCP packet size exceeded, omitting vendor class id option.");

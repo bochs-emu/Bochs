@@ -3972,7 +3972,11 @@ By default, the "Bochs i440FX" chipset enables the ACPI and HPET devices, but
 original i440FX doesn't support them. The options 'noacpi' and 'nohpet' make
 it possible to disable them. The option 'noagp' disables the incomplete AGP
 subsystem of the i440BX chipset. If PCI is enabled, the 'nofdc' option disables
-the FDC if no floppy drive is configured.
+the FDC if no floppy drive is configured. The option 'ich7ide' makes the PCI
+IDE controller report the ICH7 IDE device ID instead of the PIIX3/PIIX4 one
+(required by Mac OS X guests, which have no PIIX IDE driver). The controller
+still works in the legacy compatibility mode. This option is not supported by
+the i430FX chipset.
 </para>
 </section>
 
@@ -6118,7 +6122,7 @@ features enabled at compile time (3rd column).
   </row>
   <row>
     <entry>corei7_sandy_bridge_2600k</entry>
-    <entry>Intel(R) Core(TM) i7-2600K (Sandy Bridge)</entry>
+    <entry>Intel(R) Core(TM) i7-2600 (Sandy Bridge)</entry>
     <entry>cpu level 6, x86-64, avx</entry>
   </row>
   <row>
@@ -6128,7 +6132,7 @@ features enabled at compile time (3rd column).
   </row>
   <row>
     <entry>trinity_apu</entry>
-    <entry>AMD A8-5600K APU (Trinity)</entry>
+    <entry>AMD A10-5800K APU (Trinity)</entry>
     <entry>cpu level 6, x86-64, avx</entry>
   </row>
   <row>
@@ -6139,6 +6143,11 @@ features enabled at compile time (3rd column).
   <row>
     <entry>zen3_vermeer</entry>
     <entry>AMD Ryzen 7 5800X</entry>
+    <entry>cpu level 6, x86-64, avx</entry>
+  </row>
+  <row>
+    <entry>zen4_raphael</entry>
+    <entry>AMD Ryzen 9 7950X</entry>
     <entry>cpu level 6, x86-64, avx</entry>
   </row>
   <row>
@@ -6168,7 +6177,7 @@ features enabled at compile time (3rd column).
   </row>
   <row>
     <entry>corei7_icelake_u</entry>
-    <entry>QuadCore Intel Core i7-1065G7 (IceLake)</entry>
+    <entry>Intel(R) Core(TM) i7-1065G7 (IceLake)</entry>
     <entry>cpu level 6, x86-64, avx</entry>
   </row>
   <row>
@@ -6178,7 +6187,7 @@ features enabled at compile time (3rd column).
   </row>
   <row>
     <entry>sapphire_rapids</entry>
-    <entry>Intel(R) Xeon(R) w9-3475X (Sappire Rapids)</entry>
+    <entry>Intel(R) Xeon(R) w7-2475X (Sappire Rapids)</entry>
     <entry>cpu level 6, x86-64, avx</entry>
   </row>
   <row>

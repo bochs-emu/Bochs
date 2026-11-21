@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2007-2015 Stanislav Shwartsman
+//   Copyright (c) 2007-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -49,6 +49,11 @@ typedef struct { /* bx_selector_t */
 
 #define BX_SELECTOR_RPL(selector) ((selector) & 0x03)
 #define BX_SELECTOR_RPL_MASK (0xfffc)
+
+// NULL selector: index 0 in GDT (TI=0), any RPL
+#define BX_IS_NULL_SELECTOR(selector) (((selector) & BX_SELECTOR_RPL_MASK) == 0)
+// selector based exception error code: RPL bits are cleared (EXT is added by exception())
+#define BX_SELECTOR_ERROR_CODE(selector) ((selector) & BX_SELECTOR_RPL_MASK)
 
 typedef struct
 {
@@ -191,5 +196,8 @@ void  parse_selector(Bit16u raw_selector, bx_selector_t *selector);
 Bit8u get_ar_byte(const bx_descriptor_t *d);
 void  set_ar_byte(bx_descriptor_t *d, Bit8u ar_byte);
 void  parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp);
+const char* get_descriptor_type_name(unsigned type, bool long_mode);
+const char* get_descriptor_type_name32(unsigned type);
+const char* get_descriptor_type_name64(unsigned type);
 
 #endif

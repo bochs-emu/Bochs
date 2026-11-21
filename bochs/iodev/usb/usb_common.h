@@ -5,7 +5,7 @@
 // Generic USB emulation code
 //
 // Copyright (c) 2005       Fabrice Bellard
-// Copyright (C) 2009-2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
+// Copyright (C) 2009-2026  Benjamin D Lunt (fys [at] fysnet [dot] net)
 //               2009-2025  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -305,6 +305,10 @@ public:
   }
 
 protected:
+  // data toggle handling for handle_packet()
+  bool toggle_ok(USBPacket *p, int ep, int expected, const char *stage);
+  void toggle_advance(USBPacket *p, int ep, int ret);
+
   struct {
     Bit8u type;
     bool connected;

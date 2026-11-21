@@ -223,6 +223,12 @@ void bx_devices_c::init(BX_MEM_C *newmem)
         }
       } else if (!strcmp(argv[i], "nofdc")) {
         pci.advopts |= BX_PCI_ADVOPT_NOFDC;
+      } else if (!strcmp(argv[i], "ich7ide")) {
+        if (chipset != BX_PCI_CHIPSET_I430FX) {
+          pci.advopts |= BX_PCI_ADVOPT_ICH7IDE;
+        } else {
+          BX_ERROR(("ICH7 IDE not supported by PCI chipset"));
+        }
       } else {
         BX_ERROR(("Unknown advanced PCI option '%s'", argv[i]));
       }
@@ -521,6 +527,11 @@ void bx_devices_c::exit()
 
   // unload device plugins
   bx_unload_plugins();
+#if BX_SUPPORT_SOUNDLOW
+  // stop the sound threads and unload the sound drivers before
+  // plugin_cleanup() unloads them with the loader lock held
+  bx_soundmod_ctl.exit();
+#endif
   // remove runtime parameter handlers
   SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set_handler(NULL);
   SIM->get_param_num(BXPN_MOUSE_ENABLED)->set_handler(NULL);
@@ -1140,6 +1151,14 @@ bx_devices_c::inp(Bit16u addr, unsigned io_len)
   io_read_handler = read_port_to_handler[addr];
   if (io_read_handler->mask & io_len) {
     ret = ((bx_read_handler_t)io_read_handler->funct)(io_read_handler->this_ptr, (Bit32u)addr, io_len);
+  } else if (io_len > 1 && (io_read_handler->mask & 1)) {
+    // a word / dword IN from a device that registered byte access only: the bus splits it into byte reads, low byte first
+    ret = 0;
+    for (unsigned i = 0; i < io_len; i++) {
+      struct io_handler_struct *h = read_port_to_handler[(Bit16u)(addr + i)];
+      Bit32u b = (h->mask & 1) ? ((bx_read_handler_t)h->funct)(h->this_ptr, (Bit32u)(Bit16u)(addr + i), 1) : 0xff;
+      ret |= (b & 0xff) << (8 * i);
+    }
   } else {
     switch (io_len) {
       case 1: ret = 0xff; break;
@@ -1173,6 +1192,12 @@ bx_devices_c::outp(Bit16u addr, Bit32u value, unsigned io_len)
   io_write_handler = write_port_to_handler[addr];
   if (io_write_handler->mask & io_len) {
     ((bx_write_handler_t)io_write_handler->funct)(io_write_handler->this_ptr, (Bit32u)addr, value, io_len);
+  } else if (io_len > 1 && (io_write_handler->mask & 1)) {
+    // a word / dword OUT to a device that registered byte access only: the bus splits it into byte writes, low byte first
+    for (unsigned i = 0; i < io_len; i++) {
+      struct io_handler_struct *h = write_port_to_handler[(Bit16u)(addr + i)];
+      if (h->mask & 1) ((bx_write_handler_t)h->funct)(h->this_ptr, (Bit32u)(Bit16u)(addr + i), (value >> (8 * i)) & 0xff, 1);
+    }
   } else if (addr != 0x0cf8) { // don't flood the logfile when probing PCI
     BX_ERROR(("write to port 0x%04x with len %d ignored", addr, io_len));
   }
@@ -1194,6 +1219,15 @@ bool bx_devices_c::is_agp_present(void)
 {
 #if BX_SUPPORT_PCI
   return (pci.enabled && ((pci.advopts & BX_PCI_ADVOPT_NOAGP) == 0));
+#else
+  return false;
+#endif
+}
+
+bool bx_devices_c::is_ich7_ide(void)
+{
+#if BX_SUPPORT_PCI
+  return (pci.enabled && ((pci.advopts & BX_PCI_ADVOPT_ICH7IDE) != 0));
 #else
   return false;
 #endif
@@ -1544,17 +1578,20 @@ bool bx_devices_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_
   Bit32u oldbase = *addr, newbase = 0;
   Bit32u mask = ~(size - 1);
   Bit8u pci_flags = pci_conf[0x00] & 0x0f;
+  bool above_4g = 0;
   if ((pci_flags & 0x06) == 0x04) {
     Bit32u tmpaddr = ReadHostDWordFromLittleEndian((Bit32u*)&pci_conf[4]);
     if (tmpaddr != 0) {
-      BX_PANIC(("64-bit PCI BAR not supported yet (high = 0x%08x)", tmpaddr));
+      // not supported: the BAR is not mapped while the high dword is set
+      BX_ERROR(("64-bit PCI BAR above 4 GB not supported yet (high = 0x%08x)", tmpaddr));
+      above_4g = 1;
     }
   }
   pci_conf[0x00] &= (mask & 0xf0);
   pci_conf[0x01] &= (mask >> 8) & 0xff;
   pci_conf[0x02] &= (mask >> 16) & 0xff;
   pci_conf[0x03] &= (mask >> 24) & 0xff;
-  if (mae) {
+  if (mae && !above_4g) {
     newbase = ReadHostDWordFromLittleEndian((Bit32u*)pci_conf);
   }
   pci_conf[0x00] |= pci_flags;
@@ -1928,3 +1965,56 @@ Bit32u bx_pci_device_c::pci_read_handler(Bit8u address, unsigned io_len)
   return value;
 }
 #endif
+
+// memory stub has an assumption that there are no memory accesses splitting 4K page
+void DEV_MEM_READ_PHYSICAL(bx_phy_address phy_addr, unsigned len, Bit8u *ptr)
+{
+  while(len > 0) {
+    unsigned remainingInPage = 0x1000 - (phy_addr & 0xfff);
+    if (len < remainingInPage) remainingInPage = len;
+    BX_MEM(0)->readPhysicalPage(NULL, phy_addr, remainingInPage, ptr);
+    BX_INSTR_DEV_ACCESS(phy_addr, remainingInPage, BX_READ, ptr);
+    ptr += remainingInPage;
+    phy_addr += remainingInPage;
+    len -= remainingInPage;
+  }
+}
+
+void DEV_MEM_READ_PHYSICAL_DMA(bx_phy_address phy_addr, unsigned len, Bit8u *ptr)
+{
+  while(len > 0) {
+    unsigned remainingInPage = 0x1000 - (phy_addr & 0xfff);
+    if (len < remainingInPage) remainingInPage = len;
+    BX_MEM(0)->dmaReadPhysicalPage(phy_addr, remainingInPage, ptr);
+    BX_INSTR_DEV_ACCESS(phy_addr, remainingInPage, BX_READ, ptr);
+    ptr += remainingInPage;
+    phy_addr += remainingInPage;
+    len -= remainingInPage;
+  }
+}
+
+void DEV_MEM_WRITE_PHYSICAL(bx_phy_address phy_addr, unsigned len, Bit8u *ptr)
+{
+  while(len > 0) {
+    unsigned remainingInPage = 0x1000 - (phy_addr & 0xfff);
+    if (len < remainingInPage) remainingInPage = len;
+    BX_MEM(0)->writePhysicalPage(NULL, phy_addr, remainingInPage, ptr);
+    BX_INSTR_DEV_ACCESS(phy_addr, remainingInPage, BX_WRITE, ptr);
+    ptr += remainingInPage;
+    phy_addr += remainingInPage;
+    len -= remainingInPage;
+  }
+}
+
+void DEV_MEM_WRITE_PHYSICAL_DMA(bx_phy_address phy_addr, unsigned len, Bit8u *ptr)
+{
+  while(len > 0) {
+    unsigned remainingInPage = 0x1000 - (phy_addr & 0xfff);
+    if (len < remainingInPage) remainingInPage = len;
+    BX_MEM(0)->dmaWritePhysicalPage(phy_addr, remainingInPage, ptr);
+    BX_INSTR_DEV_ACCESS(phy_addr, remainingInPage, BX_WRITE, ptr);
+    ptr += remainingInPage;
+    phy_addr += remainingInPage;
+    len -= remainingInPage;
+  }
+}

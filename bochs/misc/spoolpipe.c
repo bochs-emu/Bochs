@@ -41,6 +41,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -54,7 +55,7 @@ int delay = 60;  // default delay, in seconds
 int count_down = 0;
 
 char buffer[BUF_SIZE];
-ssize_t readcnt, writecnt;
+ssize_t readcnt, writecnt, written;
 
 int didwait = 0;   // have we already waited?
 int havedata = 0;  // have we read anything in?
@@ -62,7 +63,7 @@ int havedata = 0;  // have we read anything in?
 int q;
 
 pid_t pid, wait_pid;
-int wait_status;
+int wait_status = 0;
 
 int main (int argc, char *argv[]) {
 
@@ -113,10 +114,14 @@ int main (int argc, char *argv[]) {
 		      exit(5);
 	      } else {  // no errors reading input pipe
 		      if (readcnt > 0) {
-			      writecnt = write(outfd, buffer, readcnt);
-			      if (writecnt == -1) {
-				      printf("Error writing output file: %d - %s\n", errno, strerror(errno));
-				      exit(6);
+			      written = 0;
+			      while (written < readcnt) { // write() may write only a part
+				      writecnt = write(outfd, buffer + written, readcnt - written);
+				      if (writecnt == -1) {
+					      printf("Error writing output file: %d - %s\n", errno, strerror(errno));
+					      exit(6);
+				      }
+				      written += writecnt;
 			      }
 			      didwait = 0; // reset wait flag (wait again)
 			      count_down = delay;
@@ -151,17 +156,15 @@ int main (int argc, char *argv[]) {
 					      } // we're now running in the child process...
 					      if (pid > 0) { // we're running in the parent process...
 						      wait_pid = waitpid(pid, (int *)&wait_status, 0);
-						      if (wait_pid != pid) { // some sort of error
-							      printf("Wait for 'lpr' command returned abnormally!\n");
-							      if (WIFEXITED(wait_status)) {
-								      printf("  'lpr' exited normally.\n");
-							      } else {
-								      printf("  'lpr' exited abnormally, return code = %d.\n", WEXITSTATUS(wait_status));
+						      if (wait_pid != pid) { // wait failed, no status available
+							      printf("Wait for 'lpr' command failed: %d - %s\n", errno, strerror(errno));
+						      } else if (WIFEXITED(wait_status)) {
+							      if (WEXITSTATUS(wait_status) != 0) {
+								      printf("'lpr' exited with return code %d.\n", WEXITSTATUS(wait_status));
 							      }
-							      if (WIFSIGNALED(wait_status)) {
-								      printf("   'lpr' received uncaught signal %d\n", WTERMSIG(wait_status));
-							      }
-						      } // some sort of error
+						      } else if (WIFSIGNALED(wait_status)) {
+							      printf("'lpr' received uncaught signal %d\n", WTERMSIG(wait_status));
+						      }
 					      } // we're running in the parent process...
 					      outfd = open(argv[2], O_RDWR | O_TRUNC);
 					      if (outfd == -1) {

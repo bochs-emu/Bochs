@@ -407,16 +407,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::linkTrace(bxInstruction_c *i)
 
   BX_SYNC_TIME_IF_SINGLE_PROCESSOR(0);
 
-  bxInstruction_c *next = i->getNextTrace(BX_CPU_THIS_PTR traceCache->traceLinkTimeStamp);
-  if (next) {
-    BX_EXECUTE_INSTRUCTION(next);
-    return;
-  }
-
+  // branch target on another page must go through prefetch() before following the link:
+  // code breakpoint assist, RF clearing and fetch page tracking are done there
   bx_address eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
   if (eipBiased >= BX_CPU_THIS_PTR eipPageWindowSize) {
     prefetch();
     eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
+  }
+
+  bxInstruction_c *next = i->getNextTrace(BX_CPU_THIS_PTR traceCache->traceLinkTimeStamp);
+  if (next) {
+    BX_EXECUTE_INSTRUCTION(next);
+    return;
   }
 
   INC_ICACHE_STAT(traceCacheLookups);

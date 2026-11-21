@@ -67,9 +67,10 @@ these four paragraphs for those parts of this code that are retained.
 #include <stddef.h>
 
 #include "fpu_trans.h"
-#include "softfloat-helpers.h"
 #include "fpu_constant.h"
 #include "fsincos_constants.h"
+
+#include "../wide_int.h"
 
 extern float128_t f128_mul_67_chop(float128_t a, float128_t b, struct softfloat_status_t *status);
 extern float128_t f128_mul_e67   (float128_t a, float128_t b, struct softfloat_status_t *status);
@@ -151,6 +152,9 @@ static BX_CPP_INLINE float128_t f128_xorsign(float128_t v, int neg)
  *   |x| >= 2    : full remainder.  A restoring bit-serial division of
  *                 (aSig << expDiff) << 64  by pi/2 yields the quotient bits
  *                 (only the low ones matter) and the 128-bit remainder.
+ *                 The callers reject |x| >= 2^63, so  aSig << expDiff < 2^126
+ *                 is below pi/2: the upper 128 dividend bits produce no
+ *                 quotient bits and only the low 64 (zero) bits are iterated.
  *
  * Then the fold: the raw remainder is in [0, pi/2); if it exceeds pi/4 replace
  * it with pi/2 - remainder (now in (0, pi/4]), remember that r is negative,
@@ -161,7 +165,8 @@ static BX_CPP_INLINE float128_t f128_xorsign(float128_t v, int neg)
 static int sincos_reduce(Bit32s aExp, Bit64u aSig, float128_t &r, int &rNeg, softfloat_status_t &status)
 {
     Bit32s expDiff = aExp - FLOATX80_EXP_BIAS;
-    Bit64u rSig0, rSig1;
+    Bit128u pi2 = MAKE128U(SC_PI2_HI, SC_PI2_LO);
+    Bit128u rem;
     Bit64u q = 0;
 
     if (expDiff < -1) {
@@ -173,48 +178,38 @@ static int sincos_reduce(Bit32s aExp, Bit64u aSig, float128_t &r, int &rNeg, sof
 
     if (expDiff <= 0) {
         /* |x| in [1/2, 2) : at most one pi/2 to subtract */
-        Bit64u xHi, xLo;
-        shortShift128Right(aSig, 0, (expDiff == 0) ? 0 : 1, &xHi, &xLo);   /* x on the /2^127 scale */
-        rSig0 = xHi; rSig1 = xLo;
-        if (! softfloat_lt128(rSig0, rSig1, SC_PI2_HI, SC_PI2_LO)) {
-            sub128(rSig0, rSig1, SC_PI2_HI, SC_PI2_LO, &rSig0, &rSig1);
+        rem = MAKE128U(aSig, 0) >> ((expDiff == 0) ? 0 : 1);   /* x on the /2^127 scale */
+        if (rem >= pi2) {
+            rem -= pi2;
             q = 1;
         }
     }
     else {
         /* |x| >= 2 : bit-serial truncated remainder.  Dividend is
            (aSig << expDiff) << 64  (so that quotient = x / (pi/2) on the
-           /2^127 scale), divisor is pi/2. */
-        Bit64u y1, y0;
-        shortShift128Left(0, aSig, expDiff, &y1, &y0);   /* (y1:y0) = aSig << expDiff */
-        rSig0 = 0; rSig1 = 0;
-        for (int idx = 0; idx < 192; idx++) {
-            Bit64u dbit =
-                (idx < 64)  ? ((y1 >> (63 - idx)) & 1) :
-                (idx < 128) ? ((y0 >> (127 - idx)) & 1) : 0;
-            Bit64u carry = rSig0 >> 63;
-            rSig0 = (rSig0 << 1) | (rSig1 >> 63);
-            rSig1 = (rSig1 << 1) | dbit;
+           /2^127 scale), divisor is pi/2.  The upper 128 dividend bits
+           (aSig << expDiff) are below pi/2 and become the initial remainder. */
+        rem = (Bit128u) aSig << expDiff;
+        for (int idx = 0; idx < 64; idx++) {
+            Bit64u carry = GET128H(rem) >> 63;
+            rem <<= 1;
             q <<= 1;
-            if (carry || ! softfloat_lt128(rSig0, rSig1, SC_PI2_HI, SC_PI2_LO)) {
-                sub128(rSig0, rSig1, SC_PI2_HI, SC_PI2_LO, &rSig0, &rSig1);
+            if (carry || rem >= pi2) {
+                rem -= pi2;     /* modulo 2^128, exact when carry is set */
                 q |= 1;
             }
         }
     }
 
     /* fold to |r| <= pi/4 : if r > pi/4 then r := (pi/2) - r, rNeg, n++ */
-    Bit64u p4Sig0, p4Sig1;
-    shortShift128Right(SC_PI2_HI, SC_PI2_LO, 1, &p4Sig0, &p4Sig1);
-
     rNeg = 0;
-    if (softfloat_lt128(p4Sig0, p4Sig1, rSig0, rSig1)) {
-        sub128(SC_PI2_HI, SC_PI2_LO, rSig0, rSig1, &rSig0, &rSig1);
+    if (rem > (pi2 >> 1)) {
+        rem = pi2 - rem;
         rNeg = 1;
         q++;
     }
 
-    r = softfloat_normRoundPackToF128(0, FLOATX80_EXP_BIAS - 0x10, rSig0, rSig1, &status);
+    r = softfloat_normRoundPackToF128(0, FLOATX80_EXP_BIAS - 0x10, GET128H(rem), GET128L(rem), &status);
     return (int)(q & 3);
 }
 
@@ -254,30 +249,14 @@ static void sincos_sincosd(float128_t d, float128_t &p, float128_t &q, softfloat
     q  = f128_mul_64_ne(e, q1, &status);
 }
 
-/* Round  a + b  to a 64-bit (extF80) significand honouring the FPU mode; this
-   is the closing step of every sin/cos reconstruction and is the only rounding
-   that reaches SW.C1 (magnitude rounded up), so the round-up state left by the
-   intermediate steps is cleared first.
-   Corner case: when |b| is more than ~112 bits below |a|, f128_add absorbs it
-   entirely (sum == a) and roundPackToF128 never flags a round-up - but the tiny
-   addend still decided the direction, so it is applied by hand here: opposite
-   signs mean |a+b| < |a| rounded up to |a|.  (This is what makes sin(tiny x)
-   report C1 the way the hardware does.) */
+/* Round a + b to a 64-bit (extF80) significand honouring the FPU mode.
+   Round to odd before conversion to avoid double rounding. Only the final
+   conversion determines C1, so discard round-up state from earlier steps. */
 static floatx80 sc_add_e64(float128_t a, float128_t b, softfloat_status_t &status)
 {
     softfloat_clearRoundingUp(&status);
 
-    float128_t sum = f128_add(a, b, &status);
-
-    if (sum.v64 == a.v64 && sum.v0 == a.v0 && ((b.v64 << 1) | b.v0) != 0) {
-        /* a + b == a to 113 bits : |b| < 1/2 ulp, result is 'a' */
-        softfloat_raiseFlags(&status, softfloat_flag_inexact);
-        floatx80 res = f128_to_extF80(a, &status);
-        if ((a.v64 ^ b.v64) & SC_SIGNBIT)          /* opposite signs -> |a+b| < |a|, rounded up */
-            softfloat_setRoundingUp(&status);
-        return res;
-    }
-    return f128_to_extF80(sum, &status);
+    return f128_to_extF80(f128_add(a, b, softfloat_round_odd, &status), &status);
 }
 
 static floatx80 sincos_finish(float128_t head, float128_t f, float128_t g, softfloat_status_t &status)
@@ -738,7 +717,7 @@ int fptan(floatx80 &a, softfloat_status_t &status)
     }
 
     softfloat_clearRoundingUp(&status);
-    float128_t z = f128_div(num, den, softfloat_getRoundingMode(&status), &status);
+    float128_t z = f128_div(num, den, softfloat_round_odd, &status);
     a = f128_to_extF80(z, &status);
 
     return 0;

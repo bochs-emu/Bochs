@@ -36,6 +36,8 @@
 //   <op>_BdEdR      : ND=1, dst = vvvv, src = rm (or TMP after LOAD_Ed), flags updated unless NF=1,
 //                     the upper part of the destination register is always cleared
 //                     also ND=0 NF=1 register form (def duplicates rm as dst and src)
+//   APX_NF_SHxD_EdGdM : ND=0 NF=1 memory form, src = reg, flags are not updated
+//   APX_NF_<op>_EdM : ND=0 NF=1 memory form, flags are not updated
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_BdEdGdR(bxInstruction_c *i)
 {
@@ -65,6 +67,33 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_BdEdGdR(bxInstruction_c *i)
   }
 
   BX_WRITE_32BIT_REGZ(i->dst(), result_32);
+
+  BX_NEXT_INSTR(i);
+}
+
+// SHLD Ed, Gd with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHLD_EdGdM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_NF_SHLD_EdGd)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0x1f; // use only 5 LSB's
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+
+  if (count) {
+    Bit32u op2_32 = BX_READ_32BIT_REG(i->src());
+
+    Bit32u result_32 = (op1_32 << count) | (op2_32 >> (32 - count));
+
+    write_RMW_linear_dword(result_32);
+  }
 
   BX_NEXT_INSTR(i);
 }
@@ -101,6 +130,33 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_BdEdGdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// SHRD Ed, Gd with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHRD_EdGdM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_NF_SHRD_EdGd)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0x1f; // use only 5 LSB's
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+
+  if (count) {
+    Bit32u op2_32 = BX_READ_32BIT_REG(i->src());
+
+    Bit32u result_32 = (op2_32 << (32 - count)) | (op1_32 >> count);
+
+    write_RMW_linear_dword(result_32);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_BdEdR(bxInstruction_c *i)
 {
   unsigned count;
@@ -132,6 +188,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_BdEdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// ROL Ed with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_ROL_EdM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_NF_ROL_Ed)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0x1f; // only the rotate count matters, flags are not updated
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+
+  if (count) {
+    Bit32u result_32 = rol32(op1_32, count);
+
+    write_RMW_linear_dword(result_32);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_BdEdR(bxInstruction_c *i)
 {
   unsigned count;
@@ -159,6 +240,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_BdEdR(bxInstruction_c *i)
   }
 
   BX_WRITE_32BIT_REGZ(i->dst(), result_32);
+
+  BX_NEXT_INSTR(i);
+}
+
+// ROR Ed with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_ROR_EdM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_NF_ROR_Ed)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0x1f; // only the rotate count matters, flags are not updated
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+
+  if (count) {
+    Bit32u result_32 = ror32(op1_32, count);
+
+    write_RMW_linear_dword(result_32);
+  }
 
   BX_NEXT_INSTR(i);
 }
@@ -266,6 +372,32 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_BdEdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// SHL Ed with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHL_EdM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_NF_SHL_Ed)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0x1f;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+
+  if (count) {
+    /* count < 32, since only lower 5 bits used */
+    Bit32u result_32 = (op1_32 << count);
+
+    write_RMW_linear_dword(result_32);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_BdEdR(bxInstruction_c *i)
 {
   unsigned count;
@@ -300,6 +432,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_BdEdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// SHR Ed with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHR_EdM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_NF_SHR_Ed)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0x1f;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+
+  if (count) {
+    Bit32u result_32 = (op1_32 >> count);
+
+    write_RMW_linear_dword(result_32);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_BdEdR(bxInstruction_c *i)
 {
   unsigned count;
@@ -328,6 +485,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_BdEdR(bxInstruction_c *i)
   }
 
   BX_WRITE_32BIT_REGZ(i->dst(), result_32);
+
+  BX_NEXT_INSTR(i);
+}
+
+// SAR Ed with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SAR_EdM(bxInstruction_c *i)
+{
+  unsigned count;
+
+  if (i->getIaOpcode() == BX_IA_APX_NF_SAR_Ed)
+    count = CL;
+  else
+    count = i->Ib();
+
+  count &= 0x1f;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
+
+  if (count) {
+    Bit32u result_32 = ((Bit32s) op1_32) >> count;
+
+    write_RMW_linear_dword(result_32);
+  }
 
   BX_NEXT_INSTR(i);
 }

@@ -298,15 +298,23 @@ BX_CPU_C::write_linear_zmmword_aligned(unsigned s, bx_address laddr, const BxPac
 
 #endif
 
-  void BX_CPP_AttrRegparmN(2)
-BX_CPU_C::tickle_read_linear(unsigned s, bx_address laddr)
+  void BX_CPP_AttrRegparmN(3)
+BX_CPU_C::tickle_read_linear(unsigned s, bx_address laddr, unsigned len)
 {
+  len--;
+
+  bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr, len);
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+  bx_address lpf = AlignedAccessLPFOf(laddr, (len & BX_CPU_THIS_PTR alignment_check_mask));
+#else
   bx_address lpf = LPFOf(laddr);
-  bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr, 0);
+#endif
+  Bit32u pageOffset = PAGE_OFFSET(laddr);
+
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us read access from this CPL
     if (isReadOK(tlbEntry, USER_PL)) {
-      BX_CPU_THIS_PTR address_xlation.paddress1 = tlbEntry->ppf | PAGE_OFFSET(laddr);
+      BX_CPU_THIS_PTR address_xlation.paddress1 = tlbEntry->ppf | pageOffset;
       BX_CPU_THIS_PTR address_xlation.pages     = 1;
 #if BX_SUPPORT_MEMTYPE
       BX_CPU_THIS_PTR address_xlation.memtype1  = tlbEntry->get_memtype();
@@ -316,22 +324,40 @@ BX_CPU_C::tickle_read_linear(unsigned s, bx_address laddr)
   }
 
 #if BX_SUPPORT_X86_64
-  if (! IsCanonicalAccess(laddr, BX_READ, USER_PL)) {
+  if (! IsCanonicalAccess(laddr, BX_READ, USER_PL) || ! IsCanonicalAccess(laddr+len, BX_READ, USER_PL)) {
     BX_ERROR(("tickle_read_linear(): canonical failure"));
     exception(int_number(s), 0);
   }
 #endif
 
-  // Access within single page
-  BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, USER_PL, BX_READ);
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  if (BX_CPU_THIS_PTR alignment_check() && USER_PL) {
+    // 16/32/64-byte accesses never generate #AC, same as the vector read that follows
+    if (len < 8 && (pageOffset & len)) {
+      BX_ERROR(("tickle_read_linear(): #AC misaligned access"));
+      exception(BX_AC_EXCEPTION, 0);
+    }
+  }
+#endif
+
+  // access spans across two pages
+  tlbEntry = BX_DTLB_ENTRY_OF(laddr, 0);
   BX_CPU_THIS_PTR address_xlation.pages     = 1;
+  BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, USER_PL, BX_READ);
 #if BX_SUPPORT_MEMTYPE
   BX_CPU_THIS_PTR address_xlation.memtype1  = tlbEntry->get_memtype();
 #endif
 
-#if BX_X86_DEBUGGER
-  hwbreakpoint_match(laddr, 1, BX_READ);
+  if ((laddr>>12) != (laddr + len) >> 12) {
+    bx_address laddr2 = LPFOf(laddr + len);
+    bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr2, 1);
+
+    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry, laddr2, USER_PL, BX_READ);
+    BX_CPU_THIS_PTR address_xlation.pages     = 2;
+#if BX_SUPPORT_MEMTYPE
+    BX_CPU_THIS_PTR address_xlation.memtype2  = tlbEntry->get_memtype();
 #endif
+  }
 }
 
   void BX_CPP_AttrRegparmN(3)
@@ -368,14 +394,16 @@ BX_CPU_C::tickle_write_linear(unsigned s, bx_address laddr, unsigned len)
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
   if (BX_CPU_THIS_PTR alignment_check() && USER_PL) {
-    if (pageOffset & len) {
+    // 16/32/64-byte accesses never generate #AC, same as the vector write that follows
+    if (len < 8 && (pageOffset & len)) {
       BX_ERROR(("tickle_write_linear(): #AC misaligned access"));
       exception(BX_AC_EXCEPTION, 0);
     }
   }
 #endif
 
-  // access spans accross two pages
+  // access spans across two pages
+  tlbEntry = BX_DTLB_ENTRY_OF(laddr, 0);
   BX_CPU_THIS_PTR address_xlation.pages     = 1;
   BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, USER_PL, BX_WRITE);
 #if BX_SUPPORT_MEMTYPE
@@ -383,16 +411,15 @@ BX_CPU_C::tickle_write_linear(unsigned s, bx_address laddr, unsigned len)
 #endif
 
   if ((laddr>>12) != (laddr + len) >> 12) {
+    bx_address laddr2 = LPFOf(laddr + len);
+    bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr2, 1);
+
+    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry, laddr2, USER_PL, BX_WRITE);
     BX_CPU_THIS_PTR address_xlation.pages     = 2;
-    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry, laddr+len, USER_PL, BX_WRITE);
 #if BX_SUPPORT_MEMTYPE
     BX_CPU_THIS_PTR address_xlation.memtype2  = tlbEntry->get_memtype();
 #endif
   }
-
-#if BX_X86_DEBUGGER
-  hwbreakpoint_match(laddr, len+1, BX_WRITE);
-#endif
 }
 
   Bit8u BX_CPP_AttrRegparmN(2)
@@ -1126,7 +1153,7 @@ accessOK:
   if (!write_virtual_checks(seg, offset, 2)) {
     BX_ERROR(("write_new_stack_word(): segment limit violation"));
     exception(BX_SS_EXCEPTION,
-         seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0);
+         seg->selector.rpl != CPL ? BX_SELECTOR_ERROR_CODE(seg->selector.value) : 0);
   }
   goto accessOK;
 }
@@ -1141,7 +1168,8 @@ void BX_CPU_C::write_new_stack_dword(bx_segment_reg_t *seg, Bit32u offset, unsig
   }
 
   if (seg->cache.valid & SegAccessWOK) {
-    if (offset < (seg->cache.u.segment.limit_scaled-2)) {
+    // check limit first, limit_scaled-3 underflows for tiny segments
+    if (seg->cache.u.segment.limit_scaled >= 3 && offset <= (seg->cache.u.segment.limit_scaled-3)) {
 accessOK:
       laddr = (Bit32u)(seg->cache.u.segment.base) + offset;
       write_new_stack_dword(laddr, curr_pl, data);
@@ -1153,7 +1181,7 @@ accessOK:
   if (!write_virtual_checks(seg, offset, 4)) {
     BX_ERROR(("write_new_stack_dword(): segment limit violation"));
     exception(BX_SS_EXCEPTION,
-         seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0);
+         seg->selector.rpl != CPL ? BX_SELECTOR_ERROR_CODE(seg->selector.value) : 0);
   }
   goto accessOK;
 }
@@ -1168,7 +1196,8 @@ void BX_CPU_C::write_new_stack_qword(bx_segment_reg_t *seg, Bit32u offset, unsig
   }
 
   if (seg->cache.valid & SegAccessWOK) {
-    if (offset <= (seg->cache.u.segment.limit_scaled-7)) {
+    // check limit first, limit_scaled-7 underflows for tiny segments
+    if (seg->cache.u.segment.limit_scaled >= 7 && offset <= (seg->cache.u.segment.limit_scaled-7)) {
 accessOK:
       laddr = (Bit32u)(seg->cache.u.segment.base) + offset;
       write_new_stack_qword(laddr, curr_pl, data);
@@ -1180,13 +1209,15 @@ accessOK:
   if (!write_virtual_checks(seg, offset, 8)) {
     BX_ERROR(("write_new_stack_qword(): segment limit violation"));
     exception(BX_SS_EXCEPTION,
-        seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0);
+        seg->selector.rpl != CPL ? BX_SELECTOR_ERROR_CODE(seg->selector.value) : 0);
   }
   goto accessOK;
 }
 
 #if BX_SUPPORT_CET
-Bit32u BX_CPP_AttrRegparmN(2) BX_CPU_C::shadow_stack_read_dword(bx_address offset, unsigned curr_pl)
+// Shadow stack accesses: 's' is the segment of explicit memory operand (canonical or LASS failure
+// referencing SS segment is #SS), implicit shadow stack accesses pass BX_SEG_REG_NULL (#GP)
+Bit32u BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_read_dword(unsigned s, bx_address offset, unsigned curr_pl)
 {
   Bit32u data;
 
@@ -1205,13 +1236,18 @@ Bit32u BX_CPP_AttrRegparmN(2) BX_CPU_C::shadow_stack_read_dword(bx_address offse
     }
   }
 
-  if (access_read_linear(offset, 4, curr_pl, BX_SHADOW_STACK_READ, 0, (void *) &data) < 0)
+  if (offset & 3) {
+    BX_ERROR(("shadow_stack_read_dword(): #GP misaligned access"));
     exception(BX_GP_EXCEPTION, 0);
+  }
+
+  if (access_read_linear(offset, 4, curr_pl, BX_SHADOW_STACK_READ, 0, (void *) &data) < 0)
+    exception(int_number(s), 0);
 
   return data;
 }
 
-Bit64u BX_CPP_AttrRegparmN(2) BX_CPU_C::shadow_stack_read_qword(bx_address offset, unsigned curr_pl)
+Bit64u BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_read_qword(unsigned s, bx_address offset, unsigned curr_pl)
 {
   Bit64u data;
 
@@ -1231,12 +1267,12 @@ Bit64u BX_CPP_AttrRegparmN(2) BX_CPU_C::shadow_stack_read_qword(bx_address offse
   }
 
   if (access_read_linear(offset, 8, curr_pl, BX_SHADOW_STACK_READ, 0, (void *) &data) < 0)
-    exception(BX_GP_EXCEPTION, 0);
+    exception(int_number(s), 0);
 
   return data;
 }
 
-void BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_write_dword(bx_address offset, unsigned curr_pl, Bit32u data)
+void BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_write_dword(unsigned s, bx_address offset, unsigned curr_pl, Bit32u data)
 {
   bool user = (curr_pl == 3);
   bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(offset, 3);
@@ -1255,11 +1291,16 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_write_dword(bx_address offset
     }
   }
 
-  if (access_write_linear(offset, 4, curr_pl, BX_SHADOW_STACK_WRITE, 0, (void *) &data) < 0)
+  if (offset & 3) {
+    BX_ERROR(("shadow_stack_write_dword(): #GP misaligned access"));
     exception(BX_GP_EXCEPTION, 0);
+  }
+
+  if (access_write_linear(offset, 4, curr_pl, BX_SHADOW_STACK_WRITE, 0, (void *) &data) < 0)
+    exception(int_number(s), 0);
 }
 
-void BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_write_qword(bx_address offset, unsigned curr_pl, Bit64u data)
+void BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_write_qword(unsigned s, bx_address offset, unsigned curr_pl, Bit64u data)
 {
   bool user = (curr_pl == 3);
   bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(offset, 7);
@@ -1279,30 +1320,30 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_write_qword(bx_address offset
   }
 
   if (access_write_linear(offset, 8, curr_pl, BX_SHADOW_STACK_WRITE, 0, (void *) &data) < 0)
-    exception(BX_GP_EXCEPTION, 0);
+    exception(int_number(s), 0);
 }
 
-bool BX_CPP_AttrRegparmN(4) BX_CPU_C::shadow_stack_lock_cmpxchg8b(bx_address offset, unsigned curr_pl, Bit64u data, Bit64u expected_data)
+bool BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_lock_cmpxchg8b(unsigned s, bx_address offset, unsigned curr_pl, Bit64u data, Bit64u expected_data)
 {
-  Bit64u val64 = shadow_stack_read_qword(offset, curr_pl); // should be locked and RMW
+  Bit64u val64 = shadow_stack_read_qword(s, offset, curr_pl); // should be locked and RMW
   if (val64 == expected_data) {
-    shadow_stack_write_qword(offset, curr_pl, data);
+    shadow_stack_write_qword(s, offset, curr_pl, data);
     return true;
   }
   else {
-    shadow_stack_write_qword(offset, curr_pl, val64);
+    shadow_stack_write_qword(s, offset, curr_pl, val64);
     return false;
   }
 }
 
-bool BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_atomic_set_busy(bx_address offset, unsigned curr_pl, bool long64)
+bool BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_atomic_set_busy(unsigned s, bx_address offset, unsigned curr_pl, bool long64)
 {
   // set busy fail if address in the token is above 4GB while in compatibility mode
-  return shadow_stack_lock_cmpxchg8b(offset, curr_pl, offset | 0x1, long64 ? offset : GET32L(offset));
+  return shadow_stack_lock_cmpxchg8b(s, offset, curr_pl, offset | 0x1, long64 ? offset : GET32L(offset));
 }
 
-bool BX_CPP_AttrRegparmN(2) BX_CPU_C::shadow_stack_atomic_clear_busy(bx_address offset, unsigned curr_pl)
+bool BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_atomic_clear_busy(unsigned s, bx_address offset, unsigned curr_pl)
 {
-  return shadow_stack_lock_cmpxchg8b(offset, curr_pl, offset, offset | 0x1);
+  return shadow_stack_lock_cmpxchg8b(s, offset, curr_pl, offset, offset | 0x1);
 }
 #endif

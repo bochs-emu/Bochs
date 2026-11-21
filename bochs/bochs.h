@@ -330,6 +330,10 @@ typedef struct {
 #endif
 } bx_debug_t;
 
+#if BX_DEBUGGER
+BOCHSAPI void dbg_printf(const char *fmt, ...);
+#endif
+
 #if BX_SHOW_IPS
 BOCHSAPI void bx_show_ips_handler(void);
 #endif

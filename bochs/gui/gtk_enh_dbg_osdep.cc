@@ -706,9 +706,9 @@ void VSizeChange()
     if (ShowIOWindows == FALSE)
     {
         gtk_widget_hide(IOVbox);
-//#if BX_HAVE_GTK_VERSION == 2
+#if BX_HAVE_GTK_VERSION == 2
         gtk_table_resize(GTK_TABLE(TreeTbl), 3, 1);  // IO windows do not exist, so total table rows = 3
-//#endif
+#endif
     }
     else
     {
@@ -718,9 +718,9 @@ void VSizeChange()
         gcp = gtk_entry_get_text(GTK_ENTRY(IEntry));
         strcpy (tmpcb, gcp);
         gtk_entry_set_text(GTK_ENTRY(IEntry),"");
-//#if BX_HAVE_GTK_VERSION == 2
+#if BX_HAVE_GTK_VERSION == 2
         gtk_table_resize(GTK_TABLE(TreeTbl), 4, 1);  // IO windows exist, so total table rows = 4
-//#endif
+#endif
         gtk_widget_show(IOVbox);
         gtk_widget_grab_focus(IEntry);  // Input window loses focus while it is hidden
         gtk_entry_set_text(GTK_ENTRY(IEntry),tmpcb);
@@ -1574,10 +1574,10 @@ void Mem_DblClick (GtkTreeView *treeview, GtkTreePath *path, GtkTreeViewColumn *
     if (DViewMode == VIEW_MEMDUMP)
     {
         if (KeyStateShft != 0 && LinearDump == FALSE)
-            SetWatchpoint(&num_write_watchpoints,write_watchpoint);
+            SetWatchpointWr();
 
         else if (KeyStateAlt != 0 && LinearDump == FALSE)
-            SetWatchpoint(&num_read_watchpoints,read_watchpoint);
+            SetWatchpointRd();
 
         else
 //L HIHI Fix how this works in the Windoze version to match GTK?
@@ -1588,32 +1588,17 @@ void Mem_DblClick (GtkTreeView *treeview, GtkTreePath *path, GtkTreeViewColumn *
 //L HIHI pre-test DumpSelRow < 256
         if (DumpSelRow < WWP_BaseEntry)
         {
-            if (BrkpIDMap[DumpSelRow] == 0)
-                ;   // dblclick was on an invalid row
-            else if (DumpSelRow > EndPhyEntry)
-                bx_dbg_del_vbreak(BrkpIDMap[DumpSelRow]);   // delete Virtual Brk
-            else if (DumpSelRow > EndLinEntry)
-                bx_dbg_del_pbreak(BrkpIDMap[DumpSelRow]);   // delete Phy Brkpt
-            else
+            if (BrkpIDMap[DumpSelRow] != 0)     // 0 = dblclick was on an invalid row
             {
-                bx_dbg_del_lbreak(BrkpIDMap[DumpSelRow]);   // delete Lin Brkpt
+                bx_dbg_del_breakpoint_command(BrkpIDMap[DumpSelRow]);
                 ParseBkpt();        // get a new set of linear breakpoints
                 Invalidate (1);     // breakpoint colors may have changed
             }
         }
         else if (DumpSelRow >= WWP_BaseEntry && DumpSelRow < WWP_BaseEntry + WWPSnapCount)
-        {
-            // if a watchpoint was clicked, get its index (0 to 15)
-            int i = DumpSelRow - WWP_BaseEntry;
-            if (WWP_Snapshot[i] == write_watchpoint[i].addr)
-                DelWatchpoint(write_watchpoint, &num_write_watchpoints, i);
-        }
+            bx_dbg_unwatch_wr(WWP_Snapshot[DumpSelRow - WWP_BaseEntry]);
         else if (DumpSelRow >= RWP_BaseEntry && DumpSelRow < RWP_BaseEntry + RWPSnapCount)
-        {
-            int i = DumpSelRow - RWP_BaseEntry;
-            if (RWP_Snapshot[i] == read_watchpoint[i].addr)
-                DelWatchpoint(read_watchpoint, &num_read_watchpoints, i);
-        }
+            bx_dbg_unwatch_rd(RWP_Snapshot[DumpSelRow - RWP_BaseEntry]);
         RefreshDataWin();       // show the NEW set of break/watchpoints
     }
 }
@@ -1992,14 +1977,14 @@ void ListClr_PaintCb(GtkTreeViewColumn *col,
             // set fg (and bg if requested) according to color list
         Bit8u ClrFlgs = RegColor[ RitemToRnum[rownum] ];
         // RitemToRnum converts a ListView row number to the corresponding Register number.
-        // RegColor has the 0x80 bit set if the register is supposed to be red.
+        // RegColor has the RCLR_CHANGED bit set if the register is supposed to be red.
         // Background color index is in the low nibble of ClrFlgs/RegColor.
         if (SeeRegColors != FALSE)
             g_object_set(renderer, "cell-background-gdk", &ColorList[ClrFlgs &7], "cell-background-set", TRUE, NULL);
         else
             g_object_set(renderer, "cell-background-gdk", &white, "cell-background-set", TRUE, NULL);
 
-        if ((ClrFlgs & 0x80) != 0)      // should this register be red?
+        if ((ClrFlgs & RCLR_CHANGED) != 0)      // should this register be red?
             g_object_set(renderer, "foreground-gdk", &fg_red, "foreground-set", TRUE, NULL);
         else
             g_object_set(renderer, "foreground-gdk", &fg_black, "foreground-set", TRUE, NULL);
@@ -2280,7 +2265,7 @@ bool OSInit()
     Stat[0] = gtk_label_new("Break");
     gtk_label_set_width_chars (GTK_LABEL(Stat[0]), 7);
     Stat[1] = gtk_label_new("CPU:");
-    gtk_label_set_width_chars (GTK_LABEL(Stat[1]), 23);
+    gtk_label_set_width_chars (GTK_LABEL(Stat[1]), 50);
     Stat[2] = gtk_label_new("t=0");
     gtk_label_set_width_chars (GTK_LABEL(Stat[2]), 19);
     Stat[3] = gtk_label_new("IOPL");
@@ -2320,13 +2305,15 @@ bool OSInit()
     gtk_box_pack_start(GTK_BOX(MainVbox), menubar, FALSE, FALSE, 0);
     gtk_box_pack_end(GTK_BOX(MainVbox), StatHbox, FALSE, FALSE, 0);
 
-    // build the table that holds the TreeView/Input&Output windows
-    TreeTbl = gtk_table_new(4, 1, TRUE);    // proportion the remaining space in quarters, vertically
+    // build the table / grid that holds the TreeView/Input&Output windows
 #if BX_HAVE_GTK_VERSION == 2
+    TreeTbl = gtk_table_new(4, 1, TRUE);    // proportion the remaining space in quarters, vertically
     sep8 = gtk_vseparator_new();            // vertical separators between the ListViews
     sep9 = gtk_vseparator_new();
 #else
-//    TreeTbl = gtk_grid_new();              // TODO
+    TreeTbl = gtk_grid_new();
+    gtk_grid_set_row_homogeneous(GTK_GRID(TreeTbl), TRUE);    // proportion the remaining space in quarters, vertically
+    gtk_grid_set_column_homogeneous(GTK_GRID(TreeTbl), TRUE);
     sep8 = gtk_separator_new(GTK_ORIENTATION_VERTICAL);
     sep9 = gtk_separator_new(GTK_ORIENTATION_VERTICAL);
 #endif
@@ -2418,13 +2405,17 @@ bool OSInit()
 
     gtk_box_pack_end(GTK_BOX(MainVbox), TreeTbl, TRUE, TRUE, 0);
 
-//#if BX_HAVE_GTK_VERSION == 2
+#if BX_HAVE_GTK_VERSION == 2
     gtk_table_attach_defaults(GTK_TABLE(TreeTbl), LVEvtBox, 0, 1, 0, 3);  // order = LRTB
     gtk_table_attach_defaults(GTK_TABLE(TreeTbl), IOVbox, 0, 1, 3, 4);
-//#else
-//    gtk_grid_attach(GTK_GRID(TreeTbl), LVEvtBox, 0, 0, 3, 3);  // order = LTWH
-//    gtk_grid_attach(GTK_GRID(TreeTbl), IOVbox, 0, 3, 3, 1);
-//#endif
+#else
+    gtk_grid_attach(GTK_GRID(TreeTbl), LVEvtBox, 0, 0, 1, 3);  // order = LTWH
+    gtk_grid_attach(GTK_GRID(TreeTbl), IOVbox, 0, 3, 1, 1);
+    gtk_widget_set_hexpand(LVEvtBox, TRUE);
+    gtk_widget_set_vexpand(LVEvtBox, TRUE);
+    gtk_widget_set_hexpand(IOVbox, TRUE);
+    gtk_widget_set_vexpand(IOVbox, TRUE);
+#endif
     VSizeChange();
 
     // build the 3 ListView windows

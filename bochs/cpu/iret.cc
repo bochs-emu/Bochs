@@ -26,12 +26,94 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+// EFLAGS bits that protected mode IRET may change, must be called before CPL is changed:
+//   IF only changed if (CPL <= EFLAGS.IOPL)
+//   VIF, VIP, IOPL only changed if CPL == 0
+//   VM is unaffected (return to v8086 mode is handled separately)
+//   16-bit operand size changes only bits 15:0
+  Bit32u BX_CPP_AttrRegparmN(1)
+BX_CPU_C::get_iret_eflags_write_mask(bxInstruction_c *i)
+{
+  // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
+  Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask |
+                          EFlagsDFMask | EFlagsNTMask | EFlagsRFMask;
+#if BX_CPU_LEVEL >= 4
+  changeMask |= (EFlagsIDMask | EFlagsACMask);  // ID/AC
+#endif
+  if (CPL <= BX_CPU_THIS_PTR get_IOPL())
+    changeMask |= EFlagsIFMask;
+  if (CPL == 0)
+    changeMask |= EFlagsVIPMask | EFlagsVIFMask | EFlagsIOPLMask;
+
+  if (! i->os32L()) // 16 bit
+    changeMask &= 0xffff;
+
+  return changeMask;
+}
+
+// IRET with EFLAGS.NT=1 in protected mode (SDM label TASK-RETURN): switch tasks back
+// to the task specified by the back link field of the current TSS
+  void BX_CPP_AttrRegparmN(1)
+BX_CPU_C::iret_return_from_nested_task(bxInstruction_c *i)
+{
+  /* what's the deal with NT & VM ? */
+  Bit16u raw_link_selector;
+  bx_selector_t   link_selector;
+  bx_descriptor_t tss_descriptor;
+  Bit32u dword1, dword2;
+
+  if (BX_CPU_THIS_PTR get_VM())
+    BX_PANIC(("iret_return_from_nested_task: VM sholdn't be set here !"));
+
+  BX_DEBUG(("IRET: nested task return"));
+
+  if (BX_CPU_THIS_PTR tr.cache.valid==0)
+    BX_PANIC(("IRET: TR not valid"));
+
+  // examine back link selector in TSS addressed by current TR
+  raw_link_selector = system_read_word(BX_CPU_THIS_PTR tr.cache.u.segment.base);
+
+  // must specify global, else #TS(new TSS selector)
+  parse_selector(raw_link_selector, &link_selector);
+
+  if (link_selector.ti) {
+    BX_ERROR(("iret: link selector.ti=1"));
+    exception(BX_TS_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_link_selector));
+  }
+
+  // index must be within GDT limits, else #TS(new TSS selector)
+  fetch_raw_descriptor(&link_selector, &dword1, &dword2, BX_TS_EXCEPTION);
+
+  // AR byte must specify TSS, else #TS(new TSS selector)
+  // new TSS must be busy, else #TS(new TSS selector)
+  parse_descriptor(dword1, dword2, &tss_descriptor);
+  if (tss_descriptor.valid==0 || tss_descriptor.segment) {
+    BX_ERROR(("iret: TSS selector points to bad TSS"));
+    exception(BX_TS_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_link_selector));
+  }
+  if (tss_descriptor.type != BX_SYS_SEGMENT_BUSY_286_TSS &&
+      tss_descriptor.type != BX_SYS_SEGMENT_BUSY_386_TSS)
+  {
+    BX_ERROR(("iret: TSS selector points to bad TSS"));
+    exception(BX_TS_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_link_selector));
+  }
+
+  // TSS must be present, else #NP(new TSS selector)
+  if (! IS_PRESENT(tss_descriptor)) {
+    BX_ERROR(("iret: task descriptor.p == 0"));
+    exception(BX_NP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_link_selector));
+  }
+
+  // switch tasks (without nesting) to TSS specified by back link selector
+  task_switch(i, &link_selector, &tss_descriptor,
+              BX_TASK_FROM_IRET, dword1, dword2);
+}
+
   void BX_CPP_AttrRegparmN(1)
 BX_CPU_C::iret_protected(bxInstruction_c *i)
 {
   Bit16u raw_cs_selector, raw_ss_selector;
   bx_selector_t cs_selector, ss_selector;
-  Bit32u dword1, dword2;
   bx_descriptor_t cs_descriptor, ss_descriptor;
 
 #if BX_SUPPORT_X86_64
@@ -41,58 +123,8 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
   }
 #endif
 
-  if (BX_CPU_THIS_PTR get_NT())   /* NT = 1: RETURN FROM NESTED TASK */
-  {
-    /* what's the deal with NT & VM ? */
-    Bit16u raw_link_selector;
-    bx_selector_t   link_selector;
-    bx_descriptor_t tss_descriptor;
-
-    if (BX_CPU_THIS_PTR get_VM())
-      BX_PANIC(("iret_protected: VM sholdn't be set here !"));
-
-    BX_DEBUG(("IRET: nested task return"));
-
-    if (BX_CPU_THIS_PTR tr.cache.valid==0)
-      BX_PANIC(("IRET: TR not valid"));
-
-    // examine back link selector in TSS addressed by current TR
-    raw_link_selector = system_read_word(BX_CPU_THIS_PTR tr.cache.u.segment.base);
-
-    // must specify global, else #TS(new TSS selector)
-    parse_selector(raw_link_selector, &link_selector);
-
-    if (link_selector.ti) {
-      BX_ERROR(("iret: link selector.ti=1"));
-      exception(BX_TS_EXCEPTION, raw_link_selector & 0xfffc);
-    }
-
-    // index must be within GDT limits, else #TS(new TSS selector)
-    fetch_raw_descriptor(&link_selector, &dword1, &dword2, BX_TS_EXCEPTION);
-
-    // AR byte must specify TSS, else #TS(new TSS selector)
-    // new TSS must be busy, else #TS(new TSS selector)
-    parse_descriptor(dword1, dword2, &tss_descriptor);
-    if (tss_descriptor.valid==0 || tss_descriptor.segment) {
-      BX_ERROR(("iret: TSS selector points to bad TSS"));
-      exception(BX_TS_EXCEPTION, raw_link_selector & 0xfffc);
-    }
-    if (tss_descriptor.type != BX_SYS_SEGMENT_BUSY_286_TSS &&
-        tss_descriptor.type != BX_SYS_SEGMENT_BUSY_386_TSS)
-    {
-      BX_ERROR(("iret: TSS selector points to bad TSS"));
-      exception(BX_TS_EXCEPTION, raw_link_selector & 0xfffc);
-    }
-
-    // TSS must be present, else #NP(new TSS selector)
-    if (! IS_PRESENT(tss_descriptor)) {
-      BX_ERROR(("iret: task descriptor.p == 0"));
-      exception(BX_NP_EXCEPTION, raw_link_selector & 0xfffc);
-    }
-
-    // switch tasks (without nesting) to TSS specified by back link selector
-    task_switch(i, &link_selector, &tss_descriptor,
-                BX_TASK_FROM_IRET, dword1, dword2);
+  if (BX_CPU_THIS_PTR get_NT()) {  /* NT = 1: RETURN FROM NESTED TASK */
+    iret_return_from_nested_task(i);
     return;
   }
 
@@ -142,23 +174,12 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     new_eip         = stack_read_word(temp_ESP + 0);
   }
 
-  parse_selector(raw_cs_selector, &cs_selector);
-
-  // return CS selector must be non-null, else #GP(0)
-  if ((raw_cs_selector & 0xfffc) == 0) {
-    BX_ERROR(("iret: return CS selector null"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
-  // selector index must be within descriptor table limits,
-  // else #GP(return selector)
-  fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
-  parse_descriptor(dword1, dword2, &cs_descriptor);
+  fetch_cs_descriptor(raw_cs_selector, &cs_selector, &cs_descriptor);
 
   // return CS selector RPL must be >= CPL, else #GP(return selector)
   if (cs_selector.rpl < CPL) {
     BX_ERROR(("iret: return selector RPL < CPL"));
-    exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc);
+    exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_cs_selector));
   }
 
   // check code-segment descriptor
@@ -181,27 +202,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
 
     /* top 6/12 bytes on stack must be within limits, else #SS(0) */
     /* satisfied above */
-    if (i->os32L()) {
-      // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
-      Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask |
-                              EFlagsDFMask | EFlagsNTMask | EFlagsRFMask;
-#if BX_CPU_LEVEL >= 4
-      changeMask |= (EFlagsIDMask | EFlagsACMask);  // ID/AC
-#endif
-      if (CPL <= BX_CPU_THIS_PTR get_IOPL())
-        changeMask |= EFlagsIFMask;
-      if (CPL == 0)
-        changeMask |= EFlagsVIPMask | EFlagsVIFMask | EFlagsIOPLMask;
-
-      // IF only changed if (CPL <= EFLAGS.IOPL)
-      // VIF, VIP, IOPL only changed if CPL == 0
-      // VM unaffected
-      writeEFlags(new_eflags, changeMask);
-    }
-    else {
-      /* load flags with third word on stack */
-      write_flags((Bit16u) new_eflags, CPL==0, CPL<=BX_CPU_THIS_PTR get_IOPL());
-    }
+    writeEFlags(new_eflags, get_iret_eflags_write_mask(i));
 
     /* increment stack by 6/12 */
     if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
@@ -231,7 +232,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     }
 
     /* selector must be non-null, else #GP(0) */
-    if ((raw_ss_selector & 0xfffc) == 0) {
+    if (BX_IS_NULL_SELECTOR(raw_ss_selector)) {
       BX_ERROR(("iret: SS selector null"));
       exception(BX_GP_EXCEPTION, 0);
     }
@@ -247,19 +248,8 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       new_esp = stack_read_word(temp_ESP + 6);
     }
 
-    // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
-    Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask |
-                            EFlagsDFMask | EFlagsNTMask | EFlagsRFMask;
-#if BX_CPU_LEVEL >= 4
-    changeMask |= (EFlagsIDMask | EFlagsACMask);  // ID/AC
-#endif
-    if (CPL <= BX_CPU_THIS_PTR get_IOPL())
-      changeMask |= EFlagsIFMask;
-    if (CPL == 0)
-      changeMask |= EFlagsVIPMask | EFlagsVIFMask | EFlagsIOPLMask;
-
-    if (! i->os32L()) // 16 bit
-      changeMask &= 0xffff;
+    // computed with the previous CPL
+    Bit32u changeMask = get_iret_eflags_write_mask(i);
 
 #if BX_SUPPORT_CET
     unsigned prev_cpl = CPL;
@@ -300,7 +290,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       SSP = new_SSP;
     }
     if (ShadowStackEnabled(prev_cpl)) {
-      shadow_stack_atomic_clear_busy(old_SSP, prev_cpl);
+      shadow_stack_atomic_clear_busy(BX_SEG_REG_NULL, old_SSP, prev_cpl);
     }
 #endif
 
@@ -314,7 +304,6 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
 {
   Bit16u raw_cs_selector, raw_ss_selector;
   bx_selector_t cs_selector, ss_selector;
-  Bit32u dword1, dword2;
   bx_descriptor_t cs_descriptor, ss_descriptor;
   Bit32u new_eflags;
   Bit64u new_rip, new_rsp, temp_RSP;
@@ -369,30 +358,19 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
   // ignore VM flag in long mode
   new_eflags &= ~EFlagsVMMask;
 
-  parse_selector(raw_cs_selector, &cs_selector);
-
-  // return CS selector must be non-null, else #GP(0)
-  if ((raw_cs_selector & 0xfffc) == 0) {
-    BX_ERROR(("iret64: return CS selector null"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
-  // selector index must be within descriptor table limits,
-  // else #GP(return selector)
-  fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
-  parse_descriptor(dword1, dword2, &cs_descriptor);
+  fetch_cs_descriptor(raw_cs_selector, &cs_selector, &cs_descriptor);
 
   // return CS selector RPL must be >= CPL, else #GP(return selector)
   if (cs_selector.rpl < CPL) {
     BX_ERROR(("iret64: return selector RPL < CPL"));
-    exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc);
+    exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_cs_selector));
   }
 
 #if BX_SUPPORT_FRED
   if (BX_CPU_THIS_PTR cr4.get_FRED()) {
     if (cs_selector.rpl > CPL) {
       BX_ERROR(("iret64: ring transition is not allowed when FRED is enabled"));
-      exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc);
+      exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_cs_selector));
     }
   }
 #endif
@@ -401,7 +379,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
   check_cs(&cs_descriptor, raw_cs_selector, 0, cs_selector.rpl);
 
   /* INTERRUPT RETURN TO SAME PRIVILEGE LEVEL */
-  if (cs_selector.rpl == CPL && !i->os64L())
+  if (cs_selector.rpl == CPL && !long64_mode())   // in 64-bit mode IRET always pops SS:RSP
   {
     BX_DEBUG(("LONG MODE INTERRUPT RETURN TO SAME PRIVILEGE LEVEL"));
 
@@ -427,26 +405,15 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
       // SSP now points above the popped shadow stack frame. If restored SSP is not the same stack (stack switch
       // happened) free the supervisor shadow stack token located at current SSP.
       if (new_SSP != SSP)
-        shadow_stack_atomic_clear_busy(SSP, CPL);
+        shadow_stack_atomic_clear_busy(BX_SEG_REG_NULL, SSP, CPL);
       SSP = new_SSP;
     }
 #endif
 
-    // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
-    Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask | EFlagsDFMask |
-                            EFlagsNTMask | EFlagsRFMask | EFlagsIDMask | EFlagsACMask;
-    if (CPL <= BX_CPU_THIS_PTR get_IOPL())
-      changeMask |= EFlagsIFMask;
-    if (CPL == 0)
-      changeMask |= EFlagsVIPMask | EFlagsVIFMask | EFlagsIOPLMask;
-
-    if (! i->os32L()) // 16 bit
-      changeMask &= 0xffff;
-
     // IF only changed if (CPL <= EFLAGS.IOPL)
     // VIF, VIP, IOPL only changed if CPL == 0
     // VM unaffected
-    writeEFlags(new_eflags, changeMask);
+    writeEFlags(new_eflags, get_iret_eflags_write_mask(i));
 
     /* we are NOT in 64-bit mode */
     if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
@@ -486,8 +453,12 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
       }
     }
 
-    if ((raw_ss_selector & 0xfffc) == 0) {
-      if (! IS_LONG64_SEGMENT(cs_descriptor) || cs_selector.rpl == 3) {
+    if (BX_IS_NULL_SELECTOR(raw_ss_selector)) {
+      // NULL SS is allowed only in 64-bit mode when returning to 64-bit mode with RPL != 3,
+      // NULL SS selector RPL must be equal to the RPL of the return CS selector
+      if (! long64_mode() || ! IS_LONG64_SEGMENT(cs_descriptor) || cs_selector.rpl == 3 ||
+           BX_SELECTOR_RPL(raw_ss_selector) != cs_selector.rpl)
+      {
         BX_ERROR(("iret64: SS selector null"));
         exception(BX_GP_EXCEPTION, 0);
       }
@@ -499,16 +470,8 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
 
     Bit8u prev_cpl = CPL; /* previous CPL */
 
-    // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
-    Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask | EFlagsDFMask |
-                            EFlagsNTMask | EFlagsRFMask | EFlagsIDMask | EFlagsACMask;
-    if (prev_cpl <= BX_CPU_THIS_PTR get_IOPL())
-      changeMask |= EFlagsIFMask;
-    if (prev_cpl == 0)
-      changeMask |= EFlagsVIPMask | EFlagsVIFMask | EFlagsIOPLMask;
-
-    if (! i->os32L()) // 16 bit
-      changeMask &= 0xffff;
+    // computed with the previous CPL
+    Bit32u changeMask = get_iret_eflags_write_mask(i);
 
 #if BX_SUPPORT_CET
     bool same_privilege = (cs_selector.rpl == CPL);
@@ -534,7 +497,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     // VM unaffected
     writeEFlags(new_eflags, changeMask);
 
-    if ((raw_ss_selector & 0xfffc) != 0) {
+    if (! BX_IS_NULL_SELECTOR(raw_ss_selector)) {
       // load SS:RSP from stack
       // load the SS-cache with SS descriptor
       load_ss(&ss_selector, &ss_descriptor, cs_selector.rpl);
@@ -560,7 +523,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
       // same privilege IRETQ frees the token only if there was a stack switch (interrupt delivered through IST),
       // i.e. the restored SSP is not the same stack as SSP above the popped shadow stack frame
       if (! same_privilege || new_SSP != old_SSP)
-        shadow_stack_atomic_clear_busy(old_SSP, prev_cpl);
+        shadow_stack_atomic_clear_busy(BX_SEG_REG_NULL, old_SSP, prev_cpl);
     }
 #endif
 

@@ -23,7 +23,9 @@ void ndp_table_add(Slirp *slirp, struct in6_addr ip_addr,
     DEBUG_ARG("hw addr = %s", slirp_ether_ntoa(ethaddr, ethaddr_str,
                                                sizeof(ethaddr_str)));
 
-    if (IN6_IS_ADDR_MULTICAST(&ip_addr) || in6_zero(&ip_addr)) {
+    if (IN6_IS_ADDR_MULTICAST(&ip_addr) || in6_zero(&ip_addr)
+            || in6_equal(&ip_addr, &slirp->vhost_addr6)
+            || in6_equal(&ip_addr, &slirp->vnameserver_addr6)) {
         /* Do not register multicast or unspecified addresses */
         DEBUG_CALL(" abort: do not register multicast or unspecified address");
         return;

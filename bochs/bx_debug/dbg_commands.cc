@@ -1761,10 +1761,10 @@ void bx_dbg_unwatch_all()
   dbg_printf("All watchpoints removed\n");
 }
 
-void bx_dbg_unwatch(bx_phy_address address)
+// returns true if a read watchpoint was removed
+bool bx_dbg_unwatch_rd(bx_phy_address address)
 {
-  unsigned i;
-  for (i=0; i<num_read_watchpoints; i++) {
+  for (unsigned i=0; i<num_read_watchpoints; i++) {
     if (read_watchpoint[i].addr == address) {
       dbg_printf("read watchpoint at 0x" FMT_PHY_ADDRX " removed\n", address);
       // found watchpoint, delete it by shifting remaining entries left
@@ -1772,11 +1772,17 @@ void bx_dbg_unwatch(bx_phy_address address)
         read_watchpoint[j] = read_watchpoint[j+1];
       }
       num_read_watchpoints--;
-      break;
+      return true;
     }
   }
 
-  for (i=0; i<num_write_watchpoints; i++) {
+  return false;
+}
+
+// returns true if a write watchpoint was removed
+bool bx_dbg_unwatch_wr(bx_phy_address address)
+{
+  for (unsigned i=0; i<num_write_watchpoints; i++) {
     if (write_watchpoint[i].addr == address) {
       dbg_printf("write watchpoint at 0x" FMT_PHY_ADDRX " removed\n", address);
       // found watchpoint, delete it by shifting remaining entries left
@@ -1784,9 +1790,17 @@ void bx_dbg_unwatch(bx_phy_address address)
         write_watchpoint[j] = write_watchpoint[j+1];
       }
       num_write_watchpoints--;
-      break;
+      return true;
     }
   }
+
+  return false;
+}
+
+void bx_dbg_unwatch(bx_phy_address address)
+{
+  bx_dbg_unwatch_rd(address);
+  bx_dbg_unwatch_wr(address);
 }
 
 void bx_dbg_continue_command(bool expression)
@@ -2884,29 +2898,10 @@ void bx_dbg_print_descriptor(Bit32u lo, Bit32u hi)
         IS_SEGMENT_ACCESSED(type)? ", Accessed" : "");
     }
   } else {
-    // types from IA32-devel-guide-3, page 3-15.
-    static const char *undef = "???";
-    static const char *type_names[16] = {
-        undef,
-        "16-Bit TSS (available)",
-        "LDT",
-        "16-Bit TSS (Busy)",
-        "16-Bit Call Gate",
-        "Task Gate",
-        "16-Bit Interrupt Gate",
-        "16-Bit Trap Gate",
-        undef,
-        "32-Bit TSS (Available)",
-        undef,
-        "32-Bit TSS (Busy)",
-        "32-Bit Call Gate",
-        undef,
-        "32-Bit Interrupt Gate",
-        "32-Bit Trap Gate"
-    };
-    dbg_printf("%s ", type_names[type]);
+    const char *type_str = get_descriptor_type_name32(type);
+    dbg_printf("%s ", type_str ? type_str : "???");
     // only print more if type is valid
-    if (type_names[type] == undef)  {
+    if (NULL == type_str)  {
       dbg_printf("descriptor hi=0x%08x, lo=0x%08x", hi, lo);
     } else {
       // for call gates, print segment:offset and parameter count p.4-15
@@ -2940,35 +2935,6 @@ void bx_dbg_print_descriptor(Bit32u lo, Bit32u hi)
 }
 
 #if BX_SUPPORT_X86_64
-const char* bx_dbx_get_descriptor64_type_name(unsigned type)
-{
-    static const char *type_names[16] = {
-        NULL,
-        NULL,
-        "LDT",
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        "64-Bit TSS (Available)",
-        NULL,
-        "64-Bit TSS (Busy)",
-        "64-Bit Call Gate",
-        NULL,
-        "64-Bit Interrupt Gate",
-        "64-Bit Trap Gate"
-    };
-
-    if (type >= sizeof(type_names) / sizeof(*type_names))
-    {
-      return NULL;
-    }
-
-    return type_names[type];
-}
-
 void bx_dbg_print_descriptor64(Bit32u lo1, Bit32u hi1, Bit32u lo2, Bit32u hi2)
 {
   Bit32u segment = (lo1 >> 16) & 0xffff;
@@ -2981,7 +2947,7 @@ void bx_dbg_print_descriptor64(Bit32u lo1, Bit32u hi1, Bit32u lo2, Bit32u hi2)
     dbg_printf("bx_dbg_print_descriptor64: only system entries displayed in 64bit mode\n");
   }
   else {
-    const char *type_str = bx_dbx_get_descriptor64_type_name(type);
+    const char *type_str = get_descriptor_type_name64(type);
     dbg_printf("%s ", type_str ? type_str : "???");
     // only print more if type is valid
     if (NULL == type_str)  {
@@ -3140,7 +3106,7 @@ void bx_dbg_info_lgdt_command(unsigned from, unsigned to, bool gdt)
 #if BX_SUPPORT_X86_64
       const Bit32u sys_descriptor = (1 << 12);
       const unsigned type = (hi >> 8) & 0xf;
-      if (BX_CPU(dbg_cpu)->long_mode() && (hi & sys_descriptor) == 0 && bx_dbx_get_descriptor64_type_name(type)) {
+      if (BX_CPU(dbg_cpu)->long_mode() && (hi & sys_descriptor) == 0 && get_descriptor_type_name64(type)) {
           n++;
           if (8*n + 7 > limit) break;
           if (bx_dbg_read_linear(dbg_cpu, base + 8*n, 8, entry + 8)) {
@@ -3666,32 +3632,51 @@ void bx_dbg_calc_command(Bit64u value)
   dbg_printf("0x" FMT_LL "x " FMT_LL "d\n", eval_value, eval_value);
 }
 
-// Evaluate breakpoint condition in the context of the CPU which hit the
-// breakpoint. The condition is parsed while the CPU loop runs from inside of
-// the outer command (continue, step, ...), so the lexer input and the parser
-// lookahead of the outer command line are preserved. A condition which fails
-// to parse or does not produce a value is treated as true (stop).
-bool bx_dbg_eval_condition(char *condition, unsigned cpu)
+// Evaluate a debugger expression (registers, symbols, seg:ofs, arithmetic) in the
+// context of the given CPU. The expression is wrapped in parentheses, so only an
+// expression can be parsed -- never a command. The lexer input and the parser
+// lookahead of an outer command line are preserved (breakpoint conditions are
+// evaluated while the CPU loop runs from inside of continue, step, ...).
+// Returns false if the expression cannot be parsed or does not produce a value.
+bool bx_dbg_eval_expression(const char *expr, unsigned cpu, Bit64u *value)
 {
   extern bool eval_value_valid;
   extern int bxchar;
+  char buf[512];
+
+  size_t len = strlen(expr);
+  while (len > 0 && (expr[len-1] == '\n' || expr[len-1] == '\r'))
+    len--;                                 // breakpoint conditions end with '\n'
+  if (len == 0 || len > sizeof(buf) - 4 || memchr(expr, '\n', len) != NULL)
+    return false;
+  sprintf(buf, "(%.*s)\n", (int) len, expr);
+
   int saved_bxchar = bxchar;
   unsigned saved_dbg_cpu = dbg_cpu;
-
   dbg_cpu = cpu;
   eval_value_valid = false;
-  bx_push_lex_input(condition);
+  bx_push_lex_input(buf);
   int ret = bxparse();
   bx_pop_lex_input();
   bxchar = saved_bxchar;
   dbg_cpu = saved_dbg_cpu;
 
-  if (ret != 0 || !eval_value_valid) {
+  if (ret != 0 || !eval_value_valid)
+    return false;
+  *value = eval_value;
+  return true;
+}
+
+// Evaluate breakpoint condition in the context of the CPU which hit the
+// breakpoint. A condition which fails to evaluate is treated as true (stop).
+bool bx_dbg_eval_condition(char *condition, unsigned cpu)
+{
+  Bit64u value;
+  if (! bx_dbg_eval_expression(condition, cpu, &value)) {
     dbg_printf("CPU%u: cannot evaluate breakpoint condition, stopping: %s", cpu, condition);
     return true;
   }
-
-  return eval_value != 0;
+  return value != 0;
 }
 
 bx_address bx_dbg_get_ssp(void)

@@ -55,6 +55,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_XOR_EbGbR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// XOR Eb, Gb with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_XOR_EbGbM(bxInstruction_c *i)
+{
+  Bit8u op1, op2;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  op1 = read_RMW_virtual_byte(i->seg(), eaddr);
+  op2 = BX_READ_8BIT_REGx(i->src(), i->extend8bitL());
+  op1 ^= op2;
+  write_RMW_linear_byte(op1);
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_BbEbIbR(bxInstruction_c *i)
 {
   Bit8u op1, op2 = i->Ib();
@@ -81,6 +96,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_XOR_EbIbR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// XOR Eb, Ib with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_XOR_EbIbM(bxInstruction_c *i)
+{
+  Bit8u op1, op2 = i->Ib();
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  op1 = read_RMW_virtual_byte(i->seg(), eaddr);
+  op1 ^= op2;
+  write_RMW_linear_byte(op1);
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_BbEbIbR(bxInstruction_c *i)
 {
   Bit8u op1, op2 = i->Ib();
@@ -103,6 +132,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_OR_EbIbR(bxInstruction_c *i)
   op1 = BX_READ_8BIT_REGx(i->dst(), i->extend8bitL());
   op1 |= op2;
   BX_WRITE_8BIT_REGx(i->dst(), i->extend8bitL(), op1);
+
+  BX_NEXT_INSTR(i);
+}
+
+// OR Eb, Ib with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_OR_EbIbM(bxInstruction_c *i)
+{
+  Bit8u op1, op2 = i->Ib();
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  op1 = read_RMW_virtual_byte(i->seg(), eaddr);
+  op1 |= op2;
+  write_RMW_linear_byte(op1);
 
   BX_NEXT_INSTR(i);
 }
@@ -144,6 +187,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_OR_EbGbR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// OR Eb, Gb with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_OR_EbGbM(bxInstruction_c *i)
+{
+  Bit8u op1, op2;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  op1 = read_RMW_virtual_byte(i->seg(), eaddr);
+  op2 = BX_READ_8BIT_REGx(i->src(), i->extend8bitL());
+  op1 |= op2;
+  write_RMW_linear_byte(op1);
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_BbGbEbR(bxInstruction_c *i)
 {
   Bit8u op1, op2;
@@ -172,6 +230,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_AND_EbGbR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// AND Eb, Gb with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_AND_EbGbM(bxInstruction_c *i)
+{
+  Bit8u op1, op2;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  op1 = read_RMW_virtual_byte(i->seg(), eaddr);
+  op2 = BX_READ_8BIT_REGx(i->src(), i->extend8bitL());
+  op1 &= op2;
+  write_RMW_linear_byte(op1);
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_BbEbIbR(bxInstruction_c *i)
 {
   Bit8u op1, op2 = i->Ib();
@@ -194,6 +267,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_AND_EbIbR(bxInstruction_c *i)
   op1 = BX_READ_8BIT_REGx(i->dst(), i->extend8bitL());
   op1 &= op2;
   BX_WRITE_8BIT_REGx(i->dst(), i->extend8bitL(), op1);
+
+  BX_NEXT_INSTR(i);
+}
+
+// AND Eb, Ib with NF=1 (ND=0 memory form): flags are not updated
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_AND_EbIbM(bxInstruction_c *i)
+{
+  Bit8u op1, op2 = i->Ib();
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+
+  op1 = read_RMW_virtual_byte(i->seg(), eaddr);
+  op1 &= op2;
+  write_RMW_linear_byte(op1);
 
   BX_NEXT_INSTR(i);
 }

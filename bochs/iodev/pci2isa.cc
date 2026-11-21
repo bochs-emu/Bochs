@@ -149,6 +149,7 @@ void bx_piix3_c::reset(unsigned type)
   BX_P2I_THIS pci_conf[0xae] = 0x00;
 
   for (unsigned i = 0; i < 4; i++) {
+    BX_P2I_THIS s.pirq_level[i] = 0;
     pci_set_irq(BX_P2I_THIS s.devfunc, i+1, 0);
     pirq_route_changed(i, BX_P2I_THIS pci_conf[0x60 + i], 0x80);
     BX_P2I_THIS pci_conf[0x60 + i] = 0x80;
@@ -218,17 +219,17 @@ void bx_piix3_c::pci_set_irq(Bit8u devfunc, unsigned line, bool level)
       pirq = (slot + line - 2) & 3;
     }
   }
-#if BX_SUPPORT_APIC
-  // forward this function call to the ioapic too
-  if (DEV_ioapic_present()) {
-    DEV_ioapic_set_irq_level(pirq + 16, level);
-  }
-#endif
   if (level) {
     BX_P2I_THIS s.pirq_level[pirq] |= (1 << device);
   } else {
     BX_P2I_THIS s.pirq_level[pirq] &= ~(1 << device);
   }
+#if BX_SUPPORT_APIC
+  // forward this function call to the ioapic too, a PIRQ line is shared (wired-OR)
+  if (DEV_ioapic_present()) {
+    DEV_ioapic_set_irq_level(pirq + 16, BX_P2I_THIS s.pirq_level[pirq] != 0);
+  }
+#endif
   Bit8u irq = BX_P2I_THIS pci_conf[0x60 + pirq];
   if ((irq < 16) && (((1 << irq) & 0xdef8) > 0)) {
     if (level) {

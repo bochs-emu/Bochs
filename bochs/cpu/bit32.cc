@@ -54,11 +54,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSR_GdEdR(bxInstruction_c *i)
     assert_ZF(); /* op1_32 undefined */
   }
   else {
-    Bit32u op1_32 = 31;
-    while ((op2_32 & 0x80000000) == 0) {
-      op1_32--;
-      op2_32 <<= 1;
-    }
+    Bit32u op1_32 = most_significant_bitd(op2_32);
 
     SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
     clear_ZF();

@@ -10131,7 +10131,7 @@ pci_real_f0e: ;; get irq routing options
   push cs
   pop ds
   SEG ES
-  les di, [di+2]
+  les di, [di]   ;; STOSW has moved DI to the buffer's far pointer (offset 2)
   mov cx, ax
   rep
       movsb

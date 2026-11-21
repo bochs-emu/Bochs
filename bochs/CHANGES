@@ -1,9 +1,10 @@
 Changes after Bochs 3.1 release:
 
-(up to date with commits done till 28 Oct 2026)
+(up to date with commits done till 19 Nov 2026)
 
 - CPU emulation and instrumentation
   ! CPUDB: Added AMD Zen3 (Vermeer) CPUID model (features X2APIC, CLWB, UMIP, PKU, CET, VAES, RDPID + introduces CPUID 0x80000021: AMD Extended Feature Identification 2)
+  ! CPUDB: Added AMD Zen4 (Raphael) CPUID model (features AVX512/AVX512DQ/AVX512CD/AVX512BW/AVX512IFMA52/AVX512VBMI/AVX512VBMI2/AVX512VNNI/AVX512BITALG/AVX512VPOPCNTDQ/AVX512BF16)
   ! Implemented AI Compute Extensions (ACE) emulation according AI Compute Extensions (ACE) Specification rev1.16.2 from x86 Ecosystem Advisory Group
   ! Implemented support for Intel MPX ISA extension
   ! Implemented support for APX (Advanced Performance Extensions) new instructions, still not enabled in any CPU model
@@ -11,10 +12,15 @@ Changes after Bochs 3.1 release:
   ! Implemented SVM SPEC_CTRL virtualization and AMD speculation control (spec_ctrl_amd), enabled in Zen3 model
     - CPU feature 'sca_mitigations' renamed to 'spec_ctrl' (Intel speculation control), new 'spec_ctrl_amd' feature for AMD speculation control
   ! Implemented MSR_CORE_THREAD_COUNT (0x35) for Intel Nehalem and later cpu models, reports the configured number of cores and threads
+  ! Implemented RDPRU instruction (AMD) and enabled in Zen3 model
+  ! Implemented AMD AVX512_BMM (Bit Matrix Multiply and Bit Reversal) instructions VBMACOR16X16X16, VBMACXOR16X16X16 and VBITREV, not yet enabled in any CPU model
   ! Configurable Maximum Physical Address Width (MAXPHYADDR) through new 'maxphyaddr' parameter of the 'cpu' bochsrc option (supported maxphyaddr between 36 to 52 bit, default 40)
   ! Improved implementation of x87 transendential instructions (F2XM1/FYL2X/FYL2XP1/FPATAN/FSIN/FCOS/FSINCOS/FPTAN) to match HW
-  - Bugfixes for CPU emulation correctness (critical bugfixes for emulation of xAPIC, AVX_NE_CONVERT, AVX512/AVX512_FP16/AVX512_BF16, AMX, VMX, SVM, XOP, TBM, CET, FRED, MWAIT)
-    full list of all CPU bugfixes can be seen in Bochs source tree @ bochs/cpu/history)
+  - Bugfixes for CPU emulation correctness (critical bugfixes for emulation of 3DNow!, xAPIC, AVX_NE_CONVERT, AVX512/AVX512_FP16/AVX512_BF16, AMX, VMX, SVM, XOP, TBM, CET, FRED, MWAIT, XSAVE)
+    - full list of all CPU bugfixes can be seen in Bochs source tree @ bochs/cpu/history)
+  - Instrumentation (see description in instrumentation.txt)
+    - BX_INSTR_LIN_ACCESS and BX_INSTR_PHY_ACCESS callbacks receive a pointer to the accessed data
+    - new BX_INSTR_DEV_ACCESS callback reports device (DMA) reads and writes of guest memory
 
 - Bochs debugger
   - Invalidate SMC pages after debugger memory writes
@@ -55,22 +61,27 @@ Changes after Bochs 3.1 release:
     With display libraries other than win32 the debugger cannot be activated again after 'detach'.
 
 - Enhanced (gui) debugger enhancements and bugfixes
-  - Editing memory in linear memory dump wrote the bytes to physical address equal to the linear address
+  - Editing memory in linear memory dump translates the linear address (bytes were written to physical address equal to the linear address)
   - XMM registers view shows the correct upper half of each XMM register
   - IDT view selects the gate size by CPU mode: 4-byte IVT in real mode, 8-byte gates in protected/V8086 mode,
     16-byte gates in long mode (including compatibility mode)
   - GDT view in long mode shows 16-byte LDT/TSS/call gate descriptors as one entry with 64-bit base and long mode type names
-  - DR0-DR3 are shown as 64-bit values in 64-bit mode
-  - IP is shown masked to 16 bits in 16-bit mode
-  - Stack view in 16-bit mode shows 16-bit entries and uses SP for 16-bit stack segment (SS.B=0)
-  - Memory dump search could select rows by comparing past the end of the 4K dump
-  - Register list supports all register groups shown at once in 64-bit mode
+  - Stack view with 16-bit stack segment (SS.B=0) shows 16-bit entries and uses SP
+  - Register view rejects EFLAGS values with reserved bits set (Bochs PANIC when editing EFLAGS)
   - Fixed buffer overflows (Find search string, ask dialog reply, font name, bx_enh_dbg.ini parsing)
   - bx_enh_dbg.ini is sanitized on load: invalid values are reported and ignored
   - Allow copy text from the output window (^c copies the selected text, ^c without selection still breaks the simulation)
     - win32: output window is read only and keeps the selection visible, ^a selects all output text
     - GTK: select the text with the mouse, "Select All" and "Copy" are also available in the right-click menu
   - win32: much faster Output window updates for long debugger output
+  - Single step (F11, Step button) runs on the simulator thread (CPU and devices were driven from two threads at once)
+  - Memory dump and stack views show "illegal address" when the guest memory cannot be read (stale data was shown),
+    a failed new memory dump keeps the previous dump unchanged
+  - Segment, system and control registers are read only in the register view (the direct change did not reload
+    the descriptor cache and skipped the mode/paging side effects and validity checks)
+  - Accept expressions in GUI debugger dialogs
+    The GUI debugger memory dump address, disassemble start address and change register value dialogs accept
+    expressions like rsp+0x10, cs:rip or rax+8 instead of plain numbers only.
 
 - Configure and compile
   - Bochs now require C++11 support for compilation, enforced via configure
@@ -85,16 +96,19 @@ Changes after Bochs 3.1 release:
     - Fixed host heap out-of-bounds read in planar memory read beyond the end of the video memory
     - Fixed division by zero in Input Status 1 read with very short horizontal total
     - Fixed vertical timer stall when vertical retrace end is beyond vertical total
+    - Fixed 256-color word mode screen update address calculation
+    - Writing the DAC read index (3C7h) also sets the write index (wrong palette colors in Star Control II) (#974)
+    - VBE: virtual width smaller than the X resolution is rejected (host heap over-read), fixed virtual height truncation
   - Voodoo
     - Fixed crash when the screen is redrawn (e.g. by the debugger) before a display mode is set (#666)
   - Banshee
-    - Two small fixes in blt_polygon_fill
     - Fixed clip window for bottom-to-top 2D BLTs
     - Y direction bit is applied only to screen-to-screen and host-to-screen BLTs (was applied also to stretch BLTs, fills, lines and polygons)
   - Cirrus
     - Fixed guest-to-host stack buffer overflow in color expand video-to-video BitBLT
     - Reject BitBLT operations crossing the video memory boundaries
     - Fixed division by zero in SVGA memory write with zero pitch
+    - Wide I/O port accesses are split into byte accesses (PANIC "SVGA write: io_len != 1") (#981)
   - GeForce
     - Continue to improve GeForce model
       - #846: Add volume texture support
@@ -107,16 +121,36 @@ Changes after Bochs 3.1 release:
       - #928: Add back-transform support for NV20
       - #942: Fix inline array method handler registration for NV15 (crashes in 3D demos)
       - #944: Implement 16-bit MMIO writes (PANIC with RivaTuner)
+      - #945: Fix out of bounds vertex data read with NV40 (geometry corruption in 3D demos)
+      - #948: Fix uninitialized BAR2 size (PANIC on BAR2 write)
+      - #955: Implement DOT_PRODUCT_TEXTURE_2D_NV texture shader operation (bump mapping with NV20)
+      - #956: Fix texture filtering with NV15
+      - #958: Implement depth buffer swizzling (missing geometry in render to texture demos)
+      - #996: Implement SIFM context store (broken mipmap generation and texture corruption in render to texture demo)
+      - #997: Use card type derived from the class id for 3D rendering (missing 3D output with 30.82 driver and NV35)
+      - #998: Fix X8R8G8B8 pixel reads in SIFM command (blur effect in Minecraft main menu with NV40)
+      - #1001: Fix projective texture lookup for cubemaps and implement LIF pixel shader operation (bump mapping and marble demos with NV40)
+      - #1005: Implement LIT and TIMESWTEX pixel shader operations (shading in marble and bump mapping demos with NV35)
+      - #1012: Add Direct3D stencil operation values (stencil buffer demos with NV40)
   - Hard drive / HD image
     - VVFAT: Fixed LongName handling in vvfat disks
     - VVFAT: Adding path prefix "fat32:" forces using FAT32 file system
     - VBOX: Fixed data corruption in images with more than 4GB of allocated data
-    - VMWARE3: Fixed data corruption on Windows hosts (image files were opened in text mode)
+    - VMWARE3: Fixed data corruption on Windows hosts (image files were opened in text mode) and loss of
+      the last written data on close
     - Undoable/volatile images: fixed crash and double free when opening the image fails
+    - Undoable/volatile images and vvfat: initialize the redolog bitmap state on create (a written sector could be
+      read back from the base image)
     - VPC: fixed multi-sector reads of dynamic VHD images and sequential read/write of fixed VHD images
     - VVFAT: reject files of 4 GB and more on Windows hosts (were mapped with a wrong size)
-    - CONCAT: fixed uninitialized number of parts, lseek(SEEK_END) and a memory leak
+    - CONCAT: fixed uninitialized number of parts, lseek(SEEK_END), a memory leak and split read/write at
+      part boundaries (data corruption on requests spanning two parts)
     - VVFAT: do not crash on blank or malformed lines in vvfat_attr.cfg
+    - IDE: save/restore the LBA48 flag (disk corruption after restoring a state saved during an LBA48 transfer) (#963)
+    - Faster access to growing, undoable, volatile, VBOX, VMWARE4, VHDX and VPC images
+    - Undoable/volatile images: fixed multi-sector reads mixing changed and unchanged sectors (wrong data read from the base image)
+    - VBOX, VMWARE4: cached data is written to the image before saving the simulation state
+    - VVFAT: guest-written directory and FAT data is bounds checked when committing changes (host memory corruption)
   - CD-ROM
     - Model parameter now supports format "VENDOR:PRODUCT:REV" for ATAPI inquiry
     - Fixed MODE SENSE(6) header and response lengths and GET PERFORMANCE maximum number of descriptors
@@ -129,16 +163,21 @@ Changes after Bochs 3.1 release:
     - Fixed guest-to-host heap corruption on PCI configuration space accesses crossing the 0xCFC-0xCFF window
     - i440FX: fixed write-1-to-clear handling of the PCI status register
     - PIIX3: asserted PCI interrupt lines now follow PIRQ routing changes
+    - Lower the INTx line on reset of GeForce, USB host controllers, NE2000 and PCI Pseudo-NIC, OR all devices
+      sharing a PIRQ at the IOAPIC input (lost or stuck PCI interrupts)
     - PIIX3: restore the default I/O APIC base on reset
     - Fixed loading of PCI option ROM images (partial reads, uninitialized ROM padding)
     - ACPI: unmap the PM/SMBus I/O windows when reset clears their BARs
+    - ACPI: fixed SMBus register decoding, written SMBus register values are kept
     - Fixed spurious rejection of read-only memory handlers (e.g. PCI option ROM) after other memory handlers were unregistered (#932)
+    - Added 'ich7ide' choice to pci advopts (pci: advopts=ich7ide)
+      Report the PCI IDE controller as ICH7 IDE (stock Mac OS X has no driver for PIIX IDE)
   - Interrupt controllers and timers
     - IOAPIC: implemented Remote IRR for level triggered interrupts
     - IOAPIC: a level triggered entry programmed while its input line is already asserted now delivers the interrupt
     - LAPIC: clear TMR before broadcasting EOI to the IOAPIC (level triggered interrupt could be lost forever,
              Windows Vista hang with GeForce at the display mode switch)
-    - LAPIC: TSC-deadline timer compared the deadline with system time instead of the guest TSC (interrupt storm after hardware reset or TSC write),
+    - LAPIC: TSC-deadline timer compares the deadline with the guest TSC instead of system time (interrupt storm after hardware reset or TSC write),
              IA32_TSC_DEADLINE is cleared when the timer fires
     - LAPIC: many fixes for SDM compliance:
       - ExtINT interrupts are delivered bypassing IRR/ISR and processor priority
@@ -154,55 +193,129 @@ Changes after Bochs 3.1 release:
     - PIC: reset special mask mode and read register select on ICW1
     - HPET: interrupt routes >= 16 are delivered to the IOAPIC only (were aliased onto PIC IRQs 8-15)
     - HPET: fixed main counter and comparator state after save/restore
-    - PIT: events of counters 1/2 were not scheduled while counter 0 had no pending event
+    - PIT: schedule events of counters 1/2 also when counter 0 has no pending event (counter 1/2 events were lost)
+    - PIT: fixed mode 3 with count 0 or an odd count and mode 2 with BCD count 0 (IRQ0 at half rate with the
+      standard DOS timer setup, guest clock ran at half speed) (#965, #967, #968)
     - Slowdown timer synchronization works again after restoring a saved state
+    - IOAPIC, HPET: misaligned, odd sized or undefined guest MMIO accesses are reported as errors instead of PANIC
   - DMA
     - Fixed 16-bit DMA transfers from device to memory (only half of the data was written)
     - Fixed 64K DMA transfers (transfer length overflow)
   - Keyboard / mouse
-    - PS/2 mouse "Set Scaling 1:1" command selected 2:1 scaling
+    - Fixed PS/2 mouse "Set Scaling 1:1" command (selected 2:1 scaling)
     - Bytes queued while the 8042 output buffer was full are delivered to the right (keyboard or AUX) output buffer
-    - Range check key codes received from the GUI
+    - Busmouse: motion is no longer lost while the counters are held
+    - 8042 keyboard controller timer runs only while there is pending work (performance)
   - USB
     - Fixed USB SCSI disk seek truncated to int (USB disks larger than 2GB failed past 2GB)
     - USB HID: deactivate the idle timer before unregistering it (PANIC on exit after guest set HID idle rate)
+    - Data toggle is not advanced on NAK (the retried transfer was STALLed), UHCI retries a NAKed TD
+      instead of skipping it (lost HID keyboard input)
+    - OHCI: fixed control OUT transfers longer than MaxPacketSize (STALL) and retry of NAKed control transfers
+    - xHCI: decode the doorbell registers of all device slots (devices in slot 9 and above never got any transfer)
+    - xHCI: report errors of OUT and SETUP transfers, fixed the completion code of the Configure Endpoint command
+    - EHCI: a short IN packet no longer writes stale data to guest memory past the received data
+    - Fixed device state handling of SET_CONFIGURATION(0), bus reset and endpoint halt
+    - Fixed several guest-triggerable host memory corruptions (xHCI, USB MSD UASP, USB floppy, control transfers
+      longer than 1024 bytes); a circular OHCI/xHCI schedule built by the guest no longer hangs the simulation;
+      unimplemented UHCI/EHCI features used by the guest are reported as errors instead of PANIC
+    - xHCI: answer the NEC/Renesas Get Verification vendor command (NEC/Renesas xHCI driver failed to start) (#952)
   - fw_cfg
     - Fail DMA write requests instead of leaving them pending (matches QEMU)
-  - Serial port
-    - Raw serial mode (Win32): the 1 stop bit setting was ignored
+    - Fixed host heap out-of-bounds read by DMA READ after DMA SKIP past the end of the item
+    - UEFI ACPI tables: added SSDT with Processor objects (required for Mac OS X guest boot) (#933)
+    - Arch-local keys are kept apart from the standard keys (IRQ0 override and HPET entries overwrote UUID and
+      NOGRAPHIC, arch-local keys were not readable and selecting them read out of bounds)
+    - UEFI ACPI tables: FADT does not advertise a 32-bit PM timer (PIIX4 PM timer is 24-bit), GPE0 block is placed
+      on the PIIX4 GPSTS/GPEN registers, FIRMWARE_CTRL is zero when the 64-bit X_FIRMWARE_CTRL pointer to the FACS
+      is used (both were set, the ACPI spec requires FIRMWARE_CTRL to be zero when X_FIRMWARE_CTRL is used)
+  - Serial / Parallel port
+    - Raw serial mode (Win32): the 1 stop bit setting was ignored, transmit no longer waits synchronously for each byte
+    - Serial: fixed THRE interrupt clearing on IIR read, IRQ update on MCR OUT2 change, receive FIFO reset
+      and character time (parity and stop bits are included now)
+    - Parallel: the IRQ is registered once at init (enabling the IRQ by the guest could PANIC with an IRQ conflict)
   - Sound
     - SB16: Added parameter 'dsp_realtime' to use realtime mode for the DSP
     - ES1370: Added parameter 'dac_realtime' to use realtime mode for the DACs
     - ALSA sound driver: Added support to specify PCM device
     - Implement sound buffering
       - With this change, mixer thread adds short delay before starting sound playback. It allows to get rid of crackling noise during playback.
+    - SB16: 16-bit port writes (e.g. OUTW to the mixer index/data ports) were processed twice
+    - SB16: DSP / MPU-401 FIFOs and pending commands are saved / restored
+    - SB16: pace the DSP DMA timer by the size of each DMA burst (playback too slow for blocks not multiple of
+      512 bytes, 2x too fast for small 16-bit DMA blocks)
+    - SB16: convert direct mode DAC (DSP command 0x10) samples to signed (distorted sound)
+    - SB16: request the last byte of a DMA transfer (1-byte DMA raised no IRQ, IRQ detection failed) (#978)
+    - SB16: machine reset resets the DSP, MPU-401, mixer and OPL state (DMA timer kept running after reboot)
+    - SB16: fixed recording buffer handling (lost and duplicated recorded data)
+    - MPU-401, ES1370 UART: support MIDI running status, SysEx and real-time messages (missing notes)
+    - MIDI SysEx output fixed on Windows and implemented for ALSA
+    - OPL: keep the FM register state when the output sample rate changes (FM music silenced mid-song)
+    - Convert signed 8-bit samples as signed and clamp converted samples (garbled 8-bit sound, clicks)
+    - SB16, ES1370: mixer volume uses 2 dB steps, ES1370 honors the mute bit (muting had no effect)
+    - Join the sound threads on shutdown (fixed crash on exit)
+    - SB16, ES1370: fixed host crash (division by zero) and out of bounds reads triggered by the guest
+    - ES1370: DMA channels are stopped on reset (no sound after reboot when the guest used the other DAC),
+      stopping the inactive DAC keeps the active one playing
+    - SB16, ES1370: MIDI delta times and OPL timers are computed on demand from the emulated time (no periodic timers, faster emulation)
   - Networking
+    - Updated builtin slirp to libslirp 4.9.7 (including upstream security fixes)
+    - Fixed many guest-triggerable host memory corruptions and out of bounds accesses (NE2000, E1000, PCI Pseudo-NIC, vnet, tap, FreeBSD backend)
+    - vnet: TFTP and FTP file access is restricted to the server root directory
+    - vnet: no more network stall when the NIC is not ready to receive, fixed TFTP uploads and downloads of large files
+      (more than 65535 blocks), FTP commands without argument are handled
+    - NE2000: fixed receive ring wrap, missed frames counter and DCR / TCR bits decoding
+    - E1000: full multicast, receive address and VLAN filter tables are decoded, TX interrupt causes are no longer lost
+    - win32 and socket backends pass multicast frames to the NIC, win32 backend supports more than one NIC
     - VDE: fix networking on FreeBSD
+    - Faster networking:
+      - Host backends deliver up to 32 received frames per poll, frames stay in the host queue while the NIC cannot take them (were dropped),
+        win32 backend polls every 1 ms
+      - NE2000: bulk string I/O (REP INSW/OUTSW) for word mode remote DMA
+      - E1000: implemented interrupt throttling (ITR register)
   - CMOS
     - Save/restore: the extended CMOS RAM bank (ports 0x72/0x73) is save/restored now
     - Report an error instead of PANIC when the CMOS image file cannot be written on exit
   - General
     - Set Windows system timer resolution to 1ms. This help to reduce artefacts (clicking noises) during sound playback
-    - Save/restore: failures while saving the simulation state are reported instead of being ignored
+    - Save/restore: failures while saving the simulation state are reported instead of being ignored, restore
+      fails if a data file is missing (guest resumed with zeroed RAM) (#985)
+    - Save/restore: negative signed values keep their sign bit (guest TSC jumped by 2^63, older Linux hang) (#964)
 
 - GUI and display libraries
-  - General
-    - Allocate the tile buffer for the generic graphics update code once at init (performance)
   - win32 gui
     - Fixed crash on paste when the clipboard has no text
     - Faster text mode character drawing
     - Fixed heap overflow on clipboard copy
     - Fixed absolute mouse (USB tablet) coordinates in stretched modes (small modes, autoscale, fullscreen)
+    - Fixed crash when the Bochs window is closed from the taskbar (#1011)
+    - Bochs window position is saved (registry key HKEY_CURRENT_USER\Software\Bochs) and restored on the next start
+  - textconfig
+    - Fixed stack overflows in the runtime options menu and string input, 64-bit hex parameters are no
+      longer truncated
+  - win32 config interface
+    - Fixed buffer overflows in the string dialog and the plugin control
+    - Standard log options wrote invalid log actions, "end simulation" is listed in the advanced log options, runtime log page fixed
+    - Pages are refreshed after reading a config file and after reset to factory defaults
+    - Config file read / write errors are reported in the start menu
+    - Simulation is not started if restoring the saved state failed
+    - Numeric input is validated, bytestring parameters are handled in the string dialog (invalid raw byte input reported)
+    - Fixed parameter dialog list cleanup and scrolling
+    - Parameter dialogs: canceling the file dialog keeps the old file name, 64-bit hex values are shown completely,
+      enum choices and spin control ranges are handled correctly
+    - Floppy dialog: fixed "Create Image", media status is set to "inserted" after selecting an image
   - sdl2 gui
     - Faster screen update: only the modified area is copied to the window
     - Fixed paste (an extra NUL byte was sent to the guest)
     - Fixed mouse wheel event in absolute mouse mode
     - Fixed status bar drawing past the window width in narrow video modes
+    - Fixed erratic mouse movement when the mouse is captured on Wayland (#1003)
   - rfb / vncsrv
     - Fixed hangs and deadlocks when the event queue is full or the headerbar is clicked
     - Fixed RFB protocol handling: client clipboard text is skipped, unknown message type closes the connection (was 100% CPU loop)
   - x11 gui
     - Faster graphics tile update
+    - Header bar buttons ignore clicks while the mouse is captured (accidental reset / power off in USB tablet mode)
   - term gui
     - Fixed terminal init in debugger enabled mode
     - Added support for the command mode
@@ -214,6 +327,14 @@ Changes after Bochs 3.1 release:
     and was not properly checked for overlap with the system BIOS
   - Fixed PANIC "System BIOS must end at 0xfffff" when system BIOS address is specified explicitly
     in 'romimage' option (e.g. address=0xfffe0000) and Bochs compiled with 64-bit physical address support
+  - rombios32: do not write IA32_FEATURE_CONTROL MSR when it is already locked (fixed guest triple fault and
+    reset on every restart) (#954)
+  - rombios: PCI BIOS function B10Eh reads the route buffer pointer from the right offset (Windows 2000 Setup hang) (#982)
+
+- Misc
+  - bximage: faster image convert/resize, read or write errors abort the conversion (unreadable sectors became zero),
+    using the same name for source and destination no longer damages the image, resize can no longer make the image smaller
+  - bximage: Win32 flat images are created as sparse files instead of NTFS compressed files (faster disk access)
 
 -------------------------------------------------------------------------
 Changes in 3.1 (August 23, 2026):

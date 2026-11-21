@@ -120,6 +120,7 @@ vpc_image_t::vpc_image_t()
 {
   fd = -1;
   pagetable = NULL;
+  bitmap_set = NULL;
 }
 
 int vpc_image_t::open(const char* _pathname, int flags)
@@ -232,6 +233,8 @@ int vpc_image_t::open(const char* _pathname, int flags)
 
     max_table_entries = be32_to_cpu(dyndisk_header->max_table_entries);
     pagetable = new Bit32u[max_table_entries];
+    bitmap_set = new Bit8u[max_table_entries];
+    memset(bitmap_set, 0, max_table_entries);
 
     bat_offset = be64_to_cpu(dyndisk_header->table_offset);
     if (bx_read_image(fd, bat_offset, (void*)pagetable, max_table_entries * 4) != (max_table_entries * 4)) {
@@ -252,7 +255,6 @@ int vpc_image_t::open(const char* _pathname, int flags)
       }
     }
 
-    last_bitmap_offset = (Bit64s) -1;
   }
   cur_sector = 0;
 
@@ -266,6 +268,8 @@ void vpc_image_t::close(void)
   if (fd > -1) {
     delete [] pagetable;
     pagetable = NULL;
+    delete [] bitmap_set;
+    bitmap_set = NULL;
     bx_close_image(fd, pathname);
     fd = -1;
   }
@@ -514,13 +518,13 @@ Bit64s vpc_image_t::get_sector_offset(Bit64s sector_num, int write)
   // bitmap each time we write to a new block. This might cause Virtual PC to
   // miss sparse read optimization, but it's not a problem in terms of
   // correctness.
-  if (write && (last_bitmap_offset != bitmap_offset)) {
+  if (write && !bitmap_set[pagetable_index]) {
     Bit8u *bitmap = new Bit8u[bitmap_size];
 
-    last_bitmap_offset = bitmap_offset;
     memset(bitmap, 0xff, bitmap_size);
     bx_write_image(fd, bitmap_offset, bitmap, bitmap_size);
     delete [] bitmap;
+    bitmap_set[pagetable_index] = 1;
   }
 
   return (Bit64s)block_offset;
@@ -577,6 +581,7 @@ Bit64s vpc_image_t::alloc_block(Bit64s sector_num)
   if (ret < 0) {
     return ret;
   }
+  bitmap_set[index] = 1;
 
   // Write new footer (the old one will be overwritten)
   old_fdbo = free_data_block_offset;

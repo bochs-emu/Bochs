@@ -34,6 +34,13 @@
 #ifndef IP_H
 #define IP_H
 
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
+#include <netinet/in.h>
+#endif
+
 #ifndef BX_LITTLE_ENDIAN
 # undef NTOHL
 # undef NTOHS
@@ -232,5 +239,40 @@ struct  ipas {
 #define ipf_off      ipf_ip.ip_off
 #define ipf_tos      ipf_ip.ip_tos
 #define ipf_len      ipf_ip.ip_len
+
+static inline bool in_martian(const uint32_t ip)
+{
+    return (ip & IN_CLASSA_NET) == (INADDR_LOOPBACK & IN_CLASSA_NET)
+#ifdef IN_EXPERIMENTAL
+        || (IN_EXPERIMENTAL(ip) && ip != INADDR_BROADCAST)
+#endif
+           ;
+}
+
+static inline bool in_martian_source(const uint32_t src)
+{
+    return in_martian(src)
+        || IN_MULTICAST(src)
+#ifdef IN_CLASSE
+        || IN_CLASSE(src)
+#endif
+#ifdef IN_BADCLASS
+        || IN_BADCLASS(src)
+#endif
+        ;
+}
+
+static inline bool in_martian_destination(const uint32_t dst)
+{
+    return in_martian(dst)
+        || !dst
+#ifdef IN_CLASSE
+        || (IN_CLASSE(dst) && dst != INADDR_BROADCAST)
+#endif
+#ifdef IN_BADCLASS
+        || (IN_BADCLASS(dst) && dst != INADDR_BROADCAST)
+#endif
+        ;
+}
 
 #endif

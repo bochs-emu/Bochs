@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2013       Volker Ruppert
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -48,16 +48,18 @@
 
 #ifdef BXIMAGE
 #define BX_DEBUG(x)
-#define BX_INFO(x)  { if (bx_interactive) { (printf) x ; printf("\n"); } }
-#define BX_ERROR(x) { (printf) x ; printf("\n"); }
-#define BX_PANIC(x) { (printf) x ; printf("\n"); myexit(1); }
-#define BX_FATAL(x) { (printf) x ; printf("\n"); myexit(1); }
+#define BX_INFO(x)  do { if (bx_interactive) { (printf) x ; printf("\n"); } } while (0)
+#define BX_ERROR(x) do { (printf) x ; printf("\n"); } while (0)
+#define BX_PANIC(x) do { (printf) x ; printf("\n"); myexit(1); } while (0)
+#define BX_FATAL(x) do { (printf) x ; printf("\n"); myexit(1); } while (0)
 #else
-#define BX_DEBUG(x) { if (bx_loglev == 3) { (bx_printf) x ; } }
-#define BX_INFO(x)  { if (bx_loglev >= 2) { (bx_printf) x ; } }
-#define BX_ERROR(x) { if (bx_loglev >= 1) { (bx_printf) x ; } }
+#define BX_DEBUG(x) do { if (bx_loglev == 3) { (bx_printf) x ; } } while (0)
+#define BX_INFO(x)  do { if (bx_loglev >= 2) { (bx_printf) x ; } } while (0)
+#define BX_ERROR(x) do { if (bx_loglev >= 1) { (bx_printf) x ; } } while (0)
 #endif
 #define BX_ASSERT(x)
+
+#define BX_PATHNAME_LEN 512
 
 #ifdef BXIMAGE
 extern int bx_interactive;
@@ -70,8 +72,6 @@ device_image_t* init_image(const char *image_mode);
 #define DEV_hdimage_init_image(a,b,c) init_image(a)
 
 #else
-
-#define BX_PATHNAME_LEN 512
 
 extern int bx_loglev;
 

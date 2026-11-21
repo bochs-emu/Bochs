@@ -994,17 +994,16 @@ void bx_x_gui_c::handle_events(void)
 
     case ButtonPress:
       button_event = (XButtonEvent *) &report;
-//    BX_DEBUG(("xxx: buttonpress"));
       if (button_event->y < BX_HEADER_BAR_Y) {
-//      BX_DEBUG(("xxx:   in headerbar"));
         if (mouse_update) {
-//        BX_DEBUG(("xxx:   mouse_update=1"));
           send_mouse_status();
           mouse_update = 0;
         }
         prev_x = current_x = -1;
         prev_y = current_y = -1;
-        headerbar_click(button_event->x);
+        if (!mouse_captured) {
+          headerbar_click(button_event->x);
+        }
         break;
       }
       current_x = button_event->x;

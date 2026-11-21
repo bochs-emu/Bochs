@@ -5,7 +5,7 @@
 //  UFI/CBI floppy disk storage device support
 //
 //  Copyright (c) 2015-2023  Benjamin David Lunt
-//  Copyright (C) 2015-2023  The Bochs Project
+//  Copyright (C) 2015-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -110,7 +110,7 @@ private:
   void floppy_timer(void);
   int floppy_read_sector(void);
   int floppy_write_sector(void);
-  void copy_data(USBPacket *p);
+  void copy_data(USBPacket *p, int len);
   bool set_inserted(bool value);
 
   static const char *floppy_path_handler(bx_param_string_c *param, bool set,

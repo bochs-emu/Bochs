@@ -199,6 +199,7 @@ static char szMouseTooltip[64];
 
 static const char szAppName[] = "Bochs for Windows";
 static const char szWindowName[] = "Bochs for Windows - Display";
+static const char szRegLocation[] = "Software\\Bochs";
 
 typedef struct {
   HINSTANCE hInstance;
@@ -597,20 +598,29 @@ void terminateEmul(int reason)
   }
   x_tilesize = 0;
 
+  // reset everything freed here, terminateEmul could be called more than once
   if (MemoryDC) DeleteDC (MemoryDC);
+  MemoryDC = NULL;
   if (FontDC) {
     SelectObject(FontDC, FontDCdefBitmap);
     DeleteDC(FontDC);
   }
+  FontDC = NULL;
   if (MemoryBitmap) DeleteObject (MemoryBitmap);
+  MemoryBitmap = NULL;
 
   delete[] (char*)bitmap_info;
+  bitmap_info = NULL;
 
-  for (unsigned b=0; b<bx_bitmap_entries; b++)
+  for (unsigned b=0; b<bx_bitmap_entries; b++) {
     if (bx_bitmaps[b].bmap) DeleteObject(bx_bitmaps[b].bmap);
+    bx_bitmaps[b].bmap = NULL;
+  }
   for (unsigned c=0; c<256; c++) {
     if (vgafont[0][c]) DeleteObject(vgafont[0][c]);
     if (vgafont[1][c]) DeleteObject(vgafont[1][c]);
+    vgafont[0][c] = NULL;
+    vgafont[1][c] = NULL;
   }
 
   switch (reason) {
@@ -922,6 +932,58 @@ void resize_main_window(BOOL disable_fullscreen)
   }
 }
 
+// Look in the registry to see if we have the coord's of the last session
+// (This checks to make sure the new coord's are not outside of the physical display range)
+//
+// name -> 'Window Name' which will be appended with "Left" or "Top"
+// ipLeft and ipTop, if this function is successful, will be updated with
+//  the top left corner of the window.
+void LoadWindowPosition(const char *name, int *ipLeft, int *ipTop)
+{
+  LONG Left, Top;
+  DWORD LeftSize = sizeof(LONG);
+  DWORD TopSize = sizeof(LONG);
+  char SubKey[128];
+
+  // read from the registry
+  sprintf(SubKey, "%sLeft", name);
+  LONG resLeft = RegGetValue(HKEY_CURRENT_USER, szRegLocation, SubKey, RRF_RT_DWORD, NULL, &Left, &LeftSize);
+  sprintf(SubKey, "%sTop", name);
+  LONG resTop = RegGetValue(HKEY_CURRENT_USER, szRegLocation, SubKey, RRF_RT_DWORD, NULL, &Top, &TopSize);
+  if ((resLeft == ERROR_SUCCESS) && (resTop == ERROR_SUCCESS)) {
+    // check to make sure we don't move clear off the right/bottom of screen
+    //  (this can happen if the user changes the Host screen size to a smaller size)
+    if (Left > ((LONG)desktop_x - 25) || Top > ((LONG)desktop_y - 25))
+      return;
+
+    // send the new values
+    if (ipLeft) *ipLeft = (int) Left;
+    if (ipTop) *ipTop = (int) Top;
+  }
+}
+
+static_assert(sizeof(LONG) == sizeof(DWORD), "On Windows platform LONG should be the same size as DWORD (32 bits)");
+
+// Save the coord's of the specified window to the registry so that next time
+//  we can place the window in the same place
+void SaveWindowPosition(HWND Wnd, const char *name)
+{
+  char SubKey[128];
+  HKEY hKey;
+  LONG result = RegCreateKeyEx(HKEY_CURRENT_USER, szRegLocation, 0, NULL,
+                               REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
+  if (result == ERROR_SUCCESS) {
+    RECT Rect;
+    if (GetWindowRect(Wnd, &Rect)) {
+      sprintf(SubKey, "%sLeft", name);
+      RegSetValueEx(hKey, SubKey, 0, REG_DWORD, (const BYTE *) &Rect.left, sizeof(LONG));
+      sprintf(SubKey, "%sTop", name);
+      RegSetValueEx(hKey, SubKey, 0, REG_DWORD, (const BYTE *) &Rect.top, sizeof(LONG));
+    }
+    RegCloseKey(hKey);
+  }
+}
+
 // This thread controls the GUI window.
 DWORD WINAPI UIThread(LPVOID)
 {
@@ -929,6 +991,8 @@ DWORD WINAPI UIThread(LPVOID)
   HDC hdc;
   WNDCLASS wndclass;
   RECT wndRect;
+  int left = CW_USEDEFAULT;
+  int top = CW_USEDEFAULT;
 
   workerThreadID = GetCurrentThreadId();
 
@@ -963,11 +1027,11 @@ DWORD WINAPI UIThread(LPVOID)
   AdjustWindowRectEx(&wndRect, sim_style, FALSE, sim_exstyle);
   DWORD main_style = WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
   AdjustWindowRect(&wndRect, main_style, FALSE);
+  LoadWindowPosition("MainWin", &left, &top);
   stInfo.mainWnd = CreateWindow (szAppName,
                      szWindowName,
                      main_style,
-                     CW_USEDEFAULT,
-                     CW_USEDEFAULT,
+                     left, top,
                      wndRect.right - wndRect.left,
                      wndRect.bottom - wndRect.top,
                      NULL,
@@ -976,7 +1040,6 @@ DWORD WINAPI UIThread(LPVOID)
                      NULL);
 
   if (stInfo.mainWnd) {
-
     InitCommonControls();
     hwndTB = CreateWindowEx(0, TOOLBARCLASSNAME, (LPSTR) NULL,
                WS_CHILD | TBSTYLE_TOOLTIPS | TBSTYLE_FLAT, 0, 0, 0, 0, stInfo.mainWnd,
@@ -1155,6 +1218,8 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     return 0;
 
   case WM_CLOSE:
+    // Save the coord's of the window for next time
+    SaveWindowPosition(stInfo.mainWnd, "MainWin");
     SendMessage(stInfo.simWnd, WM_CLOSE, 0, 0);
     break;
 
@@ -1715,7 +1780,12 @@ void bx_win32_gui_c::handle_events(void)
   Bit32u key;
   Bit32u key_event;
 
-  if (stInfo.kill) terminateEmul(stInfo.kill);
+  if (stInfo.kill) {
+    // GUI thread is gone (window closed) - quit like the power button does,
+    // the cleanup is done once by the exit() method
+    bx_user_quit = 1;
+    BX_FATAL(("Window closed, exiting!"));
+  }
 
   if (fix_size) {
     resize_main_window(FALSE);
@@ -2153,7 +2223,7 @@ void bx_win32_gui_c::exit(void)
   }
 #endif
 
-  // kill thread first...
+  // kill thread first (window position is saved by WM_CLOSE handler)...
   PostMessage(stInfo.mainWnd, WM_CLOSE, 0, 0);
 
   // Wait until it dies

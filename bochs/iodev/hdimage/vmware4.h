@@ -10,7 +10,7 @@
  * Contact: snrrrub@gmail.com
  *
  * Copyright (C) 2006 Sharvil Nanavati.
- * Copyright (C) 2006-2021  The Bochs Project
+ * Copyright (C) 2006-2026  The Bochs Project
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -100,8 +100,12 @@ class vmware4_image_t : public device_image_t
         VM4_Header header;
         Bit8u* tlb;
         off_t tlb_offset;
+        off_t tlb_file_offset;
         off_t current_offset;
         bool is_dirty;
+        Bit32u *gd;       // grain directory (cached)
+        Bit32u *gd_copy;  // redundant grain directory (cached)
+        Bit32u gd_count;
         const char *pathname;
 };
 

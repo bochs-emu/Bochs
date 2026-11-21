@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2021  The Bochs Project
+//  Copyright (C) 2004-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -74,6 +74,7 @@ public:
 
   private:
     void setup_port();
+    void tx_complete();
 #ifdef WIN32_RECEIVE_RAW
     void enq_event(Bit16s event);
 #endif
@@ -85,6 +86,9 @@ public:
     BOOL DCBchanged;
     DWORD MSR_value;
     Bit16s rxdata_buffer[RX_BUFSIZE];
+    OVERLAPPED tx_ovl;
+    BOOL tx_pending;
+    Bit8u tx_byte;
 #ifdef WIN32_RECEIVE_RAW
     HANDLE hRawSerialThread;
     BOOL thread_active;

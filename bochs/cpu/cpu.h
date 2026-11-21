@@ -509,12 +509,12 @@ extern BX_CPU_C   bx_cpu;
 
 // notify internal debugger/instrumentation about memory access
 #define BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, paddr, size, memtype, rw, dataptr) {              \
-  BX_INSTR_LIN_ACCESS(BX_CPU_ID, (laddr), (paddr), (size), (memtype), (rw));                 \
+  BX_INSTR_LIN_ACCESS(BX_CPU_ID, (laddr), (paddr), (size), (memtype), (rw), (dataptr));      \
   BX_DBG_LIN_MEMORY_ACCESS(BX_CPU_ID, (laddr), (paddr), (size), (memtype), (rw), (dataptr)); \
 }
 
 #define BX_NOTIFY_PHY_MEMORY_ACCESS(paddr, size, memtype, rw, why, dataptr) {              \
-  BX_INSTR_PHY_ACCESS(BX_CPU_ID, (paddr), (size), (memtype), (rw));                        \
+  BX_INSTR_PHY_ACCESS(BX_CPU_ID, (paddr), (size), (memtype), (rw), (dataptr));             \
   BX_DBG_PHY_MEMORY_ACCESS(BX_CPU_ID, (paddr), (size), (memtype), (rw), (why), (dataptr)); \
 }
 
@@ -1057,10 +1057,10 @@ public: // for now...
 
   // TSC: Time Stamp Counter
   // Instead of storing a counter and incrementing it every instruction, we
-  // remember the time in ticks that it was reset to zero.  With a little
-  // algebra, we can also support setting it to something other than zero.
-  // Don't read this directly; use get_TSC and set_TSC to access the TSC.
-  Bit64u tsc_adjust;
+  // remember the time in ticks that it was reset to zero and add IA32_TSC_ADJUST.
+  // Don't read these directly; use get_TSC and set_TSC to access the TSC.
+  Bit64u tsc_last_reset;
+  Bit64u tsc_adjust;     // holds IA32_TSC_ADJUST MSR value
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM
   Bit64s tsc_offset;
 #endif
@@ -1760,6 +1760,7 @@ public: // for now...
   BX_SMF void WBINVD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CLFLUSH(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CLZERO(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RDPRU(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void MOV_CR0Rd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_CR2Rd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3803,6 +3804,10 @@ public: // for now...
 
   BX_SMF void VPSHUFBITQMB_MASK_KGqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
+  BX_SMF void VBMACOR16X16X16_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VBMACXOR16X16X16_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VBITREV_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   BX_SMF void VP2INTERSECTD_KGqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VP2INTERSECTQ_KGqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
@@ -4255,6 +4260,62 @@ public: // for now...
   BX_SMF void DEC_BqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void APX_NF_DEC_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void APX_NF_DEC_EwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void APX_NF_ADD_EbGbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SUB_EbGbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ADD_EbIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SUB_EbIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_NEG_EbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_INC_EbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_DEC_EbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_XOR_EbGbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_XOR_EbIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_OR_EbIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_OR_EbGbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_AND_EbGbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_AND_EbIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void APX_NF_ADD_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SUB_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ADD_EwIwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SUB_EwIwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_NEG_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_INC_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_DEC_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_XOR_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_XOR_EwIwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_OR_EwIwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_OR_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_AND_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_AND_EwIwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void APX_NF_ADD_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SUB_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ADD_EdIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SUB_EdIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_NEG_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_INC_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_DEC_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_XOR_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_XOR_EdIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_OR_EdIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_OR_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_AND_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_AND_EdIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void APX_NF_ADD_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SUB_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ADD_EqIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SUB_EqIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_NEG_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_INC_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_DEC_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_XOR_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_XOR_EqIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_OR_EqIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_OR_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_AND_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_AND_EqIdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void APX_NF_MUL_ALEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void APX_NF_MUL_AXEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -4844,6 +4905,36 @@ public: // for now...
   BX_SMF void SHRD_BwEwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void APX_NF_SHRD_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
+  BX_SMF void APX_NF_ROL_EbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ROR_EbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHL_EbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHR_EbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SAR_EbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void APX_NF_SHLD_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHRD_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ROL_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ROR_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHL_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHR_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SAR_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void APX_NF_SHLD_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHRD_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ROL_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ROR_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHL_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHR_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SAR_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void APX_NF_SHLD_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHRD_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ROL_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ROR_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHL_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHR_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SAR_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   BX_SMF void SHLD_BdEdGdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void SHRD_BdEdGdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
@@ -5430,6 +5521,7 @@ public: // for now...
   BX_SMF bxICacheEntry_c *fillICacheEntry(const Bit8u *fetchPtr, unsigned remainingInPage, bx_phy_address pAddr);
   BX_SMF bxICacheEntry_c* getICacheEntry(void);
   BX_SMF bool mergeTraces(bxTraceCacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr);
+  BX_SMF void invalidatePageSplitTraces(void);
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS && BX_ENABLE_TRACE_LINKING
   BX_SMF void linkTrace(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 #endif
@@ -5483,9 +5575,9 @@ public: // for now...
   BX_SMF void write_linear_zmmword_aligned(unsigned seg, bx_address off, const BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
 #endif
 
-  BX_SMF void tickle_read_linear(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
-  BX_SMF void tickle_read_virtual_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
-  BX_SMF void tickle_read_virtual(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF void tickle_read_linear(unsigned seg, bx_address offset, unsigned len) BX_CPP_AttrRegparmN(3);
+  BX_SMF void tickle_read_virtual_32(unsigned seg, Bit32u offset, unsigned len) BX_CPP_AttrRegparmN(3);
+  BX_SMF void tickle_read_virtual(unsigned seg, bx_address offset, unsigned len) BX_CPP_AttrRegparmN(3);
 
   BX_SMF void tickle_write_linear(unsigned seg, bx_address offset, unsigned len) BX_CPP_AttrRegparmN(3);
   BX_SMF void tickle_write_virtual_32(unsigned seg, Bit32u offset, unsigned len) BX_CPP_AttrRegparmN(3);
@@ -5529,6 +5621,9 @@ public: // for now...
   BX_SMF void read_virtual_zmmword(unsigned seg, bx_address off, BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_virtual_zmmword_aligned(unsigned seg, bx_address off, BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
 #endif
+#if BX_SUPPORT_AVX
+  BX_SMF void read_virtual_vector(unsigned seg, bx_address off, BxPackedAvxRegister *data, unsigned vlen);
+#endif
 
   BX_SMF void write_virtual_byte(unsigned seg, bx_address offset, Bit8u data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_word(unsigned seg, bx_address offset, Bit16u data) BX_CPP_AttrRegparmN(3);
@@ -5541,6 +5636,9 @@ public: // for now...
   BX_SMF void write_virtual_ymmword_aligned(unsigned seg, bx_address off, const BxPackedYmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_zmmword(unsigned seg, bx_address off, const BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_zmmword_aligned(unsigned seg, bx_address off, const BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
+#endif
+#if BX_SUPPORT_AVX
+  BX_SMF void write_virtual_vector(unsigned seg, bx_address off, const BxPackedAvxRegister *data, unsigned vlen);
 #endif
 
   BX_SMF Bit8u read_RMW_linear_byte(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
@@ -5589,15 +5687,15 @@ public: // for now...
   BX_SMF Bit64u stack_read_qword(bx_address offset) BX_CPP_AttrRegparmN(1);
 
 #if BX_SUPPORT_CET
-  BX_SMF void shadow_stack_write_dword(bx_address offset, unsigned curr_pl, Bit32u data) BX_CPP_AttrRegparmN(3);
-  BX_SMF void shadow_stack_write_qword(bx_address offset, unsigned curr_pl, Bit64u data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void shadow_stack_write_dword(unsigned seg, bx_address offset, unsigned curr_pl, Bit32u data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void shadow_stack_write_qword(unsigned seg, bx_address offset, unsigned curr_pl, Bit64u data) BX_CPP_AttrRegparmN(3);
 
-  BX_SMF Bit32u shadow_stack_read_dword(bx_address offset, unsigned curr_pl) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit64u shadow_stack_read_qword(bx_address offset, unsigned curr_pl) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit32u shadow_stack_read_dword(unsigned seg, bx_address offset, unsigned curr_pl) BX_CPP_AttrRegparmN(3);
+  BX_SMF Bit64u shadow_stack_read_qword(unsigned seg, bx_address offset, unsigned curr_pl) BX_CPP_AttrRegparmN(3);
 
-  BX_SMF bool shadow_stack_lock_cmpxchg8b(bx_address offset, unsigned curr_pl, Bit64u data, Bit64u expected_data) BX_CPP_AttrRegparmN(4);
-  BX_SMF bool shadow_stack_atomic_set_busy(bx_address offset, unsigned curr_pl, bool long64) BX_CPP_AttrRegparmN(3);
-  BX_SMF bool shadow_stack_atomic_clear_busy(bx_address offset, unsigned curr_pl) BX_CPP_AttrRegparmN(2);
+  BX_SMF bool shadow_stack_lock_cmpxchg8b(unsigned seg, bx_address offset, unsigned curr_pl, Bit64u data, Bit64u expected_data) BX_CPP_AttrRegparmN(3);
+  BX_SMF bool shadow_stack_atomic_set_busy(unsigned seg, bx_address offset, unsigned curr_pl, bool long64) BX_CPP_AttrRegparmN(3);
+  BX_SMF bool shadow_stack_atomic_clear_busy(unsigned seg, bx_address offset, unsigned curr_pl) BX_CPP_AttrRegparmN(3);
 #endif
 
   BX_SMF void stackPrefetch(bx_address offset, unsigned len) BX_CPP_AttrRegparmN(2);
@@ -5716,17 +5814,17 @@ public: // for now...
   BX_SMF void inhibit_interrupts(unsigned mask);
   BX_SMF bool interrupts_inhibited(unsigned mask);
   BX_SMF const char *strseg(bx_segment_reg_t *seg);
-  BX_SMF void interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u error_code);
+  BX_SMF void interrupt(Bit8u vector, unsigned type, bool push_error, Bit32u error_code);
 #if BX_SUPPORT_FRED
   BX_SMF void FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code, bool sti_blocking = false);
   BX_SMF void set_fred_event_info_and_data(Bit8u vector, unsigned type, bool nested_exception, unsigned ilen);
   BX_SMF Bit64u get_fred_event_data(Bit8u vector, unsigned type) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit32u get_fred_event_info(Bit8u vector, unsigned type, bool nested_exception, unsigned ilen);
 #endif
-  BX_SMF void real_mode_int(Bit8u vector, bool push_error, Bit16u error_code);
-  BX_SMF void protected_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16u error_code);
+  BX_SMF void real_mode_int(Bit8u vector, bool push_error, Bit32u error_code);
+  BX_SMF void protected_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit32u error_code);
 #if BX_SUPPORT_X86_64
-  BX_SMF void long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16u error_code);
+  BX_SMF void long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit32u error_code);
 #endif
   BX_SMF bool exception_push_error(unsigned vector);
   BX_SMF int  get_exception_type(unsigned vector);
@@ -5837,19 +5935,25 @@ public: // for now...
   BX_SMF void jmp_far32(bxInstruction_c *i, Bit16u cs_raw, Bit32u disp32);
   BX_SMF void call_far16(bxInstruction_c *i, Bit16u cs_raw, Bit16u disp16);
   BX_SMF void call_far32(bxInstruction_c *i, Bit16u cs_raw, Bit32u disp32);
-  BX_SMF void task_gate(bxInstruction_c *i, bx_selector_t *selector, bx_descriptor_t *gate_descriptor, unsigned source);
+  BX_SMF void task_gate(bxInstruction_c *i, bx_descriptor_t *gate_descriptor, unsigned source, bool push_error = 0, Bit32u error_code = 0);
   BX_SMF void jump_protected(bxInstruction_c *i, Bit16u cs, bx_address disp) BX_CPP_AttrRegparmN(3);
   BX_SMF void jmp_call_gate(bx_selector_t *selector, bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(2);
   BX_SMF void call_gate(bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(1);
+  BX_SMF void call_gate_more_privilege(bx_descriptor_t *gate_descriptor, bx_selector_t *cs_selector, bx_descriptor_t *cs_descriptor) BX_CPP_AttrRegparmN(3);
+  BX_SMF void call_gate_same_privilege(bx_descriptor_t *gate_descriptor, bx_selector_t *cs_selector, bx_descriptor_t *cs_descriptor) BX_CPP_AttrRegparmN(3);
 #if BX_SUPPORT_X86_64
   BX_SMF void jmp_call_gate64(bx_selector_t *selector) BX_CPP_AttrRegparmN(1);
 #endif
   BX_SMF void call_protected(bxInstruction_c *i, Bit16u cs, bx_address disp) BX_CPP_AttrRegparmN(3);
 #if BX_SUPPORT_X86_64
   BX_SMF void call_gate64(bx_selector_t *selector) BX_CPP_AttrRegparmN(1);
+  BX_SMF void call_gate64_more_privilege(bx_selector_t *cs_selector, bx_descriptor_t *cs_descriptor, Bit64u new_RIP) BX_CPP_AttrRegparmN(3);
+  BX_SMF void call_gate64_same_privilege(bx_selector_t *cs_selector, bx_descriptor_t *cs_descriptor, Bit64u new_RIP) BX_CPP_AttrRegparmN(3);
 #endif
   BX_SMF void return_protected(bxInstruction_c *i, Bit16u pop_bytes) BX_CPP_AttrRegparmN(2);
   BX_SMF void iret_protected(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void iret_return_from_nested_task(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF Bit32u get_iret_eflags_write_mask(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64
   BX_SMF void long_iret(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void swapgs();
@@ -5891,6 +5995,7 @@ public: // for now...
   BX_SMF Bit32u  get_descriptor_h(const bx_descriptor_t *) BX_CPP_AttrRegparmN(1);
   BX_SMF bool set_segment_ar_data(bx_segment_reg_t *seg, bool valid, Bit16u raw_selector,
                          bx_address base, Bit32u limit_scaled, Bit16u ar_data);
+  BX_SMF void fetch_cs_descriptor(Bit16u raw_selector, bx_selector_t *selector, bx_descriptor_t *descriptor);
   BX_SMF void check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_rpl, Bit8u check_cpl);
   // the basic assumption of the code that load_cs and load_ss cannot fail !
   BX_SMF void load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl) BX_CPP_AttrRegparmN(3);
@@ -5948,8 +6053,11 @@ public: // for now...
   BX_SMF void    deliver_UINTR();
   BX_SMF void    Process_UINTR_Notification();
 #endif
+
   BX_SMF void    debug(bx_address offset);
   BX_SMF void    debug_disasm_instruction(bx_address offset);
+
+  BX_SMF const char* cpu_status_string(char *s);
 
 #if BX_X86_DEBUGGER
   // x86 hardware debug support
@@ -6126,10 +6234,12 @@ public: // for now...
   BX_SMF void xrstor_mxcsr_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_init_mxcsr_state(void);
 
+#if BX_SUPPORT_FPU
   BX_SMF bool xsave_x87_state_xinuse(void);
   BX_SMF void xsave_x87_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_x87_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_init_x87_state(void);
+#endif
 
   BX_SMF bool xsave_sse_state_xinuse(void);
   BX_SMF void xsave_sse_state(bxInstruction_c *i, bx_address offset);
@@ -6387,7 +6497,7 @@ public: // for now...
   BX_SMF void vmcb_write64(unsigned offset, Bit64u val_64);
   BX_SMF void svm_segment_read(bx_segment_reg_t *seg, unsigned offset);
   BX_SMF void svm_segment_write(bx_segment_reg_t *seg, unsigned offset);
-  BX_SMF void SvmRecordExitIntInfo(unsigned type, unsigned vector, bool push_error, Bit16u error_code);
+  BX_SMF void SvmRecordExitIntInfo(unsigned type, unsigned vector, bool push_error, Bit32u error_code);
   BX_SMF void SvmInterceptException(unsigned type, unsigned vector,
        Bit16u errcode, bool errcode_valid, Bit64u qualification = 0);
   BX_SMF void SvmInterceptIO(bxInstruction_c *i, unsigned port, unsigned len);
@@ -6572,11 +6682,17 @@ BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
 #endif
      unsigned(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b);    // typecast to keep MSVC warnings silent
 
-  BX_CPU_THIS_PTR user_pl = // CPL == 3
+  bool user_pl = // CPL == 3
      (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl == 3);
 
+  if (BX_CPU_THIS_PTR user_pl != user_pl) {
+    BX_CPU_THIS_PTR user_pl = user_pl;
+    // the 2nd page of a page split trace was cached with old CPL
+    invalidatePageSplitTraces();
+  }
+
 #if BX_SUPPORT_UINTR
-  uintr_control(); // CPL changes
+  uintr_control(); // CPL or long64 mode changes
 #endif
 }
 

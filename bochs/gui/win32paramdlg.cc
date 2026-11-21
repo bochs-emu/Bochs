@@ -33,10 +33,12 @@
 
 #include "scrollwin.h"
 
-#define ID_LABEL 1000
-#define ID_PARAM 1500
-#define ID_BROWSE 2000
-#define ID_UPDOWN 2500
+// control id ranges for dynamically created controls (up to 1000 each)
+// must not overlap with the dialog resource ids (see win32res.h)
+#define ID_LABEL  4000
+#define ID_PARAM  5000
+#define ID_BROWSE 6000
+#define ID_UPDOWN 7000
 
 // helper function
 
@@ -89,11 +91,13 @@ UINT registerDlgList(UINT mid, UINT lid, bx_list_c *list)
   } else {
     dlg_list_t *temp = dlg_lists;
 
-    while (temp->next) {
+    while (1) {
       if (temp->list == dlg_list->list) {
+        // already registered
         delete dlg_list;
-        return 0;
+        return temp->dlg_base_id;
       }
+      if (temp->next == NULL) break;
       temp = temp->next;
     }
     temp->next = dlg_list;
@@ -115,6 +119,55 @@ UINT findDlgListBaseID(bx_list_c *list)
     }
   }
   return 0;
+}
+
+// returns the id of the list container control (scroll window, tab control or groupbox)
+UINT findDlgListID(bx_list_c *list)
+{
+  dlg_list_t *dlg_list;
+
+  for (dlg_list = dlg_lists; dlg_list; dlg_list = dlg_list->next) {
+    if (list == dlg_list->list) {
+      return dlg_list->dlg_list_id;
+    }
+  }
+  return 0;
+}
+
+// returns the list containing the control with the specified id
+bx_list_c *findDlgListFromID(UINT cid)
+{
+  dlg_list_t *dlg_list;
+  UINT end;
+
+  for (dlg_list = dlg_lists; dlg_list; dlg_list = dlg_list->next) {
+    end = dlg_list->dlg_base_id + dlg_list->list->get_size();
+    if ((dlg_list->list->get_options() & dlg_list->list->USE_TAB_WINDOW) != 0) {
+      end++;
+    }
+    if ((cid >= dlg_list->dlg_base_id) && (cid < end)) {
+      return dlg_list->list;
+    }
+  }
+  return NULL;
+}
+
+// recalculate the next free dialog id from the registered lists
+void updateNextDlgID(void)
+{
+  dlg_list_t *dlg_list;
+  UINT end;
+
+  nextDlgID = 1;
+  for (dlg_list = dlg_lists; dlg_list; dlg_list = dlg_list->next) {
+    end = dlg_list->dlg_base_id + dlg_list->list->get_size();
+    if ((dlg_list->list->get_options() & dlg_list->list->USE_TAB_WINDOW) != 0) {
+      end++;
+    }
+    if (end > nextDlgID) {
+      nextDlgID = end;
+    }
+  }
 }
 
 bx_param_c *findParamFromDlgID(UINT mid, UINT cid, bool list)
@@ -182,20 +235,20 @@ void cleanupDlgList(bx_list_c *list)
               cleanupDlgList((bx_list_c*)d->list->get(i));
             }
           }
-          nextDlgID = d->dlg_base_id;
           next = d->next;
           delete d;
           d = next;
           if (prev) {
             prev->next = next;
           } else {
-            dlg_lists = NULL;
+            dlg_lists = next;
           }
         } else {
           prev = d;
           d = d->next;
         }
       }
+      updateNextDlgID();
     }
   } else {
     if (dlg_lists) {
@@ -357,7 +410,7 @@ int AskFilename(HWND hwnd, bx_param_filename_c *param, char *buffer)
     param->get(filename, BX_PATHNAME_LEN);
   }
   // common file dialogs don't accept raw device names
-  if ((isalpha(filename[0])) && (filename[1] == ':') && (strlen(filename) == 2)) {
+  if ((isalpha((unsigned char)filename[0])) && (filename[1] == ':') && (strlen(filename) == 2)) {
     filename[0] = 0;
   }
   title = param->get_label();
@@ -396,12 +449,13 @@ int AskFilename(HWND hwnd, bx_param_filename_c *param, char *buffer)
     ofn.Flags |= OFN_FILEMUSTEXIST;
     ret = GetOpenFileName(&ofn);
   }
-  if (buffer != NULL) {
-    lstrcpyn(buffer, filename, BX_PATHNAME_LEN);
+  if (ret != 0) {
+    if (buffer != NULL) {
+      lstrcpyn(buffer, filename, BX_PATHNAME_LEN);
+    } else {
+      param->set(filename);
+    }
   } else {
-    param->set(filename);
-  }
-  if (ret == 0) {
     errcode = CommDlgExtendedError();
     if (errcode == 0) {
       ret = -1;
@@ -500,6 +554,42 @@ BOOL IsScrollWindow(HWND hwnd)
 
   GetClassName(hwnd, classname, 80);
   return (!lstrcmp(classname, "ScrollWin"));
+}
+
+// returns the scroll window of the list (child of hDlg) or NULL if not used
+HWND GetListScrollWindow(HWND hDlg, bx_list_c *list)
+{
+  HWND scrollwin;
+
+  if ((list == NULL) || ((list->get_options() & list->USE_SCROLL_WINDOW) == 0)) {
+    return NULL;
+  }
+  scrollwin = GetDlgItem(hDlg, ID_PARAM + findDlgListID(list));
+  if ((scrollwin != NULL) && IsScrollWindow(scrollwin)) {
+    return scrollwin;
+  }
+  return NULL;
+}
+
+// returns the parent window of the parameter control with the specified id
+HWND FindParamWindow(HWND hDlg, UINT cid)
+{
+  HWND scrollwin;
+
+  if (GetDlgItem(hDlg, ID_PARAM + cid) != NULL) {
+    return hDlg;
+  }
+  if (IsScrollWindow(hDlg)) {
+    hDlg = GetParent(hDlg);
+    if (GetDlgItem(hDlg, ID_PARAM + cid) != NULL) {
+      return hDlg;
+    }
+  }
+  scrollwin = GetListScrollWindow(hDlg, findDlgListFromID(cid));
+  if ((scrollwin != NULL) && (GetDlgItem(scrollwin, ID_PARAM + cid) != NULL)) {
+    return scrollwin;
+  }
+  return NULL;
 }
 
 HWND CreateLabel(HWND hDlg, UINT cid, UINT xpos, UINT ypos, UINT width, BOOL hide, const char *text)
@@ -654,7 +744,7 @@ HWND CreateInput(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_param_
   } else {
     nparam = (bx_param_num_c*)param;
     if (nparam->get_base() == BASE_HEX) {
-      wsprintf(buffer, "0x%x", nparam->get());
+      wsprintf(buffer, "0x%I64x", nparam->get64());
       hexedit = TRUE;
     } else {
       wsprintf(buffer, "%I64d", nparam->get64());
@@ -684,11 +774,33 @@ HWND CreateInput(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_param_
             UDS_ALIGNRIGHT | UDS_SETBUDDYINT;
     Updown = CreateUpDownControl(style, 0, 0, 0, 0, hDlg, ID_UPDOWN + cid, NULL, Input,
                                  (int)nparam->get_max(), (int)nparam->get_min(), (int)nparam->get());
+    // CreateUpDownControl() only supports 16-bit range and position
+    SendMessage(Updown, UDM_SETRANGE32, (WPARAM)(int)nparam->get_min(), (LPARAM)(int)nparam->get_max());
+    if ((nparam->get() < -32768) || (nparam->get() > 32767)) {
+      SendMessage(Updown, UDM_SETPOS32, 0, (LPARAM)(int)nparam->get());
+    }
     ShowWindow(Updown, hide ? SW_HIDE : SW_SHOW);
   }
   SendMessage(Input, WM_SETFONT, (WPARAM)DlgFont, TRUE);
   ShowWindow(Input, hide ? SW_HIDE : SW_SHOW);
   return Input;
+}
+
+// empty choices are not added to the combobox, so the item index may differ
+// from the choice index (stored as item data)
+void SelectComboChoice(HWND Combo, bx_param_enum_c *eparam)
+{
+  int i, count;
+  LRESULT choice = (LRESULT)(eparam->get() - eparam->get_min());
+
+  count = SendMessage(Combo, CB_GETCOUNT, 0, 0);
+  for (i = 0; i < count; i++) {
+    if (SendMessage(Combo, CB_GETITEMDATA, (WPARAM)i, 0) == choice) {
+      SendMessage(Combo, CB_SETCURSEL, (WPARAM)i, 0);
+      return;
+    }
+  }
+  SendMessage(Combo, CB_SETCURSEL, (WPARAM)-1, 0);
 }
 
 HWND CreateCombobox(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_param_enum_c *eparam)
@@ -720,7 +832,7 @@ HWND CreateCombobox(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_par
     }
     j++;
   }
-  SendMessage(Combo, CB_SETCURSEL, (WPARAM)(eparam->get()-eparam->get_min()), 0);
+  SelectComboChoice(Combo, eparam);
   SendMessage(Combo, WM_SETFONT, (WPARAM)DlgFont, TRUE);
   ShowWindow(Combo, hide ? SW_HIDE : SW_SHOW);
   return Combo;
@@ -778,7 +890,8 @@ UINT GetLabelText(bx_param_c *param, bx_list_c *list, char *buffer)
   if (label == NULL) {
     label = param->get_name();
   }
-  if ((list->get_options() & list->SHOW_GROUP_NAME) && (param->get_group() != NULL)) {
+  if ((list->get_options() & list->SHOW_GROUP_NAME) && (param->get_group() != NULL) &&
+      ((lstrlen(param->get_group()) + lstrlen(label)) < 510)) {
     wsprintf(tmpbuf, "%s %s", param->get_group(), label);
   } else {
     lstrcpyn(tmpbuf, label, 512);
@@ -978,25 +1091,65 @@ void RemoveParamList(HWND hDlg, UINT lid, bx_list_c *list)
   cleanupDlgList(list);
 }
 
-void SetParamList(HWND hDlg, bx_list_c *list)
+// returns FALSE if a numeric value is invalid or out of range
+BOOL GetNumParamValue(HWND hDlg, UINT cid, bx_param_num_c *nparam, Bit64s *val)
+{
+  char buffer[512], mesg[600];
+  char *endptr;
+  const char *label;
+  Bit64s min, max;
+  BOOL valid;
+
+  GetWindowText(GetDlgItem(hDlg, ID_PARAM + cid), buffer, 511);
+  if (nparam->get_base() == BASE_HEX) {
+    *val = (Bit64s)strtoull(buffer, &endptr, 16);
+  } else {
+    *val = strtoll(buffer, &endptr, 10);
+  }
+  min = nparam->get_min();
+  max = nparam->get_max();
+  valid = (endptr != buffer) && (*endptr == 0) && (*val >= min);
+  if ((Bit64u)max != BX_MAX_BIT64U) {
+    valid &= (*val <= max);
+  }
+  if (!valid) {
+    label = nparam->get_label();
+    if (label == NULL) label = nparam->get_name();
+    if (nparam->get_base() == BASE_HEX) {
+      wsprintf(mesg, "Invalid value for '%s' (range 0x%I64x - 0x%I64x)", label, min, max);
+    } else {
+      wsprintf(mesg, "Invalid value for '%s' (range %I64d - %I64d)", label, min, max);
+    }
+    MessageBox(hDlg, mesg, "Invalid value", MB_ICONERROR);
+    SetFocus(GetDlgItem(hDlg, ID_PARAM + cid));
+  }
+  return valid;
+}
+
+// returns FALSE if an invalid value was found (following params not set)
+BOOL SetParamList(HWND hDlg, bx_list_c *list)
 {
   bx_param_c *param;
   Bit64s val, idx;
   const char *src;
   char buffer[512];
   UINT cid, i, items, lid;
+  HWND scrollwin;
 
   lid = findDlgListBaseID(list);
   items = list->get_size();
-  if (list->get_options() & list->USE_SCROLL_WINDOW) {
-    hDlg = FindWindowEx(hDlg, NULL, "ScrollWin", NULL);
+  scrollwin = GetListScrollWindow(hDlg, list);
+  if (scrollwin != NULL) {
+    hDlg = scrollwin;
   }
   for (i = 0; i < items; i++) {
     cid = lid + i;
     param = list->get(i);
     if (param->get_enabled() && (!SIM->get_init_done() || (SIM->get_init_done() && param->get_runtime_param()))) {
       if (param->get_type() == BXT_LIST) {
-        SetParamList(hDlg, (bx_list_c*)param);
+        if (!SetParamList(hDlg, (bx_list_c*)param)) {
+          return FALSE;
+        }
       } else if (param->get_type() == BXT_PARAM_BOOL) {
         val = (SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), BM_GETCHECK, 0, 0) == BST_CHECKED);
         bx_param_bool_c *bparam = (bx_param_bool_c*)param;
@@ -1006,6 +1159,7 @@ void SetParamList(HWND hDlg, bx_list_c *list)
       } else if (param->get_type() == BXT_PARAM_ENUM) {
         bx_param_enum_c *eparam = (bx_param_enum_c*)param;
         idx = (LRESULT)(SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), CB_GETCURSEL, 0, 0));
+        if (idx == CB_ERR) continue;
         val = (LRESULT)(SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), CB_GETITEMDATA, (WPARAM)idx, 0) + eparam->get_min());
         if (val != eparam->get()) {
           GetDlgItemText(hDlg, ID_PARAM + cid, buffer, 80);
@@ -1015,12 +1169,8 @@ void SetParamList(HWND hDlg, bx_list_c *list)
         if (SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), EM_GETMODIFY, 0, 0)) {
           if (param->get_type() == BXT_PARAM_NUM) {
             bx_param_num_c *nparam = (bx_param_num_c*)param;
-            if (nparam->get_base() == BASE_HEX) {
-              GetWindowText(GetDlgItem(hDlg, ID_PARAM + cid), buffer, 511);
-              sscanf(buffer, "%llx", &val);
-            } else {
-              GetWindowText(GetDlgItem(hDlg, ID_PARAM + cid), buffer, 511);
-              val = strtoll(buffer, NULL, 10);
+            if (!GetNumParamValue(hDlg, cid, nparam, &val)) {
+              return FALSE;
             }
             nparam->set(val);
           } else if (param->get_type() == BXT_PARAM_STRING) {
@@ -1031,13 +1181,18 @@ void SetParamList(HWND hDlg, bx_list_c *list)
             GetWindowText(GetDlgItem(hDlg, ID_PARAM + cid), buffer, 511);
             bx_param_bytestring_c *sparam = (bx_param_bytestring_c*)param;
             src = &buffer[0];
-            sparam->parse_param(src);
+            if (sparam->parse_param(src) == 0) {
+              MessageBox(hDlg, "Illegal raw byte format", "Invalid value", MB_ICONERROR);
+              SetFocus(GetDlgItem(hDlg, ID_PARAM + cid));
+              return FALSE;
+            }
           }
         }
       }
     }
     if ((i + 1) >= (UINT)list->get_size()) break;
   }
+  return TRUE;
 }
 
 void ProcessDependentList(HWND hDlg, bx_param_c *param, BOOL enabled);
@@ -1050,11 +1205,13 @@ void ResetParamList(HWND hDlg, bx_list_c *list, bool force)
   Bit64s val;
   char buffer[512];
   UINT cid, i, items, lid;
+  HWND scrollwin;
 
   lid = findDlgListBaseID(list);
   items = list->get_size();
-  if (list->get_options() & list->USE_SCROLL_WINDOW) {
-    hDlg = FindWindowEx(hDlg, NULL, "ScrollWin", NULL);
+  scrollwin = GetListScrollWindow(hDlg, list);
+  if (scrollwin != NULL) {
+    hDlg = scrollwin;
   }
   for (i = 0; i < items; i++) {
     cid = lid + i;
@@ -1068,13 +1225,13 @@ void ResetParamList(HWND hDlg, bx_list_c *list, bool force)
         SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), BM_SETCHECK, val ? BST_CHECKED : BST_UNCHECKED, 0);
       } else if (param->get_type() == BXT_PARAM_ENUM) {
         bx_param_enum_c *eparam = (bx_param_enum_c*)param;
-        SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), CB_SETCURSEL, (WPARAM)(eparam->get()-eparam->get_min()), 0);
+        SelectComboChoice(GetDlgItem(hDlg, ID_PARAM + cid), eparam);
       } else {
         if (force || SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), EM_GETMODIFY, 0, 0)) {
           if (param->get_type() == BXT_PARAM_NUM) {
             bx_param_num_c *nparam = (bx_param_num_c*)param;
             if (nparam->get_base() == BASE_HEX) {
-              wsprintf(buffer, "0x%x", nparam->get());
+              wsprintf(buffer, "0x%I64x", nparam->get64());
             } else {
               wsprintf(buffer, "%I64d", nparam->get64());
             }
@@ -1094,13 +1251,15 @@ void ShowParamList(HWND hDlg, UINT lid, BOOL show, bx_list_c *list)
 {
   UINT cid;
   int i;
-  HWND Button, Updown;
+  HWND Button, Updown, scrollwin;
   BOOL ishow;
 
   if (lid < 500) {
     ShowWindow(GetDlgItem(hDlg, ID_PARAM + lid), show ? SW_SHOW : SW_HIDE);
-    if (list->get_options() & list->USE_SCROLL_WINDOW) {
-      hDlg = GetDlgItem(hDlg, ID_PARAM + lid);
+    // scroll window is only used if the list is large
+    scrollwin = GetListScrollWindow(hDlg, list);
+    if (scrollwin != NULL) {
+      hDlg = scrollwin;
     }
   }
   cid = findDlgListBaseID(list);
@@ -1143,19 +1302,22 @@ void ProcessDependentList(HWND hDlg, bx_param_c *param, BOOL enabled)
   char buffer[BX_PATHNAME_LEN];
   int i;
   BOOL en;
+  HWND hwnd;
 
   deplist = param->get_dependent_list();
   if (deplist != NULL) {
     cid = findDlgIDFromParam(param);
-    if (GetDlgItem(hDlg, ID_PARAM + cid) == NULL) {
-      hDlg = FindWindowEx(hDlg, NULL, "ScrollWin", NULL);
-      if ((hDlg == NULL) || (GetDlgItem(hDlg, ID_PARAM + cid) == NULL)) {
-        return;
-      }
+    hDlg = FindParamWindow(hDlg, cid);
+    if (hDlg == NULL) {
+      return;
     }
     if (param->get_type() == BXT_PARAM_ENUM) {
       eparam = (bx_param_enum_c*)param;
       value = SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), CB_GETCURSEL, 0, 0);
+      if (value == CB_ERR) {
+        return;
+      }
+      value = SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), CB_GETITEMDATA, (WPARAM)value, 0);
       enable_bitmap = eparam->get_dependent_bitmap(value + eparam->get_min());
       mask = 0x1;
       for (i = 0; i < deplist->get_size(); i++) {
@@ -1171,9 +1333,10 @@ void ProcessDependentList(HWND hDlg, bx_param_c *param, BOOL enabled)
           }
           cid = findDlgIDFromParam(dparam);
           if (cid != 0) {
-            if (en != IsWindowEnabled(GetDlgItem(hDlg, ID_PARAM + cid))) {
-              ProcessDependentList(hDlg, dparam, en);
-              EnableParam(hDlg, 0, dparam, en);
+            hwnd = FindParamWindow(hDlg, cid);
+            if ((hwnd != NULL) && (en != IsWindowEnabled(GetDlgItem(hwnd, ID_PARAM + cid)))) {
+              ProcessDependentList(hwnd, dparam, en);
+              EnableParam(hwnd, cid, dparam, en);
             }
           }
         }
@@ -1186,7 +1349,12 @@ void ProcessDependentList(HWND hDlg, bx_param_c *param, BOOL enabled)
       if (param->get_type() == BXT_PARAM_BOOL) {
         value = SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), BM_GETCHECK, 0, 0);
       } else if (param->get_type() == BXT_PARAM_NUM) {
-        value = GetDlgItemInt(hDlg, ID_PARAM + cid, NULL, FALSE);
+        GetWindowText(GetDlgItem(hDlg, ID_PARAM + cid), buffer, BX_PATHNAME_LEN);
+        if (((bx_param_num_c*)param)->get_base() == BASE_HEX) {
+          value = (strtoull(buffer, NULL, 16) != 0);
+        } else {
+          value = (strtoll(buffer, NULL, 10) != 0);
+        }
       } else {
         GetWindowText(GetDlgItem(hDlg, ID_PARAM + cid), buffer, BX_PATHNAME_LEN);
         value = (lstrlen(buffer) > 0) && (strcmp(buffer, "none"));
@@ -1197,9 +1365,10 @@ void ProcessDependentList(HWND hDlg, bx_param_c *param, BOOL enabled)
           en = (value && enabled);
           cid = findDlgIDFromParam(dparam);
           if (cid != 0) {
-            if (en != IsWindowEnabled(GetDlgItem(hDlg, ID_PARAM + cid))) {
-              ProcessDependentList(hDlg, dparam, en);
-              EnableParam(hDlg, 0, dparam, en);
+            hwnd = FindParamWindow(hDlg, cid);
+            if ((hwnd != NULL) && (en != IsWindowEnabled(GetDlgItem(hwnd, ID_PARAM + cid)))) {
+              ProcessDependentList(hwnd, dparam, en);
+              EnableParam(hwnd, cid, dparam, en);
             }
           }
         }
@@ -1229,7 +1398,10 @@ void SetDefaultButtons(HWND Window, UINT xpos, UINT ypos)
 void HandleOkCancel(HWND hDlg, UINT_PTR id, bx_list_c *list)
 {
   if (id == IDOK) {
-    SetParamList(hDlg, list);
+    if (!SetParamList(hDlg, list)) {
+      // invalid value: keep the dialog open
+      return;
+    }
   }
   EndDialog(hDlg, (id == IDOK) ? 1 : -1);
 }
@@ -1254,12 +1426,13 @@ UINT HandleChildWindowEvents(HWND hDlg, UINT mid, UINT_PTR id, UINT_PTR nc, bx_l
   if ((id >= ID_BROWSE) && (id < (ID_BROWSE + nextDlgID))) {
     i = (UINT)(id - ID_BROWSE);
     bx_param_string_c *sparam = (bx_param_string_c *)findParamFromDlgID(mid, i, false);
-    if (sparam != NULL) {
-      GetDlgItemText(hDlg, ID_PARAM + i, fname, BX_PATHNAME_LEN);
+    HWND hwnd = FindParamWindow(hDlg, i);
+    if ((sparam != NULL) && (hwnd != NULL)) {
+      GetDlgItemText(hwnd, ID_PARAM + i, fname, BX_PATHNAME_LEN);
       if (AskFilename(hDlg, (bx_param_filename_c *)sparam, fname) > 0) {
-        SetWindowText(GetDlgItem(hDlg, ID_PARAM + i), fname);
-        SendMessage(GetDlgItem(hDlg, ID_PARAM + i), EM_SETMODIFY, 1, 0);
-        SetFocus(GetDlgItem(hDlg, ID_PARAM + i));
+        SetWindowText(GetDlgItem(hwnd, ID_PARAM + i), fname);
+        SendMessage(GetDlgItem(hwnd, ID_PARAM + i), EM_SETMODIFY, 1, 0);
+        SetFocus(GetDlgItem(hwnd, ID_PARAM + i));
         ret = BXPD_SET_PATH;
       }
     }
@@ -1277,7 +1450,10 @@ UINT HandleChildWindowEvents(HWND hDlg, UINT mid, UINT_PTR id, UINT_PTR nc, bx_l
     ret = 0;
     if ((id == IDAPPLY) || (id == IDREVERT)) {
       if (id == IDAPPLY) {
-        SetParamList(hDlg, list);
+        if (!SetParamList(hDlg, list)) {
+          // invalid value: stay in edit mode
+          return 0;
+        }
       } else {
         ResetParamList(hDlg, list, false);
       }
@@ -1380,7 +1556,7 @@ static INT_PTR CALLBACK FloppyParamDlgProc(HWND Window, UINT AMessage, WPARAM wP
   int i;
   RECT r, r2;
   SIZE size;
-  char mesg[MAX_PATH];
+  char mesg[MAX_PATH + 64];
   char path[MAX_PATH];
 
   switch (AMessage) {
@@ -1419,6 +1595,10 @@ static INT_PTR CALLBACK FloppyParamDlgProc(HWND Window, UINT AMessage, WPARAM wP
           GetDlgItemText(Window, path_id, path, MAX_PATH);
           backslashes(path);
           i = SendMessage(GetDlgItem(Window, type_id), CB_GETCURSEL, 0, 0);
+          if (i == CB_ERR) {
+            return TRUE;
+          }
+          i = SendMessage(GetDlgItem(Window, type_id), CB_GETITEMDATA, (WPARAM)i, 0);
           if (CreateImage(Window, floppy_type_n_sectors[i], path)) {
             wsprintf(mesg, "Created a %s disk image called %s", floppy_type_names[i], path);
             MessageBox(Window, mesg, "Image created", MB_OK);
@@ -1428,7 +1608,7 @@ static INT_PTR CALLBACK FloppyParamDlgProc(HWND Window, UINT AMessage, WPARAM wP
         default:
           ret = HandleChildWindowEvents(Window, 0, code, noticode, NULL);
           if (ret == BXPD_SET_PATH) {
-            SendMessage(GetDlgItem(Window, status_id), BM_SETCHECK, BST_CHECKED, 0);
+            SendMessage(GetDlgItem(Window, status_id), CB_SELECTSTRING, (WPARAM)-1, (LPARAM)"inserted");
             SendMessage(GetDlgItem(Window, type_id), CB_SELECTSTRING, (WPARAM)-1, (LPARAM)"auto");
             EnableWindow(GetDlgItem(Window, IDCREATE), FALSE);
           } else if (ret == BXPD_UPDATE_DEPS) {
@@ -1436,7 +1616,10 @@ static INT_PTR CALLBACK FloppyParamDlgProc(HWND Window, UINT AMessage, WPARAM wP
               EnableWindow(GetDlgItem(Window, IDCREATE), IsWindowEnabled(GetDlgItem(Window, type_id)));
             } else if (code == type_id) {
               i = SendMessage(GetDlgItem(Window, type_id), CB_GETCURSEL, 0, 0);
-              EnableWindow(GetDlgItem(Window, IDCREATE), (i != 0));
+              if (i != CB_ERR) {
+                i = SendMessage(GetDlgItem(Window, type_id), CB_GETITEMDATA, (WPARAM)i, 0);
+              }
+              EnableWindow(GetDlgItem(Window, IDCREATE), (i > 0));
             }
           }
       }

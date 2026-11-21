@@ -143,7 +143,7 @@ static float128_t f2xm1_table_d(int index)
    intermediate roundings is discarded first. */
 static extFloat80_t f2xm1_reconstruct(float128_t a, float128_t b, softfloat_status_t &status)
 {
-    float128_t sum = f128_add(a, b, &status);   /* final reconstruction add, full precision */
+    float128_t sum = f128_add(a, b, softfloat_round_odd, &status);   /* round to odd: the conversion below rounds once */
     softfloat_clearRoundingUp(&status);
     return f128_to_extF80(sum, &status);        /* single rounding, per FPU mode */
 }
@@ -279,7 +279,7 @@ extFloat80_t f2xm1(extFloat80_t x, softfloat_status_t &status)
                 xSig = n.sig;
             }
             float128_t prod = f128_mul_by_extF80(f2xm1_L2, packFloatx80(sign, FLOATX80_EXP_BIAS, xSig), 
-                                                 softfloat_getRoundingMode(&status), &status);
+                                                 softfloat_round_odd, &status);
             return f128_to_extF80(prod, xExp - FLOATX80_EXP_BIAS, softfloat_getRoundingMode(&status), &status);
         }
     }

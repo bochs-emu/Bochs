@@ -30,6 +30,7 @@ void ip6_input(struct mbuf *m)
     M_DUP_DEBUG(slirp, m, 1, TCPIPHDR_DELTA + 2 + ETH_HLEN);
 
     struct ip6 *ip6;
+    int ip6_len;
 
     if (!slirp->in6_enabled) {
         goto bad;
@@ -49,7 +50,9 @@ void ip6_input(struct mbuf *m)
         goto bad;
     }
 
-    if (ntohs(ip6->ip_pl) + sizeof(struct ip6) > (unsigned)slirp->if_mtu) {
+    ip6_len = ntohs(ip6->ip_pl) + sizeof(struct ip6);
+
+    if (ip6_len > slirp->if_mtu) {
         icmp6_send_error(m, ICMP6_TOOBIG, 0);
         goto bad;
     }
@@ -57,14 +60,41 @@ void ip6_input(struct mbuf *m)
     // Check if the message size is big enough to hold what's
     // set in the payload length header. If not this is an invalid
     // packet
-    if (m->m_len < (int)(ntohs(ip6->ip_pl) + sizeof(struct ip6))) {
+    if (m->m_len < ip6_len) {
         goto bad;
     }
+
+    /* Should drop packet if mbuf too long? hmmm... */
+    if (m->m_len > ip6_len)
+        m_adj(m, ip6_len - m->m_len);
 
     /* check ip_ttl for a correct ICMP reply */
     if (ip6->ip_hl == 0) {
         icmp6_send_error(m, ICMP6_TIMXCEED, ICMP6_TIMXCEED_INTRANS);
         goto bad;
+    }
+
+    if (in6_martian_source(&ip6->ip_src)
+     || in6_martian_destination(&ip6->ip_dst)) {
+        goto bad;
+    }
+
+    if (IN6_IS_ADDR_V4MAPPED(&ip6->ip_src)
+     || IN6_IS_ADDR_V4COMPAT(&ip6->ip_src)) {
+        struct in_addr ip4_src;
+        memcpy(&ip4_src, &ip6->ip_src.s6_addr[12], 4);
+        if (in_martian_source(ntohl(ip4_src.s_addr))) {
+            goto bad;
+        }
+    }
+
+    if (IN6_IS_ADDR_V4MAPPED(&ip6->ip_dst)
+     || IN6_IS_ADDR_V4COMPAT(&ip6->ip_dst)) {
+        struct in_addr ip4_dst;
+        memcpy(&ip4_dst, &ip6->ip_dst.s6_addr[12], 4);
+        if (in_martian_destination(ntohl(ip4_dst.s_addr))) {
+            goto bad;
+        }
     }
 
     /*

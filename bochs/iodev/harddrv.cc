@@ -719,6 +719,14 @@ void bx_hard_drive_c::register_state(void)
         new bx_shadow_num_c(drive, "hob_lcyl", &BX_CONTROLLER(i, j).hob.lcyl, BASE_HEX);
         new bx_shadow_num_c(drive, "hob_hcyl", &BX_CONTROLLER(i, j).hob.hcyl, BASE_HEX);
         new bx_shadow_num_c(drive, "num_sectors", &BX_CONTROLLER(i, j).num_sectors, BASE_HEX);
+        // the rest of a transfer in progress (an LBA48 command needs lba48), and the guest-visible caches
+        BXRS_PARAM_BOOL(drive, lba48, BX_CONTROLLER(i, j).lba48);
+        BXRS_PARAM_BOOL(drive, identify_set, BX_HD_THIS channels[i].drives[j].identify_set);
+        new bx_shadow_data_c(drive, "id_drive", (Bit8u *) BX_HD_THIS channels[i].drives[j].id_drive,
+                             sizeof(BX_HD_THIS channels[i].drives[j].id_drive));
+        new bx_shadow_num_c(drive, "status_changed", (Bit32s *) &BX_HD_THIS channels[i].drives[j].status_changed);
+        new bx_shadow_data_c(drive, "sense", (Bit8u *) &BX_HD_THIS channels[i].drives[j].sense,
+                             sizeof(BX_HD_THIS channels[i].drives[j].sense));
       }
     }
     new bx_shadow_num_c(chan, "drive_select", &BX_HD_THIS channels[i].drive_select);
@@ -1509,8 +1517,12 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                 {
                   Bit16u alloc_length = read_16bit(controller->buffer + 8);
 
-                  if (alloc_length == 0)
-                    BX_PANIC(("Zero allocation length to MECHANISM STATUS not impl."));
+                  if (alloc_length == 0) {
+                    // no data to transfer, the command completes without data phase
+                    atapi_cmd_nop(controller);
+                    raise_interrupt(channel);
+                    break;
+                  }
 
                   init_send_atapi_command(channel, atapi_command, 8, alloc_length);
 
@@ -2307,13 +2319,9 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           break;
 
         default:
-          if (controller->current_command == 0xa0) {
-            BX_PANIC(("IO read(0x%04x): current command is a0h/%02xh",
-              address, (unsigned) BX_SELECTED_DRIVE(channel).atapi.command));
-          } else {
-            BX_PANIC(("IO write(0x%04x): current command is %02xh", 
-              address, (unsigned) controller->current_command));
-          }
+          // no data out transfer in progress, the data is dropped
+          BX_ERROR(("IO write(0x%04x): current command is %02xh, data ignored",
+            address, (unsigned) controller->current_command));
       }
       break;
 
@@ -2812,7 +2820,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
         case 0xa2: // SERVICE (atapi), optional
           if (BX_SELECTED_IS_CD(channel)) {
-            BX_PANIC(("ATAPI SERVICE not implemented"));
+            BX_ERROR(("ATAPI SERVICE not implemented"));
             command_aborted(channel, 0xa2);
           } else {
             command_aborted(channel, 0xa2);
@@ -2822,6 +2830,9 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
         // power management & flush cache stubs
         case 0xE0: // STANDBY NOW
         case 0xE1: // IDLE IMMEDIATE
+        case 0xE2: // STANDBY
+        case 0xE3: // IDLE
+        case 0xE6: // SLEEP
         case 0xE7: // FLUSH CACHE
         case 0xEA: // FLUSH CACHE EXT
           controller->status.busy = 0;
@@ -2984,10 +2995,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0xDA: BX_ERROR(("write cmd 0xDA (GET MEDIA STATUS) not supported"));command_aborted(channel, 0xDA); break;
         case 0xDE: BX_ERROR(("write cmd 0xDE (MEDIA LOCK) not supported"));command_aborted(channel, 0xDE); break;
         case 0xDF: BX_ERROR(("write cmd 0xDF (MEDIA UNLOCK) not supported"));command_aborted(channel, 0xDF); break;
-        case 0xE2: BX_ERROR(("write cmd 0xE2 (STANDBY) not supported"));command_aborted(channel, 0xE2); break;
-        case 0xE3: BX_ERROR(("write cmd 0xE3 (IDLE) not supported"));command_aborted(channel, 0xE3); break;
         case 0xE4: BX_ERROR(("write cmd 0xE4 (READ BUFFER) not supported"));command_aborted(channel, 0xE4); break;
-        case 0xE6: BX_ERROR(("write cmd 0xE6 (SLEEP) not supported"));command_aborted(channel, 0xE6); break;
         case 0xE8: BX_ERROR(("write cmd 0xE8 (WRITE BUFFER) not supported"));command_aborted(channel, 0xE8); break;
         case 0xED: BX_ERROR(("write cmd 0xED (MEDIA EJECT) not supported"));command_aborted(channel, 0xED); break;
         case 0xF1: BX_ERROR(("write cmd 0xF1 (SECURITY SET PASSWORD) not supported"));command_aborted(channel, 0xF1); break;
@@ -3588,8 +3596,11 @@ void bx_hard_drive_c::init_send_atapi_command(Bit8u channel, Bit8u command, int 
   }
 
   if (!controller->packet_dma) {
-    if (controller->byte_count == 0)
-      BX_PANIC(("ATAPI command 0x%02x with zero byte count", command));
+    if (controller->byte_count == 0) {
+      // invalid byte count limit, use the largest even value
+      BX_ERROR(("ATAPI command 0x%02x with zero byte count", command));
+      controller->byte_count = 0xfffe;
+    }
   }
 
   if (alloc_length < 0)

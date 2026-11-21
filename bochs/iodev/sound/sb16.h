@@ -99,17 +99,19 @@ public:
   BX_SB16_BUFINL bool full(void);         // is the buffer full?
   BX_SB16_BUFINL bool empty(void);        // is it empty?
 
-  BX_SB16_BUFINL void flush(void);        // empty the buffer
-  BX_SB16_BUFINL int bytes(void);         // return number of bytes in the buffer
-  BX_SB16_BUFINL Bit8u peek(int ahead);   // peek ahead number of bytes
+  BX_SB16_BUFINL void flush(void) { tail = head; }  // empty the buffer
+  BX_SB16_BUFINL int bytes(void);                   // return number of bytes in the buffer
+  BX_SB16_BUFINL Bit8u peek(int ahead);             // peek ahead number of bytes
 
       /* These are for caching the command number */
-  BX_SB16_BUFINL void newcommand(Bit8u newcmd, int bytes);   // start a new command with length bytes
-  BX_SB16_BUFINL Bit8u currentcommand(void); // return the current command
-  BX_SB16_BUFINL void clearcommand(void);    // clear the command
+  BX_SB16_BUFINL void newcommand(Bit8u newcmd, int bytes);      // start a new command with length bytes
+  BX_SB16_BUFINL void clearcommand(void); // clear the command
   BX_SB16_BUFINL bool commanddone(void);  // return if all bytes have arrived
-  BX_SB16_BUFINL bool hascommand(void);   // return if there is a pending command
-  BX_SB16_BUFINL int commandbytes(void);     // return the length of the command
+  BX_SB16_BUFINL Bit8u currentcommand(void) { return command; } // return the current command
+  BX_SB16_BUFINL bool hascommand(void) { return havecommand; }  // return if there is a pending command
+  BX_SB16_BUFINL int commandbytes(void) { return bytesneeded; } // return the length of the command
+
+  void register_state(bx_list_c *parent, const char *name); // save/restore support
 
 
 private:
@@ -144,7 +146,7 @@ public:
   static void runtime_config_handler(void *);
   void runtime_config(void);
 
-  BX_SB16_SMF Bit32u fmopl_generator(Bit16u rate, Bit8u *buffer, Bit32u len);
+  BX_SB16_SMF Bit32u fmopl_generator(Bit32u rate, Bit8u *buffer, Bit32u len);
 
 private:
 
@@ -158,6 +160,7 @@ private:
   int currentirq;
   int currentdma8;
   int currentdma16;
+  bool irqdma_initialized;
   int fmopl_callback_id[2];
   int rt_conf_id;
   Bit16u fm_volume;
@@ -174,8 +177,8 @@ private:
       int bankmsb[16];   // current patch lists
       int program[16];
 
-      int timer_handle, current_timer;           // no. of delta times passed
-      Bit32u last_delta_time;                    // timer value at last command
+      Bit32u last_delta_time;                    // delta time count at last command
+      Bit8u runningstatus;                       // status of last channel message
       Bit8u outputinit;
     } d;
   } mpu401;
@@ -216,6 +219,7 @@ private:
         Bit16u blocklength;
       } dma;
       int timer_handle;   // handle for the DMA timer
+      int silence_timer_handle; // handle for the silence period timer
       Bit8u outputinit; // have the lowlevel output been initialized
       bool inputinit;  // have the lowlevel input been initialized
     } d;
@@ -228,8 +232,7 @@ private:
   struct bx_sb16_opl_struct;
   friend struct bx_sb16_opl_struct;
   struct bx_sb16_opl_struct {
-    int timer_handle;
-    int timer_running;
+    Bit64u timer_usec;            // emulated time of the last timer update
     int index[2];                 // index register for the two chips
     Bit16u timer[4];              // two timers on each chip
     Bit16u timerinit[4];          // initial timer counts
@@ -266,7 +269,7 @@ private:
   BX_SB16_SMF Bit32u mpu_dataread();                 // read data port     3x0
   BX_SB16_SMF void   mpu_datawrite(Bit32u value);    // write data port    3x0
   BX_SB16_SMF void   mpu_mididata(Bit32u value);     // get a midi byte
-  static void   mpu_timer (void *);
+  BX_SB16_SMF Bit32u mpu_current_timer();            // no. of delta times passed
 
       /* The DSP part */
   BX_SB16_SMF void   dsp_reset(Bit32u value);        // write to reset port 2x6
@@ -284,8 +287,12 @@ private:
   BX_SB16_SMF void   dsp_enabledma();		     // enable the transfer
   BX_SB16_SMF void   dsp_disabledma();		     // temporarily disable DMA
   BX_SB16_SMF void   dsp_disable_nondma();	     // disable DSP direct mode
+  BX_SB16_SMF void   dsp_set_drq(bool val);         // set DRQ of the active DMA channel
+  BX_SB16_SMF void   dsp_dma_rearm_timer(Bit32u bytes); // set timer period for next burst
   static void dsp_dmatimer_handler(void *);
   void dsp_dmatimer(void);
+  static void dsp_silence_timer_handler(void *);
+  void dsp_silence_timer(void);
   static Bit32u sb16_adc_handler(void *, Bit32u len);
   Bit32u dsp_adc_handler(Bit32u len);
 
@@ -304,8 +311,8 @@ private:
   BX_SB16_SMF Bit32u opl_status(int chipid);
   BX_SB16_SMF void   opl_data(Bit32u value, int chipid);
   BX_SB16_SMF void   opl_settimermask(int value, int chipid);
-  static void   opl_timer(void *);
-  BX_SB16_SMF void   opl_timerevent(void);
+  BX_SB16_SMF void   opl_lock(bool lock);
+  BX_SB16_SMF void   opl_timer_sync(void);
 
       /* several high level sound handlers */
   BX_SB16_SMF int    currentdeltatime();

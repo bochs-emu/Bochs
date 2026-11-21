@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2011-2024  The Bochs Project
+//  Copyright (C) 2011-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -104,6 +104,8 @@ static void convert_to_float(Bit8u *src, unsigned srcsize, audio_buffer_t *audio
   bx_pcm_param_t *param = &audiobuf->param;
   bool issigned = (param->format & 1);
   bool setvol = (param->volume != BX_MAX_BIT16U);
+  // stereo: left / right volume for even / odd samples, mono: mean value
+  unsigned chmask = (param->channels == 2) ? 1 : 0;
   Bit16s val16s;
   Bit16u val16u;
   float volume[2];
@@ -112,20 +114,23 @@ static void convert_to_float(Bit8u *src, unsigned srcsize, audio_buffer_t *audio
   if (setvol) {
     volume[0] = ((float)(param->volume & 0xff)) / 255.0F;
     volume[1] = ((float)(param->volume >> 8)) / 255.0F;
+    if (chmask == 0) {
+      volume[0] = (volume[0] + volume[1]) / 2.0F;
+    }
   }
   if (param->bits == 8) {
     if (issigned) {
       for (i = 0; i < srcsize; i++) {
-        dst[i] = ((float)src[i]) / 128.0F;
+        dst[i] = ((float)(Bit8s)src[i]) / 128.0F;
         if (setvol) {
-          dst[i] *= volume[i & 1];
+          dst[i] *= volume[i & chmask];
         }
       }
     } else {
       for (i = 0; i < srcsize; i++) {
         dst[i] = (((float)src[i]) - 128.0F) / 128.0F;
         if (setvol) {
-          dst[i] *= volume[i & 1];
+          dst[i] *= volume[i & chmask];
         }
       }
     }
@@ -136,7 +141,7 @@ static void convert_to_float(Bit8u *src, unsigned srcsize, audio_buffer_t *audio
         val16s = (Bit16s)(src[i] | (src[i+1] << 8));
         dst[j] = ((float)val16s) / 32768.0F;
         if (setvol) {
-          dst[j] *= volume[i & 1];
+          dst[j] *= volume[j & chmask];
         }
         j++;
       }
@@ -145,7 +150,7 @@ static void convert_to_float(Bit8u *src, unsigned srcsize, audio_buffer_t *audio
         val16u = (Bit16u)(src[i] | (src[i+1] << 8));
         dst[j] = (((float)val16u) - 32768.0F) / 32768.0F;
         if (setvol) {
-          dst[j] *= volume[i & 1];
+          dst[j] *= volume[j & chmask];
         }
         j++;
       }
@@ -158,10 +163,17 @@ static void convert_to_float(Bit8u *src, unsigned srcsize, audio_buffer_t *audio
 void convert_float_to_s16le(float *src, unsigned srcsize, Bit8u *dst)
 {
   Bit16s val16s;
+  float fval;
   unsigned i, j = 0;
 
   for (i = 0; i < srcsize; i++) {
-    val16s = (Bit16s)(src[i] * 32768.0F);
+    fval = src[i] * 32768.0F;
+    if (fval > 32767.0F) {
+      fval = 32767.0F;
+    } else if (fval < -32768.0F) {
+      fval = -32768.0F;
+    }
+    val16s = (Bit16s)fval;
     dst[j++] =(Bit8u)(val16s & 0xff);
     dst[j++] = (Bit8u)(val16s >> 8);
   }
@@ -169,7 +181,7 @@ void convert_float_to_s16le(float *src, unsigned srcsize, Bit8u *dst)
 
 // audio buffer callback function
 
-Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len)
+Bit32u pcm_callback(void *dev, Bit32u rate, Bit8u *buffer, Bit32u len)
 {
   Bit32u copied = 0;
   UNUSED(rate);
@@ -198,22 +210,18 @@ Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len)
 
 // resampler & mixer thread support
 
-BX_MUTEX(resampler_mutex);
-BX_MUTEX(mixer_mutex);
-int mixer_mutex_usage = 0;
-
 BX_THREAD_FUNC(resampler_thread, indata)
 {
   bx_soundlow_waveout_c *waveout = (bx_soundlow_waveout_c*)indata;
   while (waveout->resampler_running()) {
-    BX_LOCK(resampler_mutex);
+    waveout->lock_resampler();
     audio_buffer_t *curbuffer = waveout->get_audio_buffer(0)->get_buffer();
-    BX_UNLOCK(resampler_mutex);
+    waveout->unlock_resampler();
     if (curbuffer != NULL) {
       waveout->resampler(curbuffer, NULL);
-      BX_LOCK(resampler_mutex);
+      waveout->lock_resampler();
       waveout->get_audio_buffer(0)->delete_buffer();
-      BX_UNLOCK(resampler_mutex);
+      waveout->unlock_resampler();
     } else {
       BX_MSLEEP(20);
     }
@@ -263,6 +271,8 @@ bx_soundlow_waveout_c::bx_soundlow_waveout_c()
   pcm_callback_id = -1;
   res_thread_start = 0;
   mix_thread_start = 0;
+  BX_INIT_MUTEX(resampler_mutex);
+  BX_INIT_MUTEX(mixer_mutex);
 #if BX_HAVE_LIBSAMPLERATE || BX_HAVE_SOXR_LSR
   int ret = 0;
   src_state = src_new(SRC_SINC_MEDIUM_QUALITY, 2, &ret);
@@ -271,31 +281,20 @@ bx_soundlow_waveout_c::bx_soundlow_waveout_c()
 
 bx_soundlow_waveout_c::~bx_soundlow_waveout_c()
 {
+  stop_threads();
   if (pcm_callback_id >= 0) {
 #if BX_HAVE_LIBSAMPLERATE || BX_HAVE_SOXR_LSR
     src_delete(src_state);
 #endif
     unregister_wave_callback(pcm_callback_id);
-    if (res_thread_start) {
-      res_thread_start = 0;
-      BX_MSLEEP(20);
-      BX_FINI_MUTEX(resampler_mutex);
-    }
-    if (mix_thread_start) {
-      mix_thread_start = 0;
-      BX_MSLEEP(30);
-      if (mixer_mutex_usage > 0) {
-        if (--mixer_mutex_usage == 0) {
-          BX_FINI_MUTEX(mixer_mutex);
-        }
-      }
-    }
     if (audio_buffers[0] != NULL) {
       delete audio_buffers[0];
       delete audio_buffers[1];
       audio_buffers[0] = NULL;
     }
   }
+  BX_FINI_MUTEX(resampler_mutex);
+  BX_FINI_MUTEX(mixer_mutex);
 }
 
 int bx_soundlow_waveout_c::openwaveoutput(const char *wavedev)
@@ -472,9 +471,9 @@ Bit32u bx_soundlow_waveout_c::resampler_common(audio_buffer_t *inbuffer, float *
     double irate = (double)param.samplerate;
     double orate = (double)real_pcm_param.samplerate;
     size_t ilen = inbuffer->size / 2;
-    size_t olen = (size_t)(ilen * orate / irate + 0.5);
+    // some extra space, the number of generated frames varies slightly
+    size_t olen = (size_t)(ilen * orate / irate + 0.5) + 16;
     *fbuffer  = new float[olen * 2];
-    fcount = olen * 2;
     int ret = 0;
 
     data.data_in = inbuffer->fdata;
@@ -486,6 +485,14 @@ Bit32u bx_soundlow_waveout_c::resampler_common(audio_buffer_t *inbuffer, float *
     ret = src_process(src_state, &data);
     if (ret != 0) {
       BX_ERROR(("resampling error: %s", src_strerror(ret)));
+      fcount = 0;
+    } else {
+      // only use the frames really generated by the resampler
+      fcount = (unsigned)data.output_frames_gen * 2;
+      if (data.input_frames_used < data.input_frames) {
+        BX_DEBUG(("resampler: %ld of %ld input frames dropped",
+                  (long)(data.input_frames - data.input_frames_used), (long)data.input_frames));
+      }
     }
   } else {
     *fbuffer = new float[inbuffer->size];
@@ -507,17 +514,26 @@ Bit32u bx_soundlow_waveout_c::resampler_common(audio_buffer_t *inbuffer, float *
 
 void bx_soundlow_waveout_c::start_resampler_thread()
 {
-  BX_INIT_MUTEX(resampler_mutex);
   res_thread_start = 1;
   BX_THREAD_CREATE(resampler_thread, this, res_thread_var);
 }
 
 void bx_soundlow_waveout_c::start_mixer_thread()
 {
-  BX_INIT_MUTEX(mixer_mutex);
-  mixer_mutex_usage++;
   mix_thread_start = 1;
   BX_THREAD_CREATE(mixer_thread, this, mix_thread_var);
+}
+
+void bx_soundlow_waveout_c::stop_threads()
+{
+  if (res_thread_start) {
+    res_thread_start = 0;
+    BX_THREAD_JOIN(res_thread_var);
+  }
+  if (mix_thread_start) {
+    mix_thread_start = 0;
+    BX_THREAD_JOIN(mix_thread_var);
+  }
 }
 
 // bx_soundlow_wavein_c class implementation
@@ -538,7 +554,7 @@ int bx_soundlow_wavein_c::openwaveinput(const char *wavedev, sound_record_handle
 {
   UNUSED(wavedev);
   record_handler = rh;
-  if (rh != NULL) {
+  if ((rh != NULL) && (record_timer_index == BX_NULL_TIMER_HANDLE)) {
     record_timer_index = DEV_register_timer(this, record_timer_handler, 1, 1, 0, "wavein");
     // record timer: inactive, continuous, frequency variable
   }
@@ -705,6 +721,17 @@ bx_sound_lowlevel_c* bx_sound_lowlevel_c::get_module(const char *type)
 
 void bx_sound_lowlevel_c::cleanup()
 {
+  bx_sound_lowlevel_c *ptr;
+
+  // Stop the waveout threads while the objects are still complete. The
+  // driver objects are static objects of the plugins: their destructors
+  // run inside dlclose() / FreeLibrary() with the loader lock held, and
+  // joining a thread there deadlocks (an exiting thread may need it).
+  for (ptr = all; ptr != NULL; ptr = ptr->next) {
+    if (ptr->waveout != NULL) {
+      ptr->waveout->stop_threads();
+    }
+  }
 #if BX_PLUGINS
   while (all != NULL) {
     PLUG_unload_plugin_type(all->type, PLUGTYPE_SND);

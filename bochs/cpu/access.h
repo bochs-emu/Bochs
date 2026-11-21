@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2015-2018 Stanislav Shwartsman
+//   Copyright (c) 2015-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -98,17 +98,17 @@ BX_CPU_C::write_virtual_zmmword_aligned_32(unsigned s, Bit32u offset, const BxPa
 
 #endif // BX_CPU_LEVEL >= 6
 
-  BX_CPP_INLINE void BX_CPP_AttrRegparmN(2)
-BX_CPU_C::tickle_read_virtual_32(unsigned s, Bit32u offset)
+  BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
+BX_CPU_C::tickle_read_virtual_32(unsigned s, Bit32u offset, unsigned len)
 {
-  Bit32u laddr = agen_read32(s, offset, 1);
-  tickle_read_linear(s, laddr);
+  Bit32u laddr = agen_read32(s, offset, len);
+  tickle_read_linear(s, laddr, len);
 }
 
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::tickle_write_virtual_32(unsigned s, Bit32u offset, unsigned len)
 {
-  Bit32u laddr = agen_read32(s, offset, len);
+  Bit32u laddr = agen_write32(s, offset, len);
   tickle_write_linear(s, laddr, len);
 }
 
@@ -258,19 +258,42 @@ BX_CPU_C::write_virtual_zmmword_aligned(unsigned s, bx_address offset, const BxP
   write_linear_zmmword_aligned(s, laddr, data);
 }
 
+#if BX_SUPPORT_AVX
+
+// write vector of length vlen (128/256/512-bit), rest of the data is ignored
+  BX_CPP_INLINE void
+BX_CPU_C::write_virtual_vector(unsigned s, bx_address offset, const BxPackedAvxRegister *data, unsigned vlen)
+{
+#if BX_SUPPORT_EVEX
+  if (vlen == BX_VL512)
+    write_virtual_zmmword(s, offset, data);
+  else if (vlen == BX_VL256)
+    write_virtual_ymmword(s, offset, &data->vmm256(0));
+  else
+    write_virtual_xmmword(s, offset, &data->vmm128(0));
+#else
+  if (vlen == BX_VL256)
+    write_virtual_ymmword(s, offset, data);
+  else
+    write_virtual_xmmword(s, offset, &data->vmm128(0));
+#endif
+}
+
+#endif // BX_SUPPORT_AVX
+
 #endif // BX_CPU_LEVEL >= 6
 
-  BX_CPP_INLINE void BX_CPP_AttrRegparmN(2)
-BX_CPU_C::tickle_read_virtual(unsigned s, bx_address offset)
+  BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
+BX_CPU_C::tickle_read_virtual(unsigned s, bx_address offset, unsigned len)
 {
-  bx_address laddr = agen_read(s, offset, 1);
-  tickle_read_linear(s, laddr);
+  bx_address laddr = agen_read(s, offset, len);
+  tickle_read_linear(s, laddr, len);
 }
 
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::tickle_write_virtual(unsigned s, bx_address offset, unsigned len)
 {
-  bx_address laddr = agen_read(s, offset, len);
+  bx_address laddr = agen_write(s, offset, len);
   tickle_write_linear(s, laddr, len);
 }
 
@@ -345,6 +368,29 @@ BX_CPU_C::read_virtual_zmmword_aligned(unsigned s, bx_address offset, BxPackedZm
   bx_address laddr = agen_read_aligned(s, offset, 64);
   read_linear_zmmword_aligned(s, laddr, data);
 }
+
+#if BX_SUPPORT_AVX
+
+// read vector of length vlen (128/256/512-bit), rest of the register is not modified
+  BX_CPP_INLINE void
+BX_CPU_C::read_virtual_vector(unsigned s, bx_address offset, BxPackedAvxRegister *data, unsigned vlen)
+{
+#if BX_SUPPORT_EVEX
+  if (vlen == BX_VL512)
+    read_virtual_zmmword(s, offset, data);
+  else if (vlen == BX_VL256)
+    read_virtual_ymmword(s, offset, &data->vmm256(0));
+  else
+    read_virtual_xmmword(s, offset, &data->vmm128(0));
+#else
+  if (vlen == BX_VL256)
+    read_virtual_ymmword(s, offset, data);
+  else
+    read_virtual_xmmword(s, offset, &data->vmm128(0));
+#endif
+}
+
+#endif // BX_SUPPORT_AVX
 
 #endif // BX_CPU_LEVEL >= 6
 

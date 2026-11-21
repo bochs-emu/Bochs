@@ -388,10 +388,10 @@ void set_mouse_capture(bool enable)
 {
   if (enable) {
     SDL_ShowCursor(0);
-    SDL_SetWindowGrab(window, SDL_TRUE);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
   } else {
     SDL_ShowCursor(1);
-    SDL_SetWindowGrab(window, SDL_FALSE);
+    SDL_SetRelativeMouseMode(SDL_FALSE);
   }
 }
 

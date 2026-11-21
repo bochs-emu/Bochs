@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2021  The Bochs Project
+//  Copyright (C) 2012-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -76,7 +76,6 @@ bx_soundlow_waveout_sdl_c::~bx_soundlow_waveout_sdl_c()
     pcm_callback_id = -1;
   }
   WaveOutOpen = 0;
-  mix_thread_start = 0;
   SDL_CloseAudio();
   SDL_QuitSubSystem(SDL_INIT_AUDIO);
 }
@@ -123,12 +122,11 @@ int bx_soundlow_waveout_sdl_c::set_pcm_params(bx_pcm_param_t *param)
     WaveOutOpen = 0;
     return BX_SOUNDLOW_ERR;
   } else {
-    if (fmt.freq != param->samplerate) {
+    if ((Bit32u)fmt.freq != param->samplerate) {
       param->samplerate = fmt.freq;
       BX_INFO(("changed sample rate to %d", fmt.freq));
     }
     WaveOutOpen = 1;
-    mix_thread_start = 1;
   }
   SDL_PauseAudio(0);
   return BX_SOUNDLOW_OK;
@@ -201,7 +199,7 @@ int bx_soundlow_wavein_sdl2_c::openwaveinput(const char *wavedev, sound_record_h
 {
   UNUSED(wavedev);
   record_handler = rh;
-  if (rh != NULL) {
+  if ((rh != NULL) && (record_timer_index == BX_NULL_TIMER_HANDLE)) {
     record_timer_index = DEV_register_timer(this, record_timer_handler, 1, 1, 0, "wavein");
     // record timer: inactive, continuous, frequency variable
   }
@@ -252,7 +250,7 @@ int bx_soundlow_wavein_sdl2_c::startwaverecord(bx_pcm_param_t *param)
     WaveInOpen = 0;
     return BX_SOUNDLOW_ERR;
   } else {
-    if (fmt.freq != param->samplerate) {
+    if ((Bit32u)fmt.freq != param->samplerate) {
       param->samplerate = fmt.freq;
       BX_INFO(("changed sample rate to %d", fmt.freq));
     }

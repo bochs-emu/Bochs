@@ -63,7 +63,15 @@ bool cdrom_base_c::insert_cdrom(const char *dev)
   ssize_t ret;
 
   // Load CD-ROM. Returns 0 if CD is not ready.
-  if (dev != NULL) path = strdup(dev);
+  if (dev != NULL) {
+    if (path != NULL) free(path);
+    path = strdup(dev);
+  }
+  if (fd >= 0) {
+    // inserted again without eject
+    close(fd);
+    fd = -1;
+  }
   BX_INFO(("load cdrom with path='%s'", path));
 
   // all platforms except win32

@@ -152,11 +152,11 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
 #if BX_SUPPORT_CET
   if (ShadowStackEnabled(0)) {
     if (CPL == 0) {
-      shadow_stack_write_dword(new_SSP - 4,  CPL, 0); // store 4 bytes of zeros to SSP-4
+      shadow_stack_write_dword(BX_SEG_REG_NULL, new_SSP - 4,  CPL, 0); // store 4 bytes of zeros to SSP-4
       new_SSP &= ~BX_CONST64(0x7);
-      shadow_stack_write_qword(new_SSP - 8,  CPL, old_CS);
-      shadow_stack_write_qword(new_SSP - 16, CPL, old_RIP);
-      shadow_stack_write_qword(new_SSP - 24, CPL, old_SSP);
+      shadow_stack_write_qword(BX_SEG_REG_NULL, new_SSP - 8,  CPL, old_CS);
+      shadow_stack_write_qword(BX_SEG_REG_NULL, new_SSP - 16, CPL, old_RIP);
+      shadow_stack_write_qword(BX_SEG_REG_NULL, new_SSP - 24, CPL, old_SSP);
       new_SSP -= 24;
     }
     SSP = new_SSP;
@@ -183,8 +183,7 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
 
   // update registers defining context
   RIP = new_RIP;
-  BX_CPU_THIS_PTR eflags = 0x2; // Clear EFLAGS, bit1 is always set
-  clearEFlagsOSZAPC();	        // update lazy flags state
+  setEFlags(0x2);               // clear EFLAGS (bit1 is always set); also updates the interrupt mask
   RSP = new_RSP - 64;
   set_CSL(new_CSL);
 
@@ -424,7 +423,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETU(bxInstruction_c *i)
 
     parse_selector(raw_cs_selector, &cs_selector);
     // return CS selector must be non-null, else #GP(0)
-    if ((raw_cs_selector & 0xfffc) == 0) {
+    if (BX_IS_NULL_SELECTOR(raw_cs_selector)) {
       BX_ERROR(("ERETU: return CS selector null"));
       exception(BX_GP_EXCEPTION, 0);
     }
@@ -435,7 +434,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETU(bxInstruction_c *i)
     // return CS selector RPL must be >= CPL, else #GP(return selector)
     if (cs_selector.rpl < CPL) {
       BX_ERROR(("ERETU: return selector RPL < CPL"));
-      exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc);
+      exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_cs_selector));
     }
 
     // check code-segment descriptor
@@ -491,7 +490,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETU(bxInstruction_c *i)
   else {
     load_cs(&cs_selector, &cs_descriptor, cs_descriptor.dpl);
 
-    if ((raw_ss_selector & 0xfffc) != 0) {
+    if (! BX_IS_NULL_SELECTOR(raw_ss_selector)) {
       // load SS:RSP from stack
       // load the SS-cache with SS descriptor
       load_ss(&ss_selector, &ss_descriptor, cs_selector.rpl);

@@ -47,9 +47,9 @@ public:
     void beep_off();
     void set_line(bool level);
 #if BX_SUPPORT_SOUNDLOW
-    Bit32u beep_generator(Bit16u rate, Bit8u *buffer, Bit32u len);
+    Bit32u beep_generator(Bit32u rate, Bit8u *buffer, Bit32u len);
 #if BX_HAVE_REALTIME_USEC
-    Bit32u dsp_generator(Bit16u rate, Bit8u *buffer, Bit32u len);
+    Bit32u dsp_generator(Bit32u rate, Bit8u *buffer, Bit32u len);
 #endif
     void set_volume(Bit8u volume) { beep_volume = volume; }
     static Bit64s speaker_param_handler(bx_param_c *param, bool set, Bit64s val);

@@ -10,7 +10,7 @@
  * Contact: snrrrub@yahoo.com
  *
  * Copyright (C) 2003 Net Integration Technologies, Inc.
- * Copyright (C) 2025 The Bochs Project
+ * Copyright (C) 2025-2026 The Bochs Project
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -34,7 +34,7 @@ class vmware3_image_t : public device_image_t
 {
   public:
       vmware3_image_t() : FL_SHIFT(25), FL_MASK(0xFE000000)
-      { };
+      { images = current = NULL; file_descriptor = -1; };
       virtual ~vmware3_image_t();
       int open(const char* pathname, int flags);
       void close();
@@ -104,6 +104,7 @@ class vmware3_image_t : public device_image_t
       friend struct COW_Image;
       struct COW_Image {
           int fd;
+          char *filename;
           COW_Header header;
           Bit32u   *  flb;
           Bit32u   ** slb;

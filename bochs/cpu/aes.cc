@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2018 Stanislav Shwartsman
+//   Copyright (c) 2008-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -192,84 +192,47 @@ BX_CPP_INLINE void AES_InverseSubstituteBytes(BxPackedXmmRegister &state)
     state.xmmubyte(i) = inverse_sbox_transformation[state.xmmubyte(i)];
 }
 
-/*
- * Galois Field multiplication of a by b, modulo m.
- * Just like arithmetic multiplication, except that additions and
- * subtractions are replaced by XOR.
- * The code was taken from: http://www.darkside.com.au/ice/index.html
- */
+//
+// MixColumns and InverseMixColumns are computed on whole columns, two columns
+// in each qword of the state. Column j is dword j of the state, row r of the
+// column is byte r of the dword.
+//
 
-BX_CPP_INLINE unsigned gf_mul(unsigned a, unsigned b)
+// Galois Field GF(2^8) multiplication by 2 (modulo 0x11b) of each byte of a qword
+BX_CPP_INLINE Bit64u gf_mul2_bytes(Bit64u val_64)
 {
-  unsigned res = 0, m = 0x11b;
-
-  while (b) {
-    if (b & 1)
-      res ^= a;
-
-    a <<= 1;
-    b >>= 1;
-
-    if (a >= 256)
-      a ^= m;
-  }
-
-  return res;
+  return ((val_64 & BX_CONST64(0x7f7f7f7f7f7f7f7f)) << 1) ^ (((val_64 >> 7) & BX_CONST64(0x0101010101010101)) * 0x1b);
 }
 
-#define AES_STATE(s,a,b) (s.xmmubyte((b)*4+(a)))
+// Rotate right each dword of a qword by 'count' bits (count must be 8, 16 or 24)
+BX_CPP_INLINE Bit64u ror_dwords(Bit64u val_64, unsigned count)
+{
+  Bit64u mask = BX_CONST64(0xffffffff) >> count;
+  mask |= mask << 32;
+  return ((val_64 >> count) & mask) | ((val_64 << (32 - count)) & ~mask);
+}
+
+// out[r] = 2*a[r] ^ 3*a[r+1] ^ a[r+2] ^ a[r+3] = 2*(a[r] ^ a[r+1]) ^ a[r+1] ^ a[r+2] ^ a[r+3]
+BX_CPP_INLINE Bit64u AES_MixColumns2(Bit64u columns)
+{
+  Bit64u rot8 = ror_dwords(columns, 8);
+  return gf_mul2_bytes(columns ^ rot8) ^ rot8 ^ ror_dwords(columns, 16) ^ ror_dwords(columns, 24);
+}
 
 static void AES_MixColumns(BxPackedXmmRegister &state)
 {
-  BxPackedXmmRegister tmp = state;
-
-  for(int j=0; j<4; j++) {
-    AES_STATE(state, 0, j) = gf_mul(0x2, AES_STATE(tmp, 0, j)) ^
-                             gf_mul(0x3, AES_STATE(tmp, 1, j)) ^
-                             AES_STATE(tmp, 2, j) ^
-                             AES_STATE(tmp, 3, j);
-
-    AES_STATE(state, 1, j) = AES_STATE(tmp, 0, j) ^
-                             gf_mul(0x2, AES_STATE(tmp, 1, j)) ^
-                             gf_mul(0x3, AES_STATE(tmp, 2, j)) ^
-                             AES_STATE(tmp, 3, j);
-
-    AES_STATE(state, 2, j) = AES_STATE(tmp, 0, j) ^
-                             AES_STATE(tmp, 1, j) ^
-                             gf_mul(0x2, AES_STATE(tmp, 2, j)) ^
-                             gf_mul(0x3, AES_STATE(tmp, 3, j));
-
-    AES_STATE(state, 3, j) = gf_mul(0x3, AES_STATE(tmp, 0, j)) ^
-                             AES_STATE(tmp, 1, j) ^
-                             AES_STATE(tmp, 2, j) ^
-                             gf_mul(0x2, AES_STATE(tmp, 3, j));
-  }
+  state.xmm64u(0) = AES_MixColumns2(state.xmm64u(0));
+  state.xmm64u(1) = AES_MixColumns2(state.xmm64u(1));
 }
 
+// InvMixColumns matrix {0e,0b,0d,09} is MixColumns matrix {02,03,01,01} multiplied by {05,00,04,00},
+// therefore apply a[r] = a[r] ^ 4*(a[r] ^ a[r+2]) first and then MixColumns
 static void AES_InverseMixColumns(BxPackedXmmRegister &state)
 {
-  BxPackedXmmRegister tmp = state;
-
-  for(int j=0; j<4; j++) {
-    AES_STATE(state, 0, j) = gf_mul(0xE, AES_STATE(tmp, 0, j)) ^
-                             gf_mul(0xB, AES_STATE(tmp, 1, j)) ^
-                             gf_mul(0xD, AES_STATE(tmp, 2, j)) ^
-                             gf_mul(0x9, AES_STATE(tmp, 3, j));
-
-    AES_STATE(state, 1, j) = gf_mul(0x9, AES_STATE(tmp, 0, j)) ^
-                             gf_mul(0xE, AES_STATE(tmp, 1, j)) ^
-                             gf_mul(0xB, AES_STATE(tmp, 2, j)) ^
-                             gf_mul(0xD, AES_STATE(tmp, 3, j));
-
-    AES_STATE(state, 2, j) = gf_mul(0xD, AES_STATE(tmp, 0, j)) ^
-                             gf_mul(0x9, AES_STATE(tmp, 1, j)) ^
-                             gf_mul(0xE, AES_STATE(tmp, 2, j)) ^
-                             gf_mul(0xB, AES_STATE(tmp, 3, j));
-
-    AES_STATE(state, 3, j) = gf_mul(0xB, AES_STATE(tmp, 0, j)) ^
-                             gf_mul(0xD, AES_STATE(tmp, 1, j)) ^
-                             gf_mul(0x9, AES_STATE(tmp, 2, j)) ^
-                             gf_mul(0xE, AES_STATE(tmp, 3, j));
+  for (unsigned n=0; n < 2; n++) {
+    Bit64u columns = state.xmm64u(n);
+    columns ^= gf_mul2_bytes(gf_mul2_bytes(columns ^ ror_dwords(columns, 16)));
+    state.xmm64u(n) = AES_MixColumns2(columns);
   }
 }
 
@@ -458,23 +421,34 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AESKEYGENASSIST_VdqWdqIbR(bxInstruction_c 
   BX_NEXT_INSTR(i);
 }
 
+// Carry-less multiplication of two 64-bit values processing 4 bits of b at once:
+// precompute carry-less products of a with all 16 possible nibbles, then walk b
+// from the most significant nibble, shift the result by 4 and add (XOR) table entry.
 BX_CPP_INLINE void xmm_pclmulqdq(BxPackedXmmRegister *r, Bit64u a, Bit64u b)
 {
-  BxPackedXmmRegister tmp;
+  // the products are up to 67 bits wide, keep them as low qword and high (3 bits) part
+  Bit64u table_lo[16], table_hi[16];
 
-  tmp.xmm64u(0) = a;
-  tmp.xmm64u(1) = 0;
-
-  r->clear();
-
-  for (unsigned n = 0; b && n < 64; n++) {
-      if (b & 1) {
-          xmm_xorps(r, &tmp);
-      }
-      tmp.xmm64u(1) = (tmp.xmm64u(1) << 1) | (tmp.xmm64u(0) >> 63);
-      tmp.xmm64u(0) <<= 1;
-      b >>= 1;
+  table_lo[0] = table_hi[0] = 0;
+  for (unsigned bit=0; bit < 4; bit++) {
+    Bit64u a_shifted_lo = a << bit;
+    Bit64u a_shifted_hi = bit ? (a >> (64 - bit)) : 0;
+    unsigned step = 1 << bit;
+    for (unsigned v=0; v < step; v++) {
+      table_lo[step + v] = table_lo[v] ^ a_shifted_lo;
+      table_hi[step + v] = table_hi[v] ^ a_shifted_hi;
+    }
   }
+
+  Bit64u result_lo = 0, result_hi = 0;
+  for (int n=60; n >= 0; n-=4) {
+    unsigned nibble = (unsigned)(b >> n) & 0xf;
+    result_hi = ((result_hi << 4) | (result_lo >> 60)) ^ table_hi[nibble];
+    result_lo = (result_lo << 4) ^ table_lo[nibble];
+  }
+
+  r->xmm64u(0) = result_lo;
+  r->xmm64u(1) = result_hi;
 }
 
 /* 66 0F 3A 44 */

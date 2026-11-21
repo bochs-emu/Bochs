@@ -32,59 +32,6 @@ these four paragraphs for those parts of this code that are retained.
 #include "../softfloat3e/include/primitiveTypes.h"
 
 /*----------------------------------------------------------------------------
-| Multiplies the 128-bit value formed by concatenating `a0' and `a1' by
-| `b' to obtain a 192-bit product.  The product is broken into three 64-bit
-| pieces which are stored at the locations pointed to by `z0Ptr', `z1Ptr', and
-| `z2Ptr'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE void mul128By64To192(Bit64u a64, Bit64u a0, Bit64u b, Bit64u *z0Ptr, Bit64u *z1Ptr, Bit64u *z2Ptr)
-{
-    Bit64u zPtr[4];
-
-    softfloat_mul128To256M(a64, a0, 0, b, (uint64_t*) zPtr);
-
-    assert(zPtr[indexWord(4, 3)] == 0);
-
-    *z0Ptr = zPtr[indexWord(4, 2)];
-    *z1Ptr = zPtr[indexWord(4, 1)];
-    *z2Ptr = zPtr[indexWord(4, 0)];
-}
-
-/*----------------------------------------------------------------------------
-| Shifts the 128-bit value formed by concatenating `a0' and `a1' left by the
-| number of bits given in `count'.  Any bits shifted off are lost.  The value
-| of `count' must be less than 64.  The result is broken into two 64-bit
-| pieces which are stored at the locations pointed to by `z0Ptr' and `z1Ptr'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE void shortShift128Left(Bit64u a0, Bit64u a1, int count, Bit64u *z0Ptr, Bit64u *z1Ptr)
-{
-    *z1Ptr = a1<<count;
-    *z0Ptr = (count == 0) ? a0 : (a0<<count) | (a1>>((-count) & 63));
-}
-
-/*----------------------------------------------------------------------------
-| Shifts the 128-bit value formed by concatenating `a0' and `a1' right by the
-| number of bits given in `count'.  Any bits shifted off are lost.  The value
-| of `count' must be less than 64. The result is broken into two 64-bit pieces
-| which are stored at the locations pointed to by `z0Ptr' and `z1Ptr'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE void shortShift128Right(Bit64u a0, Bit64u a1, int count, Bit64u *z0Ptr, Bit64u *z1Ptr)
-{
-    Bit64u z0 = a0, z1 = a1;
-    int negCount = (-count) & 63;
-
-    if (count != 0) {
-        z1 = (a0<<negCount) | (a1>>count);
-        z0 = a0>>count;
-    }
-    *z1Ptr = z1;
-    *z0Ptr = z0;
-}
-
-/*----------------------------------------------------------------------------
 | Returns an approximation to the 64-bit integer quotient obtained by dividing
 | `b' into the 128-bit value formed by concatenating `a0' and `a1'.  The
 | divisor `b' must be at least 2^63.  If q is the exact quotient truncated
@@ -114,45 +61,5 @@ static Bit64u estimateDiv128To64(Bit64u a0, Bit64u a1, Bit64u b)
     return z;
 }
 #endif
-
-/*----------------------------------------------------------------------------
-| Adds the 192-bit value formed by concatenating `a0', `a1', and `a2' to the
-| 192-bit value formed by concatenating `b0', `b1', and `b2'.  Addition is
-| modulo 2^192, so any carry out is lost.  The result is broken into three
-| 64-bit pieces which are stored at the locations pointed to by `z0Ptr',
-| `z1Ptr', and `z2Ptr'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE void add192(Bit64u a0, Bit64u a1, Bit64u a2, Bit64u b0, Bit64u b1, Bit64u b2, Bit64u *z0Ptr, Bit64u *z1Ptr, Bit64u *z2Ptr)
-{
-    Bit64u z0, z1, z2;
-    unsigned carry0, carry1;
-
-    z2 = a2 + b2;
-    carry1 = (z2 < a2);
-    z1 = a1 + b1;
-    carry0 = (z1 < a1);
-    z0 = a0 + b0;
-    z1 += carry1;
-    z0 += (z1 < carry1);
-    z0 += carry0;
-    *z2Ptr = z2;
-    *z1Ptr = z1;
-    *z0Ptr = z0;
-}
-
-/*----------------------------------------------------------------------------
-| Subtracts the 128-bit value formed by concatenating `b0' and `b1' from the
-| 128-bit value formed by concatenating `a0' and `a1'.  Subtraction is modulo
-| 2^128, so any borrow out (carry out) is lost.  The result is broken into two
-| 64-bit pieces which are stored at the locations pointed to by `z0Ptr' and
-| `z1Ptr'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE void sub128(Bit64u a0, Bit64u a1, Bit64u b0, Bit64u b1, Bit64u *z0Ptr, Bit64u *z1Ptr)
-{
-    *z1Ptr = a1 - b1;
-    *z0Ptr = a0 - b0 - (a1 < b1);
-}
 
 #endif

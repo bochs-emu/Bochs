@@ -92,7 +92,8 @@ Bit32u bx_acpi_tables_c::build_fadt(Bit8u* buffer, Bit32u facs_offset, Bit32u ds
     fadt->header.asl_compiler_revision = 1;
     
     // FACS and DSDT pointers - store actual offsets, loader will convert to addresses
-    fadt->firmware_ctrl = facs_offset;
+    // FIRMWARE_CTRL must be 0 when X_FIRMWARE_CTRL is used (set below)
+    fadt->firmware_ctrl = 0;
     fadt->dsdt = dsdt_offset;
     
     // Power management profile
@@ -118,9 +119,9 @@ Bit32u bx_acpi_tables_c::build_fadt(Bit8u* buffer, Bit32u facs_offset, Bit32u ds
     fadt->pm_tmr_blk = 0xB008;
     fadt->pm_tmr_len = 4;
     
-    // GPE0 block
-    fadt->gpe0_blk = 0xB020;
-    fadt->gpe0_blk_len = 8;
+    // GPE0 block (PIIX4 GPSTS at PMBA+0x0C, GPEN at PMBA+0x0E)
+    fadt->gpe0_blk = 0xB00C;
+    fadt->gpe0_blk_len = 4;
     
     // P_LVL latencies (not supported)
     fadt->p_lvl2_lat = 0xFFFF;
@@ -131,8 +132,8 @@ Bit32u bx_acpi_tables_c::build_fadt(Bit8u* buffer, Bit32u facs_offset, Bit32u ds
     fadt->flags = (1 << 0)    // WBINVD supported
                 | (1 << 4)    // Proc C1 supported  
                 | (1 << 5)    // P_LVL2_UP (uniprocessor only)
-                | (1 << 8)    // RTC_S4 supported
-                | (1 << 10);  // 32-bit PM timer
+                | (1 << 8);   // RTC_S4 supported
+    // Note: bit 10 (TMR_VAL_EXT) is not set, the PIIX4 PM timer is 24-bit
     // Note: bit 20 (HW_REDUCED_ACPI) is intentionally NOT set!
     
     // IA-PC boot architecture flags
@@ -167,10 +168,10 @@ Bit32u bx_acpi_tables_c::build_fadt(Bit8u* buffer, Bit32u facs_offset, Bit32u ds
     
     // GPE0 Block
     fadt->x_gpe0_blk[0] = 1;         // SystemIO
-    fadt->x_gpe0_blk[1] = 64;        // Bit width (8 bytes)
+    fadt->x_gpe0_blk[1] = 32;        // Bit width (4 bytes)
     fadt->x_gpe0_blk[2] = 0;
     fadt->x_gpe0_blk[3] = 1;         // Byte access
-    *((Bit64u*)&fadt->x_gpe0_blk[4]) = 0xB020;
+    *((Bit64u*)&fadt->x_gpe0_blk[4]) = 0xB00C;
     
     // Checksum will be recalculated by loader after patching
     fadt->header.checksum = 0;
@@ -288,6 +289,66 @@ Bit32u bx_acpi_tables_c::build_hpet(Bit8u* buffer)
     hpet->header.checksum = calculate_checksum(buffer, sizeof(struct acpi_hpet));
     
     return sizeof(struct acpi_hpet);
+}
+
+// SSDT with a Processor object for every CPU in the \_PR scope, same layout
+// as the processor SSDT built by the legacy Bochs BIOS (bios/rombios32.c).
+// Processor IDs match the ACPI processor IDs of the MADT Local APIC entries.
+// Mac OS X (AppleACPIPlatform) enumerates CPUs only from the ACPI namespace
+// and never finishes the boot without them.
+Bit32u bx_acpi_tables_c::build_ssdt(Bit8u* buffer, Bit32u num_cpus)
+{
+    struct acpi_table_header* ssdt = (struct acpi_table_header*)buffer;
+    memset(ssdt, 0, sizeof(struct acpi_table_header));
+
+    memcpy(ssdt->signature, "SSDT", 4);
+    ssdt->revision = 1;
+    memcpy(ssdt->oem_id, ACPI_OEM_ID, 6);
+    memcpy(ssdt->oem_table_id, ACPI_OEM_TABLE_ID, 8);
+    ssdt->oem_revision = 1;
+    memcpy(ssdt->asl_compiler_id, ACPI_ASL_COMPILER_ID, 4);
+    ssdt->asl_compiler_revision = 1;
+
+    if (num_cpus > 0xff) num_cpus = 0xff;
+
+    Bit8u* p = buffer + sizeof(struct acpi_table_header);
+
+    // length of the scope body excluding PkgLength: NameSeg + 13 bytes per Processor
+    Bit32u length = 0x0d * num_cpus + 4;
+
+    *p++ = 0x10; // ScopeOp
+    if (length <= 0x3e) {
+        *p++ = (Bit8u)(length + 1); // one byte PkgLength
+    } else {
+        *p++ = (Bit8u)(0x40 | ((length + 2) & 0xf)); // two bytes PkgLength
+        *p++ = (Bit8u)((length + 2) >> 4);
+    }
+    *p++ = '_'; *p++ = 'P'; *p++ = 'R'; *p++ = '_';
+
+    for (Bit32u i = 0; i < num_cpus; i++) {
+        *p++ = 0x5B; // ProcessorOp
+        *p++ = 0x83;
+        *p++ = 0x0B; // PkgLength
+        *p++ = 'C';  // Name (CPUx or CPxx)
+        *p++ = 'P';
+        if ((i & 0xf0) != 0)
+            *p++ = (Bit8u)((i >> 4) < 0xa ? (i >> 4) + '0' : (i >> 4) + 'A' - 0xa);
+        else
+            *p++ = 'U';
+        *p++ = (Bit8u)((i & 0xf) < 0xa ? (i & 0xf) + '0' : (i & 0xf) + 'A' - 0xa);
+        *p++ = (Bit8u) i; // ProcessorID
+        *p++ = 0x10; // Processor block address 0x0000B010
+        *p++ = 0xB0;
+        *p++ = 0x00;
+        *p++ = 0x00;
+        *p++ = 0x06; // Processor block length
+    }
+
+    Bit32u size = (Bit32u)(p - buffer);
+    ssdt->length = size;
+    ssdt->checksum = calculate_checksum(buffer, size);
+
+    return size;
 }
 
 Bit32u bx_acpi_tables_c::build_xsdt(Bit8u* buffer, Bit32u* table_offsets, Bit32u num_tables)
@@ -463,10 +524,16 @@ void bx_acpi_tables_c::generate_tables(Bit64u ram_size, Bit32u num_cpus)
     offset += hpet_size;
     offset = (offset + 7) & ~7;
     
-    // 6. XSDT (Extended System Description Table)
-    // Contains pointers to FADT, MADT, HPET (not DSDT, that's referenced in FADT)
-    Bit32u table_offsets[] = { fadt_offset, madt_offset, hpet_offset };
-    Bit32u num_tables = 3;
+    // 6. SSDT with the processor objects
+    Bit32u ssdt_offset = offset;
+    Bit32u ssdt_size = build_ssdt(tables_blob + offset, num_cpus);
+    offset += ssdt_size;
+    offset = (offset + 7) & ~7;
+
+    // 7. XSDT (Extended System Description Table)
+    // Contains pointers to FADT, MADT, HPET, SSDT (not DSDT, that's referenced in FADT)
+    Bit32u table_offsets[] = { fadt_offset, madt_offset, hpet_offset, ssdt_offset };
+    Bit32u num_tables = 4;
     Bit32u xsdt_offset = offset;
     Bit32u xsdt_size = build_xsdt(tables_blob + offset, table_offsets, num_tables);
     offset += xsdt_size;
@@ -474,10 +541,10 @@ void bx_acpi_tables_c::generate_tables(Bit64u ram_size, Bit32u num_cpus)
     
     tables_size = offset;
     
-    // 7. Build RSDP (goes in separate blob)
+    // 8. Build RSDP (goes in separate blob)
     build_rsdp(xsdt_offset);
-    
-    // 8. Build loader commands
+
+    // 9. Build loader commands
     loader_capacity = 32 * sizeof(struct qemu_loader_entry);
     loader_blob = new Bit8u[loader_capacity];
     memset(loader_blob, 0, loader_capacity);
@@ -489,10 +556,6 @@ void bx_acpi_tables_c::generate_tables(Bit64u ram_size, Bit32u num_cpus)
     
     // Allocate the RSDP in FSEG (below 1MB, for BIOS compatibility)
     add_loader_allocate("etc/acpi/rsdp", 16, QEMU_LOADER_ALLOC_FSEG);
-    
-    // Patch FADT.firmware_ctrl (32-bit) to point to FACS
-    add_loader_add_pointer("etc/acpi/tables", "etc/acpi/tables",
-                          fadt_offset + offsetof(struct acpi_fadt, firmware_ctrl), 4);
     
     // Patch FADT.dsdt (32-bit) to point to DSDT
     add_loader_add_pointer("etc/acpi/tables", "etc/acpi/tables",

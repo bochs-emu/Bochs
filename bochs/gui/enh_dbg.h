@@ -51,8 +51,8 @@ void SetOutWinTxt();
 void ShowFW();
 void GetInputEntry(char *buf);
 void SelectHistory(int UpDown);
-void DelWatchpoint(bx_watchpoint *wp_array, unsigned *TotEntries, int i);
-void SetWatchpoint(unsigned *num_watchpoints, bx_watchpoint *watchpoint);
+void SetWatchpointRd();
+void SetWatchpointWr();
 
 void HideTree();
 void FillPTree();
@@ -343,7 +343,8 @@ enum {
   CR2_Rnum,
   CR3_Rnum,
   CR4_Rnum,
-  EFER_Rnum,                // currently used to mark the last entry in rV[]
+  EFER_Rnum,
+  XCR0_Rnum,                // last entry in rV[] (only available if XSAVE is supported)
   ST0_Rnum,
   ST1_Rnum,
   ST2_Rnum,
@@ -407,9 +408,36 @@ enum {
 
 #define EXTRA_REGS  28
 
+#define RV_REGS     (XCR0_Rnum + 1)     // number of registers kept in rV[] (RAX - XCR0)
+
 extern Bit8u RegColor[STD_REG_NUM+EXTRA_REGS];   // specifies foreground and background color of registers
-// Text color is red if the upper bit is set. Background is set according to ColorList.
+// Text color is red if RCLR_CHANGED is set. Background is set according to ColorList.
 extern int RitemToRnum[STD_REG_NUM+EXTRA_REGS];   // mapping from Reg List Item# to register number
+
+// RegColor background color index (into ColorList) for each register type
+enum {
+  RCLR_GPR64 = 0,           // RAX-R31, EFLAGS (and all EXTRA_REGS parts)
+  RCLR_GPR32,               // EAX-EIP
+  RCLR_SEG,                 // CS-GS
+  RCLR_SYS,                 // GDTR, IDTR, LDTR, TR
+  RCLR_CTRL,                // CR0-CR4, EFER
+  RCLR_FPU,                 // ST0-ST7
+  RCLR_SSE,                 // XMM0-XMM15
+  RCLR_DBG                  // DR0-DR7
+};
+
+#define RCLR_CHANGED    0x80    // RegColor flag: register value changed (show in red)
+
+// InsertListRow "grouping" values
+enum {
+  LGRP_GPR = 0,             // GP registers and EFLAGS
+  LGRP_SEG_SYS,             // segment and system registers
+  LGRP_CTRL,                // control registers
+  LGRP_FPU,                 // FPU / MMX registers
+  LGRP_SSE,                 // SSE registers
+  LGRP_DBG,                 // debug registers
+  LGRP_NONE = 8             // no group
+};
 
 // do the linear breakpoint list as 2 arrays, rather than a structure -- much easier to search!
 extern bx_address BrkLAddr[BX_DBG_MAX_LIN_BPOINTS+1];
@@ -419,8 +447,6 @@ extern int BreakCount;
 extern unsigned short BrkpIDMap[256];
 extern unsigned short WWP_BaseEntry;
 extern unsigned short RWP_BaseEntry;
-extern unsigned short EndLinEntry;
-extern unsigned short EndPhyEntry;
 extern unsigned short WWPSnapCount;
 extern unsigned short RWPSnapCount;
 extern bx_phy_address WWP_Snapshot[16];

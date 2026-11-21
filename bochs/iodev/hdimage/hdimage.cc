@@ -554,19 +554,26 @@ bool hdimage_copy_file(const char *src, const char *dst)
 #ifdef WIN32
   return (bool)CopyFile(src, dst, FALSE);
 #elif defined(linux)
-  pid_t pid, ws;
+  pid_t pid;
+  int ws;
 
   if ((src == NULL) || (dst == NULL)) {
     return 0;
   }
 
-  if (!(pid = fork())) {
-    execl("/bin/cp", "/bin/cp", src, dst, (char *)0);
+  pid = fork();
+  if (pid < 0) {
     return 0;
   }
-  wait(&ws);
+  if (pid == 0) {
+    execl("/bin/cp", "/bin/cp", src, dst, (char *)0);
+    _exit(127);
+  }
+  if (waitpid(pid, &ws, 0) != pid) {
+    return 0;
+  }
   if (!WIFEXITED(ws)) {
-    return -1;
+    return 0;
   }
   return (WEXITSTATUS(ws) == 0);
 #else
@@ -877,54 +884,54 @@ Bit64s concat_image_t::lseek(Bit64s offset, int whence)
 ssize_t concat_image_t::read(void* buf, size_t count)
 {
   size_t readmax, count1 = count;
-  ssize_t ret = -1;
+  ssize_t ret = 0;
   char *buf1 = (char*)buf;
 
   BX_DEBUG(("concat_image_t.read %ld bytes", (long)count));
-  do {
+  while (count1 > 0) {
+    if (total_offset > curr_max) {
+      // continue with the next image
+      ret = lseek(total_offset, SEEK_SET);
+      if (ret < 0) break;
+    }
     readmax = (size_t)(curr_max - total_offset + 1);
-    if (count1 > readmax) {
-      ret = ::read(curr_fd, buf1, readmax);
-      if (ret >= 0) {
-        buf1 += readmax;
-        count1 -= readmax;
-        ret = lseek(curr_max + 1, SEEK_SET);
-      }
-    } else {
-      ret = ::read(curr_fd, buf1, count1);
-      if (ret >= 0) {
-        ret = lseek(count1, SEEK_CUR);
-      }
+    if (readmax > count1) readmax = count1;
+    ret = ::read(curr_fd, buf1, readmax);
+    if (ret != (ssize_t)readmax) {
+      ret = -1;
       break;
     }
-  } while (ret > 0);
+    buf1 += readmax;
+    count1 -= readmax;
+    total_offset += readmax;
+  }
   return (ret < 0) ? ret : count;
 }
 
 ssize_t concat_image_t::write(const void* buf, size_t count)
 {
   size_t writemax, count1 = count;
-  ssize_t ret = -1;
+  ssize_t ret = 0;
   char *buf1 = (char*)buf;
 
   BX_DEBUG(("concat_image_t.write %ld bytes", (long)count));
-  do {
+  while (count1 > 0) {
+    if (total_offset > curr_max) {
+      // continue with the next image
+      ret = lseek(total_offset, SEEK_SET);
+      if (ret < 0) break;
+    }
     writemax = (size_t)(curr_max - total_offset + 1);
-    if (count1 > writemax) {
-      ret = ::write(curr_fd, buf1, writemax);
-      if (ret >= 0) {
-        buf1 += writemax;
-        count1 -= writemax;
-        ret = lseek(curr_max + 1, SEEK_SET);
-      }
-    } else {
-      ret = ::write(curr_fd, buf1, count1);
-      if (ret >= 0) {
-        ret = lseek(count1, SEEK_CUR);
-      }
+    if (writemax > count1) writemax = count1;
+    ret = ::write(curr_fd, buf1, writemax);
+    if (ret != (ssize_t)writemax) {
+      ret = -1;
       break;
     }
-  } while (ret > 0);
+    buf1 += writemax;
+    count1 -= writemax;
+    total_offset += writemax;
+  }
   return (ret < 0) ? ret : count;
 }
 
@@ -1176,7 +1183,12 @@ inline Bit64s sparse_image_t::get_physical_offset()
 void sparse_image_t::set_virtual_page(Bit32u new_virtual_page)
 {
   position_virtual_page = new_virtual_page;
-  position_physical_page = dtoh32(pagetable[position_virtual_page]);
+  if (position_virtual_page < dtoh32(header.numpages)) {
+    position_physical_page = dtoh32(pagetable[position_virtual_page]);
+  } else {
+    // end of disk reached
+    position_physical_page = SPARSE_PAGE_NOT_ALLOCATED;
+  }
 }
 
 ssize_t sparse_image_t::read_page_fragment(Bit32u read_virtual_page, Bit32u read_page_offset, size_t read_size, void * buf)
@@ -1291,6 +1303,11 @@ ssize_t sparse_image_t::write(const void* buf, size_t count)
 
   while (count != 0)
   {
+    if (position_virtual_page >= dtoh32(header.numpages)) {
+      panic("write beyond end of sparse disk");
+      break;
+    }
+
     size_t can_write = pagesize - position_page_offset;
     if (count < can_write) can_write = count;
 
@@ -1642,22 +1659,34 @@ Bit64s dll_image_t::lseek(Bit64s offset, int whence)
 
 ssize_t dll_image_t::read(void* buf, size_t count)
 {
+  char *cbuf = (char*)buf;
+  size_t n = 0;
+
   if ((vunit >= 0) && (hlib_vdisk != NULL)) {
-    if (vdisk_read(vunit, vblk, buf)) {
+    while (n < count) {
+      if (!vdisk_read(vunit, vblk, cbuf + n))
+        return -1;
       vblk++;
-      return count;
+      n += 512;
     }
+    return count;
   }
   return -1;
 }
 
 ssize_t dll_image_t::write(const void* buf, size_t count)
 {
+  const char *cbuf = (const char*)buf;
+  size_t n = 0;
+
   if ((vunit >= 0) && (hlib_vdisk != 0)) {
-    if (vdisk_write(vunit, vblk, buf)) {
+    while (n < count) {
+      if (!vdisk_write(vunit, vblk, cbuf + n))
+        return -1;
       vblk++;
-      return count;
+      n += 512;
     }
+    return count;
   }
   return -1;
 }
@@ -1984,6 +2013,7 @@ ssize_t redolog_t::read(void* buf, size_t count)
 
   if (dtoh32(catalog[extent_index]) == REDOLOG_PAGE_NOT_ALLOCATED) {
     // page not allocated
+    lseek(512, SEEK_CUR);
     return 0;
   }
 
@@ -2006,6 +2036,7 @@ ssize_t redolog_t::read(void* buf, size_t count)
     BX_DEBUG(("read not in redolog"));
 
     // bitmap says block not in redolog
+    lseek(512, SEEK_CUR);
     return 0;
   }
 
@@ -2017,7 +2048,6 @@ ssize_t redolog_t::read(void* buf, size_t count)
 
 ssize_t redolog_t::write(const void* buf, size_t count)
 {
-  Bit32u i;
   Bit64s block_offset, bitmap_offset, catalog_offset;
   ssize_t written;
   bool update_catalog = 0;
@@ -2042,22 +2072,24 @@ ssize_t redolog_t::write(const void* buf, size_t count)
 
     extent_next += 1;
 
-    char *zerobuffer = new char[512];
-    memset(zerobuffer, 0, 512);
+    // Write an empty bitmap. The extent data area does not need to be cleared,
+    // only sectors marked in the bitmap are ever read from the redolog.
+    Bit32u zsize = 512 * bitmap_blocks;
+    char *zerobuffer = new char[zsize];
+    memset(zerobuffer, 0, zsize);
 
-    // Write bitmap
     bitmap_offset  = (Bit64s)STANDARD_HEADER_SIZE + (dtoh32(header.specific.catalog) * sizeof(Bit32u));
     bitmap_offset += (Bit64s)512 * dtoh32(catalog[extent_index]) * (extent_blocks + bitmap_blocks);
-    ::lseek(fd, (off_t)bitmap_offset, SEEK_SET);
-    for (i=0; i<bitmap_blocks; i++) {
-      ::write(fd, zerobuffer, 512);
-    }
-    // Write extent
-    for (i=0; i<extent_blocks; i++) {
-      ::write(fd, zerobuffer, 512);
-    }
+    bx_write_image(fd, (off_t)bitmap_offset, zerobuffer, zsize);
+    // Write just one byte at the end of the extent
+    block_offset   = bitmap_offset + ((Bit64s)512 * (bitmap_blocks + extent_blocks)) - 1;
+    bx_write_image(fd, (off_t)block_offset, zerobuffer, 1);
 
     delete [] zerobuffer;
+
+    // the cached bitmap now belongs to the new (empty) extent
+    memset(bitmap, 0, dtoh32(header.specific.bitmap));
+    bitmap_update = 0;
 
     update_catalog = 1;
   }
@@ -2084,7 +2116,11 @@ ssize_t redolog_t::write(const void* buf, size_t count)
   // If bloc does not belong to extent yet
   if (((bitmap[extent_offset/8] >> (extent_offset%8)) & 0x01) == 0x00) {
     bitmap[extent_offset/8] |= 1 << (extent_offset%8);
-    bx_write_image(fd, (off_t)bitmap_offset, bitmap,  dtoh32(header.specific.bitmap));
+    // write back only the 512 byte block of the bitmap containing the changed bit
+    Bit32u bitmap_block_offset = (extent_offset / 8) & ~511;
+    Bit32u bitmap_write_size = dtoh32(header.specific.bitmap) - bitmap_block_offset;
+    if (bitmap_write_size > 512) bitmap_write_size = 512;
+    bx_write_image(fd, (off_t)bitmap_offset + bitmap_block_offset, bitmap + bitmap_block_offset, bitmap_write_size);
   }
 
   // Write catalog
@@ -2347,6 +2383,7 @@ undoable_image_t::undoable_image_t(const char* _redolog_name)
   ro_disk = NULL;
   redolog_name = NULL;
   caps = 0;
+  ro_disk_synced = 0;
   if (_redolog_name != NULL) {
     if ((strlen(_redolog_name) > 0) && (strcmp(_redolog_name,"none") != 0)) {
       redolog_name = new char[strlen(_redolog_name) + 1];
@@ -2429,8 +2466,10 @@ void undoable_image_t::close()
 
 Bit64s undoable_image_t::lseek(Bit64s offset, int whence)
 {
-  redolog->lseek(offset, whence);
-  return ro_disk->lseek(offset, whence);
+  Bit64s pos = redolog->lseek(offset, whence);
+  if (pos < 0) return pos;
+  ro_disk_synced = 1;
+  return ro_disk->lseek(pos, SEEK_SET);
 }
 
 ssize_t undoable_image_t::read(void* buf, size_t count)
@@ -2441,8 +2480,16 @@ ssize_t undoable_image_t::read(void* buf, size_t count)
 
   while (n < count) {
     if ((size_t)redolog->read(cbuf, 512) != 512) {
+      if (!ro_disk_synced) {
+        // redolog_t::read() has already moved past this sector
+        ret = ro_disk->lseek(redolog->lseek(0, SEEK_CUR) - 512, SEEK_SET);
+        if (ret < 0) break;
+        ro_disk_synced = 1;
+      }
       ret = ro_disk->read(cbuf, 512);
       if (ret < 0) break;
+    } else {
+      ro_disk_synced = 0;
     }
     cbuf += 512;
     n += 512;
@@ -2455,6 +2502,8 @@ ssize_t undoable_image_t::write(const void* buf, size_t count)
   char *cbuf = (char*)buf;
   size_t n = 0;
   ssize_t ret = 0;
+
+  ro_disk_synced = 0;
 
   while (n < count) {
     ret = redolog->write(cbuf, 512);
@@ -2494,7 +2543,6 @@ void undoable_image_t::restore_state(const char *backup_fname)
     }
   }
 }
-#endif
 
 /*** volatile_image_t function definitions ***/
 
@@ -2505,6 +2553,7 @@ volatile_image_t::volatile_image_t(const char* _redolog_name)
   redolog_temp = NULL;
   redolog_name = NULL;
   caps = 0;
+  ro_disk_synced = 0;
   if (_redolog_name != NULL) {
     if ((strlen(_redolog_name) > 0) && (strcmp(_redolog_name,"none") != 0)) {
       redolog_name = new char[strlen(_redolog_name) + 1];
@@ -2610,8 +2659,10 @@ void volatile_image_t::close()
 
 Bit64s volatile_image_t::lseek(Bit64s offset, int whence)
 {
-  redolog->lseek(offset, whence);
-  return ro_disk->lseek(offset, whence);
+  Bit64s pos = redolog->lseek(offset, whence);
+  if (pos < 0) return pos;
+  ro_disk_synced = 1;
+  return ro_disk->lseek(pos, SEEK_SET);
 }
 
 ssize_t volatile_image_t::read(void* buf, size_t count)
@@ -2622,8 +2673,16 @@ ssize_t volatile_image_t::read(void* buf, size_t count)
 
   while (n < count) {
     if ((size_t)redolog->read(cbuf, 512) != 512) {
+      if (!ro_disk_synced) {
+        // redolog_t::read() has already moved past this sector
+        ret = ro_disk->lseek(redolog->lseek(0, SEEK_CUR) - 512, SEEK_SET);
+        if (ret < 0) break;
+        ro_disk_synced = 1;
+      }
       ret = ro_disk->read(cbuf, 512);
       if (ret < 0) break;
+    } else {
+      ro_disk_synced = 0;
     }
     cbuf += 512;
     n += 512;
@@ -2637,6 +2696,8 @@ ssize_t volatile_image_t::write(const void* buf, size_t count)
   size_t n = 0;
   ssize_t ret = 0;
 
+  ro_disk_synced = 0;
+
   while (n < count) {
     ret = redolog->write(cbuf, 512);
     if (ret < 0) break;
@@ -2646,7 +2707,6 @@ ssize_t volatile_image_t::write(const void* buf, size_t count)
   return (ret < 0) ? ret : count;
 }
 
-#ifndef BXIMAGE
 bool volatile_image_t::save_state(const char *backup_fname)
 {
   return redolog->save_state(backup_fname);

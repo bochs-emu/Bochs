@@ -23,6 +23,7 @@ x86_feature(BX_ISA_386, "386ni")                                           /* 38
 x86_feature(BX_ISA_X87, "x87")                                             /* FPU (x87) instruction */
 x86_feature(BX_ISA_486, "486ni")                                           /* 486 new instruction */
 x86_feature(BX_ISA_PENTIUM, "pentium_ni")                                  /* Pentium new instruction */
+x86_feature(BX_ISA_MSR, "msr")                                             /* RDMSR/WRMSR instructions and MSR registers support */
 x86_feature(BX_ISA_P6, "p6ni")                                             /* P6 new instruction */
 x86_feature(BX_ISA_AMD, "amd_implementation")                              /* AMD specific behaviours in x86 ISA handling */
 x86_feature(BX_ISA_MMX, "mmx")                                             /* MMX instruction */
@@ -57,7 +58,7 @@ x86_feature(BX_ISA_LONG_MODE_AMD, "longmode_amd")                          /* Lo
 x86_feature(BX_ISA_LM_LAHF_SAHF, "lm_lahf_sahf")                           /* Long Mode LAHF/SAHF instruction */
 x86_feature(BX_ISA_NX, "nx")                                               /* No-Execute Pages support */
 x86_feature(BX_ISA_1G_PAGES, "1g_pages")                                   /* 1Gb pages support */
-x86_feature(BX_ISA_CMPXCHG16B, "cmpxhg16b")                                /* CMPXCHG16B instruction */
+x86_feature(BX_ISA_CMPXCHG16B, "cmpxchg16b")                               /* CMPXCHG16B instruction */
 x86_feature(BX_ISA_RDTSCP, "rdtscp")                                       /* RDTSCP instruction */
 x86_feature(BX_ISA_FFXSR, "ffxsr")                                         /* EFER.FFXSR support (AMD) */
 x86_feature(BX_ISA_XSAVE, "xsave")                                         /* XSAVE/XRSTOR extensions instruction */
@@ -115,6 +116,7 @@ x86_feature(BX_ISA_AVX512_BITALG, "avx512bitalg")                          /* AV
 x86_feature(BX_ISA_AVX512_VP2INTERSECT, "avx512vp2intersect")              /* AVX-512 VP2INTERSECT Instructions */
 x86_feature(BX_ISA_AVX512_BF16, "avx512bf16")                              /* AVX-512 BF16 Instructions */
 x86_feature(BX_ISA_AVX512_FP16, "avx512fp16")                              /* AVX-512 FP16 Instructions */
+x86_feature(BX_ISA_AVX512_BMM, "avx512bmm")                                /* AVX-512 BMM: Bit Matrix Multiply and Bit Reversal Instructions (AMD) */
 x86_feature(BX_ISA_AMX, "amx")                                             /* AMX Instructions */
 x86_feature(BX_ISA_AMX_INT8, "amx_int8")                                   /* AMX-INT8 Instructions */
 x86_feature(BX_ISA_AMX_BF16, "amx_bf16")                                   /* AMX-BF16 Instructions */
@@ -162,3 +164,4 @@ x86_feature(BX_ISA_MOVRS, "movrs")                                         /* MO
 x86_feature(BX_ISA_FRED, "fred")                                           /* FRED: Flexible Return and Event Deivery support */
 x86_feature(BX_ISA_USER_MSR, "user_msr")                                   /* USER_MSR: Support URDMSR/UWRMSR instructions */
 x86_feature(BX_ISA_APX, "apx")                                             /* APX instructions support */
+x86_feature(BX_ISA_RDPRU, "rdpru")                                         /* RDPRU instruction support (AMD) */

@@ -4,7 +4,7 @@
 /*
  * Copyright (C) 2003       by Mariusz Matuszek
  *                             [NOmrmmSPAM @ users.sourceforge.net]
- * Copyright (C) 2017-2020  The Bochs Project
+ * Copyright (C) 2017-2026  The Bochs Project
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -102,15 +102,22 @@ static dhcp_cfg_t dhcp;
 static vnet_server_c vnet_server;
 int bx_loglev;
 static char bx_logfname[BX_PATHNAME_LEN];
+static volatile sig_atomic_t quit_requested = 0;
 
 
 bool handle_packet(hub_client_t *client, Bit8u *buf, unsigned len)
 {
   ethernet_header_t *ethhdr = (ethernet_header_t *)buf;
 
+  if (client->init < 0) {
+    return 0;
+  }
   if (!client->init) {
     if (memcmp(ethhdr->src_mac_addr, host_macaddr, 6) == 0) {
+      // the client uses the host MAC address: ignore all its packets
       client->init = -1;
+      fprintf(stderr, "bxhub - wrong MAC address configuration: client on port %d uses the host MAC address\n",
+              ntohs(client->sin.sin_port));
       return 0;
     } else {
       client->sout.sin_addr.s_addr = client->sin.sin_addr.s_addr;
@@ -135,7 +142,7 @@ void send_packet(hub_client_t *client, Bit8u *buf, unsigned len)
 
 void broadcast_packet(int clientid, Bit8u *buf, unsigned len)
 {
-  if (handle_packet(&hclient[clientid], buf, len))
+  if (handle_packet(&hclient[clientid], buf, len) || (hclient[clientid].init < 0))
     return;
   for (int i = 0; i < client_max; i++) {
     if (i != clientid) {
@@ -148,7 +155,7 @@ bool find_client(Bit8u *dst_mac_addr, int *clientid)
 {
   *clientid = -1;
   for (int i = 0; i < client_max; i++) {
-    if (hclient[i].init) {
+    if (hclient[i].init > 0) {
       if (memcmp(dst_mac_addr, hclient[i].macaddr, ETHERNET_MAC_ADDR_LEN) == 0) {
         *clientid = i;
         break;
@@ -173,6 +180,15 @@ void print_usage()
     "  --help        display this help and exit\n\n");
 }
 
+// copy an option value, returns false if it does not fit into 'size' bytes
+bool copy_option(char *dst, const char *src, size_t size)
+{
+  if (strlen(src) >= size)
+    return false;
+  strcpy(dst, src);
+  return true;
+}
+
 int parse_cmdline(int argc, char *argv[])
 {
   int arg = 1;
@@ -195,7 +211,7 @@ int parse_cmdline(int argc, char *argv[])
     }
     else if (!strncmp("-ports=", argv[arg], 7)) {
       n = atoi(&argv[arg][7]);
-      if ((n > 1) && (n < BXHUB_MAX_CLIENTS)) {
+      if ((n > 1) && (n <= BXHUB_MAX_CLIENTS)) {
         client_max = n;
       } else {
         printf("Number of virtual ethernet ports out of range\n\n");
@@ -212,10 +228,16 @@ int parse_cmdline(int argc, char *argv[])
       }
     }
     else if (!strncmp("-tftp=", argv[arg], 6)) {
-      strcpy(tftp_root, &argv[arg][6]);
+      if (!copy_option(tftp_root, &argv[arg][6], sizeof(tftp_root))) {
+        printf("TFTP root directory name too long\n\n");
+        ret = 0;
+      }
     }
     else if (!strncmp("-bootfile=", argv[arg], 10)) {
-      strcpy(dhcp_bootfile, &argv[arg][10]);
+      if (!copy_option(dhcp_bootfile, &argv[arg][10], sizeof(dhcp_bootfile))) {
+        printf("Network bootfile name too long\n\n");
+        ret = 0;
+      }
     }
     else if (!strncmp("-mac=", argv[arg], 5)) {
       n = sscanf(&argv[arg][5], "%x:%x:%x:%x:%x:%x",
@@ -237,7 +259,10 @@ int parse_cmdline(int argc, char *argv[])
       }
     }
     else if (!strncmp("-logfile=", argv[arg], 9)) {
-      strcpy(bx_logfname, &argv[arg][9]);
+      if (!copy_option(bx_logfname, &argv[arg][9], sizeof(bx_logfname))) {
+        printf("Log file name too long\n\n");
+        ret = 0;
+      }
     }
     else if (argv[arg][0] == '-') {
       printf("Unknown option: %s\n\n", argv[arg]);
@@ -250,20 +275,25 @@ int parse_cmdline(int argc, char *argv[])
   return ret;
 }
 
+// only set a flag here, the main loop exits and does the cleanup
 void CDECL intHandler(int sig)
 {
   if (sig == SIGINT) {
-    for (int i = 0; i < client_max; i++) {
-      if (hclient[i].init) {
-        delete [] hclient[i].reply_buffer;
-      }
-      closesocket(hclient[i].so);
-    }
-#ifdef WIN32
-    WSACleanup();
-#endif
+    quit_requested = 1;
   }
-  exit(0);
+}
+
+void cleanup_hub()
+{
+  for (int i = 0; i < client_max; i++) {
+    if (hclient[i].init) {
+      delete [] hclient[i].reply_buffer;
+    }
+    closesocket(hclient[i].so);
+  }
+#ifdef WIN32
+  WSACleanup();
+#endif
 }
 
 int CDECL main(int argc, char **argv)
@@ -271,6 +301,12 @@ int CDECL main(int argc, char **argv)
   int c, i, n;
   socklen_t slen;
   fd_set rfds;
+#ifdef WIN32
+  TIMEVAL tv;
+#else
+  struct timeval tv;
+#endif
+  SOCKET max_so = 0;
   Bit8u buf[BX_PACKET_BUFSIZE];
   ethernet_header_t *ethhdr = (ethernet_header_t *)buf;
 
@@ -299,6 +335,9 @@ int CDECL main(int argc, char **argv)
     if ((hclient[i].so = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
       perror("bxhub - cannot create socket");
       exit(1);
+    }
+    if (hclient[i].so > max_so) {
+      max_so = hclient[i].so;
     }
 
     /* fill addres structures */
@@ -348,7 +387,7 @@ int CDECL main(int argc, char **argv)
   }
   printf("Press CTRL+C to quit bxhub\n");
 
-  while (1) {
+  while (!quit_requested) {
 
     /* wait for input */
 
@@ -357,7 +396,15 @@ int CDECL main(int argc, char **argv)
       FD_SET(hclient[i].so, &rfds);
     }
 
-    n = select(hclient[client_max-1].so+1, &rfds, NULL, NULL, NULL);
+    // wake up regularly to check for CTRL+C (on Windows the signal does not
+    // interrupt select())
+    tv.tv_sec = 1;
+    tv.tv_usec = 0;
+    n = select((int)max_so + 1, &rfds, NULL, NULL, &tv);
+    if (n <= 0) {
+      // timeout or interrupted by a signal
+      continue;
+    }
 
     /* data is available somewhere */
 
@@ -367,7 +414,7 @@ int CDECL main(int argc, char **argv)
         slen = sizeof(hclient[i].sin);
         n = recvfrom(hclient[i].so, (char*)buf, sizeof(buf), 0,
                      (struct sockaddr*) &hclient[i].sin, &slen);
-        if (n > 0) {
+        if ((n > 0) && (hclient[i].init >= 0)) {
           if (memcmp(ethhdr->dst_mac_addr, broadcast_macaddr, ETHERNET_MAC_ADDR_LEN) == 0) {
             broadcast_packet(i, buf, n);
           } else if (memcmp(ethhdr->dst_mac_addr, host_macaddr, ETHERNET_MAC_ADDR_LEN) == 0) {
@@ -383,14 +430,8 @@ int CDECL main(int argc, char **argv)
         // check for another pending packet
         hclient[i].pending_reply_size = vnet_server.get_packet(hclient[i].reply_buffer);
       }
-      // check MAC address of new client
-      if (hclient[i].init != 0) {
-        if (hclient[i].init < 0) {
-          fprintf(stderr, "bxhub - wrong MAC address configuration\n");
-          break;
-        }
-      }
     }
   }
+  cleanup_hub();
   return 0;
 }

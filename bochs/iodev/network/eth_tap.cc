@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -104,6 +104,9 @@ PLUGIN_ENTRY_FOR_NET_MODULE(tap)
 
 #define LOG_THIS netdev->
 
+// maximum number of frames delivered per rx poll
+#define BX_RX_FRAMES_PER_POLL 32
+
 #include <signal.h>
 #include <sys/param.h>
 #include <sys/ioctl.h>
@@ -147,7 +150,7 @@ private:
   int fd;
   int rx_timer_index;
   static void rx_timer_handler(void *);
-  void rx_timer ();
+  bool rx_timer(void);
   Bit8u guest_macaddr[6];
 #if BX_ETH_TAP_LOGGING
   FILE *txlog, *txlog_txt, *rxlog, *rxlog_txt;
@@ -326,10 +329,14 @@ bx_tap_pktmover_c::~bx_tap_pktmover_c()
 
 void bx_tap_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
-  Bit8u txbuf[BX_PACKET_BUFSIZE];
+  Bit8u txbuf[BX_PACKET_BUFSIZE + 4 + 2]; // + VLAN tag + 2 byte pad
   txbuf[0] = 0;
   txbuf[1] = 0;
   unsigned int size;
+  if (io_len > (sizeof(txbuf) - 2)) {
+    BX_ERROR(("sendpkt: frame length %u too large, dropped", io_len));
+    return;
+  }
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || \
    defined(__APPLE__)  || defined(__OpenBSD__) || defined(__sun__) // Should be fixed for other *BSD
   memcpy(txbuf, buf, io_len);
@@ -374,15 +381,23 @@ void bx_tap_pktmover_c::sendpkt(void *buf, unsigned io_len)
 void bx_tap_pktmover_c::rx_timer_handler(void *this_ptr)
 {
   bx_tap_pktmover_c *class_ptr = (bx_tap_pktmover_c *) this_ptr;
-  class_ptr->rx_timer();
+
+  // deliver queued frames while the NIC can take them; frames stay
+  // in the host queue while it cannot
+  for (int n = 0; n < BX_RX_FRAMES_PER_POLL; n++) {
+    if (!(class_ptr->rxstat(class_ptr->netdev) & BX_NETDEV_RXREADY))
+      break;
+    if (!class_ptr->rx_timer())
+      break;
+  }
 }
 
-void bx_tap_pktmover_c::rx_timer()
+bool bx_tap_pktmover_c::rx_timer(void)
 {
   int nbytes;
   Bit8u buf[BX_PACKET_BUFSIZE];
   Bit8u *rxbuf;
-  if (fd<0) return;
+  if (fd<0) return 0;
 #if defined(__sun__)
   struct strbuf sbuf;
   int f = 0;
@@ -415,7 +430,7 @@ void bx_tap_pktmover_c::rx_timer()
   if (nbytes<0) {
     if (errno != EAGAIN)
       BX_ERROR(("tap read error: %s", strerror(errno)));
-    return;
+    return 0;
   }
 #if BX_ETH_TAP_LOGGING
   if (nbytes > 0) {
@@ -433,6 +448,7 @@ void bx_tap_pktmover_c::rx_timer()
   BX_DEBUG(("eth_tap: got packet: %d bytes, dst=%x:%x:%x:%x:%x:%x, src=%x:%x:%x:%x:%x:%x\n", nbytes, rxbuf[0], rxbuf[1], rxbuf[2], rxbuf[3], rxbuf[4], rxbuf[5], rxbuf[6], rxbuf[7], rxbuf[8], rxbuf[9], rxbuf[10], rxbuf[11]));
   if (nbytes < MIN_RX_PACKET_LEN) {
     BX_INFO(("packet too short (%d), padding to %d", nbytes, MIN_RX_PACKET_LEN));
+    memset(rxbuf + nbytes, 0, MIN_RX_PACKET_LEN - nbytes);
     nbytes = MIN_RX_PACKET_LEN;
   }
   if (this->rxstat(this->netdev) & BX_NETDEV_RXREADY) {
@@ -440,6 +456,7 @@ void bx_tap_pktmover_c::rx_timer()
   } else {
     BX_ERROR(("device not ready to receive data"));
   }
+  return 1;
 }
 
 #endif /* if BX_NETWORKING && BX_NETMOD_TAP */

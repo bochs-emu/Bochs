@@ -69,7 +69,7 @@ private:
   BX_CPU_C *cpu;
 
 public:
-  ApicBaseMSR(BX_CPU_C *cpu_ptr): MSR_Descriptor("MSR_APICBASE", BX_ISA_PENTIUM), cpu(cpu_ptr) {}
+  ApicBaseMSR(BX_CPU_C *cpu_ptr): MSR_Descriptor("MSR_APICBASE", BX_ISA_MSR), cpu(cpu_ptr) {}
 
   virtual bool get(Bit64u *val) {
     *val = cpu->msr.apicbase;
@@ -90,7 +90,7 @@ private:
   BX_CPU_C *cpu;
 
 public:
-  TscMSR(BX_CPU_C *cpu_ptr): MSR_Descriptor("MSR_IA32_TSC", BX_ISA_PENTIUM), cpu(cpu_ptr) {}
+  TscMSR(BX_CPU_C *cpu_ptr): MSR_Descriptor("MSR_IA32_TSC", BX_ISA_MSR), cpu(cpu_ptr) {}
 
   virtual bool get(Bit64u *val) {
     *val = cpu->get_Virtual_TSC(); // takes into account VMX or SVM adjustments
@@ -129,7 +129,9 @@ public:
   virtual bool set(Bit64u val) {
 #if BX_SUPPORT_VMX >= 2
     VMCS_CACHE *vm = &cpu->vmcs;
-    if (cpu->in_vmx_guest && vm->vmexec_ctrls3.VIRTUALIZE_IA32_SPEC_CTRL())
+    Bit64u src = val;
+    bool virtualize = cpu->in_vmx_guest && vm->vmexec_ctrls3.VIRTUALIZE_IA32_SPEC_CTRL();
+    if (virtualize)
       val = (cpu->msr.ia32_spec_ctrl & vm->ia32_spec_ctrl_mask) | (val & ~vm->ia32_spec_ctrl_mask);
 #endif
     bool valid = (get_cpu_feature() == BX_ISA_SPEC_CTRL_AMD) ? isValidMSR_SPEC_CTRL_AMD(val) : isValidMSR_IA32_SPEC_CTRL(val);
@@ -138,6 +140,11 @@ public:
       return false;
     }
     cpu->msr.ia32_spec_ctrl = GET32L(val);
+#if BX_SUPPORT_VMX >= 2
+    // the unmodified value of the source operand is written to the shadow if the write completes without a fault
+    if (virtualize)
+      vm->ia32_spec_ctrl_shadow = src;
+#endif
     return true;
   }
 };
@@ -154,7 +161,7 @@ private:
   Bit64u offset;
 
 public:
-  AperfMperfMSR(BX_CPU_C *cpu_ptr, const char *name): MSR_Descriptor(name, BX_ISA_PENTIUM), cpu(cpu_ptr), offset(0) {}
+  AperfMperfMSR(BX_CPU_C *cpu_ptr, const char *name): MSR_Descriptor(name, BX_ISA_MSR), cpu(cpu_ptr), offset(0) {}
 
   virtual bool get(Bit64u *val) {
     *val = cpu->get_TSC() - offset; // use system (not virtualized) TSC counter
@@ -200,7 +207,7 @@ private:
   BX_CPU_C *cpu;
 
 public:
-  EferMSR(BX_CPU_C *cpu_ptr, Bit64u reserved_bits): MSR_Descriptor("MSR_EFER", BX_ISA_PENTIUM, reserved_bits), cpu(cpu_ptr) {}
+  EferMSR(BX_CPU_C *cpu_ptr, Bit64u reserved_bits): MSR_Descriptor("MSR_EFER", BX_ISA_MSR, reserved_bits), cpu(cpu_ptr) {}
 
   virtual bool get(Bit64u *val) {
     *val = cpu->efer.get32();
@@ -245,7 +252,7 @@ void BX_CPU_C::init_MSRs()
     BX_CPU_THIS_PTR msr_desc[i] = NULL;
 
   BX_CPU_THIS_PTR msr_desc[BX_MSR_TSC] = new TscMSR(BX_CPU_THIS);
-  BX_CPU_THIS_PTR msr_desc[BX_MSR_PLATFORM_ID] = new ConstMSR("MSR_PLATFORM_ID", BX_ISA_PENTIUM, 0); // read only
+  BX_CPU_THIS_PTR msr_desc[BX_MSR_PLATFORM_ID] = new ConstMSR("MSR_PLATFORM_ID", BX_ISA_MSR, 0); // read only
 
 #if BX_CPU_LEVEL >= 6
   // Intel processors starting from Nehalem (first Intel cpu with SSE4.2, SYSENTER in long mode is Intel only)
@@ -405,7 +412,7 @@ void BX_CPU_C::init_MSRs()
   //     [4]: SSB_NO: Processor is not susceptible to Speculative Store Bypass
   //  [63:5]: reserved
   BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_ARCH_CAPABILITIES] = new ConstMSR("MSR_IA32_ARCH_CAPABILITIES", BX_ISA_SPEC_CTRL, 0x1F); // read only, set bits [4:0]
-  // SPEC_CTRL and PRED_CMD MSRs are present with either Intel or AMD speculation control feature
+  // SPEC_CTRL, PRED_CMD and FLUSH_CMD MSRs are present with either Intel or AMD speculation control feature
   // (both features are never enabled together)
   unsigned spec_ctrl_feature = is_cpu_extension_supported(BX_ISA_SPEC_CTRL_AMD) ? BX_ISA_SPEC_CTRL_AMD : BX_ISA_SPEC_CTRL;
   BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_SPEC_CTRL] = new SpecCtrlMSR(BX_CPU_THIS, spec_ctrl_feature);
@@ -416,7 +423,7 @@ void BX_CPU_C::init_MSRs()
   // IA32_FLUSH_CMD MSR:
   //    [0] - WBINVD DL1 Cache
   // [63:1] - reserved
-  BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_FLUSH_CMD] = new WriteOnlyMSR("MSR_IA32_FLUSH_CMD", BX_ISA_SPEC_CTRL, ~BX_CONST64(1));
+  BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_FLUSH_CMD] = new WriteOnlyMSR("MSR_IA32_FLUSH_CMD", spec_ctrl_feature, ~BX_CONST64(1));
 
 #if BX_SUPPORT_VMX
   // IA32_FEATURE_CONTROL MSR, locked for writes once the lock bit is set
@@ -1266,7 +1273,7 @@ private:
 
 public:
   UserMSR(Bit32u index, unsigned msr_type, Bit64u reset_val, Bit64u ro, Bit64u ignored_bits):
-     MSR_Descriptor(name, BX_ISA_PENTIUM, 0, ignored_bits), type(msr_type), value(reset_val), reset_value(reset_val), ro_bits(ro)
+     MSR_Descriptor(name, BX_ISA_MSR, 0, ignored_bits), type(msr_type), value(reset_val), reset_value(reset_val), ro_bits(ro)
   {
     sprintf(name, "USER_MSR_0x%x", index);
   }

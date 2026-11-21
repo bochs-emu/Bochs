@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2025 Stanislav Shwartsman
+//   Copyright (c) 2025-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -184,7 +184,7 @@ float32 approximate_rcp14_3dnow(float32 op)
   switch(op_class) {
     case softfloat_zero:             // return maximum normal value with sign of the argument
     case softfloat_denormal:
-      return packFloat32(sign, 0x7F, 0x7FFFFF);
+      return packFloat32(sign, 0xFE, 0x7FFFFF);
 
     case softfloat_negative_inf:     // this is that actual AMD hardware returns
     case softfloat_positive_inf:
@@ -243,7 +243,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRCP_PqQq(bxInstruction_c *i)
 
   // for zero argument produce maximum normal value with the sign of source operand
   if ((op << 1) == 0) {
-    op = packFloat32(f32_sign(op), 0x7F, 0x7FFFFF);
+    op = packFloat32(f32_sign(op), 0xFE, 0x7FFFFF);
   }
   else {
     // Note that Inf/NaN handling is not documented in 3Dnow! manuals
@@ -580,7 +580,7 @@ float32 approximate_rsqrt14_3dnow(float32 op)
   switch(op_class) {
     case softfloat_zero:             // return maximum normal value with sign of the argument
     case softfloat_denormal:
-      return packFloat32(sign, 0x7F, 0x7FFFFF);
+      return packFloat32(sign, 0xFE, 0x7FFFFF);
 
     case softfloat_negative_inf:     // this is that actual AMD hardware returns
     case softfloat_positive_inf:
@@ -647,7 +647,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRSQRT_PqQq(bxInstruction_c *i)
 
   // for zero argument produce maximum normal value with the sign of source operand
   if (op == 0) {
-    op = sign ^ packFloat32(0, 0x7F, 0x7FFFFF);
+    op = sign ^ packFloat32(0, 0xFE, 0x7FFFFF);
   }
   else {
     // Note that Inf/NaN handling is not documented in 3Dnow! manuals

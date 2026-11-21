@@ -451,8 +451,8 @@ findso:
      * Reset idle time and keep-alive timer.
      */
     tp->t_idle = 0;
-    if (slirp_do_keepalive)
-        tp->t_timer[TCPT_KEEP] = TCPTV_KEEPINTVL;
+    if (tp->t_state < TCPS_ESTABLISHED)
+        tp->t_timer[TCPT_KEEP] = TCPTV_KEEP_INIT;
     else
         tp->t_timer[TCPT_KEEP] = TCPTV_KEEP_IDLE;
 
@@ -602,20 +602,17 @@ findso:
         if (af == AF_INET &&
             (so->so_faddr.s_addr & slirp->vnetwork_mask.s_addr) ==
             slirp->vnetwork_addr.s_addr) {
-            if (so->so_faddr.s_addr != slirp->vhost_addr.s_addr &&
-                so->so_faddr.s_addr != slirp->vnameserver_addr.s_addr) {
-                /* May be an add exec */
-                for (ex_ptr = slirp->guestfwd_list; ex_ptr;
-                     ex_ptr = ex_ptr->ex_next) {
-                    if (ex_ptr->ex_fport == so->so_fport &&
-                        so->so_faddr.s_addr == ex_ptr->ex_addr.s_addr) {
-                        so->so_state |= SS_CTL;
-                        break;
-                    }
+            /* May be an add exec */
+            for (ex_ptr = slirp->guestfwd_list; ex_ptr;
+                 ex_ptr = ex_ptr->ex_next) {
+                if (ex_ptr->ex_fport == so->so_fport &&
+                    so->so_faddr.s_addr == ex_ptr->ex_addr.s_addr) {
+                    so->so_state |= SS_CTL;
+                    break;
                 }
-                if (so->so_state & SS_CTL) {
-                    goto cont_input;
-                }
+            }
+            if (so->so_state & SS_CTL) {
+                goto cont_input;
             }
             /* CTL_ALIAS: Do nothing, tcp_fconnect will be called on it */
         }
@@ -1127,8 +1124,8 @@ trimthenstep6:
                  * specification, but if we don't get a FIN
                  * we'll hang forever.
                  */
-                if (so->so_state & SS_FCANTRCVMORE) {
-                    tp->t_timer[TCPT_2MSL] = TCP_MAXIDLE;
+                if (so->so_state & (SS_FCANTRCVMORE | SS_NOFDREF)) {
+                    tp->t_timer[TCPT_2MSL] = TCP_LINGERTIME;
                 }
                 tp->t_state = TCPS_FIN_WAIT_2;
             }

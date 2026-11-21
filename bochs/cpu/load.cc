@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2023 Stanislav Shwartsman
+//   Copyright (c) 2008-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -186,18 +186,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Vector(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   unsigned len = i->getVL();
 
-#if BX_SUPPORT_EVEX
-  if (len == BX_VL512) {
-    read_virtual_zmmword(i->seg(), eaddr, &BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER));
-  }
-  else
-#endif
-  {
-    if (len == BX_VL256)
-      read_virtual_ymmword(i->seg(), eaddr, &BX_READ_YMM_REG(BX_VECTOR_TMP_REGISTER));
-    else
-      read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_VECTOR_TMP_REGISTER));
-  }
+  read_virtual_vector(i->seg(), eaddr, &BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER), len);
 
   BX_CPU_CALL_METHOD(i->execute2(), (i));
 }
@@ -476,12 +465,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_VectorW(bxInstruction_c *i)
     simd_pbroadcastw(&BX_AVX_REG(BX_VECTOR_TMP_REGISTER), val_16, len * 8);
   }
   else {
-    if (len == BX_VL512)
-      read_virtual_zmmword(i->seg(), eaddr, &BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER));
-    else if (len == BX_VL256)
-      read_virtual_ymmword(i->seg(), eaddr, &BX_READ_YMM_REG(BX_VECTOR_TMP_REGISTER));
-    else
-      read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_VECTOR_TMP_REGISTER));
+    read_virtual_vector(i->seg(), eaddr, &BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER), len);
   }
 
   BX_CPU_CALL_METHOD(i->execute2(), (i));
@@ -498,12 +482,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_VectorD(bxInstruction_c *i)
     simd_pbroadcastd(&BX_AVX_REG(BX_VECTOR_TMP_REGISTER), val_32, len * 4);
   }
   else {
-    if (len == BX_VL512)
-      read_virtual_zmmword(i->seg(), eaddr, &BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER));
-    else if (len == BX_VL256)
-      read_virtual_ymmword(i->seg(), eaddr, &BX_READ_YMM_REG(BX_VECTOR_TMP_REGISTER));
-    else
-      read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_VECTOR_TMP_REGISTER));
+    read_virtual_vector(i->seg(), eaddr, &BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER), len);
   }
 
   BX_CPU_CALL_METHOD(i->execute2(), (i));
@@ -520,12 +499,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_VectorQ(bxInstruction_c *i)
     simd_pbroadcastq(&BX_AVX_REG(BX_VECTOR_TMP_REGISTER), val_64, len * 2);
   }
   else {
-    if (len == BX_VL512)
-      read_virtual_zmmword(i->seg(), eaddr, &BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER));
-    else if (len == BX_VL256)
-      read_virtual_ymmword(i->seg(), eaddr, &BX_READ_YMM_REG(BX_VECTOR_TMP_REGISTER));
-    else
-      read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_VECTOR_TMP_REGISTER));
+    read_virtual_vector(i->seg(), eaddr, &BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER), len);
   }
 
   BX_CPU_CALL_METHOD(i->execute2(), (i));

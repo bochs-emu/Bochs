@@ -302,9 +302,11 @@ Bit32u bx_pcipnic_c::read(Bit32u address, unsigned io_len)
     break;
 
   case PNIC_REG_DATA:
-    if (BX_PNIC_THIS s.rDataCursor >= BX_PNIC_THIS s.rLength)
+    if (BX_PNIC_THIS s.rDataCursor >= BX_PNIC_THIS s.rLength) {
       BX_PANIC(("PNIC read at %u, beyond end of data register array",
 		BX_PNIC_THIS s.rDataCursor));
+      break;
+    }
     val = BX_PNIC_THIS s.rData[BX_PNIC_THIS s.rDataCursor++];
     break;
 
@@ -348,17 +350,21 @@ void bx_pcipnic_c::write(Bit32u address, Bit32u value, unsigned io_len)
     break;
 
   case PNIC_REG_LEN:
-    if (value > PNIC_DATA_SIZE)
+    if (value > PNIC_DATA_SIZE) {
       BX_PANIC(("PNIC bad length %u written to length register, max is %u",
 		value, PNIC_DATA_SIZE));
+      value = PNIC_DATA_SIZE;
+    }
     BX_PNIC_THIS s.rLength = value;
     BX_PNIC_THIS s.rDataCursor = 0;
     break;
 
   case PNIC_REG_DATA:
-    if (BX_PNIC_THIS s.rDataCursor >= BX_PNIC_THIS s.rLength)
+    if (BX_PNIC_THIS s.rDataCursor >= BX_PNIC_THIS s.rLength) {
       BX_PANIC(("PNIC write at %u, beyond end of data register array",
 		BX_PNIC_THIS s.rDataCursor));
+      break;
+    }
     BX_PNIC_THIS s.rData[BX_PNIC_THIS s.rDataCursor++] = value;
     break;
 
@@ -445,6 +451,7 @@ void bx_pcipnic_c::exec_command(void)
   case PNIC_CMD_RESET:
     /* Flush the receive queue */
     BX_PNIC_THIS s.recvQueueLength = 0;
+    set_irq_level(0);
     status = PNIC_STATUS_OK;
     break;
 
@@ -477,6 +484,10 @@ void bx_pcipnic_c::exec_command(void)
     qlen = BX_PNIC_THIS s.recvQueueLength;
     olength = sizeof(qlen);
     memcpy (data, &qlen, sizeof(qlen));
+    // XMIT and FORCE_IRQ have no status bit to clear, polling an empty queue acks them
+    if (! qlen) {
+      set_irq_level(0);
+    }
     status = PNIC_STATUS_OK;
     break;
 

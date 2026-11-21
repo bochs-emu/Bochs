@@ -54,11 +54,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSR_GqEqR(bxInstruction_c *i)
     assert_ZF(); /* op1_64 undefined */
   }
   else {
-    Bit64u op1_64 = 63;
-    while ((op2_64 & BX_CONST64(0x8000000000000000)) == 0) {
-      op1_64--;
-      op2_64 <<= 1;
-    }
+    Bit64u op1_64 = most_significant_bitq(op2_64);
 
     SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
     clear_ZF();

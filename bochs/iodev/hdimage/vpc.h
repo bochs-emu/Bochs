@@ -185,7 +185,7 @@ class vpc_image_t : public device_image_t
     Bit64u free_data_block_offset;
     int max_table_entries;
     Bit64u bat_offset;
-    Bit64u last_bitmap_offset;
+    Bit8u *bitmap_set;  // per block: bitmap already set to all ones
     Bit32u *pagetable;
 
     Bit32u block_size;

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -83,7 +83,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
   }
 
   /* if selector null, clear ZF and done */
-  if ((raw_selector & 0xfffc) == 0) {
+  if (BX_IS_NULL_SELECTOR(raw_selector)) {
     clear_ZF();
     BX_NEXT_INSTR(i);
   }
@@ -191,7 +191,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
   }
 
   /* if selector null, clear ZF and done */
-  if ((raw_selector & 0xfffc) == 0) {
+  if (BX_IS_NULL_SELECTOR(raw_selector)) {
     clear_ZF();
     BX_NEXT_INSTR(i);
   }
@@ -384,9 +384,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
   }
 
   /* if selector is NULL, invalidate and done */
-  if ((raw_selector & 0xfffc) == 0) {
+  if (BX_IS_NULL_SELECTOR(raw_selector)) {
     BX_CPU_THIS_PTR ldtr.selector.value = raw_selector;
     BX_CPU_THIS_PTR ldtr.cache.valid = 0;
+    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AMD)) {
+      // AMD clears a null LDTR's base and limit, the hidden state is visible through SVM VMSAVE
+      BX_CPU_THIS_PTR ldtr.cache.u.segment.base         = 0;
+      BX_CPU_THIS_PTR ldtr.cache.u.segment.limit_scaled = 0;
+    }
     BX_NEXT_INSTR(i);
   }
 
@@ -396,7 +401,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
   // #GP(selector) if the selector operand does not point into GDT
   if (selector.ti != 0) {
     BX_ERROR(("LLDT: selector.ti != 0"));
-    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc);
+    exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_selector));
   }
 
   /* fetch descriptor; call handles out of limits checks */
@@ -417,13 +422,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
          descriptor.type != BX_SYS_SEGMENT_LDT)
   {
     BX_ERROR(("LLDT: doesn't point to an LDT descriptor!"));
-    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc);
+    exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_selector));
   }
 
   /* #NP(selector) if LDT descriptor is not present */
   if (! IS_PRESENT(descriptor)) {
     BX_ERROR(("LLDT: LDT descriptor not present!"));
-    exception(BX_NP_EXCEPTION, raw_selector & 0xfffc);
+    exception(BX_NP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_selector));
   }
 
 #if BX_SUPPORT_X86_64
@@ -431,9 +436,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
     descriptor.u.segment.base |= (Bit64u(dword3) << 32);
     BX_DEBUG(("64 bit LDT base = 0x%08x%08x",
        GET32H(descriptor.u.segment.base), GET32L(descriptor.u.segment.base)));
-    if (!IsCanonical(descriptor.u.segment.base)) {
+    if (!IsCpuidCanonical(descriptor.u.segment.base)) {
       BX_ERROR(("LLDT: non-canonical LDT descriptor base!"));
-      exception(BX_GP_EXCEPTION, raw_selector & 0xfffc);
+      exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_selector));
     }
   }
 #endif
@@ -482,7 +487,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
   }
 
   /* if selector is NULL, invalidate and done */
-  if ((raw_selector & BX_SELECTOR_RPL_MASK) == 0) {
+  if (BX_IS_NULL_SELECTOR(raw_selector)) {
     BX_ERROR(("LTR: loading with NULL selector!"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -492,7 +497,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
 
   if (selector.ti) {
     BX_ERROR(("LTR: selector.ti != 0"));
-    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc);
+    exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_selector));
   }
 
   /* fetch descriptor; call handles out of limits checks */
@@ -514,20 +519,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
           descriptor.type!=BX_SYS_SEGMENT_AVAIL_386_TSS))
   {
     BX_ERROR(("LTR: doesn't point to an available TSS descriptor!"));
-    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc);
+    exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_selector));
   }
 
 #if BX_SUPPORT_X86_64
   if (long_mode() && descriptor.type!=BX_SYS_SEGMENT_AVAIL_386_TSS) {
     BX_ERROR(("LTR: doesn't point to an available TSS386 descriptor in long mode!"));
-    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc);
+    exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_selector));
   }
 #endif
 
   /* #NP(selector) if TSS descriptor is not present */
   if (! IS_PRESENT(descriptor)) {
     BX_ERROR(("LTR: TSS descriptor not present!"));
-    exception(BX_NP_EXCEPTION, raw_selector & 0xfffc);
+    exception(BX_NP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_selector));
   }
 
 #if BX_SUPPORT_X86_64
@@ -535,9 +540,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
     descriptor.u.segment.base |= (Bit64u(dword3) << 32);
     BX_DEBUG(("64 bit TSS base = 0x%08x%08x",
        GET32H(descriptor.u.segment.base), GET32L(descriptor.u.segment.base)));
-    if (!IsCanonical(descriptor.u.segment.base)) {
+    if (!IsCpuidCanonical(descriptor.u.segment.base)) {
       BX_ERROR(("LTR: non-canonical TSS descriptor base!"));
-      exception(BX_GP_EXCEPTION, raw_selector & 0xfffc);
+      exception(BX_GP_EXCEPTION, BX_SELECTOR_ERROR_CODE(raw_selector));
     }
   }
 #endif
@@ -577,7 +582,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERR_Ew(bxInstruction_c *i)
   }
 
   /* if selector null, clear ZF and done */
-  if ((raw_selector & 0xfffc) == 0) {
+  if (BX_IS_NULL_SELECTOR(raw_selector)) {
     BX_DEBUG(("VERR: null selector"));
     clear_ZF();
     BX_NEXT_INSTR(i);
@@ -664,7 +669,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERW_Ew(bxInstruction_c *i)
   }
 
   /* if selector null, clear ZF and done */
-  if ((raw_selector & 0xfffc) == 0) {
+  if (BX_IS_NULL_SELECTOR(raw_selector)) {
     BX_DEBUG(("VERW: null selector"));
     clear_ZF();
     BX_NEXT_INSTR(i);
@@ -943,7 +948,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
 
   Bit64u base_64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), (eaddr + 2) & i->asize_mask()));
-  if (! IsCanonical(base_64)) {
+  if (! IsCpuidCanonical(base_64)) {
     BX_ERROR(("LGDT64_Ms: loaded base64 address is not in canonical form!"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -979,7 +984,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT64_Ms(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
 
   Bit64u base_64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), (eaddr + 2) & i->asize_mask()));
-  if (! IsCanonical(base_64)) {
+  if (! IsCpuidCanonical(base_64)) {
     BX_ERROR(("LIDT64_Ms: loaded base64 address is not in canonical form!"));
     exception(BX_GP_EXCEPTION, 0);
   }

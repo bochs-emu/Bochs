@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2015  The Bochs Project
+# Copyright (C) 2001-2026  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -108,7 +108,8 @@ fprem.o: fprem.@CPP_SUFFIX@ fpu_trans.h ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h softfloat-helpers.h \
  ../softfloat3e/include/primitives.h \
  ../softfloat3e/include/primitiveTypes.h \
- ../softfloat3e/include/specialize.h ../softfloat3e/include/softfloat.h
+ ../softfloat3e/include/specialize.h ../softfloat3e/include/softfloat.h \
+ ../wide_int.h
 fpu.o: fpu.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h ../../logio.h \
  ../../misc/bswap.h ../../cpu/cpu.h ../../cpu/decoder/decoder.h \
  ../../cpu/decoder/features.h ../../instrument/stubs/instrument.h \
@@ -121,7 +122,8 @@ fpu.o: fpu.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h ../../logio.h
  ../softfloat3e/include/softfloat_types.h \
  ../softfloat3e/include/softfloat-extra.h \
  ../softfloat3e/include/internals.h softfloat-specialize.h \
- ../softfloat3e/include/softfloat_types.h
+ ../softfloat3e/include/softfloat_types.h ../../cpu/decoder/ia_opcodes.h \
+ ../../cpu/decoder/ia_opcodes.def
 fpu_arith.o: fpu_arith.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../logio.h ../../misc/bswap.h ../../cpu/cpu.h \
  ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
@@ -216,9 +218,8 @@ fsincos.o: fsincos.@CPP_SUFFIX@ fpu_trans.h ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h ../../config.h \
  ../softfloat3e/include/softfloat-extra.h \
  ../softfloat3e/include/internals.h softfloat-specialize.h \
- ../softfloat3e/include/softfloat_types.h softfloat-helpers.h \
- ../softfloat3e/include/primitives.h \
- ../softfloat3e/include/primitiveTypes.h fpu_constant.h fsincos_constants.h
+ ../softfloat3e/include/softfloat_types.h fpu_constant.h \
+ fsincos_constants.h ../wide_int.h
 fyl2x.o: fyl2x.@CPP_SUFFIX@ fpu_trans.h ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h ../../config.h \
  ../softfloat3e/include/softfloat-extra.h \
