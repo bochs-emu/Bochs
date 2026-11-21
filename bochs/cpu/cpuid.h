@@ -24,7 +24,7 @@
 #ifndef BX_CPU_MODEL_SPECIFIC
 #define BX_CPU_MODEL_SPECIFIC
 
-enum class cpu_vendor_t {
+enum cpu_vendor_t {
   GenuineIntel,
   AuthenticAMD,
   CyrixInstead,
@@ -163,7 +163,10 @@ protected:
   Bit32u max_std_leaf;
   Bit32u max_ext_leaf;
 
+  cpu_vendor_t vendor;
+
   void set_max_leaf(Bit32u max_std_leaf, Bit32u max_ext_leaf);
+  void set_vendor(cpu_vendor_t _vendor) { vendor = _vendor; }
 
   virtual void get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const = 0;
 

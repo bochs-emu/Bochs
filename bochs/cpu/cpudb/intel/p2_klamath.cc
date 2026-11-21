@@ -65,7 +65,7 @@ void p2_klamath_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, 
 {
   switch(function) {
   case 0x00000000:
-    get_leaf_0(0x2, "GenuineIntel", leaf);
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   case 0x00000001:
     get_std_cpuid_leaf_1(leaf);

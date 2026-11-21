@@ -121,6 +121,7 @@ static const cpuid_function_t ext_leafs[] = {
 zen4_raphael_t::zen4_raphael_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
   set_max_leaf(0x10, 0x80000028);
+  set_vendor(AuthenticAMD);
 
   cpuid_table = new bx_cpuid_table_t(max_std_leaf, max_ext_leaf);
 
@@ -292,7 +293,7 @@ void zen4_raphael_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction
 {
   switch(function) {
   case 0x80000000:
-    get_ext_cpuid_leaf_0(leaf);
+    cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x80000001:
     get_ext_cpuid_leaf_1(leaf);
@@ -336,7 +337,7 @@ void zen4_raphael_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction
     cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x00000000:
-    get_std_cpuid_leaf_0(leaf);
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   case 0x00000001:
     get_std_cpuid_leaf_1(leaf);
@@ -416,15 +417,6 @@ Bit32u zen4_raphael_t::get_svm_extensions_bitmask(void) const
 #endif
 
 // leaf 0x00000000 //
-void zen4_raphael_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  // EAX: highest std function understood by CPUID
-  // EBX: vendor ID string
-  // EDX: vendor ID string
-  // ECX: vendor ID string
-  get_leaf_0(0x10, "AuthenticAMD", leaf);
-}
-
 // leaf 0x00000001 //
 void zen4_raphael_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
@@ -531,11 +523,6 @@ void zen4_raphael_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x0000000D - XSAVE //
 
 // leaf 0x80000000 //
-void zen4_raphael_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  get_leaf_0(0x80000028, "AuthenticAMD", leaf);
-}
-
 // leaf 0x80000001 //
 void zen4_raphael_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 {

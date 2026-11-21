@@ -121,7 +121,7 @@ void core_duo_t2400_yonah_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u sub
 {
   switch(function) {
   case 0x80000000:
-    get_leaf_0(max_ext_leaf, NULL, leaf);
+    cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x80000001:
     get_ext_cpuid_leaf_1(leaf);
@@ -138,7 +138,7 @@ void core_duo_t2400_yonah_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u sub
     get_ext_cpuid_leaf_8(leaf);
     return;
   case 0x00000000:
-    get_leaf_0(max_std_leaf, "GenuineIntel", leaf);
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   case 0x00000001:
     get_std_cpuid_leaf_1(leaf);

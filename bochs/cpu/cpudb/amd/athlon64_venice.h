@@ -43,10 +43,8 @@ public:
 private:
   bx_cpuid_table_t *cpuid_table;
 
-  void get_std_cpuid_leaf_0(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
 
-  void get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const;
 };
 

@@ -86,7 +86,7 @@ void p4_willamette_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunctio
 
   switch(function) {
   case 0x80000000:
-    get_leaf_0(max_ext_leaf, NULL, leaf); // highest extended function understood by CPUID
+    cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x80000001:
   case 0x80000002:
@@ -95,7 +95,7 @@ void p4_willamette_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunctio
     cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x00000000:
-    get_leaf_0(max_std_leaf, "GenuineIntel", leaf);
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   case 0x00000001:
     get_std_cpuid_leaf_1(leaf);

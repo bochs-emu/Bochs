@@ -72,6 +72,7 @@ static const cpuid_function_t ext_leafs[] = {
 phenom_8650_toliman_t::phenom_8650_toliman_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
   set_max_leaf(BX_SUPPORT_MONITOR_MWAIT ? 0x5 : 0x1, 0x8000001A);
+  set_vendor(AuthenticAMD);
 
   cpuid_table = new bx_cpuid_table_t(max_std_leaf, max_ext_leaf);
 
@@ -168,7 +169,7 @@ void phenom_8650_toliman_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subf
 {
   switch(function) {
   case 0x80000000:
-    get_ext_cpuid_leaf_0(leaf);
+    cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x80000001:
     get_ext_cpuid_leaf_1(leaf);
@@ -194,7 +195,7 @@ void phenom_8650_toliman_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subf
     cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x00000000:
-    get_std_cpuid_leaf_0(leaf);
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   case 0x00000001:
     get_std_cpuid_leaf_1(leaf);
@@ -252,18 +253,6 @@ Bit32u phenom_8650_toliman_t::get_svm_extensions_bitmask(void) const
 #endif
 
 // leaf 0x00000000 //
-void phenom_8650_toliman_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  static const char* vendor_string = "AuthenticAMD";
-
-  // EAX: highest std function understood by CPUID
-  // EBX: vendor ID string
-  // EDX: vendor ID string
-  // ECX: vendor ID string
-  unsigned max_leaf = BX_SUPPORT_MONITOR_MWAIT ? 0x5 : 0x1;
-  get_leaf_0(max_leaf, vendor_string, leaf);
-}
-
 // leaf 0x00000001 //
 void phenom_8650_toliman_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
@@ -366,11 +355,6 @@ void phenom_8650_toliman_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x00000005 MONITOR/MWAIT Leaf //
 
 // leaf 0x80000000 //
-void phenom_8650_toliman_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  get_leaf_0(0x8000001A, "AuthenticAMD", leaf);
-}
-
 // leaf 0x80000001 //
 void phenom_8650_toliman_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 {

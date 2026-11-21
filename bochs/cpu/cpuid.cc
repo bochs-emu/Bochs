@@ -190,7 +190,17 @@ void bx_cpuid_t::init()
   ia_extensions_bitmask[0] = (1 << BX_ISA_386);
 
   set_max_leaf(0, 0);
+  set_vendor(GenuineIntel);
 }
+
+// CPUID vendor string for every cpu_vendor_t value
+static const char *vendor_string[] = {
+  "GenuineIntel",
+  "AuthenticAMD",
+  "CyrixInstead",
+  "HygonGenuine",
+  "CentaurHauls"
+};
 
 void bx_cpuid_t::set_max_leaf(Bit32u _max_std_leaf, Bit32u _max_ext_leaf)
 {
@@ -2248,6 +2258,8 @@ void bx_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_funct
 
   switch(function) {
   case 0x00000000: // CPUID leaf 0x00000000 - Highest Basic Leaf and Vendor Identification
+    get_leaf_0(max_std_leaf, vendor_string[vendor], leaf);
+    break;
   case 0x00000001: // CPUID leaf 0x00000001 - Version and Feature Information
   case 0x00000002: // CPUID leaf 0x00000002 - Cache and TLB Descriptors
   case 0x00000003: // CPUID leaf 0x00000003 - Processor Serial Number
@@ -2364,6 +2376,13 @@ void bx_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_funct
   // extended CPUID leaves 0x80000000
   //
   case 0x80000000: // CPUID leaf 0x80000000 - Highest Extended Leaf and Vendor Identification
+    // starting from K7 (the first P6 class AMD processor) AMD reports vendor string
+    // also in the extended leaf 0, Intel reports zeros
+    if (vendor == AuthenticAMD && is_cpu_extension_supported(BX_ISA_P6))
+      get_leaf_0(max_ext_leaf, vendor_string[vendor], leaf);
+    else
+      get_leaf_0(max_ext_leaf, NULL, leaf);
+    break;
   case 0x80000001: // CPUID leaf 0x80000001 - Extended Processor Signature and Feature Bits
     get_hardware_cpuid_leaf(function, subfunction, leaf);
     break;

@@ -89,6 +89,7 @@ static const cpuid_function_t ext_leafs[] = {
 zambezi_t::zambezi_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
   set_max_leaf(0xD, 0x8000001E);
+  set_vendor(AuthenticAMD);
 
   cpuid_table = new bx_cpuid_table_t(max_std_leaf, max_ext_leaf);
 
@@ -202,7 +203,7 @@ void zambezi_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpu
 {
   switch(function) {
   case 0x80000000:
-    get_ext_cpuid_leaf_0(leaf);
+    cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x80000001:
     get_ext_cpuid_leaf_1(leaf);
@@ -236,7 +237,7 @@ void zambezi_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpu
     cpuid_table->get_ext_leaf(function, subfunction, leaf);
     return;
   case 0x00000000:
-    get_std_cpuid_leaf_0(leaf);
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   case 0x00000001:
     get_std_cpuid_leaf_1(leaf);
@@ -302,15 +303,6 @@ Bit32u zambezi_t::get_svm_extensions_bitmask(void) const
 #endif
 
 // leaf 0x00000000 //
-void zambezi_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  // EAX: highest std function understood by CPUID
-  // EBX: vendor ID string
-  // EDX: vendor ID string
-  // ECX: vendor ID string
-  get_leaf_0(0xD, "AuthenticAMD", leaf);
-}
-
 // leaf 0x00000001 //
 void zambezi_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
@@ -415,11 +407,6 @@ void zambezi_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x0000000D XSAVE //
 
 // leaf 0x80000000 //
-void zambezi_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  get_leaf_0(0x8000001E, "AuthenticAMD", leaf);
-}
-
 // leaf 0x80000001 //
 void zambezi_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
