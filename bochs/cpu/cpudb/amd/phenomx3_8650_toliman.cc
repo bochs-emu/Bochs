@@ -390,8 +390,8 @@ void phenom_8650_toliman_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [31:24] Reserved
   leaf->ecx = get_ext_cpuid_leaf_1_ecx(BX_CPUID_EXT1_ECX_CMP_LEGACY |
                                        BX_CPUID_EXT1_ECX_PREFETCHW |
-                                       BX_CPUID_EXT1_ECX_OSVW |
-                                       BX_CPUID_EXT1_ECX_IBS);
+                                       BX_CPUID_EXT1_ECX_OSVW);
+                                    /* BX_CPUID_EXT1_ECX_IBS */ // not implemented
 
   // EDX:
   // Many of the bits in EDX are the same as FN 0x00000001 for AMD

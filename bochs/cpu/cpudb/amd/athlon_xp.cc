@@ -132,7 +132,7 @@ void athlon_xp_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [13:12] Type: 0=OEM, 1=overdrive, 2=dual cpu, 3=reserved
   //   [19:16] Extended Model
   //   [27:20] Extended Family
-  leaf->eax = 0x00000622;
+  leaf->eax = 0x00000680;
 
   leaf->ebx = 0;
   leaf->ecx = 0;
@@ -178,7 +178,7 @@ void athlon_xp_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 void athlon_xp_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information (same as 0x00000001.EAX)
-  leaf->eax = 0x00000722;
+  leaf->eax = 0x00000780;
 
   leaf->ebx = 0;
   leaf->ecx = 0;

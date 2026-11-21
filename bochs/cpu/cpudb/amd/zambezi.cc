@@ -447,7 +447,7 @@ void zambezi_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   leaf->ecx = get_ext_cpuid_leaf_1_ecx(BX_CPUID_EXT1_ECX_CMP_LEGACY |
                                        BX_CPUID_EXT1_ECX_PREFETCHW |
                                        BX_CPUID_EXT1_ECX_OSVW |
-                                       BX_CPUID_EXT1_ECX_IBS |
+                                    /* BX_CPUID_EXT1_ECX_IBS | */    // not implemented
                                     /* BX_CPUID_EXT1_ECX_SKINIT | */ // not implemented
                                        BX_CPUID_EXT1_ECX_WDT |
                                     /* BX_CPUID_EXT1_ECX_LWP | */    // not implemented
