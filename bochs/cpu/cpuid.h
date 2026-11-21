@@ -171,8 +171,10 @@ protected:
   virtual void get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const = 0;
 
   void get_leaf_0(unsigned max_leaf, const char *vendor_string, cpuid_function_t *leaf) const;
-  void get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf) const;
-  void get_cpuid_hidden_level(cpuid_function_t *leaf, const char *magic_string) const;
+
+  Bit32u get_std_cpuid_leaf_1_ecx(Bit32u extra = 0) const;
+  Bit32u get_std_cpuid_leaf_1_edx_common(Bit32u extra = 0) const;
+  Bit32u get_std_cpuid_leaf_1_edx(Bit32u extra = 0) const;
 
   // CPUID function 0x00000004 - Deterministic Cache Parameters
   void get_std_cpuid_deterministic_cache_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
@@ -194,10 +196,13 @@ protected:
   Bit32u get_std_cpuid_leaf_7_subleaf_2_edx(Bit32u extra = 0) const;
 
 #if BX_SUPPORT_APIC
+  // CPUID function 0x0000000B - Extended Topology Leaf
+  // matches also CPUID function 0x0000001F - V2 Extended Topology Leaf
   void get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
 #endif
 
 #if BX_CPU_LEVEL >= 6
+  // CPUID function 0x0000000D - XSAVE
   void get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
 #endif
 
@@ -209,28 +214,29 @@ protected:
   void get_freq_leaf_16(cpuid_function_t *leaf) const;
 
 #if BX_SUPPORT_AMX
-  // CPUID function 0x0000001D: AMX Palette info
+  // CPUID function 0x0000001D - AMX Palette info
   void get_std_cpuid_amx_palette_info_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
-  // CPUID function 0x0000001E: AMX: TMUL Information Main leaf
+  // CPUID function 0x0000001E - AMX: TMUL Information Main leaf
   void get_std_cpuid_amx_tmul_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
 #endif
 
-  // CPUID function 0x00000024: AVX10 support and versioning
+  // CPUID function 0x00000024 - AVX10 support and versioning
   void get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
 
 #if BX_SUPPORT_APX
-  // CPUID function 0x00000029: APX support and versioning
+  // CPUID function 0x00000029 - APX support and versioning
   void get_std_cpuid_apx_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
 #endif
 
-  Bit32u get_std_cpuid_leaf_1_ecx(Bit32u extra = 0) const;
-  Bit32u get_std_cpuid_leaf_1_edx_common(Bit32u extra = 0) const;
-  Bit32u get_std_cpuid_leaf_1_edx(Bit32u extra = 0) const;
-
+  // CPUID function 0x80000001 - Extended Processor Signature and Feature Bits
+  void get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const;
   Bit32u get_ext_cpuid_leaf_1_ecx(Bit32u extra = 0) const;
   Bit32u get_ext_cpuid_leaf_1_edx_amd(Bit32u extra = 0) const;
   Bit32u get_ext_cpuid_leaf_1_edx_intel() const;
 
+  void get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function_t *leaf) const;
+
+  // CPUID function 0x80000008 - Address Sizes and Extended Feature Identifiers
   void get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const;
   Bit32u get_ext_cpuid_leaf_8_ebx(Bit32u extra = 0) const;
 
@@ -245,6 +251,9 @@ protected:
   // CPUID leaf 0x80000026 - Extended CPU Topology
   void get_ext_cpuid_leaf_26(Bit32u subfunction, cpuid_function_t *leaf) const;
 
+  // // CPUID leaf 0x8FFFFFFF - Magic leaf
+  void get_cpuid_hidden_level(cpuid_function_t *leaf, const char *magic_string) const;
+
   BX_CPP_INLINE void get_leaf(cpuid_function_t *leaf, Bit32u eax, Bit32u ebx, Bit32u ecx, Bit32u edx) const
   {
     leaf->eax = eax;
@@ -255,10 +264,7 @@ protected:
 
   BX_CPP_INLINE void get_reserved_leaf(cpuid_function_t *leaf) const
   {
-    leaf->eax = 0;
-    leaf->ebx = 0;
-    leaf->ecx = 0;
-    leaf->edx = 0;
+    get_leaf(leaf, 0, 0, 0, 0);
   }
 
   void dump_cpuid_leaf(unsigned function, unsigned subfunction = 0) const;

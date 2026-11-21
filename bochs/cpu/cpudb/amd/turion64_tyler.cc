@@ -144,11 +144,7 @@ void turion64_tyler_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfuncti
 {
   switch(function) {
   case 0x80000000:
-    cpuid_table->get_ext_leaf(function, subfunction, leaf);
-    return;
   case 0x80000001:
-    get_ext_cpuid_leaf_1(leaf);
-    return;
   case 0x80000002:
   case 0x80000003:
   case 0x80000004:
@@ -277,87 +273,6 @@ void turion64_tyler_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 
 // leaf 0x80000000 //
 // leaf 0x80000001 //
-void turion64_tyler_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
-{
-  // EAX:       CPU Version Information (same as 0x00000001.EAX)
-  leaf->eax = 0x00060F82;
-
-  // EBX:       Brand ID
-  leaf->ebx = 0x0000059F;
-
-  // ECX:
-  // * [0:0]   LAHF/SAHF instructions support in 64-bit mode
-  // * [1:1]   CMP_Legacy: Core multi-processing legacy mode (AMD)
-  // * [2:2]   SVM: Secure Virtual Machine (AMD)
-  // * [3:3]   Extended APIC Space
-  // * [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
-  //   [5:5]   LZCNT: LZCNT instruction support
-  //   [6:6]   SSE4A: SSE4A Instructions support
-  //   [7:7]   Misaligned SSE support
-  // * [8:8]   PREFETCHW: PREFETCHW instruction support
-  //   [9:9]   OSVW: OS visible workarounds (AMD)
-  //   [10:10] IBS: Instruction based sampling
-  //   [11:11] XOP: Extended Operations Support and XOP Prefix
-  //   [12:12] SKINIT support
-  //   [13:13] WDT: Watchdog timer support
-  //   [14:14] Reserved
-  //   [15:15] LWP: Light weight profiling
-  //   [16:16] FMA4: Four-operand FMA instructions support
-  //   [17:17] Reserved
-  //   [18:18] Reserved
-  //   [19:19] Reserved
-  //   [20:20] NodeId: Indicates support for NodeId MSR (0xc001100c)
-  //   [21:21] Reserved
-  //   [22:22] TBM: trailing bit manipulation instructions support
-  //   [23:23] Topology extensions support
-  //   [31:24] Reserved
-
-  leaf->ecx = BX_CPUID_EXT1_ECX_LAHF_SAHF |
-              BX_CPUID_EXT1_ECX_CMP_LEGACY |
-#if BX_SUPPORT_SVM
-              BX_CPUID_EXT1_ECX_SVM |
-#endif
-              BX_CPUID_EXT1_ECX_EXT_APIC_SPACE |
-              BX_CPUID_EXT1_ECX_ALT_MOV_CR8 |
-              BX_CPUID_EXT1_ECX_PREFETCHW;
-
-  // EDX:
-  // Many of the bits in EDX are the same as FN 0x00000001 for AMD
-  // * [0:0]   FPU on chip
-  // * [1:1]   VME: Virtual-8086 Mode enhancements
-  // * [2:2]   DE: Debug Extensions (I/O breakpoints)
-  // * [3:3]   PSE: Page Size Extensions
-  // * [4:4]   TSC: Time Stamp Counter
-  // * [5:5]   MSR: RDMSR and WRMSR support
-  // * [6:6]   PAE: Physical Address Extensions
-  // * [7:7]   MCE: Machine Check Exception
-  // * [8:8]   CXS: CMPXCHG8B instruction
-  // * [9:9]   APIC: APIC on Chip
-  //   [10:10] Reserved
-  // * [11:11] SYSCALL/SYSRET support
-  // * [12:12] MTRR: Memory Type Range Reg
-  // * [13:13] PGE/PTE Global Bit
-  // * [14:14] MCA: Machine Check Architecture
-  // * [15:15] CMOV: Cond Mov/Cmp Instructions
-  // * [16:16] PAT: Page Attribute Table
-  // * [17:17] PSE-36: Physical Address Extensions
-  //   [18:18] Reserved
-  //   [19:19] Reserved
-  // * [20:20] No-Execute page protection
-  //   [21:21] Reserved
-  // * [22:22] AMD MMX Extensions
-  // * [23:23] MMX Technology
-  // * [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
-  // * [25:25] Fast FXSAVE/FXRSTOR mode support
-  //   [26:26] 1G paging support
-  // * [27:27] Support RDTSCP Instruction
-  //   [28:28] Reserved
-  // * [29:29] Long Mode
-  // * [30:30] AMD 3DNow! Extensions
-  // * [31:31] AMD 3DNow! Instructions
-  leaf->edx = get_ext_cpuid_leaf_1_edx_amd();
-}
-
 // leaf 0x80000002 //
 // leaf 0x80000003 //
 // leaf 0x80000004 //

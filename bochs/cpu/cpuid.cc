@@ -1706,100 +1706,135 @@ void bx_cpuid_t::get_std_cpuid_apx_leaf(Bit32u subfunction, cpuid_function_t *le
 }
 #endif
 
+// CPUID function 0x80000001 - Extended Processor Signature and Feature Bits
+void bx_cpuid_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
+{
+  // the hardware supplies the processor signature and extras for the white listed bits
+  cpuid_function_t hw;
+  get_hardware_cpuid_leaf(0x80000001, 0, &hw);
+
+  leaf->ecx = get_ext_cpuid_leaf_1_ecx(hw.ecx);
+
+  if (vendor == AuthenticAMD) {
+    // EAX: CPU Version Information
+    leaf->eax = hw.eax;
+    // EBX: BrandId and PkgType
+    leaf->ebx = hw.ebx;
+    leaf->edx = get_ext_cpuid_leaf_1_edx_amd();
+  }
+  else {
+    // EAX and EBX are reserved for Intel
+    leaf->eax = 0;
+    leaf->ebx = 0;
+    leaf->edx = get_ext_cpuid_leaf_1_edx_intel();
+  }
+}
+
 // Most of the bits in ECX are reserved for Intel
 Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_ecx(Bit32u extra) const
 {
-  Bit32u ecx = extra;
+  // white list of bits passed through from extra (no emulation required)
+  static const Bit32u extra_white_list = BX_CPUID_EXT1_ECX_PREFETCHW |
+                                         BX_CPUID_EXT1_ECX_OSVW |
+                                         BX_CPUID_EXT1_ECX_WDT |
+                                         BX_CPUID_EXT1_ECX_NODEID |
+                                         BX_CPUID_EXT1_ECX_PERFCTR_EXT_CORE |
+                                         BX_CPUID_EXT1_ECX_PERFCTR_EXT_NB |
+                                         BX_CPUID_EXT1_ECX_PERFCTR_EXT_L2I;
 
-  // i [0:0]   LAHF/SAHF instructions support in 64-bit mode
-  //   [1:1]   CMP_Legacy: Core multi-processing legacy mode (AMD)
-  //   [2:2]   SVM: Secure Virtual Machine (AMD)
-  //   [3:3]   Extended APIC Space
-  //   [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
-  // i [5:5]   LZCNT: LZCNT instruction support
-  //   [6:6]   SSE4A: SSE4A Instructions support
-  //   [7:7]   Misaligned SSE support
-  // i [8:8]   PREFETCHW: PREFETCHW instruction support - can be enabled through extra
-  //   [9:9]   OSVW: OS visible workarounds CPUID leaf (AMD)
-  //   [10:10] IBS: Instruction based sampling (not supported in Bochs)
-  //   [11:11] XOP: Extended Operations Support and XOP Prefix
-  //   [12:12] SKINIT support (not supported in Bochs)
-  //   [13:13] WDT: Watchdog timer support (not supported in Bochs)
-  //   [14:14] Reserved
-  //   [15:15] LWP: Light weight profiling (not supported in Bochs)
-  //   [16:16] FMA4: Four-operand FMA instructions support
-  //   [17:17] TCE: Translation Cache Extensions
-  //   [18:18] Reserved
-  //   [19:19] NodeId: Indicates support for NodeId MSR (0xc001100c)
-  //   [20:20] Reserved
-  //   [21:21] TBM: trailing bit manipulation instructions support
-  //   [22:22] Topology extensions support
-  //   [23:23] PerfCtrExtCore: core perf counter extensions support
-  //   [24:24] PerfCtrExtNB: NB perf counter extensions support
-  //   [25:25] Reserved
-  //   [26:26] Data breakpoint extension. Indicates support for MSR 0xC0011027 and MSRs 0xC001101[B:9]
-  //   [27:27] Performance time-stamp counter. Indicates support for MSR 0xC0010280
-  //   [28:28] PerfCtrExtL2I: L2I performance counter extensions support
-  //   [29:29] MONITORX/MWAITX instructions support
-  //   [30:30] AddrMaskExt: address mask extension support for instruction breakpoint
-  //   [31:31] Reserved
+  Bit32u ecx = extra & extra_white_list;
 
   // i - can also be reported by Intel
 
 #if BX_SUPPORT_X86_64
-  // [0:0]   LAHF/SAHF instructions support in 64-bit mode
+  // i [0:0]   LAHF/SAHF instructions support in 64-bit mode
   if (is_cpu_extension_supported(BX_ISA_LM_LAHF_SAHF))
     ecx |= BX_CPUID_EXT1_ECX_LAHF_SAHF;
 #endif
 
-  // [5:5]   LZCNT: LZCNT instruction support
-  if (is_cpu_extension_supported(BX_ISA_LZCNT))
-    ecx |= BX_CPUID_EXT1_ECX_LZCNT;
+  //   [1:1]   CMP_Legacy: Core multi-processing legacy mode (AMD), set when the package
+  //           has more than one logical processor (CPUID 0x00000001 EDX[HTT] legacy method)
+  if (vendor == AuthenticAMD && ncores * nthreads > 1)
+    ecx |= BX_CPUID_EXT1_ECX_CMP_LEGACY;
 
-  // now AMD specific bits
 #if BX_SUPPORT_SVM
-  // [2:2]   SVM: Secure Virtual Machine (AMD)
+  //   [2:2]   SVM: Secure Virtual Machine (AMD)
   if (is_cpu_extension_supported(BX_ISA_SVM))
     ecx |= BX_CPUID_EXT1_ECX_SVM;
 #endif
 
-  // [3:3]   Extended APIC Space
+  //   [3:3]   Extended APIC Space
   if (is_cpu_extension_supported(BX_ISA_XAPIC_EXT))
     ecx |= BX_CPUID_EXT1_ECX_EXT_APIC_SPACE;
 
-  // [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
+  //   [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
   if (is_cpu_extension_supported(BX_ISA_ALT_MOV_CR8))
     ecx |= BX_CPUID_EXT1_ECX_ALT_MOV_CR8;
 
-  // [6:6]   SSE4A: SSE4A Instructions support
+  // i [5:5]   LZCNT: LZCNT instruction support
+  if (is_cpu_extension_supported(BX_ISA_LZCNT))
+    ecx |= BX_CPUID_EXT1_ECX_LZCNT;
+
+  //   [6:6]   SSE4A: SSE4A Instructions support
   if (is_cpu_extension_supported(BX_ISA_SSE4A))
     ecx |= BX_CPUID_EXT1_ECX_SSE4A;
 
-  // [7:7]   Misaligned SSE support
+  //   [7:7]   Misaligned SSE support
   if (is_cpu_extension_supported(BX_ISA_MISALIGNED_SSE))
     ecx |= BX_CPUID_EXT1_ECX_MISALIGNED_SSE;
 
-  // [11:11] XOP: Extended Operations Support and XOP Prefix
+  // i [8:8]   PREFETCHW: PREFETCHW instruction support - passed through from extra
+  //   [9:9]   OSVW: OS visible workarounds CPUID leaf (AMD) - passed through from extra
+  // ! [10:10] IBS: Instruction based sampling - not supported
+
+  //   [11:11] XOP: Extended Operations Support and XOP Prefix
+#if BX_SUPPORT_AVX
   if (is_cpu_extension_supported(BX_ISA_XOP))
     ecx |= BX_CPUID_EXT1_ECX_XOP;
+#endif
 
-  // [16:16] FMA4: Four-operand FMA instructions support
+  // ! [12:12] SKINIT support - not supported
+  //   [13:13] WDT: Watchdog timer support - passed through from extra
+  //   [14:14] Reserved
+  // ! [15:15] LWP: Light weight profiling - not supported
+
+  //   [16:16] FMA4: Four-operand FMA instructions support
+#if BX_SUPPORT_AVX
   if (is_cpu_extension_supported(BX_ISA_FMA4))
     ecx |= BX_CPUID_EXT1_ECX_FMA4;
+#endif
 
-  // [17:17] TCE: Translation Cache Extensions
+  //   [17:17] TCE: Translation Cache Extensions
   if (is_cpu_extension_supported(BX_ISA_TCE))
     ecx |= BX_CPUID_EXT1_ECX_TCE;
 
-  // [21:21] TBM: trailing bit manipulation instructions support
+  //   [18:18] Reserved
+  //   [19:19] NodeId: Indicates support for NodeId MSR (0xc001100c) - passed through from extra
+  //   [20:20] Reserved
+
+  //   [21:21] TBM: trailing bit manipulation instructions support
   if (is_cpu_extension_supported(BX_ISA_TBM))
     ecx |= BX_CPUID_EXT1_ECX_TBM;
 
+  //   [22:22] Topology extensions support: CPUID 0x8000001D and 0x8000001E leafs are supported
+  if (vendor == AuthenticAMD && max_ext_leaf >= 0x8000001E)
+    ecx |= BX_CPUID_EXT1_ECX_TOPOLOGY_EXTENSIONS;
+
+  //   [23:23] PerfCtrExtCore: core perf counter extensions support - passed through from extra
+  //   [24:24] PerfCtrExtNB: NB perf counter extensions support - passed through from extra
+  //   [25:25] Reserved
+  // ! [26:26] Data breakpoint extension (MSR 0xC0011027 and MSRs 0xC001101[B:9]) - not supported
+  // ! [27:27] Performance time-stamp counter (MSR 0xC0010280) - not supported
+  //   [28:28] PerfCtrExtL2I: L2I performance counter extensions support - passed through from extra
+
 #if BX_SUPPORT_MONITOR_MWAIT
-  // [29:29] MONITORX/MWAITX instructions support
+  //   [29:29] MONITORX/MWAITX instructions support
   if (is_cpu_extension_supported(BX_ISA_MONITORX_MWAITX))
     ecx |= BX_CPUID_EXT1_ECX_MONITORX_MWAITX;
 #endif
+
+  // ! [30:30] AddrMaskExt: address mask extension support for instruction breakpoint - not supported
+  //   [31:31] Reserved
 
   return ecx;
 }
@@ -2419,7 +2454,7 @@ void bx_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_funct
       get_leaf_0(max_ext_leaf, NULL, leaf);
     break;
   case 0x80000001: // CPUID leaf 0x80000001 - Extended Processor Signature and Feature Bits
-    get_hardware_cpuid_leaf(function, subfunction, leaf);
+    get_ext_cpuid_leaf_1(leaf);
     break;
   case 0x80000002: // CPUID leaf 0x80000002 - Processor Brand String
   case 0x80000003: // CPUID leaf 0x80000003 - Processor Brand String
