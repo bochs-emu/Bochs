@@ -53,14 +53,11 @@ pentium_t::pentium_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_PSE);
 }
 
-void pentium_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+unsigned pentium_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  cpuid_table->get_leaf(function, subfunction, leaf);
+  return cpuid_table->get_leaf(function, subfunction, leaf);
 }
 
-// leaf 0x00000000 //
-
-// leaf 0x00000001 //
 bx_cpuid_t *create_pentium_cpuid(BX_CPU_C *cpu) { return new pentium_t(cpu); }
 
 #endif

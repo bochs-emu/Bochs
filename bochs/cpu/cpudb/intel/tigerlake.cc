@@ -253,9 +253,9 @@ tigerlake_t::tigerlake_t(BX_CPU_C *cpu):
   enable_cpu_extension(BX_ISA_SPEC_CTRL);
 }
 
-void tigerlake_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+unsigned tigerlake_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  cpuid_table->get_leaf(function, subfunction, leaf);
+  return cpuid_table->get_leaf(function, subfunction, leaf);
 }
 
 #if BX_SUPPORT_VMX >= 2
@@ -290,47 +290,6 @@ Bit32u tigerlake_t::get_vmx_extensions_bitmask(void) const
          BX_VMX_TSC_SCALING;
 }
 #endif
-
-// leaf 0x00000000 //
-
-// leaf 0x00000001 //
-// leaf 0x00000003 - Processor Serial Number (not supported) //
-
-// leaf 0x00000004 - Deterministic Cache Parameters //
-// leaf 0x00000005 MONITOR/MWAIT Leaf                //
-// leaf 0x00000006 Thermal and Power Management Leaf //
-
-// leaf 0x00000007 //
-// leaf 0x00000008 reserved                          //
-// leaf 0x00000009 direct cache access not supported //
-
-// leaf 0x0000000A //
-
-// leaf 0x0000000C - reserved //
-// leaf 0x0000000D - XSAVE //
-// leaf 0x0000000E - reserved //
-// leaf 0x0000000F - L3 Cache Intel RDT Monitoring Capability Enumeration //
-// leaf 0x00000010 - Intel Resource Director Technology (Intel RDT) Allocation Enumeration //
-// leaf 0x00000011 - reserved //
-// leaf 0x00000012 - Intel Software Guard Extensions //
-// leaf 0x00000013 - reserved //
-// leaf 0x00000014 - Intel Processor Trace Enumeration //
-
-// leaf 0x00000015 - Time Stamp Counter and Core Crystal Clock Information Leaf //
-// leaf 0x00000016 - Processor Frequency Information Leaf
-// leaf 0x00000017 - System-On-Chip Vendor Attribute Enumeration //
-
-// leaf 0x00000018 - Deterministic Address Translation Parameters //
-// leaf 0x80000000 //
-
-// leaf 0x80000001 //
-// leaf 0x80000002 //
-// leaf 0x80000003 //
-// leaf 0x80000004 //
-// leaf 0x80000005 - L1 Cache and TLB Identifiers (reserved for Intel) //
-// leaf 0x80000006 //
-// leaf 0x80000007 - Advanced Power Management //
-// leaf 0x80000008 //
 
 bx_cpuid_t *create_tigerlake_cpuid(BX_CPU_C *cpu) { return new tigerlake_t(cpu); }
 

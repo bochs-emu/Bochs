@@ -41,6 +41,7 @@ export CXXFLAGS
             --enable-busmouse \
             --enable-es1370 \
             --enable-e1000 \
+            --enable-applesmc \
             --enable-plugins \
             --with-macos \
             ${CONFIGURE_ARGS}

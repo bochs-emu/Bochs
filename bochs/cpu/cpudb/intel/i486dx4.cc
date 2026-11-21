@@ -49,14 +49,11 @@ i486dx4_t::i486dx4_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_VME);
 }
 
-void i486dx4_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+unsigned i486dx4_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  cpuid_table->get_leaf(function, subfunction, leaf);
+  return cpuid_table->get_leaf(function, subfunction, leaf);
 }
 
-// leaf 0x00000000 //
-
-// leaf 0x00000001 //
 bx_cpuid_t *create_i486dx4_cpuid(BX_CPU_C *cpu) { return new i486dx4_t(cpu); }
 
 #endif

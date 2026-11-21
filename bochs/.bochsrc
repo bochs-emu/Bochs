@@ -319,6 +319,18 @@ romimage: file=$BXSHARE/BIOS-bochs-latest, options=fastboot
 #fw_cfg: enabled=1
 
 #=======================================================================
+# APPLESMC:
+# Apple System Management Controller (I/O ports 0x300-0x31F), required by
+# Mac OS X guests (AppleSMC.kext). Specifying this option loads the device.
+# The 'osk' parameter sets the 64-character OSK0/OSK1 key. Mac OS X checks it
+# during boot and refuses to run without the right value.
+# While applesmc is configured, the fw_cfg device also provides SMBIOS tables
+# that identify the guest as an Apple iMac15,1. See user doc for the full
+# Mac OS X guest setup.
+#=======================================================================
+#applesmc: osk=ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc
+
+#=======================================================================
 # VGAROMIMAGE
 # You now need to load a VGA ROM BIOS into C0000.
 #=======================================================================

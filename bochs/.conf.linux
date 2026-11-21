@@ -51,6 +51,7 @@ case $which_config in
                 --enable-busmouse \
                 --enable-es1370 \
                 --enable-e1000 \
+                --enable-applesmc \
                 --enable-show-ips \
                 --enable-debugger \
                 --enable-debugger-gui \
@@ -102,6 +103,7 @@ case $which_config in
                 --enable-busmouse \
                 --enable-es1370 \
                 --enable-e1000 \
+                --enable-applesmc \
                 --enable-plugins \
                 --enable-show-ips \
                 --enable-debugger \
@@ -137,6 +139,7 @@ case $which_config in
                 --enable-busmouse \
                 --enable-es1370 \
                 --enable-e1000 \
+                --enable-applesmc \
                 --enable-plugins \
                 --enable-show-ips \
                 --enable-debugger \

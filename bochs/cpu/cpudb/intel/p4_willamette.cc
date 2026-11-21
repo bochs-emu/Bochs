@@ -80,21 +80,10 @@ p4_willamette_t::p4_willamette_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_XAPIC);
 }
 
-void p4_willamette_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+unsigned p4_willamette_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  cpuid_table->get_leaf(function, subfunction, leaf);
+  return cpuid_table->get_leaf(function, subfunction, leaf);
 }
-
-// leaf 0x00000000 //
-
-// leaf 0x00000001 //
-// leaf 0x00000002 - Cache and TLB Descriptors //
-
-// leaf 0x80000000 //
-// leaf 0x80000001 //
-// leaf 0x80000002 //
-// leaf 0x80000003 //
-// leaf 0x80000004 //
 
 bx_cpuid_t *create_p4_willamette_cpuid(BX_CPU_C *cpu) { return new p4_willamette_t(cpu); }
 

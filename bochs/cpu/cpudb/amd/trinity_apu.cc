@@ -202,16 +202,16 @@ trinity_apu_t::trinity_apu_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_TCE);
 }
 
-void trinity_apu_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+unsigned trinity_apu_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
 #if BX_SUPPORT_SVM
   if (function == 0x8000000A) {
     get_ext_cpuid_leaf_A(leaf);
-    return;
+    return 0;
   }
 #endif
 
-  cpuid_table->get_leaf(function, subfunction, leaf);
+  return cpuid_table->get_leaf(function, subfunction, leaf);
 }
 
 #if BX_SUPPORT_SVM
@@ -262,23 +262,6 @@ Bit32u trinity_apu_t::get_svm_extensions_bitmask(void) const
 }
 #endif
 
-// leaf 0x00000000 //
-// leaf 0x00000001 //
-// leaf 0x00000005 MONITOR/MWAIT Leaf                //
-// leaf 0x00000006 Thermal and Power Management Leaf //
-
-// leaf 0x00000007 //
-// leaf 0x0000000D - XSAVE //
-
-// leaf 0x80000000 //
-// leaf 0x80000001 //
-// leaf 0x80000002 //
-// leaf 0x80000003 //
-// leaf 0x80000004 //
-
-// leaf 0x80000005 - L1 Cache and TLB Identifiers //
-// leaf 0x80000006 - L2 Cache and TLB Identifiers //
-// leaf 0x80000007 - Advanced Power Management //
 #if BX_SUPPORT_SVM
 
 // leaf 0x8000000A : SVM //
@@ -291,16 +274,6 @@ void trinity_apu_t::get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const
 }
 
 #endif
-
-// leaf 0x8000000B - 0x80000018: Reserved //
-
-// leaf 0x80000019 - 1G Page TLB Identifiers //
-
-// CPUID leaf 0x80000001A - Performance Optimization Identifiers
-
-// leaf 0x8000001B - Instruction Based Sampling Identifiers //
-
-// leaf 0x8000001D - Cache Properties //
 
 bx_cpuid_t *create_trinity_apu_cpuid(BX_CPU_C *cpu) { return new trinity_apu_t(cpu); }
 

@@ -47,6 +47,7 @@ case $which_config in
       --enable-busmouse \
       --enable-es1370 \
       --enable-e1000 \
+      --enable-applesmc \
       --enable-plugins \
       --enable-show-ips \
       --enable-debugger \
@@ -91,6 +92,7 @@ case $which_config in
       --enable-instrumentation=instrument/example1 \
       --enable-ne2000 \
       --enable-e1000 \
+      --enable-applesmc \
       --enable-pci \
       --enable-clgd54xx \
       --enable-geforce \
@@ -151,6 +153,7 @@ case $which_config in
       --enable-es1370 \
       --enable-ne2000 \
       --enable-e1000 \
+      --enable-applesmc \
       --enable-debugger \
       --enable-debugger-gui \
       --enable-show-ips

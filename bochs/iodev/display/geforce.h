@@ -95,6 +95,14 @@ struct gf_light
   float local_attenuation[3];
 };
 
+struct gf_combiner_stage
+{
+  Bit32u icw[2]; // 0 - color, 1 - alpha
+  Bit32u color_ocw;
+  Bit32u alpha_ocw;
+  float const_color[2][4];
+};
+
 struct gf_channel
 {
   Bit32u subr_return;
@@ -259,7 +267,7 @@ struct gf_channel
   Bit32u d3d_window_clip_y2[8];
   Bit32u d3d_surface_color_offset;
   Bit32u d3d_surface_zeta_offset;
-  Bit32u d3d_combiner_alpha_icw[8];
+  gf_combiner_stage d3d_combiner_stages[8];
   Bit32u d3d_combiner_final[2];
   Bit32u d3d_alpha_test_enable;
   Bit32u d3d_alpha_func;
@@ -321,9 +329,6 @@ struct gf_channel
   Bit32u d3d_viewport_height;
   float d3d_viewport_offset[4];
   float d3d_eye_position[4];
-  float d3d_combiner_const_color[8][2][4];
-  Bit32u d3d_combiner_alpha_ocw[8];
-  Bit32u d3d_combiner_color_icw[8];
   float d3d_viewport_scale[4];
   Bit32u d3d_transform_program[544][4];
   float d3d_transform_constant[512][4];
@@ -354,7 +359,6 @@ struct gf_channel
   Bit32u d3d_zstencil_clear_value;
   Bit32u d3d_color_clear_value;
   Bit32u d3d_clear_surface;
-  Bit32u d3d_combiner_color_ocw[8];
   Bit32u d3d_combiner_control;
   Bit32u d3d_combiner_control_num_stages;
   Bit32u d3d_tex_shader_op[4];

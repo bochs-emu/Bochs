@@ -26,6 +26,7 @@ set echo
             --enable-busmouse \
             --enable-es1370 \
             --enable-e1000 \
+            --enable-applesmc \
             --enable-show-ips \
             --enable-debugger \
             --enable-debugger-gui \

@@ -39,7 +39,7 @@ public:
   // return CPU name
   virtual const char *get_name(void) const { return "i386"; }
 
-  virtual void get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const { assert(0); }
+  virtual unsigned get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const { assert(0); return 0; }
 };
 
 bx_cpuid_t *create_i386_cpuid(BX_CPU_C *cpu) { return new i386_t(cpu); }

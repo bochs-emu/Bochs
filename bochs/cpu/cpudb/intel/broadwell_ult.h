@@ -40,7 +40,7 @@ public:
   virtual Bit32u get_vmx_extensions_bitmask(void) const;
 #endif
 
-  virtual void get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
+  virtual unsigned get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
 
 private:
   bx_cpuid_table_t *cpuid_table;
