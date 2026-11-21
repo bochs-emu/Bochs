@@ -1756,10 +1756,10 @@ void vnet_server_c::ftp_list_directory(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_da
                 strftime(tmptime, 20, "%b %d %H:%M", localtime(&st.st_mtime));
               }
               if (S_ISDIR(st.st_mode)) {
-                sprintf(linebuf, "drwxrwxr-x 1 ftp ftp %ld %s %s%c%c", st.st_size,
+                sprintf(linebuf, "drwxrwxr-x 1 ftp ftp " FMT_LL "d %s %s%c%c", (Bit64s)st.st_size,
                         tmptime, dent->d_name, 13, 10);
               } else {
-                sprintf(linebuf, "-rw-rw-r-- 1 ftp ftp %ld %s %s%c%c", st.st_size,
+                sprintf(linebuf, "-rw-rw-r-- 1 ftp ftp " FMT_LL "d %s %s%c%c", (Bit64s)st.st_size,
                         tmptime, dent->d_name, 13, 10);
               }
             }

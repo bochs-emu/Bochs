@@ -241,7 +241,7 @@ ssize_t vbox_image_t::read(void *buf, size_t count)
     }
     Bit32u index = (Bit32u) (current_offset / header.block_size);
     if (index >= header.blocks_in_hdd) {
-      BX_ERROR(("vbox disk image read beyond end of disk at " FMT_LL "d", current_offset));
+      BX_ERROR(("vbox disk image read beyond end of disk at " FMT_LL "d", (Bit64s)current_offset));
       return -1;
     }
 
@@ -261,7 +261,7 @@ ssize_t vbox_image_t::read(void *buf, size_t count)
       // read only the requested bytes instead of loading the whole block
       off_t file_offset = header.offset_data + (off_t)dtoh32(mtlb[index]) * header.block_size + offset;
       if (bx_read_image(file_descriptor, file_offset, cbuf, (int) copysize) != (int) copysize) {
-        BX_ERROR(("vbox disk image read failed on %u bytes at " FMT_LL "d", (unsigned)copysize, current_offset));
+        BX_ERROR(("vbox disk image read failed on %u bytes at " FMT_LL "d", (unsigned)copysize, (Bit64s)current_offset));
         return -1;
       }
     }
@@ -286,7 +286,7 @@ ssize_t vbox_image_t::write(const void *buf, size_t count)
     }
     Bit32u index = (Bit32u) (current_offset / header.block_size);
     if (index >= header.blocks_in_hdd) {
-      BX_ERROR(("vbox disk image write beyond end of disk at " FMT_LL "d", current_offset));
+      BX_ERROR(("vbox disk image write beyond end of disk at " FMT_LL "d", (Bit64s)current_offset));
       return -1;
     }
 
@@ -298,13 +298,13 @@ ssize_t vbox_image_t::write(const void *buf, size_t count)
       // allocated block which is not cached: write directly to the file
       off_t file_offset = header.offset_data + (off_t)dtoh32(mtlb[index]) * header.block_size + offset;
       if (bx_write_image(file_descriptor, file_offset, cbuf, (int) writesize) != (int) writesize) {
-        BX_ERROR(("vbox disk image write failed on %u bytes at " FMT_LL "d", (unsigned)writesize, current_offset));
+        BX_ERROR(("vbox disk image write failed on %u bytes at " FMT_LL "d", (unsigned)writesize, (Bit64s)current_offset));
         return -1;
       }
     } else {
       // cached block or new block (allocated in the file on flush)
       if (perform_seek() == INVALID_OFFSET) {
-        BX_ERROR(("vbox disk image write failed on %u bytes at " FMT_LL "d", (unsigned)count, current_offset));
+        BX_ERROR(("vbox disk image write failed on %u bytes at " FMT_LL "d", (unsigned)count, (Bit64s)current_offset));
         return -1;
       }
       memcpy(block_data + offset, cbuf, (size_t) writesize);
@@ -438,7 +438,7 @@ void vbox_image_t::read_block(const Bit32u index)
     offset = (off_t)dtoh32(mtlb[index]) * header.block_size;
     bx_read_image(file_descriptor, header.offset_data + offset, block_data, header.block_size);
 
-    BX_DEBUG(("reading block index %d (%d) " FMT_LL "d", index, dtoh32(mtlb[index]), offset));
+    BX_DEBUG(("reading block index %d (%d) " FMT_LL "d", index, dtoh32(mtlb[index]), (Bit64s)offset));
   }
 }
 
@@ -464,7 +464,7 @@ void vbox_image_t::write_block(const Bit32u index)
 
   offset = (off_t)dtoh32(mtlb[index]) * header.block_size;
 
-  BX_DEBUG(("writing block index %d (%d) " FMT_LL "d", index, dtoh32(mtlb[index]), offset));
+  BX_DEBUG(("writing block index %d (%d) " FMT_LL "d", index, dtoh32(mtlb[index]), (Bit64s)offset));
 
   bx_write_image(file_descriptor, header.offset_data + offset, block_data, header.block_size);
 }
