@@ -1956,81 +1956,116 @@ void bx_cpuid_t::get_ext_cpuid_brand_string_leaf(Bit32u function, cpuid_function
 #endif
 }
 
-// CPUID function 0x80000008
+// CPUID function 0x80000008 - Address Sizes and Extended Feature Identifiers
 void bx_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
 {
+  // the hardware supplies extras for the white listed bits
+  cpuid_function_t hw;
+  get_hardware_cpuid_leaf(0x80000008, 0, &hw);
+
   // virtual & phys address size in low 2 bytes of EAX.
   // TODO: physical address width should be 32-bit when no PSE-36 is supported
   Bit32u phy_addr_width = BX_CPU_C::maxphyaddr;
-  Bit32u lin_addr_width = is_cpu_extension_supported(BX_ISA_LONG_MODE) ? 
+  Bit32u lin_addr_width = is_cpu_extension_supported(BX_ISA_LONG_MODE) ?
                                 (is_cpu_extension_supported(BX_ISA_LA57) ? 57 : 48) : 32;
 
   leaf->eax = phy_addr_width | (lin_addr_width << 8);
 
-  //   [0:0] CLZERO support
-  //   [1:1] Instruction Retired Counter MSR available
-  //   [2:2] FP Error Pointers Restored by XRSTOR
-  //   [3:3] INVLPGB and TLBSYNC instructions support
-  //   [4:4] RDPRU support
-  //   [5:5] reserved
-  //   [6:6] Memory Bandwidth Enforcement (MBE) support
-  //   [7:7] reserved
-  //   [8:8] MCOMMIT instruction support
-  //   [9:9] WBNOINVD support - when not supported fall back to legacy WBINVD
-  // [11:10] reserved
-  // [12:12] IBPB: Indirect Branch Prediction Barrier
-  // [13:13] INT_WBINVD: WBINVD/WBNOINVD instructions are interruptible
-  // [14:14] IBRS: Indirect Branch Restricted Speculation
-  // [15:15] STIBP: Single Thread Indirect Branch Prediction mode
-  // [16:16] IbrsAlwaysOn
-  // [17:17] StibpAlwaysOn
-  // [18:18] IbrsPreferred
-  // [19:19] IbrsSameMode
-  // [20:20] EferLmsleUnsupported: EFER.LMSLE is unsupported
-  // [21:21] INVLPGBnestedPages: INVLPGB support for invalidating guest nested translations
-  // [23:22] reserved
-  // [24:24] SSBD: Speculative Store Bypass Disable
-  // [25:25] SsbdVirtSpecCtrl: use VIRT_SPEC_CTL MSR (C001_011Fh) for SSBD
-  // [26:26] SsbdNotRequired: SSBD not needed on this processor
-  // [27:27] CPPC: Collaborative Processor Performance Control
-  // [28:28] PSFD: Predictive Store Forward Disable
-  // [29:29] BTC_NO: The processor is not affected by branch type confusion
-  // [30:30] IBPB_RET: IBPB clears return address predictor
-  // [31:31] reserved
-  leaf->ebx = 0;
-  if (is_cpu_extension_supported(BX_ISA_CLZERO))
-    leaf->ebx |= BX_CPUID_EXT8_EBX_CLZERO;
-  if (is_cpu_extension_supported(BX_ISA_RDPRU))
-    leaf->ebx |= BX_CPUID_EXT8_EBX_RDPRU;
-  if (is_cpu_extension_supported(BX_ISA_LONG_MODE))
-    leaf->ebx |= BX_CPUID_EXT8_EBX_WBNOINVD; // I don't add CPUID feature for WBNOINVD but also don't want to report it for really old processors
+  leaf->ebx = get_ext_cpuid_leaf_8_ebx(hw.ebx);
 
-  leaf->ecx = 0; // Reserved, undefined for Intel
+  // ECX: reserved for Intel, logical processor count and APIC ID size for AMD (starting from K8)
+  //   [17:16] PerfTscSize: performance time-stamp counter size (PTSC is not supported, report 0)
+  //   [15:12] ApicIdSize: number of APIC ID bits that identify logical processor within the package,
+  //                       zero means legacy method (number of logical processors = NC+1)
+  //    [11:8] reserved
+  //     [7:0] NC: number of logical processors (threads) in the package - 1
+  leaf->ecx = 0;
+  if (vendor == AuthenticAMD && is_cpu_extension_supported(BX_ISA_LONG_MODE)) {
+    Bit32u n_logical_processors = ncores * nthreads;
+    Bit32u apic_id_size = 0;
+
+#if BX_SUPPORT_SMP
+    if (n_logical_processors > 1)
+      apic_id_size = ilog2(n_logical_processors - 1) + 1;
+#endif
+
+    leaf->ecx = (apic_id_size << 12) | (n_logical_processors - 1);
+  }
 
   // EDX[15:0]:  InvlpgbCountMax - maximum page count for INVLPGB instruction (INVLPGB is not supported, report 0)
   // EDX[31:16]: MaxRdpruID - maximum ECX value recognized by RDPRU (MPERF=0, APERF=1)
   leaf->edx = is_cpu_extension_supported(BX_ISA_RDPRU) ? (1 << 16) : 0;
 }
 
-void bx_cpuid_t::get_ext_cpuid_leaf_8_amd(cpuid_function_t *leaf) const
+// CPUID function 0x80000008 - EBX
+Bit32u bx_cpuid_t::get_ext_cpuid_leaf_8_ebx(Bit32u extra) const
 {
-  bx_cpuid_t::get_ext_cpuid_leaf_8(leaf);
+  // white list of bits passed through from extra (no emulation required)
+  static const Bit32u extra_white_list = BX_CPUID_EXT8_EBX_RSTR_FP_ERR_PTRS |
+                                         BX_CPUID_EXT8_EBX_WBNOINVD |
+                                         BX_CPUID_EXT8_EBX_EFER_LMSLE_UNSUPPORTED;
 
-  // leaf 0x80000008 ECX (AMD): logical processor count and APIC ID size
-  //   [17:16] PerfTscSize: performance time-stamp counter size (PTSC is not supported, report 0)
-  //   [15:12] ApicIdSize: number of APIC ID bits that identify logical processor within the package,
-  //                       zero means legacy method (number of logical processors = NC+1)
-  //    [11:8] reserved
-  //     [7:0] NC: number of logical processors (threads) in the package - 1
-  Bit32u n_logical_processors = ncores * nthreads;
-  Bit32u apic_id_size = 0;
+  // spec_ctrl bits (SCA mitigations, marked with *) are passed through only
+  // when speculation control is supported
+  static const Bit32u extra_spec_ctrl_white_list = BX_CPUID_EXT8_EBX_IBRS_ALWAYS_ON |
+                                                   BX_CPUID_EXT8_EBX_STIBP_ALWAYS_ON |
+                                                   BX_CPUID_EXT8_EBX_IBRS_PREFERRED |
+                                                   BX_CPUID_EXT8_EBX_IBRS_SAME_MODE |
+                                                   BX_CPUID_EXT8_EBX_SSBD_NOT_REQUIRED |
+                                                   BX_CPUID_EXT8_EBX_BTC_NO |
+                                                   BX_CPUID_EXT8_EBX_IBPB_RET;
 
-#if BX_SUPPORT_SMP
-  if (n_logical_processors > 1)
-    apic_id_size = ilog2(n_logical_processors - 1) + 1;
-#endif
+  Bit32u ebx = extra & extra_white_list;
+  if (is_cpu_extension_supported(BX_ISA_SPEC_CTRL) || is_cpu_extension_supported(BX_ISA_SPEC_CTRL_AMD))
+    ebx |= extra & extra_spec_ctrl_white_list;
 
-  leaf->ecx = (apic_id_size << 12) | (n_logical_processors - 1);
+  //   [0:0]   CLZERO support
+  if (is_cpu_extension_supported(BX_ISA_CLZERO))
+    ebx |= BX_CPUID_EXT8_EBX_CLZERO;
+
+  // ! [1:1]   Instruction Retired Counter MSR available - not supported
+  //   [2:2]   FP Error Pointers Restored by XRSTOR - passed through from extra
+  // ! [3:3]   INVLPGB and TLBSYNC instructions support - not supported
+
+  //   [4:4]   RDPRU support
+  if (is_cpu_extension_supported(BX_ISA_RDPRU))
+    ebx |= BX_CPUID_EXT8_EBX_RDPRU;
+
+  //   [5:5]   reserved
+  // ! [6:6]   Memory Bandwidth Enforcement (MBE) support - not supported
+  //   [7:7]   reserved
+  // ! [8:8]   MCOMMIT instruction support - not supported
+  //   [9:9]   WBNOINVD support - passed through from extra (when not supported executed as legacy WBINVD)
+  //   [11:10] reserved
+
+  // [12:12] IBPB: Indirect Branch Prediction Barrier
+  // [14:14] IBRS: Indirect Branch Restricted Speculation
+  // [15:15] STIBP: Single Thread Indirect Branch Prediction mode
+  // [24:24] SSBD: Speculative Store Bypass Disable
+  // [28:28] PSFD: Predictive Store Forward Disable
+  if (is_cpu_extension_supported(BX_ISA_SPEC_CTRL_AMD))
+    ebx |= BX_CPUID_EXT8_EBX_IBPB |
+           BX_CPUID_EXT8_EBX_IBRS |
+           BX_CPUID_EXT8_EBX_STIBP |
+           BX_CPUID_EXT8_EBX_SSBD |
+           BX_CPUID_EXT8_EBX_PSFD;
+
+  // ! [13:13] INT_WBINVD: WBINVD/WBNOINVD instructions are interruptible - not supported
+  // * [16:16] IbrsAlwaysOn: Processor prefers that IBRS is left on
+  // * [17:17] StibpAlwaysOn: Processor prefers that STIBP is left on
+  // * [18:18] IbrsPreferred: IBRS is preferred over software solution
+  // * [19:19] IbrsSameMode: IBRS provides same mode speculation limits
+  //   [20:20] EferLmsleUnsupported: EFER.LMSLE is unsupported - passed through from extra
+  // ! [21:21] INVLPGBnestedPages: INVLPGB support for invalidating guest nested translations - not supported
+  //   [23:22] reserved
+  // ! [25:25] SsbdVirtSpecCtrl: use VIRT_SPEC_CTL MSR (C001_011Fh) for SSBD - not supported
+  // * [26:26] SsbdNotRequired: SSBD not needed on this processor
+  // ! [27:27] CPPC: Collaborative Processor Performance Control - not supported
+  // * [29:29] BTC_NO: The processor is not affected by branch type confusion
+  // * [30:30] IBPB_RET: IBPB clears return address predictor
+  //   [31:31] reserved
+
+  return ebx;
 }
 
 // CPUID function 0x80000001E - Topology Extensions
@@ -2394,8 +2429,10 @@ void bx_cpuid_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_funct
   case 0x80000005: // CPUID leaf 0x80000005 - L1 Cache and TLB Identifiers
   case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
   case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management
-  case 0x80000008: // CPUID leaf 0x80000008 - Address Size and Processor Capacity
     get_hardware_cpuid_leaf(function, subfunction, leaf);
+    break;
+  case 0x80000008: // CPUID leaf 0x80000008 - Address Size and Processor Capacity
+    get_ext_cpuid_leaf_8(leaf);
     break;
   case 0x80000009: // CPUID leaf 0x80000009 - reserved
     get_reserved_leaf(leaf);

@@ -48,7 +48,6 @@ private:
   void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
 
   void get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const;
-  void get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const;
 #if BX_SUPPORT_SVM
   void get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const;
 #endif

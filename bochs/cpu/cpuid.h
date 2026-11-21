@@ -232,7 +232,7 @@ protected:
   Bit32u get_ext_cpuid_leaf_1_edx_intel() const;
 
   void get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const;
-  void get_ext_cpuid_leaf_8_amd(cpuid_function_t *leaf) const;
+  Bit32u get_ext_cpuid_leaf_8_ebx(Bit32u extra = 0) const;
 
   // CPUID leaf 0x8000001E - AMD Processor Topology Information
   void get_ext_cpuid_leaf_1E(cpuid_function_t *leaf) const;

@@ -180,10 +180,8 @@ void phenom_8650_toliman_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subf
   case 0x80000005: // CPUID leaf 0x80000005 - L1 Cache and TLB Identifiers
   case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
   case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management
+  case 0x80000008: // CPUID leaf 0x80000008 - Address Sizes and Extended Feature Identifiers
     cpuid_table->get_ext_leaf(function, subfunction, leaf);
-    return;
-  case 0x80000008:
-    get_ext_cpuid_leaf_8_amd(leaf);
     return;
 #if BX_SUPPORT_SVM
   case 0x8000000A:

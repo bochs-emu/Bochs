@@ -304,10 +304,8 @@ void zen4_raphael_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction
   case 0x80000005: // CPUID leaf 0x80000005 - L1 Cache and TLB Identifiers
   case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
   case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management
+  case 0x80000008: // CPUID leaf 0x80000008 - Address Sizes and Extended Feature Identifiers
     cpuid_table->get_ext_leaf(function, subfunction, leaf);
-    return;
-  case 0x80000008:
-    get_ext_cpuid_leaf_8(leaf);
     return;
 #if BX_SUPPORT_SVM
   case 0x8000000A:
@@ -626,53 +624,6 @@ void zen4_raphael_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000006 - L2 Cache and TLB Identifiers //
 // leaf 0x80000007 - Advanced Power Management //
 // leaf 0x80000008 - Address Sizes and Extended Feature Identifiers //
-void zen4_raphael_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
-{
-  get_ext_cpuid_leaf_8_amd(leaf);
-
-  // EBX: extended feature identifiers
-  // * [0:0]   CLZERO support
-  // ! [1:1]   Instruction Retired Counter MSR available
-  // * [2:2]   FP Error Pointers Restored by XRSTOR
-  //   [3:3]   INVLPGB and TLBSYNC instructions support
-  // * [4:4]   RDPRU support
-  //   [5:5]   reserved
-  // ! [6:6]   Memory Bandwidth Enforcement (MBE) support
-  //   [8:7]   reserved
-  // * [9:9]   WBNOINVD support
-  //   [11:10] reserved
-  // * [12:12] IBPB: Indirect Branch Prediction Barrier
-  // ! [13:13] INT_WBINVD: WBINVD/WBNOINVD instructions are interruptible
-  // * [14:14] IBRS: Indirect Branch Restricted Speculation
-  // * [15:15] STIBP: Single Thread Indirect Branch Prediction mode
-  //   [16:16] IbrsAlwaysOn: Processor prefers that IBRS is left on
-  // * [17:17] StibpAlwaysOn: Processor prefers that STIBP is left on
-  // * [18:18] IbrsPreferred: IBRS is preferred over software solution
-  // * [19:19] IbrsSameMode: IBRS provides same mode speculation limits
-  // * [20:20] EferLmsleUnsupported: EFER.LMSLE is unsupported
-  //   [21:21] INVLPGBnestedPages: INVLPGB support for invalidating guest nested translations
-  //   [23:22] reserved
-  // * [24:24] SSBD: Speculative Store Bypass Disable
-  //   [25:25] SsbdVirtSpecCtrl: use VIRT_SPEC_CTL MSR (C001_011Fh) for SSBD
-  //   [26:26] SsbdNotRequired: SSBD not needed on this processor
-  // ! [27:27] CPPC: Collaborative Processor Performance Control
-  // * [28:28] PSFD: Predictive Store Forward Disable
-  //   [29:29] BTC_NO: The processor is not affected by branch type confusion
-  //   [30:30] IBPB_RET: IBPB clears return address predictor
-  //   [31:31] reserved
-  leaf->ebx |= BX_CPUID_EXT8_EBX_RSTR_FP_ERR_PTRS |
-               BX_CPUID_EXT8_EBX_EFER_LMSLE_UNSUPPORTED;
-
-  if (is_cpu_extension_supported(BX_ISA_SPEC_CTRL_AMD))
-    leaf->ebx |= BX_CPUID_EXT8_EBX_IBPB |
-                 BX_CPUID_EXT8_EBX_IBRS |
-                 BX_CPUID_EXT8_EBX_STIBP |
-                 BX_CPUID_EXT8_EBX_STIBP_ALWAYS_ON |
-                 BX_CPUID_EXT8_EBX_IBRS_PREFERRED |
-                 BX_CPUID_EXT8_EBX_IBRS_SAME_MODE |
-                 BX_CPUID_EXT8_EBX_SSBD |
-                 BX_CPUID_EXT8_EBX_PSFD;
-}
 
 #if BX_SUPPORT_SVM
 

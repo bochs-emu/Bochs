@@ -132,10 +132,8 @@ void core_duo_t2400_yonah_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u sub
   case 0x80000005:
   case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
   case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management
+  case 0x80000008: // CPUID leaf 0x80000008 - Address Sizes and Extended Feature Identifiers
     cpuid_table->get_ext_leaf(function, subfunction, leaf);
-    return;
-  case 0x80000008:
-    get_ext_cpuid_leaf_8(leaf);
     return;
   case 0x00000000:
     cpuid_table->get_std_leaf(function, subfunction, leaf);
