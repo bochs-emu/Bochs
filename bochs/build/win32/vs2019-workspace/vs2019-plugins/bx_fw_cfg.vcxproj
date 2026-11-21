@@ -208,10 +208,12 @@
   <ItemGroup>
     <ClCompile Include="..\iodev\fw_cfg.cc" />
     <ClCompile Include="..\iodev\acpi_tables.cc" />
+    <ClCompile Include="..\iodev\smbios_tables.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\iodev\fw_cfg.h" />
     <ClInclude Include="..\iodev\acpi_tables.h" />
+    <ClInclude Include="..\iodev\smbios_tables.h" />
     <ClInclude Include="..\iodev\acpi_dsdt_aml.h" />
     <ClInclude Include="..\iodev\iodev.h" />
   </ItemGroup>
