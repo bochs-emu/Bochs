@@ -47,6 +47,8 @@ static const cpuid_function_t ext_leafs[] = {
 amd_k6_2_chomper_t::amd_k6_2_chomper_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
   set_max_leaf(0x1, 0x80000005);
+  set_vendor(AuthenticAMD);
+  set_magic_string("NexGenerationAMD");
 
   cpuid_table = new bx_cpuid_table_t(max_std_leaf, max_ext_leaf);
 
@@ -75,156 +77,9 @@ amd_k6_2_chomper_t::amd_k6_2_chomper_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_PSE);
 }
 
-void amd_k6_2_chomper_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+unsigned amd_k6_2_chomper_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  static const char* magic_string = "NexGenerationAMD";
-
-  switch(function) {
-  case 0x8FFFFFFF:
-    get_cpuid_hidden_level(leaf, magic_string);
-    return;
-  case 0x80000000:
-    get_ext_cpuid_leaf_0(leaf);
-    return;
-  case 0x80000001:
-    get_ext_cpuid_leaf_1(leaf);
-    return;
-  case 0x80000002:
-  case 0x80000003:
-  case 0x80000004:
-  case 0x80000005: // CPUID leaf 0x80000005 - L1 Cache and TLB Identifiers
-    cpuid_table->get_ext_leaf(function, subfunction, leaf);
-    return;
-  case 0x00000000:
-    get_std_cpuid_leaf_0(leaf);
-    return;
-  case 0x00000001:
-    get_std_cpuid_leaf_1(leaf);
-    return;
-  default:
-    get_reserved_leaf(leaf);
-    return;
-  }
-}
-
-// leaf 0x00000000 //
-void amd_k6_2_chomper_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  get_leaf_0(0x1, "AuthenticAMD", leaf);
-}
-
-// leaf 0x00000001 //
-void amd_k6_2_chomper_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
-{
-  // EAX:       CPU Version Information
-  //   [3:0]   Stepping ID
-  //   [7:4]   Model: starts at 1
-  //   [11:8]  Family: 4=486, 5=Pentium, 6=PPro, ...
-  //   [13:12] Type: 0=OEM, 1=overdrive, 2=dual cpu, 3=reserved
-  //   [19:16] Extended Model
-  //   [27:20] Extended Family
-  leaf->eax = 0x00000580;
-
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-
-  // EDX: Standard Feature Flags
-  // * [0:0]   FPU on chip
-  // * [1:1]   VME: Virtual-8086 Mode enhancements
-  // * [2:2]   DE: Debug Extensions (I/O breakpoints)
-  // * [3:3]   PSE: Page Size Extensions
-  // * [4:4]   TSC: Time Stamp Counter
-  // * [5:5]   MSR: RDMSR and WRMSR support
-  //   [6:6]   PAE: Physical Address Extensions
-  // * [7:7]   MCE: Machine Check Exception
-  // * [8:8]   CXS: CMPXCHG8B instruction
-  //   [9:9]   APIC: APIC on Chip
-  //   [10:10] Reserved
-  //   [11:11] SYSENTER/SYSEXIT support
-  //   [12:12] MTRR: Memory Type Range Reg
-  //   [13:13] PGE/PTE Global Bit
-  //   [14:14] MCA: Machine Check Architecture
-  //   [15:15] CMOV: Cond Mov/Cmp Instructions
-  //   [16:16] PAT: Page Attribute Table
-  //   [17:17] PSE-36: Physical Address Extensions
-  //   [18:18] PSN: Processor Serial Number
-  //   [19:19] CLFLUSH: CLFLUSH Instruction support
-  //   [20:20] Reserved
-  //   [21:21] DS: Debug Store
-  //   [22:22] ACPI: Thermal Monitor and Software Controlled Clock Facilities
-  // * [23:23] MMX Technology
-  //   [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
-  //   [25:25] SSE: SSE Extensions
-  //   [26:26] SSE2: SSE2 Extensions
-  //   [27:27] Self Snoop
-  //   [28:28] Hyper Threading Technology
-  //   [29:29] TM: Thermal Monitor
-  //   [30:30] Reserved
-  //   [31:31] PBE: Pending Break Enable
-  leaf->edx = get_std_cpuid_leaf_1_edx();
-}
-
-// leaf 0x80000000 //
-void amd_k6_2_chomper_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  // EAX: highest extended function understood by CPUID
-  // EBX: reserved
-  // EDX: reserved
-  // ECX: reserved
-  get_leaf_0(0x80000005, NULL, leaf);
-}
-
-// leaf 0x80000001 //
-void amd_k6_2_chomper_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
-{
-  // EAX:       CPU Version Information (same as 0x00000001.EAX)
-  leaf->eax = 0x00000680;
-
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-
-  // EDX:
-  // Many of the bits in EDX are the same as FN 0x00000001 [*] for AMD
-  // * [0:0]   FPU on chip
-  // * [1:1]   VME: Virtual-8086 Mode enhancements
-  // * [2:2]   DE: Debug Extensions (I/O breakpoints)
-  // * [3:3]   PSE: Page Size Extensions
-  // * [4:4]   TSC: Time Stamp Counter
-  // * [5:5]   MSR: RDMSR and WRMSR support
-  //   [6:6]   PAE: Physical Address Extensions
-  // * [7:7]   MCE: Machine Check Exception
-  // * [8:8]   CXS: CMPXCHG8B instruction
-  // * [9:9]   APIC: APIC on Chip
-  //   [10:10] Reserved
-  // * [11:11] SYSCALL/SYSRET support
-  //   [12:12] MTRR: Memory Type Range Reg
-  //   [13:13] PGE/PTE Global Bit
-  //   [14:14] MCA: Machine Check Architecture
-  //   [15:15] CMOV: Cond Mov/Cmp Instructions
-  //   [16:16] PAT: Page Attribute Table
-  //   [17:17] PSE-36: Physical Address Extensions
-  //   [18:18] Reserved
-  //   [19:19] Reserved
-  //   [20:20] No-Execute page protection
-  //   [21:21] Reserved
-  //   [22:22] MMXExt: AMD Extensions to MMX Technology
-  // * [23:23] MMX Technology
-  //   [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
-  //   [25:25] FFXSR: Fast FXSAVE/FXRSTOR
-  //   [26:26] 1G paging support
-  //   [27:27] Support RDTSCP Instruction
-  //   [28:28] Reserved
-  //   [29:29] Long Mode
-  //   [30:30] AMD 3DNow! Extensions
-  // * [31:31] AMD 3DNow! Instructions
-  leaf->edx = get_ext_cpuid_leaf_1_edx_amd();
-}
-
-// leaf 0x80000005 - L1 Cache and TLB Identifiers //
-void amd_k6_2_chomper_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(0x1, 0x80000005);
-  dump_cpuid_leaf(0x8fffffff);
+  return cpuid_table->get_leaf(function, subfunction, leaf);
 }
 
 bx_cpuid_t *create_amd_k6_2_chomper_cpuid(BX_CPU_C *cpu) { return new amd_k6_2_chomper_t(cpu); }

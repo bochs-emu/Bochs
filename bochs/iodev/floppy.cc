@@ -735,7 +735,7 @@ void bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (!prev_normal_operation && normal_operation) {
         // transition from RESET to NORMAL
         BX_FD_THIS s.pending_command = FD_RESET; // RESET pending
-        bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index, FDC_TIMER_VAL, 0);
+        bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index, FDC_TIMER_VAL * 5, 0);
       } else if (prev_normal_operation && !normal_operation) {
         // transition from NORMAL to RESET
         BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
@@ -771,7 +771,7 @@ void bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_FD_THIS s.main_status_reg &= FD_MS_NDMA;
         BX_FD_THIS s.DOR = 0x0C;
         BX_FD_THIS s.pending_command = FD_RESET; // RESET pending
-        bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index, FDC_TIMER_VAL, 0);
+        bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index, FDC_TIMER_VAL * 5, 0);
       }
       switch (BX_FD_THIS s.DSR & 0x03) {
         case 0: BX_DEBUG(("  500 Kbps")); break;
@@ -1265,7 +1265,7 @@ void bx_floppy_ctrl_c::floppy_command(void)
       }
 
       // time to read one sector at 300 rpm
-      sector_time = (FDC_TIMER_VAL / BX_FD_THIS s.media[drive].sectors_per_track) * 1000;
+      sector_time = (FDC_TIMER_VAL  * 1000) / BX_FD_THIS s.media[drive].sectors_per_track;
       bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index, sector_time, 0);
       /* data reg not ready, controller busy */
       BX_FD_THIS s.main_status_reg &= FD_MS_NDMA;
@@ -1485,7 +1485,7 @@ void bx_floppy_ctrl_c::floppy_command(void)
           BX_FD_THIS s.main_status_reg |= (FD_MS_RQM | FD_MS_DIO);
         }
         // time to read one sector at 300 rpm
-        sector_time = (FDC_TIMER_VAL / BX_FD_THIS s.media[drive].sectors_per_track) * 1000;
+        sector_time = (FDC_TIMER_VAL * 1000) / BX_FD_THIS s.media[drive].sectors_per_track;
         bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index, sector_time, 0);
       } else if ((BX_FD_THIS s.command[0] & 0x5f) == (FD_CMD_MFM | FD_CMD_WRITE_NORMAL_DATA)) {
         if (BX_FD_THIS s.media[drive].write_protected) {
@@ -1511,7 +1511,7 @@ void bx_floppy_ctrl_c::floppy_command(void)
         BX_FD_THIS s.main_status_reg &= FD_MS_NDMA;
         BX_FD_THIS s.main_status_reg |= FD_MS_BUSY;
         // time to verify one sector at 300 rpm
-        sector_time = (FDC_TIMER_VAL / BX_FD_THIS s.media[drive].sectors_per_track) * 1000;
+        sector_time = (FDC_TIMER_VAL * 1000) / BX_FD_THIS s.media[drive].sectors_per_track;
         bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index, sector_time, 0);
       } else if (((BX_FD_THIS s.command[0] & 0x5f) == (FD_CMD_MFM | FD_CMD_SCAN_EQUAL)) ||
                  ((BX_FD_THIS s.command[0] & 0x5f) == (FD_CMD_MFM | FD_CMD_SCAN_LOW_EQUAL)) ||
@@ -1908,7 +1908,7 @@ void bx_floppy_ctrl_c::timer()
       } else {
         increment_sector();
         // time to 'verify' one sector at 300 rpm
-        Bit32u sector_time = (FDC_TIMER_VAL / BX_FD_THIS s.media[drive].sectors_per_track) * 1000;
+        Bit32u sector_time = (FDC_TIMER_VAL * 1000) / BX_FD_THIS s.media[drive].sectors_per_track;
         bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index, sector_time, 0);
       }
       break;
@@ -2003,7 +2003,7 @@ Bit16u bx_floppy_ctrl_c::dma_write(Bit8u *buffer, Bit16u maxlen)
         DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
       }
       // time to read one sector at 300 rpm
-      Bit32u sector_time = (FDC_TIMER_VAL / BX_FD_THIS s.media[drive].sectors_per_track) * 1000;
+      Bit32u sector_time = (FDC_TIMER_VAL * 1000) / BX_FD_THIS s.media[drive].sectors_per_track;
       bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index, sector_time, 0);
     }
   }
@@ -2145,7 +2145,7 @@ Bit16u bx_floppy_ctrl_c::dma_read(Bit8u *buffer, Bit16u maxlen)
         DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
       }
       // time to write one sector at 300 rpm
-      sector_time = ((FDC_TIMER_VAL / BX_FD_THIS s.media[drive].sectors_per_track) * fmt_sectors) * 1000;
+      sector_time = ((FDC_TIMER_VAL * 1000) / BX_FD_THIS s.media[drive].sectors_per_track) * fmt_sectors;
       bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index, sector_time, 0);
     }
     return retlen;
@@ -2181,7 +2181,7 @@ Bit16u bx_floppy_ctrl_c::dma_read(Bit8u *buffer, Bit16u maxlen)
       }
       // time to write one sector at 300 rpm
       increment_sector();
-      sector_time = (FDC_TIMER_VAL / BX_FD_THIS s.media[drive].sectors_per_track) * 1000;
+      sector_time = (FDC_TIMER_VAL * 1000) / BX_FD_THIS s.media[drive].sectors_per_track;
       bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index, sector_time, 0);
     }
     return len;
@@ -2256,7 +2256,7 @@ Bit16u bx_floppy_ctrl_c::dma_read(Bit8u *buffer, Bit16u maxlen)
         enter_result_phase();
       }
       // time to write one sector at 300 rpm
-      sector_time = (FDC_TIMER_VAL / BX_FD_THIS s.media[drive].sectors_per_track) * 1000;
+      sector_time = (FDC_TIMER_VAL * 1000) / BX_FD_THIS s.media[drive].sectors_per_track;
       bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index, sector_time, 0);
     }
     return len;

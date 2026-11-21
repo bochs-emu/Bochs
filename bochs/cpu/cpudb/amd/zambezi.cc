@@ -89,6 +89,7 @@ static const cpuid_function_t ext_leafs[] = {
 zambezi_t::zambezi_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
   set_max_leaf(0xD, 0x8000001E);
+  set_vendor(AuthenticAMD);
 
   cpuid_table = new bx_cpuid_table_t(max_std_leaf, max_ext_leaf);
 
@@ -198,59 +199,16 @@ zambezi_t::zambezi_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_TCE);
 }
 
-void zambezi_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+unsigned zambezi_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  switch(function) {
-  case 0x80000000:
-    get_ext_cpuid_leaf_0(leaf);
-    return;
-  case 0x80000001:
-    get_ext_cpuid_leaf_1(leaf);
-    return;
-  case 0x80000002:
-  case 0x80000003:
-  case 0x80000004:
-  case 0x80000005: // CPUID leaf 0x80000005 - L1 Cache and TLB Identifiers
-  case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
-  case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management
-    cpuid_table->get_ext_leaf(function, subfunction, leaf);
-    return;
-  case 0x80000008:
-    get_ext_cpuid_leaf_8_amd(leaf);
-    return;
 #if BX_SUPPORT_SVM
-  case 0x8000000A:
+  if (function == 0x8000000A) {
     get_ext_cpuid_leaf_A(leaf);
-    return;
-#endif
-  case 0x80000019: // CPUID leaf 0x80000019 - 1G Page TLB Identifiers
-  case 0x8000001A: // CPUID leaf 0x8000001A - Performance Optimization Identifiers
-  case 0x8000001B: // CPUID leaf 0x8000001B - Instruction Based Sampling Identifiers
-    cpuid_table->get_ext_leaf(function, subfunction, leaf);
-    return;
-  case 0x8000001C:
-    get_reserved_leaf(leaf); // Lightweight Profiling Capabilities (not implemented)
-    return;
-  case 0x8000001D: // CPUID leaf 0x8000001D - Cache Properties
-  case 0x8000001E:
-    cpuid_table->get_ext_leaf(function, subfunction, leaf);
-    return;
-  case 0x00000000:
-    get_std_cpuid_leaf_0(leaf);
-    return;
-  case 0x00000001:
-    get_std_cpuid_leaf_1(leaf);
-    return;
-  case 0x00000005:
-  case 0x00000006: // CPUID leaf 0x00000006 - Thermal and Power Management Leaf
-  case 0x00000007:
-  case 0x0000000D:
-    cpuid_table->get_std_leaf(function, subfunction, leaf);
-    return;
-  default:
-    get_reserved_leaf(leaf);
-    return;
+    return 0;
   }
+#endif
+
+  return cpuid_table->get_leaf(function, subfunction, leaf);
 }
 
 #if BX_SUPPORT_SVM
@@ -301,220 +259,6 @@ Bit32u zambezi_t::get_svm_extensions_bitmask(void) const
 }
 #endif
 
-// leaf 0x00000000 //
-void zambezi_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  // EAX: highest std function understood by CPUID
-  // EBX: vendor ID string
-  // EDX: vendor ID string
-  // ECX: vendor ID string
-  get_leaf_0(0xD, "AuthenticAMD", leaf);
-}
-
-// leaf 0x00000001 //
-void zambezi_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
-{
-  // EAX:       CPU Version Information
-  //   [3:0]   Stepping ID
-  //   [7:4]   Model: starts at 1
-  //   [11:8]  Family: 4=486, 5=Pentium, 6=PPro, ...
-  //   [13:12] Type: 0=OEM, 1=overdrive, 2=dual cpu, 3=reserved
-  //   [19:16] Extended Model
-  //   [27:20] Extended Family
-  leaf->eax = 0x00600F12;
-
-  // EBX:
-  //   [7:0]   Brand ID
-  //   [15:8]  CLFLUSH cache line size (value*8 = cache line size in bytes)
-  //   [23:16] Number of logical processors in one physical processor
-  //   [31:24] Local Apic ID
-
-  unsigned n_logical_processors = ncores*nthreads;
-  leaf->ebx = ((CACHE_LINE_SIZE / 8) << 8) |
-              (n_logical_processors << 16);
-#if BX_SUPPORT_APIC
-  leaf->ebx |= ((cpu->get_apic_id() & 0xff) << 24);
-#endif
-
-  // ECX: Extended Feature Flags
-  // * [0:0]   SSE3: SSE3 Instructions
-  // * [1:1]   PCLMULQDQ Instruction support
-  //   [2:2]   DTES64: 64-bit DS area
-  // * [3:3]   MONITOR/MWAIT support
-  //   [4:4]   DS-CPL: CPL qualified debug store
-  //   [5:5]   VMX: Virtual Machine Technology
-  //   [6:6]   SMX: Secure Virtual Machine Technology
-  //   [7:7]   EST: Enhanced Intel SpeedStep Technology
-  //   [8:8]   TM2: Thermal Monitor 2
-  // * [9:9]   SSSE3: SSSE3 Instructions
-  //   [10:10] CNXT-ID: L1 context ID
-  //   [11:11] reserved
-  //   [12:12] FMA Instructions support
-  // * [13:13] CMPXCHG16B: CMPXCHG16B instruction support
-  //   [14:14] xTPR update control
-  //   [15:15] PDCM - Perfmon and Debug Capability MSR
-  //   [16:16] reserved
-  //   [17:17] PCID: Process Context Identifiers
-  //   [18:18] DCA - Direct Cache Access
-  // * [19:19] SSE4.1 Instructions
-  // * [20:20] SSE4.2 Instructions
-  //   [21:21] X2APIC
-  //   [22:22] MOVBE instruction
-  // * [23:23] POPCNT instruction
-  //   [24:24] TSC Deadline
-  // * [25:25] AES Instructions
-  // * [26:26] XSAVE extensions support
-  // * [27:27] OSXSAVE support
-  // * [28:28] AVX extensions support
-  //   [29:29] AVX F16C - Float16 conversion support
-  //   [30:30] RDRAND instruction
-  //   [31:31] reserved
-  leaf->ecx = get_std_cpuid_leaf_1_ecx();
-
-  // EDX: Standard Feature Flags
-  // * [0:0]   FPU on chip
-  // * [1:1]   VME: Virtual-8086 Mode enhancements
-  // * [2:2]   DE: Debug Extensions (I/O breakpoints)
-  // * [3:3]   PSE: Page Size Extensions
-  // * [4:4]   TSC: Time Stamp Counter
-  // * [5:5]   MSR: RDMSR and WRMSR support
-  // * [6:6]   PAE: Physical Address Extensions
-  // * [7:7]   MCE: Machine Check Exception
-  // * [8:8]   CXS: CMPXCHG8B instruction
-  // * [9:9]   APIC: APIC on Chip
-  //   [10:10] Reserved
-  // * [11:11] SYSENTER/SYSEXIT support
-  // * [12:12] MTRR: Memory Type Range Reg
-  // * [13:13] PGE/PTE Global Bit
-  // * [14:14] MCA: Machine Check Architecture
-  // * [15:15] CMOV: Cond Mov/Cmp Instructions
-  // * [16:16] PAT: Page Attribute Table
-  // * [17:17] PSE-36: Physical Address Extensions
-  //   [18:18] PSN: Processor Serial Number
-  // * [19:19] CLFLUSH: CLFLUSH Instruction support
-  //   [20:20] Reserved
-  //   [21:21] DS: Debug Store
-  //   [22:22] ACPI: Thermal Monitor and Software Controlled Clock Facilities
-  // * [23:23] MMX Technology
-  // * [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
-  // * [25:25] SSE: SSE Extensions
-  // * [26:26] SSE2: SSE2 Extensions
-  //   [27:27] Self Snoop
-  // * [28:28] Hyper Threading Technology
-  //   [29:29] TM: Thermal Monitor
-  //   [30:30] Reserved
-  //   [31:31] PBE: Pending Break Enable
-  leaf->edx = get_std_cpuid_leaf_1_edx();
-#if BX_SUPPORT_SMP
-  leaf->edx |= BX_CPUID_STD1_EDX_HT;
-#endif
-}
-
-// leaf 0x00000005 MONITOR/MWAIT Leaf //
-// leaf 0x00000006 Thermal and Power Management Leaf //
-// leaf 0x0000000D XSAVE //
-
-// leaf 0x80000000 //
-void zambezi_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  get_leaf_0(0x8000001E, "AuthenticAMD", leaf);
-}
-
-// leaf 0x80000001 //
-void zambezi_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
-{
-  // EAX:       CPU Version Information (same as 0x00000001.EAX)
-  leaf->eax = 0x00600f12;
-
-  // EBX:
-  //  [15:00]  Brand ID
-  //  [27:16]  Reserved
-  //  [31:28]  Package Type
-  leaf->ebx = 0x10000000;
-
-  // ECX:
-  // * [0:0]   LAHF/SAHF instructions support in 64-bit mode
-  // * [1:1]   CMP_Legacy: Core multi-processing legacy mode (AMD)
-  // * [2:2]   SVM: Secure Virtual Machine (AMD)
-  // * [3:3]   Extended APIC Space
-  // * [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
-  // * [5:5]   LZCNT: LZCNT instruction support
-  // * [6:6]   SSE4A: SSE4A Instructions support
-  // * [7:7]   Misaligned SSE support
-  // * [8:8]   PREFETCHW: PREFETCHW instruction support
-  // * [9:9]   OSVW: OS visible workarounds (AMD)
-  // * [10:10] IBS: Instruction based sampling
-  // * [11:11] XOP: Extended Operations Support and XOP Prefix
-  // ! [12:12] SKINIT support
-  // * [13:13] WDT: Watchdog timer support
-  //   [14:14] Reserved
-  // ! [15:15] LWP: Light weight profiling
-  // * [16:16] FMA4: Four-operand FMA instructions support
-  // * [17:17] TCE: Translation Cache Extensions
-  //   [18:18] Reserved
-  // * [19:19] NodeId: Indicates support for NodeId MSR (0xc001100c)
-  //   [20:20] Reserved
-  //   [21:21] TBM: trailing bit manipulation instructions support
-  // * [22:22] Topology extensions support
-  // * [23:23] PerfCtrExtCore: core perf counter extensions support
-  // * [24:24] PerfCtrExtNB: NB perf counter extensions support
-  //   [31:25] Reserved
-  leaf->ecx = get_ext_cpuid_leaf_1_ecx(BX_CPUID_EXT1_ECX_CMP_LEGACY |
-                                       BX_CPUID_EXT1_ECX_PREFETCHW |
-                                       BX_CPUID_EXT1_ECX_OSVW |
-                                       BX_CPUID_EXT1_ECX_IBS |
-                                    /* BX_CPUID_EXT1_ECX_SKINIT | */ // not implemented
-                                       BX_CPUID_EXT1_ECX_WDT |
-                                    /* BX_CPUID_EXT1_ECX_LWP | */    // not implemented
-                                       BX_CPUID_EXT1_ECX_NODEID |
-                                       BX_CPUID_EXT1_ECX_TOPOLOGY_EXTENSIONS |
-                                       BX_CPUID_EXT1_ECX_PERFCTR_EXT_CORE |
-                                       BX_CPUID_EXT1_ECX_PERFCTR_EXT_NB);
-
-  // EDX:
-  // Many of the bits in EDX are the same as FN 0x00000001 for AMD
-  // * [0:0]   FPU on chip
-  // * [1:1]   VME: Virtual-8086 Mode enhancements
-  // * [2:2]   DE: Debug Extensions (I/O breakpoints)
-  // * [3:3]   PSE: Page Size Extensions
-  // * [4:4]   TSC: Time Stamp Counter
-  // * [5:5]   MSR: RDMSR and WRMSR support
-  // * [6:6]   PAE: Physical Address Extensions
-  // * [7:7]   MCE: Machine Check Exception
-  // * [8:8]   CXS: CMPXCHG8B instruction
-  // * [9:9]   APIC: APIC on Chip
-  //   [10:10] Reserved
-  // * [11:11] SYSCALL/SYSRET support
-  // * [12:12] MTRR: Memory Type Range Reg
-  // * [13:13] PGE/PTE Global Bit
-  // * [14:14] MCA: Machine Check Architecture
-  // * [15:15] CMOV: Cond Mov/Cmp Instructions
-  // * [16:16] PAT: Page Attribute Table
-  // * [17:17] PSE-36: Physical Address Extensions
-  //   [18:18] Reserved
-  //   [19:19] Reserved
-  // * [20:20] No-Execute page protection
-  //   [21:21] Reserved
-  // * [22:22] AMD MMX Extensions
-  // * [23:23] MMX Technology
-  // * [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
-  // * [25:25] Fast FXSAVE/FXRSTOR mode support
-  // * [26:26] 1G paging support
-  // * [27:27] Support RDTSCP Instruction
-  //   [28:28] Reserved
-  // * [29:29] Long Mode
-  //   [30:30] AMD 3DNow! Extensions
-  //   [31:31] AMD 3DNow! Instructions
-  leaf->edx = get_ext_cpuid_leaf_1_edx_amd();
-}
-
-// leaf 0x80000002 //
-// leaf 0x80000003 //
-// leaf 0x80000004 //
-
-// leaf 0x80000005 - L1 Cache and TLB Identifiers //
-// leaf 0x80000006 - L2 Cache and TLB Identifiers //
-// leaf 0x80000007 - Advanced Power Management //
 #if BX_SUPPORT_SVM
 
 // leaf 0x8000000A : SVM //
@@ -527,12 +271,6 @@ void zambezi_t::get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const
 }
 
 #endif
-
-// leaf 0x8000000B - 0x80000018: Reserved //
-// leaf 0x80000019 - 1G Page TLB Identifiers //
-// leaf 0x8000001A - Performance Optimization Identifiers
-// leaf 0x8000001B - Instruction Based Sampling Identifiers //
-// leaf 0x8000001D - Cache Properties //
 
 bx_cpuid_t *create_zambezi_cpuid(BX_CPU_C *cpu) { return new zambezi_t(cpu); }
 

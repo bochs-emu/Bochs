@@ -2098,9 +2098,11 @@ void bx_banshee_c::blt_reg_write(Bit8u reg, Bit32u value)
       BLT.cmd = (value & 0x0f);
       BLT.immed = (value >> 8) & 1;
       BLT.x_dir = (value >> 14) & 1;
-      // Y direction only applies to screen-to-screen and host-to-screen
-      // blits (not to stretch blits, fills, lines and polygons)
-      BLT.y_dir = ((BLT.cmd == 1) || (BLT.cmd == 3)) && ((value >> 15) & 1);
+      // The specs say: Y direction only applies to screen-to-screen and
+      // host-to-screen blits (not to stretch blits, fills, lines and polygons)
+      // UNDOCUMENTED: Original Banshee driver for Win95 draws stretched icons
+      // screen-to-screen with bit 15 set.
+      BLT.y_dir = ((BLT.cmd >= 1) && (BLT.cmd <= 3)) && ((value >> 15) & 1);
       BLT.transp = (value >> 16) & 1;
       BLT.patsx = (value >> 17) & 7;
       BLT.patsy = (value >> 20) & 7;
@@ -2240,7 +2242,7 @@ void bx_banshee_c::blt_launch_area_setup()
           BLT.lacnt = pbytes >> 2;
       }
       if (pxpack != 0) {
-        BLT.lacnt = (BLT.h2s_pitch * BLT.dst_h + 3) >> 2;
+        BLT.lacnt = (BLT.h2s_pitch * src_h + 3) >> 2;
       }
       BLT.lamem = new Bit8u[BLT.lacnt * 4];
       break;
@@ -3053,7 +3055,7 @@ void bx_banshee_c::blt_screen_to_screen_pattern()
   bool patrow0 = (BLT.reg[blt_commandExtra] & 0x08) > 0;
   Bit8u colorkey_en = BLT.reg[blt_commandExtra] & 3;
   Bit8u *patcolor;
-  int ncols, nrows, dx, dy, x, sx, sy, w, h;
+  int ncols, nrows, dx, dy, x, sx, sy, w, h, px, py;
   Bit8u pmask = 0, rop = 0, patline;
   bool set;
 #ifdef BANSHEE_TILED_FB
@@ -3089,12 +3091,14 @@ void bx_banshee_c::blt_screen_to_screen_pattern()
 #ifdef BANSHEE_TILED_FB
   y = 0;
 #endif
+  // the pattern is aligned to the destination pixel coordinates
+  py = dy;
   nrows = h;
   do {
     src_ptr1 = src_ptr;
     dst_ptr1 = dst_ptr;
     if (!patrow0) {
-      patline = (dy + BLT.patsy) & 7;
+      patline = (py + BLT.patsy) & 7;
       if (patmono) {
         pat_ptr1 = pat_ptr + patline;
       } else {
@@ -3104,6 +3108,7 @@ void bx_banshee_c::blt_screen_to_screen_pattern()
       pat_ptr1 = pat_ptr;
     }
     x = 0;
+    px = dx;
     ncols = w;
     do {
 #ifdef BANSHEE_TILED_FB
@@ -3121,8 +3126,8 @@ void bx_banshee_c::blt_screen_to_screen_pattern()
       }
 #endif
       if (patmono) {
-        pmask = 0x80 >> ((x + BLT.patsx) & 7);
-        set = (*pat_ptr & pmask) > 0;
+        pmask = 0x80 >> ((px + BLT.patsx) & 7);
+        set = (*pat_ptr1 & pmask) > 0;
         if (set) {
           patcolor = &BLT.fgcolor[0];
         } else {
@@ -3135,7 +3140,7 @@ void bx_banshee_c::blt_screen_to_screen_pattern()
           bx_ternary_rop(BLT.rop[rop], dst_ptr1, src_ptr1, patcolor, abs(dpxsize));
         }
       } else {
-        pat_ptr2 = pat_ptr1 + ((x + BLT.patsx) & 7) * dpxsize;
+        pat_ptr2 = pat_ptr1 + ((px + BLT.patsx) & 7) * dpxsize;
         patcolor = pat_ptr2;
         if (colorkey_en & 1) {
           rop = blt_colorkey_check(src_ptr1, abs(dpxsize), 0);
@@ -3148,9 +3153,19 @@ void bx_banshee_c::blt_screen_to_screen_pattern()
       src_ptr1 += dpxsize;
       dst_ptr1 += dpxsize;
       x++;
+      if (BLT.x_dir) {
+        px--;
+      } else {
+        px++;
+      }
     } while (--ncols);
     src_ptr += spitch;
     dst_ptr += dpitch;
+    if (BLT.y_dir) {
+      py--;
+    } else {
+      py++;
+    }
 #ifdef BANSHEE_TILED_FB
     if (BLT.y_dir) {
       y--;
@@ -3558,7 +3573,7 @@ void bx_banshee_c::blt_host_to_screen_stretch()
   Bit8u colorkey_en = BLT.reg[blt_commandExtra] & 3;
   Bit8u rop = 0;
   int nrows, stepy;
-  int dx, dy, x2, x3, y2, y3, w0, h0, w1, h1;
+  int dx, dy, x2, x3, y2, y3, w0, h0, w1, h1, soffset;
   double fx, fy;
 #ifdef BANSHEE_TILED_FB
   Bit32u doffset;
@@ -3597,10 +3612,12 @@ void bx_banshee_c::blt_host_to_screen_stretch()
     dst_ptr1 = dst_ptr;
     x2 = 0;
     for (dx = BLT.dst_x; dx < (BLT.dst_x + w1); dx++) {
-      if (blt_clip_check(dx, dy)) {
-        x3 = (int)((double)x2 / fx + 0.49f);
-        y3 = (int)((double)y2 / fy + 0.49f);
-        src_ptr1 = src_ptr + (y3 * spitch + x3 * dpxsize);
+      x3 = (int)((double)x2 / fx + 0.49f);
+      y3 = (int)((double)y2 / fy + 0.49f);
+      // source pixel must be inside the received launch area data
+      soffset = BLT.h2s_pxstart + y3 * spitch + x3 * dpxsize;
+      if (blt_clip_check(dx, dy) && (soffset >= 0) && ((soffset + dpxsize) <= (int)BLT.laidx)) {
+        src_ptr1 = src_ptr + soffset;
         if (colorkey_en & 1) {
           rop = blt_colorkey_check(src_ptr1, dpxsize, 0);
         }

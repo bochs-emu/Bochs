@@ -40,14 +40,10 @@ public:
   virtual Bit32u get_vmx_extensions_bitmask(void) const;
 #endif
 
-  virtual void get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
+  virtual unsigned get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
 
 private:
   bx_cpuid_table_t *cpuid_table;
-
-  void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
-
-  void get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const;
 };
 
 extern bx_cpuid_t *create_corei7_skylake_x_cpuid(BX_CPU_C *cpu);

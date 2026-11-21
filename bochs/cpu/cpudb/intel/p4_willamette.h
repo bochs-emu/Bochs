@@ -36,12 +36,10 @@ public:
   // return CPU name
   virtual const char *get_name(void) const { return "p4_willamette"; }
 
-  virtual void get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
+  virtual unsigned get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
 
 private:
   bx_cpuid_table_t *cpuid_table;
-
-  void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
 };
 
 extern bx_cpuid_t *create_p4_willamette_cpuid(BX_CPU_C *cpu);

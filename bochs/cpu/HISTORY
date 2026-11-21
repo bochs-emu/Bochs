@@ -33,7 +33,7 @@ Changes after Bochs 3.1:
 - CPUID: add std leaf 7 ECX/EDX calculation to CPUID models which support std leaf 7 but have nothing to report there (ECX/EDX reported=0), required for correct CET reporting after using add_features="cet"
 - CPUID: correctly report presence of subleaf=1 in CPUID Leaf 0x0000001E: AMX: TMUL Information Main leaf (when present)
 - CPUID: fixed CPUID 0x0000000B: Extended Topology leaf - core level must report total x2APIC ID shift, do not report reserved package domain type, report thread and core levels also in non-SMP build
-- CPUID: fixed CPUID 0x80000001 for Athlon XP, was missing "AuthenticAMD" vendor string
+- CPUID: minor adjustments in CPUID 0x00000001/0x80000001 and CPUID 0x80000008 for various CPU models (better matching hardware dump)
 - AMX: TILELOADD/TILESTORED must #UD if memory operand is encoded without SIB byte, use zero stride when SIB has no index register (was using RSP)
 - GATHER: VGATHER*/VSCATTER* suspended by a fault: deliver data breakpoint #DB pending from already completed elements in lieu of the fault (with RF=1) instead of dropping it
 - GATHER: VEX encoded VGATHER* must clear mask register bits above VL before gathering any element (also when suspended by a fault)
@@ -149,6 +149,7 @@ Changes after Bochs 3.1:
 - SVM: SVM VMEXIT loading host state should reset debug_trap and inhibit_mask
 - SVM: interrupt shadow lost at a #DB intercept, after STI in the guest a #DB intercept at the next boundary saved VMCB INTERRUPT_SHADOW = 0 in Bochs, 1 on real Zen 4
 + SVM: V_IRQ never taken when the guest is entered with IF = 1 (VMRUN loads the guest RFLAGS before in_svm_guest = true, so handleInterruptMaskChange() evaluated the masks as the host)
+- SVM: VMRUN must accept guest CR4.PCIDE=1 with EFER.LMA=0 (AMD), MOV to CR4 #GP only when PCIDE changes 0->1 outside of long mode
 + SVM: AMD hardware doesn't enforce TSS386 to enter long mode (Debian 12 amd64 running kvm_amd with npt=1 fails: kvm_amd leaves TR = TSS286_BUSY and its 64-bit guest triple-faults while booting)
 - SVM: an intercepted exception must save the guest's RFLAGS.RF unchanged, and an intercepted #DB must also find DR6 already updated
 - SVM: EXITINTINFO was not recorded for INTn, ICEBP, external/virtual interrupt and NMI delivery (stale value reported) and recorded 2nd exception instead of prior event on intercepted #DF

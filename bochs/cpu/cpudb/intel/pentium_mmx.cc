@@ -29,8 +29,21 @@
 
 #define LOG_THIS cpu->
 
+// CPUID dump of the real CPU (taken from pentium_mmx.txt)
+static const cpuid_function_t std_leafs[] = {
+  /* leaf 0x00000000 */ { 0x00000001, 0x756E6547, 0x6C65746E, 0x49656E69 },
+  /* leaf 0x00000001 */ { 0x00000543, 0x00000000, 0x00000000, 0x008001BF }
+};
+
 pentium_mmx_t::pentium_mmx_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
+  set_max_leaf(0x1, 0);
+
+  cpuid_table = new bx_cpuid_table_t(max_std_leaf, max_ext_leaf);
+
+  cpuid_table->register_leaf(0x00000000, 1, std_leafs + 0);
+  cpuid_table->register_leaf(0x00000001, 1, std_leafs + 1);
+
   enable_cpu_extension(BX_ISA_X87);
   enable_cpu_extension(BX_ISA_486);
   enable_cpu_extension(BX_ISA_PENTIUM);
@@ -39,74 +52,11 @@ pentium_mmx_t::pentium_mmx_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_DEBUG_EXTENSIONS);
   enable_cpu_extension(BX_ISA_VME);
   enable_cpu_extension(BX_ISA_PSE);
-
-  set_max_leaf(0x1, 0);
 }
 
-void pentium_mmx_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+unsigned pentium_mmx_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  switch(function) {
-  case 0x00000000:
-    get_leaf_0(0x1, "GenuineIntel", leaf);
-    return;
-  case 0x00000001:
-  default:
-    get_std_cpuid_leaf_1(leaf);
-    return;
-  }
-}
-
-// leaf 0x00000000 //
-
-// leaf 0x00000001 //
-void pentium_mmx_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
-{
-  // EAX:       CPU Version Information
-  //   [3:0]   Stepping ID
-  //   [7:4]   Model: starts at 1
-  //   [11:8]  Family: 4=486, 5=Pentium, 6=PPro, ...
-  //   [13:12] Type: 0=OEM, 1=overdrive, 2=dual cpu, 3=reserved
-  //   [19:16] Extended Model
-  //   [27:20] Extended Family
-  leaf->eax = 0x00000543;
-
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-
-  // EDX: Standard Feature Flags
-  // * [0:0]   FPU on chip
-  // * [1:1]   VME: Virtual-8086 Mode enhancements
-  // * [2:2]   DE: Debug Extensions (I/O breakpoints)
-  // * [3:3]   PSE: Page Size Extensions
-  // * [4:4]   TSC: Time Stamp Counter
-  // * [5:5]   MSR: RDMSR and WRMSR support
-  //   [6:6]   PAE: Physical Address Extensions
-  // * [7:7]   MCE: Machine Check Exception
-  // * [8:8]   CXS: CMPXCHG8B instruction
-  //   [9:9]   APIC: APIC on Chip
-  //   [10:10] Reserved
-  //   [11:11] SYSENTER/SYSEXIT support
-  //   [12:12] MTRR: Memory Type Range Reg
-  //   [13:13] PGE/PTE Global Bit
-  //   [14:14] MCA: Machine Check Architecture
-  //   [15:15] CMOV: Cond Mov/Cmp Instructions
-  //   [16:16] PAT: Page Attribute Table
-  //   [17:17] PSE-36: Physical Address Extensions
-  //   [18:18] PSN: Processor Serial Number
-  //   [19:19] CLFLUSH: CLFLUSH Instruction support
-  //   [20:20] Reserved
-  //   [21:21] DS: Debug Store
-  //   [22:22] ACPI: Thermal Monitor and Software Controlled Clock Facilities
-  // * [23:23] MMX Technology
-  //   [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
-  //   [25:25] SSE: SSE Extensions
-  //   [26:26] SSE2: SSE2 Extensions
-  //   [27:27] Self Snoop
-  //   [28:28] Hyper Threading Technology
-  //   [29:29] TM: Thermal Monitor
-  //   [30:30] Reserved
-  //   [31:31] PBE: Pending Break Enable
-  leaf->edx = get_std_cpuid_leaf_1_edx();
+  return cpuid_table->get_leaf(function, subfunction, leaf);
 }
 
 bx_cpuid_t *create_pentium_mmx_cpuid(BX_CPU_C *cpu) { return new pentium_mmx_t(cpu); }

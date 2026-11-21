@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2024 Stanislav Shwartsman
+//   Copyright (c) 2024-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -31,15 +31,15 @@
 class i486dx4_t : public bx_cpuid_t {
 public:
   i486dx4_t(BX_CPU_C *cpu);
-  virtual ~i486dx4_t() {}
+  virtual ~i486dx4_t() { delete cpuid_table; }
 
   // return CPU name
   virtual const char *get_name(void) const { return "i486dx4"; }
 
-  virtual void get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
+  virtual unsigned get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
 
 private:
-  void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
+  bx_cpuid_table_t *cpuid_table;
 };
 
 extern bx_cpuid_t *create_i486dx4_cpuid(BX_CPU_C *cpu);

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2024 Stanislav Shwartsman
+//   Copyright (c) 2024-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -39,12 +39,7 @@ public:
   // return CPU name
   virtual const char *get_name(void) const { return "i386"; }
 
-  virtual void get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const { assert(0); }
-
-  virtual void dump_cpuid(void) const {}
-
-private:
-  void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
+  virtual unsigned get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const { assert(0); return 0; }
 };
 
 bx_cpuid_t *create_i386_cpuid(BX_CPU_C *cpu) { return new i386_t(cpu); }

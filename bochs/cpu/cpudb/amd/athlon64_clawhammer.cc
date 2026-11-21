@@ -66,6 +66,8 @@ static const cpuid_function_t ext_leafs[] = {
 athlon64_clawhammer_t::athlon64_clawhammer_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
   set_max_leaf(0x1, 0x80000018);
+  set_vendor(AuthenticAMD);
+  set_magic_string("IT'S HAMMER TIME");
 
   cpuid_table = new bx_cpuid_table_t(max_std_leaf, max_ext_leaf);
 
@@ -123,186 +125,12 @@ athlon64_clawhammer_t::athlon64_clawhammer_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_PAT);
   enable_cpu_extension(BX_ISA_XAPIC);
   enable_cpu_extension(BX_ISA_LONG_MODE);
-  enable_cpu_extension(BX_ISA_LM_LAHF_SAHF);
   enable_cpu_extension(BX_ISA_NX);
 }
 
-void athlon64_clawhammer_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+unsigned athlon64_clawhammer_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  static const char* magic_string = "IT'S HAMMER TIME";
-
-  switch(function) {
-  case 0x8FFFFFFF:
-    get_cpuid_hidden_level(leaf, magic_string);
-    return;
-  case 0x80000000:
-    get_ext_cpuid_leaf_0(leaf);
-    return;
-  case 0x80000001:
-    get_ext_cpuid_leaf_1(leaf);
-    return;
-  case 0x80000002:
-  case 0x80000003:
-  case 0x80000004:
-  case 0x80000005: // CPUID leaf 0x80000005 - L1 Cache and TLB Identifiers
-  case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
-  case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management
-    cpuid_table->get_ext_leaf(function, subfunction, leaf);
-    return;
-  case 0x80000008:
-    get_ext_cpuid_leaf_8(leaf);
-    return;
-  case 0x00000000:
-    get_std_cpuid_leaf_0(leaf);
-    return;
-  case 0x00000001:
-    get_std_cpuid_leaf_1(leaf);
-    return;
-  default:
-    get_reserved_leaf(leaf);
-    return;
-  }
-}
-
-// leaf 0x00000000 //
-void athlon64_clawhammer_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  get_leaf_0(0x1, "AuthenticAMD", leaf);
-}
-
-// leaf 0x00000001 //
-void athlon64_clawhammer_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
-{
-  // EAX:       CPU Version Information
-  //   [3:0]   Stepping ID
-  //   [7:4]   Model: starts at 1
-  //   [11:8]  Family: 4=486, 5=Pentium, 6=PPro, ...
-  //   [13:12] Type: 0=OEM, 1=overdrive, 2=dual cpu, 3=reserved
-  //   [19:16] Extended Model
-  //   [27:20] Extended Family
-  leaf->eax = 0x00000F48;
-
-  // EBX:
-  //   [7:0]   Brand ID
-  //   [15:8]  CLFLUSH cache line size (value*8 = cache line size in bytes)
-  //   [23:16] Number of logical processors in one physical processor
-  //   [31:24] Local Apic ID
-
-  leaf->ebx = ((CACHE_LINE_SIZE / 8) << 8);
-#if BX_SUPPORT_APIC
-  leaf->ebx |= ((cpu->get_apic_id() & 0xff) << 24);
-#endif
-
-  // ECX: Extended Feature Flags
-  leaf->ecx = 0;
-
-  // EDX: Standard Feature Flags
-  // * [0:0]   FPU on chip
-  // * [1:1]   VME: Virtual-8086 Mode enhancements
-  // * [2:2]   DE: Debug Extensions (I/O breakpoints)
-  // * [3:3]   PSE: Page Size Extensions
-  // * [4:4]   TSC: Time Stamp Counter
-  // * [5:5]   MSR: RDMSR and WRMSR support
-  // * [6:6]   PAE: Physical Address Extensions
-  // * [7:7]   MCE: Machine Check Exception
-  // * [8:8]   CXS: CMPXCHG8B instruction
-  // * [9:9]   APIC: APIC on Chip
-  //   [10:10] Reserved
-  // * [11:11] SYSENTER/SYSEXIT support
-  // * [12:12] MTRR: Memory Type Range Reg
-  // * [13:13] PGE/PTE Global Bit
-  // * [14:14] MCA: Machine Check Architecture
-  // * [15:15] CMOV: Cond Mov/Cmp Instructions
-  // * [16:16] PAT: Page Attribute Table
-  // * [17:17] PSE-36: Physical Address Extensions
-  //   [18:18] PSN: Processor Serial Number
-  // * [19:19] CLFLUSH: CLFLUSH Instruction support
-  //   [20:20] Reserved
-  //   [21:21] DS: Debug Store
-  //   [22:22] ACPI: Thermal Monitor and Software Controlled Clock Facilities
-  // * [23:23] MMX Technology
-  // * [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
-  // * [25:25] SSE: SSE Extensions
-  // * [26:26] SSE2: SSE2 Extensions
-  //   [27:27] Self Snoop
-  //   [28:28] Hyper Threading Technology
-  //   [29:29] TM: Thermal Monitor
-  //   [30:30] Reserved
-  //   [31:31] PBE: Pending Break Enable
-  leaf->edx = get_std_cpuid_leaf_1_edx();
-}
-
-// leaf 0x80000000 //
-void athlon64_clawhammer_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  get_leaf_0(0x80000018, "AuthenticAMD", leaf);
-}
-
-// leaf 0x80000001 //
-void athlon64_clawhammer_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
-{
-  // EAX:       CPU Version Information (same as 0x00000001.EAX)
-  leaf->eax = 0x00000F48;
-
-  // EBX:       Brand ID
-  leaf->ebx = 0x00000106;
-
-  leaf->ecx = 0;
-
-  // EDX:
-  // Many of the bits in EDX are the same as FN 0x00000001 for AMD
-  // * [0:0]   FPU on chip
-  // * [1:1]   VME: Virtual-8086 Mode enhancements
-  // * [2:2]   DE: Debug Extensions (I/O breakpoints)
-  // * [3:3]   PSE: Page Size Extensions
-  // * [4:4]   TSC: Time Stamp Counter
-  // * [5:5]   MSR: RDMSR and WRMSR support
-  // * [6:6]   PAE: Physical Address Extensions
-  // * [7:7]   MCE: Machine Check Exception
-  // * [8:8]   CXS: CMPXCHG8B instruction
-  // * [9:9]   APIC: APIC on Chip
-  //   [10:10] Reserved
-  // * [11:11] SYSCALL/SYSRET support
-  // * [12:12] MTRR: Memory Type Range Reg
-  // * [13:13] PGE/PTE Global Bit
-  // * [14:14] MCA: Machine Check Architecture
-  // * [15:15] CMOV: Cond Mov/Cmp Instructions
-  // * [16:16] PAT: Page Attribute Table
-  // * [17:17] PSE-36: Physical Address Extensions
-  //   [18:18] Reserved
-  //   [19:19] Reserved
-  // * [20:20] No-Execute page protection
-  //   [21:21] Reserved
-  // * [22:22] MMXExt: AMD Extensions to MMX Technology
-  // * [23:23] MMX Technology
-  // * [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
-  //   [25:25] FFXSR: Fast FXSAVE/FXRSTOR
-  //   [26:26] 1G paging support
-  //   [27:27] Support RDTSCP Instruction
-  //   [28:28] Reserved
-  // * [29:29] Long Mode
-  // * [30:30] AMD 3DNow! Extensions
-  // * [31:31] AMD 3DNow! Instructions
-  leaf->edx = get_ext_cpuid_leaf_1_edx_amd();
-}
-
-// leaf 0x80000002 //
-// leaf 0x80000003 //
-// leaf 0x80000004 //
-
-// leaf 0x80000005 - L1 Cache and TLB Identifiers //
-// leaf 0x80000006 - L2 Cache and TLB Identifiers //
-// leaf 0x80000007 - Advanced Power Management //
-// leaf 0x80000008 //
-
-// leaf 0x80000009             : Reserved //
-// leaf 0x8000000A             : SVM      //
-// leaf 0x8000000B - 0x80000018: Reserved //
-
-void athlon64_clawhammer_t::dump_cpuid(void) const
-{
-  bx_cpuid_t::dump_cpuid(0x1, 0x80000018);
-  dump_cpuid_leaf(0x8fffffff);
+  return cpuid_table->get_leaf(function, subfunction, leaf);
 }
 
 bx_cpuid_t *create_athlon64_clawhammer_cpuid(BX_CPU_C *cpu) { return new athlon64_clawhammer_t(cpu); }

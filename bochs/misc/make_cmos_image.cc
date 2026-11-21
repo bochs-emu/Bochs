@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -77,7 +77,7 @@ main(int argc, char *argv[])
     exit(1);
   }
 
-  fd = open(argv[1], O_WRONLY | O_CREAT
+  fd = open(argv[1], O_WRONLY | O_CREAT | O_TRUNC
 #ifdef O_BINARY
                               | O_BINARY
 #endif
