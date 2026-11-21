@@ -289,6 +289,7 @@ DefinitionBlock (
                 }
             }
 
+#ifdef BX_APPLESMC
 	    /* Apple SMC (System Management Controller), needed for macOS guests.
 	       AML shape matches QEMU's isa-applesmc device (hw/misc/applesmc.c)
 	       so existing macOS AppleSMC.kext ACPI matching keeps working. */
@@ -302,6 +303,7 @@ DefinitionBlock (
 	            IRQNoFlags () {6}
 	        })
 	    }
+#endif
 
 	    /* PS/2 floppy controller */
 	    Device (FDC0)
