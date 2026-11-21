@@ -177,9 +177,12 @@ void athlon64_clawhammer_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [23:16] Number of logical processors in one physical processor
   //   [31:24] Local Apic ID
 
-  leaf->ebx = ((CACHE_LINE_SIZE / 8) << 8);
+  leaf->ebx = 0;
+  if (is_cpu_extension_supported(BX_ISA_CLFLUSH))
+    leaf->ebx |= ((CACHE_LINE_SIZE / 8) << 8);
 #if BX_SUPPORT_APIC
-  leaf->ebx |= ((cpu->get_apic_id() & 0xff) << 24);
+  if (is_cpu_extension_supported(BX_ISA_XAPIC))
+    leaf->ebx |= ((cpu->get_apic_id() & 0xff) << 24);
 #endif
 
   // ECX: Extended Feature Flags

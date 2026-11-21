@@ -173,10 +173,12 @@ void core_duo_t2400_yonah_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [31:24] Local Apic ID
 
   unsigned n_logical_processors = ncores*nthreads;
-  leaf->ebx = ((CACHE_LINE_SIZE / 8) << 8) |
-              (n_logical_processors << 16);
+  leaf->ebx = (n_logical_processors << 16);
+  if (is_cpu_extension_supported(BX_ISA_CLFLUSH))
+    leaf->ebx |= ((CACHE_LINE_SIZE / 8) << 8);
 #if BX_SUPPORT_APIC
-  leaf->ebx |= ((cpu->get_apic_id() & 0xff) << 24);
+  if (is_cpu_extension_supported(BX_ISA_XAPIC))
+    leaf->ebx |= ((cpu->get_apic_id() & 0xff) << 24);
 #endif
 
   // ECX: Extended Feature Flags
@@ -256,6 +258,7 @@ void core_duo_t2400_yonah_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 #if BX_SUPPORT_SMP
                                        BX_CPUID_STD1_EDX_HT |
 #endif
+                                       BX_CPUID_STD1_EDX_THERMAL_MONITOR |
                                        BX_CPUID_STD1_EDX_PBE);
 }
 

@@ -131,6 +131,10 @@ void athlon_xp_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   leaf->eax = 0x00000680;
 
   leaf->ebx = 0;
+#if BX_SUPPORT_APIC
+  if (is_cpu_extension_supported(BX_ISA_XAPIC))
+    leaf->ebx |= ((cpu->get_apic_id() & 0xff) << 24);
+#endif
   leaf->ecx = 0;
 
   // EDX: Standard Feature Flags

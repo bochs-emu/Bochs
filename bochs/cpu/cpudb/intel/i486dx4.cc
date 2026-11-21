@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2024 Stanislav Shwartsman
+//   Copyright (c) 2024-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -30,24 +30,30 @@
 #define LOG_THIS cpu->
 
 // used https://www.ardent-tool.com/CPU/Docs_Intel.html#CPUID as source
-
-// CPUID 00000000: 00000001-756E6547-6C65746E-49656E69
-// CPUID 00000001: 00000480-00000000-00000000-00000003
+static const cpuid_function_t std_leafs[] = {
+  /* leaf 0x00000000 */ { 0x00000001, 0x756E6547, 0x6C65746E, 0x49656E69 },
+  /* leaf 0x00000001 */ { 0x00000480, 0x00000000, 0x00000000, 0x00000003 }
+};
 
 i486dx4_t::i486dx4_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
+  set_max_leaf(0x1, 0);
+
+  cpuid_table = new bx_cpuid_table_t(max_std_leaf, max_ext_leaf);
+
+  cpuid_table->register_leaf(0x00000000, 1, std_leafs + 0);
+  cpuid_table->register_leaf(0x00000001, 1, std_leafs + 1);
+
   enable_cpu_extension(BX_ISA_X87);
   enable_cpu_extension(BX_ISA_486);
   enable_cpu_extension(BX_ISA_VME);
-
-  set_max_leaf(0x1, 0);
 }
 
 void i486dx4_t::get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
   switch(function) {
   case 0x00000000:
-    get_leaf_0(0x1, "GenuineIntel", leaf);
+    cpuid_table->get_std_leaf(function, subfunction, leaf);
     return;
   case 0x00000001:
   default:

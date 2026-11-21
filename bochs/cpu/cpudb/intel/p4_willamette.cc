@@ -128,10 +128,13 @@ void p4_willamette_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [31:24] Local Apic ID
 
   unsigned n_logical_processors = ncores*nthreads;
-  leaf->ebx = ((CACHE_LINE_SIZE / 8) << 8) |
+  leaf->ebx = 0x08 /* Brand ID */ |
               (n_logical_processors << 16);
+  if (is_cpu_extension_supported(BX_ISA_CLFLUSH))
+    leaf->ebx |= ((CACHE_LINE_SIZE / 8) << 8);
 #if BX_SUPPORT_APIC
-  leaf->ebx |= ((cpu->get_apic_id() & 0xff) << 24);
+  if (is_cpu_extension_supported(BX_ISA_XAPIC))
+    leaf->ebx |= ((cpu->get_apic_id() & 0xff) << 24);
 #endif
 
   // ECX: Extended Feature Flags
@@ -172,7 +175,8 @@ void p4_willamette_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [31:31] PBE: Pending Break Enable
   leaf->edx = get_std_cpuid_leaf_1_edx(BX_CPUID_STD1_EDX_DEBUG_STORE |
                                        BX_CPUID_STD1_EDX_ACPI |
-                                       BX_CPUID_STD1_EDX_SELF_SNOOP);
+                                       BX_CPUID_STD1_EDX_SELF_SNOOP |
+                                       BX_CPUID_STD1_EDX_THERMAL_MONITOR);
 #if BX_SUPPORT_SMP
   leaf->edx |= BX_CPUID_STD1_EDX_HT;
 #endif
