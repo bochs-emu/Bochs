@@ -1,6 +1,6 @@
 Changes after Bochs 3.1 release:
 
-(up to date with commits done till 19 Nov 2026)
+(up to date with commits done till 21 Nov 2026)
 
 - CPU emulation and instrumentation
   ! CPUDB: Added AMD Zen3 (Vermeer) CPUID model (features X2APIC, CLWB, UMIP, PKU, CET, VAES, RDPID + introduces CPUID 0x80000021: AMD Extended Feature Identification 2)
@@ -111,7 +111,9 @@ Changes after Bochs 3.1 release:
     - Fixed crash when the screen is redrawn (e.g. by the debugger) before a display mode is set (#666)
   - Banshee
     - Fixed clip window for bottom-to-top 2D BLTs
-    - Y direction bit is applied only to screen-to-screen and host-to-screen BLTs (was applied also to stretch BLTs, fills, lines and polygons)
+    - Y direction bit is applied only to screen-to-screen and host-to-screen BLTs (not to fills, lines and polygons)
+    - Screen-to-screen BLT with pattern ROP uses the right pattern row for each line, aligned to the destination
+    - Fixed host heap over-read in host-to-screen stretch BLT and emulator hang on zero sized stretch BLT
   - Cirrus
     - Fixed guest-to-host stack buffer overflow in color expand video-to-video BitBLT
     - Reject BitBLT operations crossing the video memory boundaries
@@ -140,6 +142,7 @@ Changes after Bochs 3.1 release:
       - #1001: Fix projective texture lookup for cubemaps and implement LIF pixel shader operation (bump mapping and marble demos with NV40)
       - #1005: Implement LIT and TIMESWTEX pixel shader operations (shading in marble and bump mapping demos with NV35)
       - #1012: Add Direct3D stencil operation values (stencil buffer demos with NV40)
+      - #1017: Implement register combiners bias and scale (shadows in shadow mapping demo with NV20 and NV35)
   - Hard drive / HD image
     - VVFAT: Fixed LongName handling in vvfat disks
     - VVFAT: Adding path prefix "fat32:" forces using FAT32 file system
@@ -167,6 +170,8 @@ Changes after Bochs 3.1 release:
     - Fixed parameters decoding of the RESTORE command
     - Reject read/write/verify of sector number 0
     - Do not continue DMA transfer after the command finished
+    - Fixed sector transfer timing (was no delay at all for media with 18 or more sectors per track)
+    - Controller reset delay increased to 50 us (Linux failed to detect the floppy controller with too short delay)
   - PCI and chipset
     - Fixed guest-to-host heap corruption on PCI configuration space accesses crossing the 0xCFC-0xCFF window
     - i440FX: fixed write-1-to-clear handling of the PCI status register
