@@ -4469,66 +4469,78 @@ float rc_get_var(Bit32u cw, Bit32u shift, float regs[16][4], Bit32u civ)
 
 void bx_geforce_c::d3d_register_combiners(gf_channel* ch, float regs[16][4], float out[4])
 {
-  for (Bit32u s = 0; s < ch->d3d_combiner_control_num_stages; s++) {
-    Bit32u icws[2] = {
-      ch->d3d_combiner_color_icw[s],
-      ch->d3d_combiner_alpha_icw[s]
-    };
-    if (icws[0] == 0 && icws[1] == 0)
+  for (Bit32u si = 0; si < ch->d3d_combiner_control_num_stages; si++) {
+    gf_combiner_stage* s = &ch->d3d_combiner_stages[si];
+    if (s->icw[0] == 0 && s->icw[1] == 0)
       continue;
     for (Bit32u ci = 0; ci < 4; ci++) {
-      regs[1][ci] = ch->d3d_combiner_const_color[s][0][ci];
-      regs[2][ci] = ch->d3d_combiner_const_color[s][1][ci];
+      regs[1][ci] = s->const_color[0][ci];
+      regs[2][ci] = s->const_color[1][ci];
     }
     float vars[4][4];
     for (Bit32u civ = 0; civ < 4; civ++) {
-      Bit32u icw = icws[(Bit32u)(civ == 3)];
+      Bit32u icw = s->icw[(Bit32u)(civ == 3)];
       vars[0][civ] = rc_get_var(icw, 24, regs, civ);
       vars[1][civ] = rc_get_var(icw, 16, regs, civ);
       vars[2][civ] = rc_get_var(icw, 8, regs, civ);
       vars[3][civ] = rc_get_var(icw, 0, regs, civ);
     }
-    Bit32u color_ocw = ch->d3d_combiner_color_ocw[s];
+    static const float biases[] = { 0.0f, -0.5f };
+    static const float scales[] = { 1.0f, 2.0f, 4.0f, 0.5f };
+    Bit32u color_ocw = s->color_ocw;
     Bit32u color_cd = color_ocw & 0xf;
     Bit32u color_ab = (color_ocw >> 4) & 0xf;
     Bit32u color_muxsum = (color_ocw >> 8) & 0xf;
     bool color_cd_dot = (color_ocw & 0x00001000) != 0;
     bool color_ab_dot = (color_ocw & 0x00002000) != 0;
+    Bit32u color_bias_index = (color_ocw >> 15) & 1;
+    Bit32u color_scale_index = (color_ocw >> 16) & 3;
+    float color_bias = biases[color_bias_index];
+    float color_scale = scales[color_scale_index];
     if (color_ab != 0) {
       if (color_ab_dot) {
-        float ab_dot = vars[0][0] * vars[1][0] +
-          vars[0][1] * vars[1][1] + vars[0][2] * vars[1][2];
+        float ab_dot = (vars[0][0] * vars[1][0] +
+          vars[0][1] * vars[1][1] + vars[0][2] * vars[1][2] + color_bias) * color_scale;
         for (Bit32u ci = 0; ci < 3; ci++)
           regs[color_ab][ci] = ab_dot;
       } else {
         for (Bit32u ci = 0; ci < 3; ci++)
-          regs[color_ab][ci] = vars[0][ci] * vars[1][ci];
+          regs[color_ab][ci] = (vars[0][ci] * vars[1][ci] + color_bias) * color_scale;
       }
     }
     if (color_cd != 0) {
       if (color_cd_dot) {
-        float cd_dot = vars[2][0] * vars[3][0] +
-          vars[2][1] * vars[3][1] + vars[2][2] * vars[3][2];
+        float cd_dot = (vars[2][0] * vars[3][0] +
+          vars[2][1] * vars[3][1] + vars[2][2] * vars[3][2] + color_bias) * color_scale;
         for (Bit32u ci = 0; ci < 3; ci++)
           regs[color_cd][ci] = cd_dot;
       } else {
         for (Bit32u ci = 0; ci < 3; ci++)
-          regs[color_cd][ci] = vars[2][ci] * vars[3][ci];
+          regs[color_cd][ci] = (vars[2][ci] * vars[3][ci] + color_bias) * color_scale;
       }
     }
-    if (color_muxsum != 0)
-      for (Bit32u ci = 0; ci < 3; ci++)
-        regs[color_muxsum][ci] = vars[0][ci] * vars[1][ci] + vars[2][ci] * vars[3][ci];
-    Bit32u alpha_ocw = ch->d3d_combiner_alpha_ocw[s];
+    if (color_muxsum != 0) {
+      for (Bit32u ci = 0; ci < 3; ci++) {
+        regs[color_muxsum][ci] = (vars[0][ci] * vars[1][ci] +
+          vars[2][ci] * vars[3][ci] + color_bias) * color_scale;
+      }
+    }
+    Bit32u alpha_ocw = s->alpha_ocw;
     Bit32u alpha_cd = alpha_ocw & 0xf;
     Bit32u alpha_ab = (alpha_ocw >> 4) & 0xf;
     Bit32u alpha_muxsum = (alpha_ocw >> 8) & 0xf;
+    Bit32u alpha_bias_index = (alpha_ocw >> 15) & 1;
+    Bit32u alpha_scale_index = (alpha_ocw >> 16) & 3;
+    float alpha_bias = biases[alpha_bias_index];
+    float alpha_scale = scales[alpha_scale_index];
     if (alpha_ab != 0)
-      regs[alpha_ab][3] = vars[0][3] * vars[1][3];
+      regs[alpha_ab][3] = (vars[0][3] * vars[1][3] + alpha_bias) * alpha_scale;
     if (alpha_cd != 0)
-      regs[alpha_cd][3] = vars[2][3] * vars[3][3];
-    if (alpha_muxsum != 0)
-      regs[alpha_muxsum][3] = vars[0][3] * vars[1][3] + vars[2][3] * vars[3][3];
+      regs[alpha_cd][3] = (vars[2][3] * vars[3][3] + alpha_bias) * alpha_scale;
+    if (alpha_muxsum != 0) {
+      regs[alpha_muxsum][3] = (vars[0][3] * vars[1][3] +
+        vars[2][3] * vars[3][3] + alpha_bias) * alpha_scale;
+    }
   }
   float vars[6][3];
   for (Bit32u civ = 0; civ < 3; civ++) {
@@ -7085,8 +7097,8 @@ void bx_geforce_c::d3d_mh_surface_pitch_zeta(gf_channel* ch, Bit32u cls, Bit32u 
 
 void bx_geforce_c::d3d_mh_combiner_alpha_icw(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
 {
-  Bit32u i = method - 0x098;
-  ch->d3d_combiner_alpha_icw[i] = param;
+  Bit32u s = method - 0x098;
+  ch->d3d_combiner_stages[s].icw[1] = param;
 }
 
 void bx_geforce_c::d3d_mh_combiner_final(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
@@ -7455,19 +7467,19 @@ void bx_geforce_c::d3d_mh_0497_240(gf_channel* ch, Bit32u cls, Bit32u method, Bi
   Bit32u stage = (method >> 3) & 7;
   Bit32u rc_method = method & 7;
   if (rc_method == 0)
-    ch->d3d_combiner_alpha_icw[stage] = param;
+    ch->d3d_combiner_stages[stage].icw[1] = param;
   else if (rc_method == 1)
-    ch->d3d_combiner_color_icw[stage] = param;
+    ch->d3d_combiner_stages[stage].icw[0] = param;
   else if (rc_method == 2 || rc_method == 3) {
     Bit32u i = rc_method - 2;
-    ch->d3d_combiner_const_color[stage][i][0] = ((param >> 16) & 0xff) / 255.0f;
-    ch->d3d_combiner_const_color[stage][i][1] = ((param >> 8) & 0xff) / 255.0f;
-    ch->d3d_combiner_const_color[stage][i][2] = ((param >> 0) & 0xff) / 255.0f;
-    ch->d3d_combiner_const_color[stage][i][3] = ((param >> 24) & 0xff) / 255.0f;
+    ch->d3d_combiner_stages[stage].const_color[i][0] = ((param >> 16) & 0xff) / 255.0f;
+    ch->d3d_combiner_stages[stage].const_color[i][1] = ((param >> 8) & 0xff) / 255.0f;
+    ch->d3d_combiner_stages[stage].const_color[i][2] = ((param >> 0) & 0xff) / 255.0f;
+    ch->d3d_combiner_stages[stage].const_color[i][3] = ((param >> 24) & 0xff) / 255.0f;
   } else if (rc_method == 4)
-    ch->d3d_combiner_alpha_ocw[stage] = param;
+    ch->d3d_combiner_stages[stage].alpha_ocw = param;
   else if (rc_method == 5)
-    ch->d3d_combiner_color_ocw[stage] = param;
+    ch->d3d_combiner_stages[stage].color_ocw = param;
 }
 
 void bx_geforce_c::d3d_mh_viewport_x_width(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
@@ -7524,10 +7536,10 @@ void bx_geforce_c::d3d_mh_0096_09c(gf_channel* ch, Bit32u cls, Bit32u method, Bi
 {
   Bit32u i = method & 1;
   for (Bit32u s = 0; s < 2; s++) {
-    ch->d3d_combiner_const_color[s][i][0] = ((param >> 16) & 0xff) / 255.0f;
-    ch->d3d_combiner_const_color[s][i][1] = ((param >> 8) & 0xff) / 255.0f;
-    ch->d3d_combiner_const_color[s][i][2] = ((param >> 0) & 0xff) / 255.0f;
-    ch->d3d_combiner_const_color[s][i][3] = ((param >> 24) & 0xff) / 255.0f;
+    ch->d3d_combiner_stages[s].const_color[i][0] = ((param >> 16) & 0xff) / 255.0f;
+    ch->d3d_combiner_stages[s].const_color[i][1] = ((param >> 8) & 0xff) / 255.0f;
+    ch->d3d_combiner_stages[s].const_color[i][2] = ((param >> 0) & 0xff) / 255.0f;
+    ch->d3d_combiner_stages[s].const_color[i][3] = ((param >> 24) & 0xff) / 255.0f;
   }
 }
 
@@ -7536,22 +7548,22 @@ void bx_geforce_c::d3d_mh_0097_298(gf_channel* ch, Bit32u cls, Bit32u method, Bi
   Bit32u method_offset = method - 0x298;
   Bit32u s = method_offset & 7;
   Bit32u i = method_offset >> 3;
-  ch->d3d_combiner_const_color[s][i][0] = ((param >> 16) & 0xff) / 255.0f;
-  ch->d3d_combiner_const_color[s][i][1] = ((param >> 8) & 0xff) / 255.0f;
-  ch->d3d_combiner_const_color[s][i][2] = ((param >> 0) & 0xff) / 255.0f;
-  ch->d3d_combiner_const_color[s][i][3] = ((param >> 24) & 0xff) / 255.0f;
+  ch->d3d_combiner_stages[s].const_color[i][0] = ((param >> 16) & 0xff) / 255.0f;
+  ch->d3d_combiner_stages[s].const_color[i][1] = ((param >> 8) & 0xff) / 255.0f;
+  ch->d3d_combiner_stages[s].const_color[i][2] = ((param >> 0) & 0xff) / 255.0f;
+  ch->d3d_combiner_stages[s].const_color[i][3] = ((param >> 24) & 0xff) / 255.0f;
 }
 
 void bx_geforce_c::d3d_mh_combiner_alpha_ocw(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
 {
-  Bit32u i = method - (cls == 0x0096 ? 0x09e : 0x2a8);
-  ch->d3d_combiner_alpha_ocw[i] = param;
+  Bit32u s = method - (cls == 0x0096 ? 0x09e : 0x2a8);
+  ch->d3d_combiner_stages[s].alpha_ocw = param;
 }
 
 void bx_geforce_c::d3d_mh_combiner_color_icw(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
 {
-  Bit32u i = method - (cls == 0x0096 ? 0x09a : 0x2b0);
-  ch->d3d_combiner_color_icw[i] = param;
+  Bit32u s = method - (cls == 0x0096 ? 0x09a : 0x2b0);
+  ch->d3d_combiner_stages[s].icw[0] = param;
 }
 
 void bx_geforce_c::d3d_mh_texture_key_color(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
@@ -8109,8 +8121,8 @@ void bx_geforce_c::d3d_mh_clear_surface(gf_channel* ch, Bit32u cls, Bit32u metho
 
 void bx_geforce_c::d3d_mh_combiner_color_ocw(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
 {
-  Bit32u i = method - (cls == 0x0096 ? 0x0a0 : 0x790);
-  ch->d3d_combiner_color_ocw[i] = param;
+  Bit32u s = method - (cls == 0x0096 ? 0x0a0 : 0x790);
+  ch->d3d_combiner_stages[s].color_ocw = param;
 }
 
 void bx_geforce_c::d3d_mh_combiner_control(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
