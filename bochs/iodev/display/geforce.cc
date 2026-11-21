@@ -5900,6 +5900,7 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
         if (!ps_enable) {
           float uv[4][2] = { { 0.0f } };
           for (Bit32u t = 0; t < ch->d3d_tex_coord_count; t++) {
+            float coords[4][3];
             Bit32u tex_shader_op = ch->d3d_tex_shader_op[t];
             switch (tex_shader_op) {
               case 0x00:   // NONE
@@ -5908,17 +5909,28 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
               case 0x02:   // PROJECT3D
               case 0x03: { // CUBEMAP
                 gf_texture* tex = &ch->d3d_texture[t];
+                for (Bit32u fi = 0; fi < 4; fi++) {
+                  float* in_coords = ps_in[fi][4 + t];
+                  coords[fi][0] = in_coords[0];
+                  coords[fi][1] = in_coords[1];
+                  coords[fi][2] = in_coords[2];
+                  if (!tex->cubemap) {
+                    float winv = 1.0f / in_coords[3];
+                    coords[fi][0] *= winv;
+                    coords[fi][1] *= winv;
+                    coords[fi][2] *= winv;
+                  }
+                }
                 float ddx[3];
                 float ddy[3];
-                compute_partials(ps_in[0][4 + t], ps_in[1][4 + t], ps_in[2][4 + t], ddx, ddy);
-                float lod = compute_lod(tex, ps_in[0][4 + t], ddx, ddy);
+                compute_partials(coords[0], coords[1], coords[2], ddx, ddy);
+                float lod = compute_lod(tex, coords[0], ddx, ddy);
                 for (Bit32u fi = 0; fi < 4; fi++)
-                  d3d_sample_texture(ch, tex, ps_in[fi][4 + t], lod, rc_regs[fi][8 + t]);
+                  d3d_sample_texture(ch, tex, coords[fi], lod, rc_regs[fi][8 + t]);
                 break;
               }
               case 0x06:   // BUMPENVMAP
               case 0x07: { // BUMPENVMAP_LUM
-                float coords[4][3];
                 gf_texture* tex = &ch->d3d_texture[t];
                 for (Bit32u fi = 0; fi < 4; fi++) {
                   float* in_coords = ps_in[fi][4 + t];
@@ -5949,21 +5961,20 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
                 break;
               }
               case 0x0c: { // DOT_RFLCT_SPEC
-                float rv[4][3];
                 for (Bit32u fi = 0; fi < 4; fi++) {
                   float* input_tex = rc_regs[fi][8 + ch->d3d_tex_shader_previous[t]];
                   float w = dot3(ps_in[fi][4 + t], input_tex, ch->d3d_tex_shader_dotmapping[t]);
                   float n[3] = { uv[fi][0], uv[fi][1], w };
                   float e[3] = { ps_in[fi][4 + 1][3], ps_in[fi][4 + 2][3], ps_in[fi][4 + 3][3] };
-                  reflection(n, e, rv[fi]);
+                  reflection(n, e, coords[fi]);
                 }
                 gf_texture* tex = &ch->d3d_texture[t];
                 float ddx[3];
                 float ddy[3];
-                compute_partials(rv[0], rv[1], rv[2], ddx, ddy);
-                float lod = compute_lod(tex, rv[0], ddx, ddy);
+                compute_partials(coords[0], coords[1], coords[2], ddx, ddy);
+                float lod = compute_lod(tex, coords[0], ddx, ddy);
                 for (Bit32u fi = 0; fi < 4; fi++)
-                  d3d_sample_texture(ch, tex, rv[fi], lod, rc_regs[fi][8 + t]);
+                  d3d_sample_texture(ch, tex, coords[fi], lod, rc_regs[fi][8 + t]);
                 break;
               }
               case 0x09:   // DOT_ST
@@ -5973,7 +5984,6 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
                   uv[fi][t == 1 ? 0 : 1] = dot3(ps_in[fi][4 + t], input_tex, ch->d3d_tex_shader_dotmapping[t]);
                 }
                 if (tex_shader_op == 0x09) { // DOT_ST
-                  float coords[4][3];
                   for (Bit32u fi = 0; fi < 4; fi++) {
                     coords[fi][0] = uv[fi][0];
                     coords[fi][1] = uv[fi][1];
