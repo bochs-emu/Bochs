@@ -38,13 +38,8 @@ public:
 
   virtual void get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
 
-  virtual void dump_cpuid(void) const;
-
 private:
   bx_cpuid_table_t *cpuid_table;
-
-  void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
-
 };
 
 extern bx_cpuid_t *create_athlon64_venice_cpuid(BX_CPU_C *cpu);

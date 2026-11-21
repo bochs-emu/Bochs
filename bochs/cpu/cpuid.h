@@ -55,6 +55,14 @@ public:
   void get_std_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
   void get_ext_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
 
+  // std or ext leaf according to the function, leafs out of range return the highest std leaf
+  void get_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const {
+    if (function >= 0x80000000)
+      get_ext_leaf(function, subfunction, leaf);
+    else
+      get_std_leaf(function, subfunction, leaf);
+  }
+
 private:
   Bit32u max_std_leaf;
   Bit32u max_ext_leaf;
@@ -92,6 +100,8 @@ public:
 
   void init();
 
+  cpu_vendor_t get_vendor() const { return vendor; }
+
   Bit32u get_max_std_leaf() const { return max_std_leaf; }
   Bit32u get_max_ext_leaf() const { return max_ext_leaf; }
 
@@ -121,7 +131,7 @@ public:
 
   void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
 
-  virtual void dump_cpuid(void) const;
+  void dump_cpuid(void) const;
 
   void dump_features() const;
   void sanity_checks() const;
@@ -165,13 +175,19 @@ protected:
 
   cpu_vendor_t vendor;
 
+  // AMD magic (hidden) CPUID leaf 0x8FFFFFFF string, NULL if the model has no magic leaf
+  const char *magic_string;
+
   void set_max_leaf(Bit32u max_std_leaf, Bit32u max_ext_leaf);
   void set_vendor(cpu_vendor_t _vendor) { vendor = _vendor; }
+  void set_magic_string(const char *_magic_string) { magic_string = _magic_string; }
 
   virtual void get_hardware_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const = 0;
 
   void get_leaf_0(unsigned max_leaf, const char *vendor_string, cpuid_function_t *leaf) const;
 
+  // CPUID function 0x00000001 - Version and Feature Information
+  void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
   Bit32u get_std_cpuid_leaf_1_ecx(Bit32u extra = 0) const;
   Bit32u get_std_cpuid_leaf_1_edx_common(Bit32u extra = 0) const;
   Bit32u get_std_cpuid_leaf_1_edx(Bit32u extra = 0) const;
@@ -252,7 +268,7 @@ protected:
   void get_ext_cpuid_leaf_26(Bit32u subfunction, cpuid_function_t *leaf) const;
 
   // // CPUID leaf 0x8FFFFFFF - Magic leaf
-  void get_cpuid_hidden_level(cpuid_function_t *leaf, const char *magic_string) const;
+  void get_cpuid_hidden_level(cpuid_function_t *leaf) const;
 
   BX_CPP_INLINE void get_leaf(cpuid_function_t *leaf, Bit32u eax, Bit32u ebx, Bit32u ecx, Bit32u edx) const
   {
@@ -268,7 +284,6 @@ protected:
   }
 
   void dump_cpuid_leaf(unsigned function, unsigned subfunction = 0) const;
-  void dump_cpuid(unsigned max_std_leaf, unsigned max_ext_leaf) const;
 
   void warning_messages(unsigned extension) const;
 

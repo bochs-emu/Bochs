@@ -44,9 +44,6 @@ public:
 
 private:
   bx_cpuid_table_t *cpuid_table;
-
-  void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
-
 };
 
 extern bx_cpuid_t *create_corei7_sandy_bridge_2600k_cpuid(BX_CPU_C *cpu);
