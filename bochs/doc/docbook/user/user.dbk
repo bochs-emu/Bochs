@@ -3692,6 +3692,23 @@ this feature yet.
 </para></note>
 </section>
 
+<section id="bochsopt-applesmc"><title>applesmc</title>
+<para>
+Example:
+<screen>
+  applesmc: osk=ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc
+</screen>
+This option enables the Apple System Management Controller emulation
+(I/O ports 0x300-0x31F) required by Mac OS X guests. The 'osk' parameter
+sets the 64-character OSK0/OSK1 key that Mac OS X checks during boot.
+Without it a dummy key is used and Mac OS X refuses to boot.
+While applesmc is configured, the fw_cfg device also provides SMBIOS tables
+(BIOS, system, baseboard, chassis and memory information) that identify the
+guest as an Apple iMac15,1. See <xref linkend="guest-macosx"> for the
+complete Mac OS X guest setup.
+</para>
+</section>
+
 <section id="bochsopt-vgaromimage"><title>vgaromimage</title>
 <para>
 Examples:
@@ -11758,6 +11775,81 @@ pci: enabled=1, chipset=i440fx, slot1=cirrus
 </para>
 <note><para>
 If you use an IPS value less than 325,000,000, Win10 will BSOD and want you to reboot (Assuming a host at 3.0Ghz).
+</para></note>
+</section>
+
+<section id="guest-macosx">
+<title>Mac OS X (OS X El Capitan 10.11)</title>
+<para>Please read the message regarding software licenses in
+<xref linkend="thirdparty"> before you install Mac OS X as a guest operating
+system in Bochs. Apple licenses OS X only for Apple-branded hardware.</para>
+<para>
+OS X El Capitan 10.11.6 has been installed and booted to the login window
+inside Bochs. Newer versions were not tested. Mac OS X needs a UEFI firmware
+and Apple-specific hardware that a generic PC does not have, so several
+options are required:
+<itemizedlist>
+<listitem><para>UEFI firmware: OVMF with the fw_cfg device
+(see <xref linkend="bochsopt-romimage">).</para></listitem>
+<listitem><para>A boot loader: OVMF cannot load the Mac OS X boot loader
+directly (no HFS+ driver, no Apple firmware protocols). OpenCore was used,
+placed on a vvfat disk. Set its picker Timeout to a few seconds because the
+USB keyboard doesn't work in the firmware boot menu yet, and set Resolution
+to 800x600@32 (the OVMF Cirrus driver offers higher resolutions only at
+24 bpp, which Mac OS X doesn't support).</para></listitem>
+<listitem><para>CPU model <command>corei7_haswell_4770</command>, which
+matches the iMac15,1 SMBIOS identity, with <command>ignore_bad_msrs=1</command>
+and an msrs.def file that defines the MSRs listed below.</para></listitem>
+<listitem><para><command>applesmc</command> with the OSK key
+(see <xref linkend="bochsopt-applesmc">).</para></listitem>
+<listitem><para>PCI option <command>advopts=ich7ide</command>: Mac OS X has
+no driver for the PIIX3/PIIX4 IDE controller, but supports the ICH7
+one.</para></listitem>
+<listitem><para>USB keyboard and tablet: Mac OS X has no PS/2 drivers.</para></listitem>
+<listitem><para>For the installer, set the clock to a date before its
+certificates expired (time0=1475280000 is October 1st, 2016).</para></listitem>
+</itemizedlist>
+</para>
+<para>
+The Mac OS X kernel and its CPU power management (XCPM) read several MSRs
+that Bochs doesn't implement, and crash without them. Add these lines to the
+file given by the cpu <command>msrs</command> option
+(see <xref linkend="bochsopt-cpu">):
+<screen>
+0x08b  0  0000001c  00000000  00000000  00000000  ffffffff  00000000  # IA32_BIOS_SIGN_ID
+0x0ce  0  00000100  00000500  00000000  00000000  00000000  00000000  # MSR_PLATFORM_INFO (max ratio 5, min ratio 1)
+0x0e2  0  00000000  00000000  00000000  00000000  00000000  00000000  # MSR_PKG_CST_CONFIG_CONTROL (unlocked)
+0x198  0  00000000  00000500  00000000  00000000  ffffffff  ffffffff  # IA32_PERF_STATUS (current ratio 5, writes ignored)
+0x199  0  00000000  00000500  00000000  00000000  00000000  00000000  # IA32_PERF_CTL (target ratio 5)
+0x1ad  0  00000000  05050505  00000000  00000000  00000000  00000000  # MSR_TURBO_RATIO_LIMIT (no turbo above max)
+</screen>
+The frequency ratio fields assume a 100 MHz bus clock, so the ratio is
+ips / 100M: 5 for ips=500M. Adjust the 05 values in 0x0ce, 0x198, 0x199
+and 0x1ad if you change ips.
+</para>
+<para>
+Settings used for the El Capitan guest:
+<screen>
+cpu: model=corei7_haswell_4770, count=1, ips=500M, reset_on_triple_fault=1, ignore_bad_msrs=1, msrs="msrs.def"
+cpu: cpuid_limit_winnt=0
+memory: guest=4096, host=4096
+romimage: file=OVMF.fd, address=0x0, options=none
+fw_cfg: enabled=1
+vgaromimage: file=$BXSHARE/VGABIOS-lgpl/VGABIOS-lgpl-latest-cirrus.bin
+vga: extension=cirrus, update_freq=60
+pci: enabled=1, chipset=i440fx, slot1=cirrus, advopts=ich7ide
+clock: sync=none, time0=1475280000
+ata0-master: type=disk, path="macos.img", mode=flat
+ata1-master: type=disk, mode=vvfat, path="OpenCore", journal="opencore.redolog"
+applesmc: osk=ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc
+usb_ohci: enabled=1, port1=tablet, port2=keyboard
+boot: disk
+</screen>
+</para>
+<note><para>
+Emulation is slow: booting El Capitan to the login window takes a long time
+even on a fast host. With clock sync=none, double-clicks and key auto-repeat
+are unreliable.
 </para></note>
 </section>
 

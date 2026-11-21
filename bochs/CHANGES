@@ -88,6 +88,14 @@ Changes after Bochs 3.1 release:
   - Removed configure option --enable-configurable-msrs, loading msrs.def is enabled by default for all models supporting MSR
   - bxdisasm tool can be compiled using 'make bxdisasm'
 
+- Mac OS X guest support: OS X El Capitan 10.11.6 installs and boots to the login window
+  (see the "Mac OS X" section of the guest operating systems chapter in the user documentation
+   for the required configuration: OVMF + OpenCore, cpu model, MSRs, applesmc, ich7ide, USB input)
+  - Added Apple SMC (System Management Controller) emulation with the new 'applesmc' bochsrc option,
+    'osk' parameter sets the OSK0/OSK1 key (Mac OS X refuses to boot without a responding SMC)
+  - fw_cfg provides SMBIOS tables identifying the guest as an Apple iMac15,1 (BIOS, system, baseboard,
+    chassis and memory device structures) when applesmc is configured
+
 - I/O Devices
   - VGA
     - Setting wrong VBE "dispi ID" do not cause PANIC anymore
