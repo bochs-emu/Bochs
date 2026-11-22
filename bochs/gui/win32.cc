@@ -973,12 +973,23 @@ void SaveWindowPosition(HWND Wnd, const char *name)
   LONG result = RegCreateKeyEx(HKEY_CURRENT_USER, szRegLocation, 0, NULL,
                                REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
   if (result == ERROR_SUCCESS) {
-    RECT Rect;
-    if (GetWindowRect(Wnd, &Rect)) {
+    RECT rect;
+    BOOL valid = FALSE;
+    if (IsIconic(Wnd)) {
+      WINDOWPLACEMENT wp;
+      wp.length = sizeof(WINDOWPLACEMENT);
+      if (GetWindowPlacement(Wnd, &wp)) {
+        valid = TRUE;
+        rect = wp.rcNormalPosition;
+      }
+    } else {
+      valid = GetWindowRect(Wnd, &rect);
+    }
+    if (valid) {
       sprintf(SubKey, "%sLeft", name);
-      RegSetValueEx(hKey, SubKey, 0, REG_DWORD, (const BYTE *) &Rect.left, sizeof(LONG));
+      RegSetValueEx(hKey, SubKey, 0, REG_DWORD, (const BYTE *) &rect.left, sizeof(LONG));
       sprintf(SubKey, "%sTop", name);
-      RegSetValueEx(hKey, SubKey, 0, REG_DWORD, (const BYTE *) &Rect.top, sizeof(LONG));
+      RegSetValueEx(hKey, SubKey, 0, REG_DWORD, (const BYTE *) &rect.top, sizeof(LONG));
     }
     RegCloseKey(hKey);
   }
