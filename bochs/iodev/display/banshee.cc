@@ -137,8 +137,14 @@ bx_banshee_c::bx_banshee_c() : bx_voodoo_base_c()
 {
 }
 
+#define BANSHEE_AGP_REG_NAMES (sizeof(banshee_agp_reg_name) / sizeof(banshee_agp_reg_name[0]))
+
 bx_banshee_c::~bx_banshee_c()
 {
+  if ((v != NULL) && (v->banshee.blt.lamem != NULL)) {
+    delete [] v->banshee.blt.lamem;
+    v->banshee.blt.lamem = NULL;
+  }
   SIM->get_bochs_root()->remove("voodoo");
 }
 
@@ -271,7 +277,7 @@ void bx_banshee_c::register_state(void)
   voodoo_register_state(list);
   bx_list_c *banshee = new bx_list_c(list, "banshee", "Banshee State");
   new bx_shadow_data_c(banshee, "io", (Bit8u*)v->banshee.io, 256, 1);
-  new bx_shadow_data_c(banshee, "agp", (Bit8u*)v->banshee.agp, 0x80, 1);
+  new bx_shadow_data_c(banshee, "agp", (Bit8u*)v->banshee.agp, sizeof(v->banshee.agp), 1);
   new bx_shadow_data_c(banshee, "crtc", (Bit8u*)v->banshee.crtc, 0x27, 1);
   new bx_shadow_num_c(banshee, "disp_bpp", &v->banshee.disp_bpp);
   BXRS_PARAM_BOOL(banshee, half_mode, v->banshee.half_mode);
@@ -1178,7 +1184,7 @@ Bit32u bx_banshee_c::read(Bit32u address, unsigned io_len)
       break;
 
     case io_dacData:
-      result = v->fbi.clut[v->banshee.io[io_dacAddr] & 0x1ff] = v->banshee.io[reg];
+      result = v->fbi.clut[v->banshee.io[io_dacAddr] & 0x1ff];
       break;
 
     case io_vgab0:  case io_vgab4:  case io_vgab8:  case io_vgabc:
@@ -1246,11 +1252,11 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
   if ((reg < io_vgab0) || (reg > io_vgadc)) {
     if (io_len == 1) {
       shift = ((offset & 3) * 8);
-      mask = ~(0xff << shift);
+      mask = ~(0xffU << shift);
       value = (old & mask) | (value << shift);
     } else if (io_len == 2) {
       shift = ((offset & 2) * 8);
-      mask = ~(0xffff << shift);
+      mask = ~(0xffffU << shift);
       value = (old & mask) | (value << shift);
     }
   }
@@ -1816,7 +1822,7 @@ Bit32u bx_banshee_c::agp_reg_read(Bit8u reg)
       result = v->banshee.agp[reg];
   }
   BX_DEBUG(("AGP read register 0x%03x (%s) result = 0x%08x", reg<<2,
-            banshee_agp_reg_name[reg], result));
+            (reg < BANSHEE_AGP_REG_NAMES) ? banshee_agp_reg_name[reg] : "reserved", result));
   return result;
 }
 
@@ -1825,7 +1831,7 @@ void bx_banshee_c::agp_reg_write(Bit8u reg, Bit32u value)
   Bit8u fifo_idx = (reg >= cmdBaseAddr1);
 
   BX_DEBUG(("AGP write register 0x%03x (%s) value = 0x%08x", reg<<2,
-            banshee_agp_reg_name[reg], value));
+            (reg < BANSHEE_AGP_REG_NAMES) ? banshee_agp_reg_name[reg] : "reserved", value));
   switch (reg) {
     case cmdBaseAddr0:
     case cmdBaseAddr1:
@@ -2272,9 +2278,9 @@ void bx_banshee_c::blt_launch_area_write(Bit32u value)
       BLT.lamem[BLT.laidx++] = ((value >> 24) & 0xff);
     } else if ((BLT.cmd == 1) || (BLT.cmd == 2)) {
       BLT.reg[blt_srcXY] = value;
-      BLT.src_x = value & 0x1fff;
-      BLT.src_y = (value >> 16) & 0x1fff;
-    } if ((BLT.cmd >= 5) && (BLT.cmd <= 7)) {
+      SIGN_EXTEND(Bit16s, BLT.src_x, 13, value);
+      SIGN_EXTEND(Bit16s, BLT.src_y, 13, value >> 16);
+    } else if ((BLT.cmd >= 5) && (BLT.cmd <= 7)) {
       BLT.reg[blt_dstXY] = value;
       if ((value >> 15) & 1) {
         BLT.dst_x = (Bit16s)(value & 0xffff);
@@ -2286,7 +2292,7 @@ void bx_banshee_c::blt_launch_area_write(Bit32u value)
       } else {
         BLT.dst_y = (value >> 16) & 0x1fff;
       }
-    } if (BLT.cmd == 8) {
+    } else if (BLT.cmd == 8) {
       BLT.pgn_val = value;
     }
     if (--BLT.lacnt == 0) {
@@ -3731,7 +3737,7 @@ void bx_banshee_c::blt_line(bool pline)
       if (!lstipple) {
         BLT.rop_fn[rop](dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
       } else {
-        if ((lpattern & (1 << lpat_idx)) != 0) {
+        if ((lpattern & (1U << lpat_idx)) != 0) {
           BLT.rop_fn[rop](dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
         } else if (!BLT.transp) {
           BLT.rop_fn[rop](dst_ptr1, BLT.bgcolor, dpitch, dpxsize, dpxsize, 1);

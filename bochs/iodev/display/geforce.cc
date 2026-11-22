@@ -2765,6 +2765,10 @@ void bx_geforce_c::iifc(gf_channel* ch)
 
 void bx_geforce_c::sifc(gf_channel* ch)
 {
+  if (ch->sifc_dxds == 0 || ch->sifc_dydt == 0) {
+    BX_ERROR(("SIFC: scale factor 0, ignored"));
+    return;
+  }
   Bit16u dx = ch->sifc_clip_yx & 0xFFFF;
   Bit16u dy = ch->sifc_clip_yx >> 16;
   Bit32u dsdx = (Bit32u)(BX_CONST64(1099511627776) / ch->sifc_dxds);
@@ -6572,7 +6576,7 @@ void bx_geforce_c::execute_ifc(gf_channel* ch, Bit32u method, Bit32u param)
   else if (method == 0x0c0) {
     ch->ifc_color_fmt = param;
     update_color_bytes_ifc(ch);
-    ch->ifc_pixels_per_word = 4 / ch->ifc_color_bytes;
+    ch->ifc_pixels_per_word = (ch->ifc_color_bytes != 0) ? (4 / ch->ifc_color_bytes) : 0;
   } else if (method == 0x0c1) {
     ch->ifc_x = 0;
     ch->ifc_y = 0;
@@ -6975,7 +6979,8 @@ void bx_geforce_c::d3d_mh_flip_modulo(gf_channel* ch, Bit32u cls, Bit32u method,
 void bx_geforce_c::d3d_mh_flip_incr(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
 {
   BX_GEFORCE_THIS graph_flip_write++;
-  BX_GEFORCE_THIS graph_flip_write %= BX_GEFORCE_THIS graph_flip_modulo;
+  if (BX_GEFORCE_THIS graph_flip_modulo != 0)
+    BX_GEFORCE_THIS graph_flip_write %= BX_GEFORCE_THIS graph_flip_modulo;
 }
 
 void bx_geforce_c::d3d_mh_fifo_wait(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
@@ -7595,7 +7600,11 @@ void bx_geforce_c::d3d_mh_viewport_scale(gf_channel* ch, Bit32u cls, Bit32u meth
 void bx_geforce_c::d3d_mh_transform_program(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
 {
   Bit32u i = method & 0x003;
-  ch->d3d_transform_program[ch->d3d_transform_program_load][i] = param;
+  if (ch->d3d_transform_program_load < 544) {
+    ch->d3d_transform_program[ch->d3d_transform_program_load][i] = param;
+  } else {
+    BX_ERROR(("vertex program upload index 0x%08x out of range", ch->d3d_transform_program_load));
+  }
   if (i == 3)
     ch->d3d_transform_program_load++;
 }
@@ -7603,8 +7612,12 @@ void bx_geforce_c::d3d_mh_transform_program(gf_channel* ch, Bit32u cls, Bit32u m
 void bx_geforce_c::d3d_mh_transform_constant(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
 {
   Bit32u i = method & 0x003;
-  ch->d3d_transform_constant[
-    ch->d3d_transform_constant_load][i] = uint32_as_float(param);
+  if (ch->d3d_transform_constant_load < 512) {
+    ch->d3d_transform_constant[
+      ch->d3d_transform_constant_load][i] = uint32_as_float(param);
+  } else {
+    BX_ERROR(("vertex constant upload index 0x%08x out of range", ch->d3d_transform_constant_load));
+  }
   if (i == 3)
     ch->d3d_transform_constant_load++;
 }
@@ -8906,7 +8919,7 @@ void bx_geforce_c::fifo_process(Bit32u chid)
         ch->dma_state.subc, ch->dma_state.mthd, word);
       if (cmd_result <= 1) {
         if (!ch->dma_state.ni)
-          ch->dma_state.mthd++;
+          ch->dma_state.mthd = (ch->dma_state.mthd + 1) & 0x7ff;
         ch->dma_state.mcnt--;
       } else {
         BX_GEFORCE_THIS fifo_cache1_dma_get -= 4;
@@ -9295,7 +9308,7 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
   } else if (address == 0x3204) {
     BX_GEFORCE_THIS fifo_cache1_push1 = value;
   } else if (address == 0x3210) {
-    BX_GEFORCE_THIS fifo_cache1_put = value;
+    BX_GEFORCE_THIS fifo_cache1_put = value & (GEFORCE_CACHE1_SIZE * 4 - 1);
   } else if (address == 0x3220) {
     BX_GEFORCE_THIS fifo_cache1_dma_push = value;
   } else if (address == 0x322c) {
@@ -9386,7 +9399,8 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
   } else if (address == 0x40071c) {
     if ((value & 0x00000002) != 0) {
       BX_GEFORCE_THIS graph_flip_read++;
-      BX_GEFORCE_THIS graph_flip_read %= BX_GEFORCE_THIS graph_flip_modulo;
+      if (BX_GEFORCE_THIS graph_flip_modulo != 0)
+        BX_GEFORCE_THIS graph_flip_read %= BX_GEFORCE_THIS graph_flip_modulo;
       if (BX_GEFORCE_THIS fifo_wait_flip &&
           BX_GEFORCE_THIS graph_flip_read != BX_GEFORCE_THIS graph_flip_write) {
         BX_GEFORCE_THIS fifo_wait_flip = false;

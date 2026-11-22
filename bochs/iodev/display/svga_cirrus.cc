@@ -447,6 +447,9 @@ void bx_svga_cirrus_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
   if (BX_CIRRUS_THIS svga_needs_update_mode) {
     return;
   }
+  if (width == 0 || height == 0) {
+    return;
+  }
 
   BX_CIRRUS_THIS svga_needs_update_tile = 1;
 
@@ -649,7 +652,7 @@ Bit8u bx_svga_cirrus_c::mem_read(bx_phy_address addr)
     else {
       return 0xff;
     }
-  } else if (addr >= 0xB8000 && addr <= 0xB8100) {
+  } else if (addr >= 0xB8000 && addr < 0xB8100) {
     // memory-mapped I/O.
     Bit32u offset = (Bit32u) (addr - 0xb8000);
     if ((BX_CIRRUS_THIS sequencer.reg[0x17] & 0x44) == 0x04)
@@ -1876,12 +1879,12 @@ void bx_svga_cirrus_c::update(void)
             for (xc=0, xti=0; xc<width; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED (xti, yti)) {
                 tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
-                for (r=0; r<Y_TILESIZE; r++) {
+                for (r=0; r<h; r++) {
                   tile_ptr2 = tile_ptr;
                   y = yc + r;
                   if (BX_CIRRUS_THIS s.y_doublescan) y >>= 1;
                   row_addr = BX_CIRRUS_THIS s.CRTC.start_addr + (y * pitch);
-                  for (c=0; c<X_TILESIZE; c++) {
+                  for (c=0; c<w; c++) {
                     x = xc + c;
                     colour = BX_CIRRUS_THIS get_vga_pixel(x, y, row_addr, 0xffff, 0, BX_CIRRUS_THIS s.memory);
                     colour = MAKE_COLOUR(
@@ -2642,7 +2645,7 @@ Bit8u bx_svga_cirrus_c::svga_read_control(Bit32u address, unsigned index)
 
 void bx_svga_cirrus_c::svga_write_control(Bit32u address, unsigned index, Bit8u value)
 {
-  Bit8u old_value = BX_CIRRUS_THIS control.reg[index];
+  Bit8u old_value = (index <= CIRRUS_CONTROL_MAX) ? BX_CIRRUS_THIS control.reg[index] : 0;
 
   BX_DEBUG(("control: index 0x%02x write 0x%02x", index, (unsigned)value));
 

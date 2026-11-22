@@ -110,11 +110,6 @@ bx_vga_c::bx_vga_c() : bx_vgacore_c()
 
 bx_vga_c::~bx_vga_c()
 {
-  if (BX_VGA_THIS s.memory == NULL) {
-    delete [] BX_VGA_THIS s.memory;
-    BX_VGA_THIS s.memory = NULL;
-  }
-
   if (SIM->get_bochs_root())
     SIM->get_bochs_root()->remove("vga");
 
@@ -270,8 +265,12 @@ void bx_vga_c::after_restore_state(void)
   }
 #endif
   if (BX_VGA_THIS vbe.enabled) {
-    bx_gui->dimension_update(BX_VGA_THIS vbe.xres, BX_VGA_THIS vbe.yres, 0, 0,
-                             BX_VGA_THIS vbe.bpp);
+    if (BX_VGA_THIS vbe.bpp > 4) {
+      bx_gui->dimension_update(BX_VGA_THIS vbe.xres, BX_VGA_THIS vbe.yres, 0, 0, BX_VGA_THIS vbe.bpp);
+    } else {
+      // 4 bpp modes are drawn with the default 8 bpp tiles (see update())
+      bx_gui->dimension_update(BX_VGA_THIS vbe.xres, BX_VGA_THIS vbe.yres);
+    }
   }
 }
 
@@ -1370,7 +1369,7 @@ void bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           BX_DEBUG(("VBE offset x %d", value));
           BX_VGA_THIS vbe.offset_x = (Bit16u)value;
 
-          BX_VGA_THIS vbe.virtual_start = BX_VGA_THIS vbe.offset_y * BX_VGA_THIS vbe.line_offset;
+          BX_VGA_THIS vbe.virtual_start = (Bit32u)BX_VGA_THIS vbe.offset_y * BX_VGA_THIS vbe.line_offset;
           if (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4) {
             BX_VGA_THIS vbe.virtual_start += (BX_VGA_THIS vbe.offset_x * BX_VGA_THIS vbe.bpp_multiplier);
           } else {
@@ -1385,7 +1384,7 @@ void bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           BX_DEBUG(("VBE offset y %d", value));
           BX_VGA_THIS vbe.offset_y = (Bit16u)value;
 
-          BX_VGA_THIS vbe.virtual_start = BX_VGA_THIS vbe.offset_y * BX_VGA_THIS vbe.line_offset;
+          BX_VGA_THIS vbe.virtual_start = (Bit32u)BX_VGA_THIS vbe.offset_y * BX_VGA_THIS vbe.line_offset;
           if (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4) {
             BX_VGA_THIS vbe.virtual_start += (BX_VGA_THIS vbe.offset_x * BX_VGA_THIS vbe.bpp_multiplier);
           } else {

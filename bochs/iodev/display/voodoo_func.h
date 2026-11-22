@@ -951,7 +951,7 @@ static void raster_fastfill(void *destbase, Bit32s y, const poly_extent *extent,
   if (FBZMODE_AUX_BUFFER_MASK(v->reg[fbzMode].u) && v->fbi.auxoffs != (Bit32u)~0)
   {
     Bit16u color = v->reg[zaColor].u;
-    Bit64u expanded = ((Bit64u)color << 48) | ((Bit64u)color << 32) | (color << 16) | color;
+    Bit64u expanded = ((Bit64u)color << 48) | ((Bit64u)color << 32) | ((Bit64u)color << 16) | color;
     Bit16u *dest = (Bit16u *)(v->fbi.ram + v->fbi.auxoffs) + scry * v->fbi.rowpixels;
 
     for (x = startx; x < stopx && (x & 3) != 0; x++)

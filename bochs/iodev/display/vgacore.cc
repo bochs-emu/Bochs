@@ -725,7 +725,7 @@ Bit32u bx_vgacore_c::read(Bit32u address, unsigned io_len)
         case 6: /* Miscellaneous */
           retval =
             ((BX_VGA_THIS s.graphics_ctrl.memory_mapping & 0x03) << 2) |
-            ((BX_VGA_THIS s.graphics_ctrl.odd_even & 0x01) << 1) |
+            ((BX_VGA_THIS s.graphics_ctrl.chain_odd_even & 0x01) << 1) |
             ((BX_VGA_THIS s.graphics_ctrl.graphics_alpha & 0x01) << 0);
           RETURN(retval);
           break;
@@ -743,6 +743,7 @@ Bit32u bx_vgacore_c::read(Bit32u address, unsigned io_len)
       }
       break;
 
+    case 0x03b4: /* CRTC Index Register (monochrome emulation modes) */
     case 0x03d4: /* CRTC Index Register (color emulation modes) */
       RETURN(BX_VGA_THIS s.CRTC.address);
       break;
@@ -763,7 +764,6 @@ Bit32u bx_vgacore_c::read(Bit32u address, unsigned io_len)
       RETURN(0); /* keep compiler happy */
       break;
 
-    case 0x03b4: /* CRTC Index Register (monochrome emulation modes) */
     case 0x03cb: /* not sure but OpenBSD reads it a lot */
     default:
       BX_INFO(("io read from vga port 0x%04x", (unsigned) address));

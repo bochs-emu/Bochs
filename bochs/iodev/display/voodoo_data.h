@@ -1682,7 +1682,6 @@ struct _banshee_info
   bool overlay_tiled;
   bool col_tiled;
   bool aux_tiled;
-  Bit16u *tiled_x_remap;
   struct {
     bool enabled;
     bool mode;
