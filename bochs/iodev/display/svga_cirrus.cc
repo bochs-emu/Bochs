@@ -697,10 +697,11 @@ Bit8u bx_svga_cirrus_c::vga_mem_read(bx_phy_address addr)
   BX_CIRRUS_THIS s.graphics_ctrl.latch[2] = BX_CIRRUS_THIS s.memory[(offset << 2) + 2];
   BX_CIRRUS_THIS s.graphics_ctrl.latch[3] = BX_CIRRUS_THIS s.memory[(offset << 2) + 3];
   if (BX_CIRRUS_THIS control.reg[0x0b] & 0x08) {
-    BX_CIRRUS_THIS ext_latch[0] = BX_CIRRUS_THIS s.memory[(offset << 2) + 4];
-    BX_CIRRUS_THIS ext_latch[1] = BX_CIRRUS_THIS s.memory[(offset << 2) + 5];
-    BX_CIRRUS_THIS ext_latch[2] = BX_CIRRUS_THIS s.memory[(offset << 2) + 6];
-    BX_CIRRUS_THIS ext_latch[3] = BX_CIRRUS_THIS s.memory[(offset << 2) + 7];
+    Bit32u ext_addr = ((offset + 1) & BX_CIRRUS_THIS s.vgamem_mask) << 2;
+    BX_CIRRUS_THIS ext_latch[0] = BX_CIRRUS_THIS s.memory[ext_addr];
+    BX_CIRRUS_THIS ext_latch[1] = BX_CIRRUS_THIS s.memory[ext_addr + 1];
+    BX_CIRRUS_THIS ext_latch[2] = BX_CIRRUS_THIS s.memory[ext_addr + 2];
+    BX_CIRRUS_THIS ext_latch[3] = BX_CIRRUS_THIS s.memory[ext_addr + 3];
   }
   if (BX_CIRRUS_THIS s.graphics_ctrl.read_mode == 1) {
     /* read mode 1 */
@@ -1225,14 +1226,15 @@ void bx_svga_cirrus_c::vga_mem_write(bx_phy_address addr, Bit8u value)
       if (sequ_map_mask & 0x10)
         BX_CIRRUS_THIS s.memory[(offset << 2) + 3] = new_val[3];
       if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x08) == 0x08) {
+        Bit32u ext_addr = ((offset + 1) & BX_CIRRUS_THIS s.vgamem_mask) << 2;
         if (sequ_map_mask & 0x08)
-          BX_CIRRUS_THIS s.memory[(offset << 2) + 4] = new_val[4];
+          BX_CIRRUS_THIS s.memory[ext_addr] = new_val[4];
         if (sequ_map_mask & 0x04)
-          BX_CIRRUS_THIS s.memory[(offset << 2) + 5] = new_val[5];
+          BX_CIRRUS_THIS s.memory[ext_addr + 1] = new_val[5];
         if (sequ_map_mask & 0x02)
-          BX_CIRRUS_THIS s.memory[(offset << 2) + 6] = new_val[6];
+          BX_CIRRUS_THIS s.memory[ext_addr + 2] = new_val[6];
         if (sequ_map_mask & 0x01)
-          BX_CIRRUS_THIS s.memory[(offset << 2) + 7] = new_val[7];
+          BX_CIRRUS_THIS s.memory[ext_addr + 3] = new_val[7];
       }
     } else {
       if (sequ_map_mask & 0x01)
