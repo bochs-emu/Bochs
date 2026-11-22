@@ -80,6 +80,12 @@ public:
 #endif
   virtual void statusbar_setitem_specific(int element, bool active, bool w);
   virtual void start_update();
+#if BX_DEBUGGER
+  virtual bool debugger_activation_allowed();
+#if BX_DEBUGGER_GUI
+  virtual bool start_debug_dialog(void);
+#endif
+#endif
 private:
   void send_mouse_status(void);
   void xkeypress(KeySym keysym, int press_release);
@@ -2061,6 +2067,25 @@ void bx_x_gui_c::xkeypress(KeySym keysym, int press_release)
   DEV_kbd_gen_scancode(key_event);
 }
 
+#if BX_DEBUGGER
+// The debugger can be activated at runtime: the gui debugger if it is
+// selected (debugger: gui=1), the command line debugger otherwise. If the
+// debugger is active the debugger button breaks into it.
+bool bx_x_gui_c::debugger_activation_allowed()
+{
+  return 1;
+}
+
+#if BX_DEBUGGER_GUI
+// Start the gui debugger at runtime.
+bool bx_x_gui_c::start_debug_dialog(void)
+{
+  bx_gui->init_debug_dialog(bx_dbg.dbg_gui_globalini);
+  return 1;
+}
+#endif
+#endif
+
 // X11 dialog box implementation
 
 // X11 control class
@@ -2627,7 +2652,7 @@ int x11_ask_dialog(BxEvent *event)
   }
   if (mode == BX_LOG_DLG_ASK) {
 #if BX_DEBUGGER || BX_GDBSTUB
-    if (bx_dbg.debugger_active) {
+    if (SIM->debugger_activation_allowed()) {
       buttons.btn[i].label = "Debugger";
       buttons.btn[i].code = BX_LOG_ASK_CHOICE_ENTER_DEBUG;
       i++;

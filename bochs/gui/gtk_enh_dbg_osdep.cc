@@ -1399,6 +1399,15 @@ void Cmd_cb(GtkWidget *widget, gpointer CmdIdx)     // "CmdIdx" is the value sup
     ActivateMenuItem (GPOINTER_TO_INT (CmdIdx));
 }
 
+// code to run when closing the window
+static gboolean Delete_cb(GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+    if (DetachDebugger()) {
+        gtk_widget_hide_on_delete(widget);
+    }
+    return TRUE;
+}
+
 // code to run on exit -- arguments are ignored
 void Close_cb(GtkWidget *widget, gpointer data)
 {
@@ -1763,6 +1772,8 @@ gboolean LEB_MouseUp(GtkWidget *widget, GdkEventButton *event, gpointer data)
 void AttachSignals()
 {
     int i;
+    g_signal_connect (G_OBJECT(window), "delete-event",
+        G_CALLBACK(Delete_cb), (gpointer) NULL);
     g_signal_connect (G_OBJECT(window), "destroy",
         G_CALLBACK(Close_cb), (gpointer) NULL);
     g_signal_connect (G_OBJECT(CmdBtn[0]), "clicked", G_CALLBACK(nbCmd_cb), (gpointer) (glong) BtnLkup[0]);
@@ -1947,6 +1958,7 @@ void HitBreak()
     }
     if (bx_user_quit == FALSE)      // may be in the middle of a "destroy"
         HitBrkflag = TRUE;
+    gtk_widget_show(window);
 }
 
 // special paint procedure for any colors on ListViews
@@ -2199,14 +2211,13 @@ void MakeGTKthreads()
 void * EventLp(void *data)
 {
     gtk_main();
-//  pthread_exit(0);
+    pthread_exit(0);
     return NULL;
 }
 
 void MakeGTKthreads()
 {
     pthread_t hThread;
-//  g_thread_init(NULL);    // if I put this in, it gives me an "undefined reference" of all crazy things!
     pthread_create (&hThread, NULL, EventLp, NULL);
 }
 
