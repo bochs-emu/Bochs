@@ -165,6 +165,7 @@ Changes after Bochs 3.1:
 - SVM: an event injected as a software event (EVENTINJ #BP/#OF exception or INT n) must be delivered with EXT=0
 - SVM: CR0 write intercept VM exit must happen before intercepted MOV CR0 changed EFER.LMA and RIP[63:32]
 - SVM: event injection must push the whole 32-bit EVENTINJ error code (was truncated to 16 bits on the stack and in EXITINTINFO)
+- SVM: SVM VMEXIT saves a real-mode guest's CS as a code segment into VMCB
 - TSC: IA32_TSC_ADJUST must be zero after hardware reset (read as minus the number of ticks passed before the reset)
 - LA57: LGDT, LIDT, LLDT and LTR must check base address canonical to the max supported linear address width (57-bit with LA57) regardless of current paging mode
 - LA57/VMX: VM entry must check host and guest linear address fields (segment and descriptor table bases, SYSENTER, CET and FRED) canonical to the max supported linear address width regardless of current paging mode

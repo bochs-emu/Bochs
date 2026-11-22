@@ -326,6 +326,11 @@ void BX_CPU_C::SvmExitSaveGuestState(void)
     svm_segment_write(&BX_CPU_THIS_PTR sregs[n], SVM_GUEST_ES_SELECTOR + n * 0x10);
   }
 
+  // Bochs keeps a real-mode CS as a read/write data segment (so that CS: stores work); the CPU keeps the
+  // code type a CS was loaded with, also after CR0.PE = 1 until the far jump. Not in V86 mode (data type there).
+  if (! v8086_mode() && BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type == BX_DATA_READ_WRITE_ACCESSED)
+    vmcb_write8(SVM_GUEST_CS_SELECTOR + 2, (vmcb_read8(SVM_GUEST_CS_SELECTOR + 2) & 0xf0) | 0x0b); // execute/read, accessed
+
   vmcb_write64(SVM_GUEST_GDTR_BASE, BX_CPU_THIS_PTR gdtr.base);
   vmcb_write16(SVM_GUEST_GDTR_LIMIT, BX_CPU_THIS_PTR gdtr.limit);
 
