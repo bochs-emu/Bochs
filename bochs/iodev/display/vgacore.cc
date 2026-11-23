@@ -1675,6 +1675,11 @@ void bx_vgacore_c::update(void)
       BX_ERROR(("update(): text mode: out of memory"));
       return;
     }
+    // the text update of the display libraries handles up to 255 rows
+    if (rows > 255) {
+      BX_ERROR(("update(): text mode with %u rows not supported", rows));
+      return;
+    }
     cWidth = ((BX_VGA_THIS s.sequencer.reg1 & 0x01) == 1) ? 8 : 9;
     if (BX_VGA_THIS s.x_dotclockdiv2) cWidth <<= 1;
     iWidth = cWidth * cols;
