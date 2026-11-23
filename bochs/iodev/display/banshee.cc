@@ -361,6 +361,12 @@ void bx_banshee_c::register_state(void)
 
 void bx_banshee_c::after_restore_state(void)
 {
+  // texture lookup tables are not saved
+  for (int i = 0; i < MAX_TMU; i++) {
+    v->tmu[i].regdirty = 1;
+    v->tmu[i].ncc[0].dirty = 1;
+    v->tmu[i].ncc[1].dirty = 1;
+  }
   bx_pci_device_c::after_restore_pci_state();
   if ((v->banshee.io[io_vidProcCfg] & 0x01) && (theVoodooVga != NULL)) {
     v->fbi.clut_dirty = 1;

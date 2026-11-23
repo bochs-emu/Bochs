@@ -910,7 +910,23 @@ void bx_voodoo_1_2_c::register_state(void)
 
 void bx_voodoo_1_2_c::after_restore_state(void)
 {
+  Bit32s fifo_in = v->fbi.fifo.in, fifo_out = v->fbi.fifo.out;
+
   bx_pci_device_c::after_restore_pci_state();
+
+  // the memory layout and memory FIFO location are derived from the
+  // registers (keep the restored FIFO positions)
+  recompute_video_memory(v);
+  v->fbi.fifo.in = fifo_in;
+  v->fbi.fifo.out = fifo_out;
+
+  // texture lookup tables are not saved
+  for (int i = 0; i < MAX_TMU; i++) {
+    v->tmu[i].regdirty = 1;
+    v->tmu[i].ncc[0].dirty = 1;
+    v->tmu[i].ncc[1].dirty = 1;
+  }
+
   if (s.vdraw.override_on) {
     // force update
     v->fbi.video_changed = 1;
@@ -918,11 +934,8 @@ void bx_voodoo_1_2_c::after_restore_state(void)
     s.vdraw.frame_start = bx_virt_timer.time_usec(0);
     update_timing();
     DEV_vga_set_override(1, BX_VOODOO_THIS_PTR);
-    if (s.model == VOODOO_1) {
-      recompute_video_memory(v);
-    }
-
   }
+
   start_fifo_thread();
 }
 
