@@ -8034,8 +8034,10 @@ void bx_geforce_c::d3d_mh_texture(gf_channel* ch, Bit32u cls, Bit32u method, Bit
       tex->wrap[2] = 1; // WRAP
     } else {
       tex->dimensions = (param >> 4) & 0xf;
-      if (tex->dimensions < 1 || tex->dimensions > 3)
-        BX_ERROR(("Texture with %d dimensions", tex->dimensions));
+      if (tex->dimensions < 1 || tex->dimensions > 3) {
+        BX_ERROR(("Texture with %d dimensions, using 2", tex->dimensions));
+        tex->dimensions = 2;
+      }
       tex->format = (param >> 8) & 0xff;
       tex->levels = (param >> 16) & 0xf;
       tex->size_log[0] = (param >> 20) & 0xf;
