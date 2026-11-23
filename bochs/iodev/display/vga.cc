@@ -240,6 +240,10 @@ void bx_vga_c::register_state(void)
     new bx_shadow_num_c(vbe, "bank0", &BX_VGA_THIS vbe.bank[0]);
     new bx_shadow_num_c(vbe, "bank1", &BX_VGA_THIS vbe.bank[1]);
     new bx_shadow_num_c(vbe, "bank_granularity_kb", &BX_VGA_THIS vbe.bank_granularity_kb);
+    // limited by the GUI capabilities (VBE_DISPI_GETCAPS)
+    new bx_shadow_num_c(vbe, "max_xres", &BX_VGA_THIS vbe.max_xres);
+    new bx_shadow_num_c(vbe, "max_yres", &BX_VGA_THIS vbe.max_yres);
+    new bx_shadow_num_c(vbe, "max_bpp", &BX_VGA_THIS vbe.max_bpp);
     BXRS_PARAM_BOOL(vbe, enabled, BX_VGA_THIS vbe.enabled);
     new bx_shadow_num_c(vbe, "curindex", &BX_VGA_THIS vbe.curindex);
     new bx_shadow_num_c(vbe, "visible_screen_size", &BX_VGA_THIS vbe.visible_screen_size);
