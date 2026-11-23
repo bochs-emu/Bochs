@@ -293,6 +293,7 @@ void bx_vgacore_c::vgacore_register_state(bx_list_c *parent)
   new bx_shadow_num_c(crtc, "address", &BX_VGA_THIS s.CRTC.address, BASE_HEX);
   new bx_shadow_data_c(crtc, "reg", BX_VGA_THIS s.CRTC.reg, 25, 1);
   BXRS_PARAM_BOOL(crtc, write_protect, BX_VGA_THIS s.CRTC.write_protect);
+  new bx_shadow_num_c(crtc, "start_addr", &BX_VGA_THIS s.CRTC.start_addr, BASE_HEX);
   bx_list_c *actl = new bx_list_c(list, "attribute_ctrl");
   BXRS_PARAM_BOOL(actl, flip_flop, BX_VGA_THIS s.attribute_ctrl.flip_flop);
   new bx_shadow_num_c(actl, "address", &BX_VGA_THIS s.attribute_ctrl.address, BASE_HEX);
@@ -349,6 +350,7 @@ void bx_vgacore_c::vgacore_register_state(bx_list_c *parent)
   BXRS_PARAM_BOOL(sequ, extended_mem, BX_VGA_THIS s.sequencer.extended_mem);
   BXRS_PARAM_BOOL(sequ, odd_even_dis, BX_VGA_THIS s.sequencer.odd_even_dis);
   BXRS_PARAM_BOOL(sequ, chain_four, BX_VGA_THIS s.sequencer.chain_four);
+  BXRS_PARAM_BOOL(sequ, clear_screen, BX_VGA_THIS s.sequencer.clear_screen);
   BXRS_PARAM_BOOL(list, enabled, BX_VGA_THIS s.vga_enabled);
   new bx_shadow_num_c(list, "line_offset", &BX_VGA_THIS s.line_offset);
   new bx_shadow_num_c(list, "line_compare", &BX_VGA_THIS s.line_compare);
