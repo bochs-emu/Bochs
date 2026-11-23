@@ -3777,6 +3777,9 @@ void bx_svga_cirrus_c::svga_simplebitblt()
       return;
     } else {
       w = BX_CIRRUS_THIS bitblt.bltwidth / BX_CIRRUS_THIS bitblt.pixelwidth;
+      // the color expanded row may be shorter than bltwidth, do not copy
+      // uninitialized bytes into the video memory
+      memset(work_colorexp, 0, BX_CIRRUS_THIS bitblt.bltwidth);
       for (y = 0; y < BX_CIRRUS_THIS bitblt.bltheight; y++) {
         svga_colorexpand(work_colorexp,BX_CIRRUS_THIS bitblt.src, w,
                          BX_CIRRUS_THIS bitblt.pixelwidth);
@@ -3898,6 +3901,7 @@ void bx_svga_cirrus_c::svga_simplebitblt_memsrc()
     }
 
     Bit8u *work_colorexp = new Bit8u[BX_CIRRUS_THIS bitblt.bltwidth];
+    memset(work_colorexp, 0, BX_CIRRUS_THIS bitblt.bltwidth);
     w = BX_CIRRUS_THIS bitblt.bltwidth / BX_CIRRUS_THIS bitblt.pixelwidth;
     svga_colorexpand(work_colorexp,srcptr,w,BX_CIRRUS_THIS bitblt.pixelwidth);
     (*BX_CIRRUS_THIS bitblt.rop_handler)(
