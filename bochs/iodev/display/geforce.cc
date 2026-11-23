@@ -4040,7 +4040,8 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
     out[a][3] = 1.0f;
   }
   Bit32s addr_regs[2][4] = { { 0 } };
-  float tmp_regs[32][4];
+  // NV40 temporary register numbers are 6 bits
+  float tmp_regs[64][4];
   for (Bit32u r = 0; r < ch->d3d_vs_temp_regs_count; r++)
     for (Bit32u ci = 0; ci < 4; ci++)
       tmp_regs[r][ci] = 0.0f;
@@ -4388,7 +4389,8 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
       Bit32u dst_vec_tmp_mask = (tokens[3] >> 20) & 0xf;
       Bit32u dst_sca_tmp_mask = (tokens[3] >> 24) & 0xf;
       for (int comp_index = 0; comp_index < 4; comp_index++) {
-        if (dst_out_reg != 0x1f) {
+        // 0x1f: no output, there are 16 output registers
+        if (dst_out_reg < 16) {
           bool sca_out = (dst_sca_out_mask & (8 >> comp_index)) != 0;
           bool vec_out = (dst_vec_out_mask & (8 >> comp_index)) != 0;
           if (sca_out)
@@ -4420,7 +4422,7 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
       bool dst_out_vec = (tokens[0] >> 30) & 1;
       for (int comp_index = 0; comp_index < 4; comp_index++) {
         if ((dst_vec_mask & (8 >> comp_index)) != 0) {
-          if (dst_out_vec && dst_out_reg != 0x1f)
+          if (dst_out_vec && (dst_out_reg < 16))
             out[dst_out_reg][comp_index] = vec_result[comp_index];
           if (dst_tmp_vec != 0x3f) {
             if (addr_write)
@@ -4430,7 +4432,7 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
           }
         }
         if ((dst_sca_mask & (8 >> comp_index)) != 0) {
-          if (!dst_out_vec && dst_out_reg != 0x1f)
+          if (!dst_out_vec && (dst_out_reg < 16))
             out[dst_out_reg][comp_index] = sca_result[comp_index];
           if (dst_tmp_sca != 0x3f)
             tmp_regs[dst_tmp_sca][comp_index] = sca_result[comp_index];
