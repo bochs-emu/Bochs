@@ -337,6 +337,16 @@ void bx_banshee_c::register_state(void)
   new bx_shadow_num_c(banshee, "blt_clipy1_1", &v->banshee.blt.clipy1[1]);
   new bx_shadow_num_c(banshee, "blt_h2s_pitch", &v->banshee.blt.h2s_pitch);
   new bx_shadow_num_c(banshee, "blt_h2s_pxstart", &v->banshee.blt.h2s_pxstart);
+  BXRS_PARAM_BOOL(banshee, blt_pgn_init, v->banshee.blt.pgn_init);
+  new bx_shadow_num_c(banshee, "blt_pgn_val", &v->banshee.blt.pgn_val, BASE_HEX);
+  new bx_shadow_num_c(banshee, "blt_pgn_l0x", &v->banshee.blt.pgn_l0x);
+  new bx_shadow_num_c(banshee, "blt_pgn_l0y", &v->banshee.blt.pgn_l0y);
+  new bx_shadow_num_c(banshee, "blt_pgn_l1x", &v->banshee.blt.pgn_l1x);
+  new bx_shadow_num_c(banshee, "blt_pgn_l1y", &v->banshee.blt.pgn_l1y);
+  new bx_shadow_num_c(banshee, "blt_pgn_r0x", &v->banshee.blt.pgn_r0x);
+  new bx_shadow_num_c(banshee, "blt_pgn_r0y", &v->banshee.blt.pgn_r0y);
+  new bx_shadow_num_c(banshee, "blt_pgn_r1x", &v->banshee.blt.pgn_r1x);
+  new bx_shadow_num_c(banshee, "blt_pgn_r1y", &v->banshee.blt.pgn_r1y);
   BXRS_PARAM_BOOL(banshee, overlay_enabled, v->banshee.overlay.enabled);
   new bx_shadow_num_c(banshee, "overlay_format", &v->banshee.overlay.format);
   new bx_shadow_num_c(banshee, "overlay_start", &v->banshee.overlay.start, BASE_HEX);
@@ -356,6 +366,15 @@ void bx_banshee_c::after_restore_state(void)
     v->fbi.clut_dirty = 1;
     v->banshee.needs_update_mode = true;
   }
+  // pending launch area data is not saved: the next launch area write
+  // starts a new setup for the current command
+  if (v->banshee.blt.lamem != NULL) {
+    delete [] v->banshee.blt.lamem;
+    v->banshee.blt.lamem = NULL;
+  }
+  v->banshee.blt.lacnt = 0;
+  v->banshee.blt.laidx = 0;
+  v->banshee.blt.lainit_done = false;
   start_fifo_thread();
 }
 
