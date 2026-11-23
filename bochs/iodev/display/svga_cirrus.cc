@@ -1571,9 +1571,10 @@ void bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_ti
   Bit8u * tile_ptr;
 
   if (info->snapshot_mode) {
+    // the snapshot has the size of the current mode (VGA or SVGA)
     tile_ptr = bx_gui->get_snapshot_buffer();
-    w = BX_CIRRUS_THIS svga_xres;
-    h = BX_CIRRUS_THIS svga_yres;
+    w = BX_CIRRUS_THIS s.last_xres;
+    h = BX_CIRRUS_THIS s.last_yres;
   } else {
     tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
   }
