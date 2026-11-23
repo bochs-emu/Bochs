@@ -71,6 +71,12 @@ bx_vgacore_c::bx_vgacore_c()
   memset(&s, 0, sizeof(s));
   update_timer_id = BX_NULL_TIMER_HANDLE;
   vga_vtimer_id = BX_NULL_TIMER_HANDLE;
+  vga_update_interval = 0;
+  update_realtime = 0;
+  update_mode_vsync = 0;
+  vtimer_toggle = 0;
+  vtimer_interval[0] = 0;
+  vtimer_interval[1] = 0;
 }
 
 bx_vgacore_c::~bx_vgacore_c()
