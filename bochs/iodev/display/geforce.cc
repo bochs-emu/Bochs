@@ -2875,7 +2875,7 @@ void bx_geforce_c::m2mf(gf_channel* ch)
 {
   Bit32u src_offset = ch->m2mf_src_offset;
   Bit32u dst_offset = ch->m2mf_dst_offset;
-  for (Bit16u y = 0; y < ch->m2mf_line_count; y++) {
+  for (Bit32u y = 0; y < ch->m2mf_line_count; y++) {
     dma_copy(
       ch->m2mf_dst, dst_offset,
       ch->m2mf_src, src_offset,
