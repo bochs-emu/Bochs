@@ -3156,13 +3156,14 @@ void bx_svga_cirrus_c::pci_write_handler(Bit8u address, Bit32u value, unsigned i
 
 // check that a BLT area starting at 'addr' does not cross the video memory
 // boundaries: 'height' rows of 'width' bytes, rows are 'pitch' bytes apart.
-// With negative pitch (backwards BLT) the rows go down from 'addr' and each
+// For a backwards BLT (pitch <= 0) the rows go down from 'addr' and each
 // row ends at its start address.
-static bool cirrus_blt_area_valid(Bit32u addr, int pitch, int width, int height, Bit32u memsize)
+static bool cirrus_blt_area_valid(Bit32u addr, int pitch, int width, int height,
+                                  Bit32u memsize, bool backwards)
 {
   Bit64s lo, hi;
 
-  if (pitch < 0) {
+  if (backwards) {
     hi = (Bit64s) addr;
     lo = hi + (Bit64s) (height - 1) * pitch - (width - 1);
   } else {
@@ -3194,6 +3195,7 @@ void bx_svga_cirrus_c::svga_bitblt()
   Bit32u srcaddr;
   Bit32u offset;
   Bit32u offset2;
+  bool backwards;
   Bit8u *cregs = BX_CIRRUS_THIS control.reg;
 
   tmp16 = ReadHostWordFromLittleEndian((Bit16u*) &cregs[0x20]);
@@ -3261,6 +3263,7 @@ void bx_svga_cirrus_c::svga_bitblt()
   }
 
   BX_CIRRUS_THIS bitblt.bltmode &= ~CIRRUS_BLTMODE_PIXELWIDTHMASK;
+  backwards = (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_BACKWARDS) != 0;
 
   if ((BX_CIRRUS_THIS bitblt.bltmode & (CIRRUS_BLTMODE_MEMSYSSRC|CIRRUS_BLTMODE_MEMSYSDEST))
                                    == (CIRRUS_BLTMODE_MEMSYSSRC|CIRRUS_BLTMODE_MEMSYSDEST)) {
@@ -3276,7 +3279,7 @@ void bx_svga_cirrus_c::svga_bitblt()
                              CIRRUS_BLTMODE_COLOREXPAND)) ==
       (CIRRUS_BLTMODE_PATTERNCOPY | CIRRUS_BLTMODE_COLOREXPAND)) {
     if (!cirrus_blt_area_valid(dstaddr, BX_CIRRUS_THIS bitblt.dstpitch, BX_CIRRUS_THIS bitblt.bltwidth,
-                               BX_CIRRUS_THIS bitblt.bltheight, BX_CIRRUS_THIS s.memsize)) {
+                               BX_CIRRUS_THIS bitblt.bltheight, BX_CIRRUS_THIS s.memsize, 0)) {
       BX_ERROR(("BLT: solid fill destination out of video memory, ignored"));
       goto ignoreblt;
     }
@@ -3321,7 +3324,7 @@ void bx_svga_cirrus_c::svga_bitblt()
     // crossing the video memory boundaries
     if (!(BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_PATTERNCOPY) &&
         !cirrus_blt_area_valid(dstaddr, BX_CIRRUS_THIS bitblt.dstpitch, BX_CIRRUS_THIS bitblt.bltwidth,
-                               BX_CIRRUS_THIS bitblt.bltheight, BX_CIRRUS_THIS s.memsize)) {
+                               BX_CIRRUS_THIS bitblt.bltheight, BX_CIRRUS_THIS s.memsize, backwards)) {
       BX_ERROR(("BLT: destination out of video memory, ignored"));
       goto ignoreblt;
     }
@@ -3348,7 +3351,8 @@ void bx_svga_cirrus_c::svga_bitblt()
         srcpitch = 0;
         srcheight = 1;
       }
-      if (!cirrus_blt_area_valid(srcstart, srcpitch, srcwidth, srcheight, BX_CIRRUS_THIS s.memsize)) {
+      if (!cirrus_blt_area_valid(srcstart, srcpitch, srcwidth, srcheight, BX_CIRRUS_THIS s.memsize,
+                                 backwards)) {
         BX_ERROR(("BLT: source out of video memory, ignored"));
         goto ignoreblt;
       }
