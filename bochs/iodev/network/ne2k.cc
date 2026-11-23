@@ -1747,7 +1747,9 @@ Bit32u bx_ne2k_c::rx_status_handler(void *arg)
 
 /*
  * The receive ring registers are guest-controlled: the ring and the
- * current/boundary pointers must lie inside the packet memory
+ * current/boundary pointers must lie inside the packet memory.
+ * BNRY = PSTART-1 is accepted: the Linux 8390 driver writes BNRY as
+ * next frame - 1 without wrapping, the ring arithmetic still works.
  */
 bool bx_ne2k_c::rx_ring_valid(void)
 {
@@ -1756,7 +1758,7 @@ bool bx_ne2k_c::rx_ring_valid(void)
           (BX_NE2K_THIS s.page_start < BX_NE2K_THIS s.page_stop) &&
           (BX_NE2K_THIS s.curr_page >= BX_NE2K_THIS s.page_start) &&
           (BX_NE2K_THIS s.curr_page < BX_NE2K_THIS s.page_stop) &&
-          (BX_NE2K_THIS s.bound_ptr >= BX_NE2K_THIS s.page_start) &&
+          (BX_NE2K_THIS s.bound_ptr >= BX_NE2K_THIS s.page_start - 1) &&
           (BX_NE2K_THIS s.bound_ptr < BX_NE2K_THIS s.page_stop));
 }
 
