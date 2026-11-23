@@ -3386,6 +3386,9 @@ void bx_svga_cirrus_c::svga_setup_bitblt_cputovideo(Bit32u dstaddr,Bit32u srcadd
   if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_PATTERNCOPY) {
     if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_COLOREXPAND) {
       BX_CIRRUS_THIS bitblt.srcpitch = 8;
+    } else if (BX_CIRRUS_THIS bitblt.pixelwidth == 3) {
+      // 24 bpp pattern rows are 32 bytes (see svga_patterncopy())
+      BX_CIRRUS_THIS bitblt.srcpitch = 8 * 32;
     } else {
       BX_CIRRUS_THIS bitblt.srcpitch = 8 * 8 * BX_CIRRUS_THIS bitblt.pixelwidth;
     }
