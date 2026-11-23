@@ -5682,8 +5682,8 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
   double b2[4];
   float z[4];
   bool discard[4];
-  for (Bit16u qy = 0; qy < draw_height; qy += 2) {
-    for (Bit16u qx = 0; qx < draw_width; qx += 2) {
+  for (Bit32u qy = 0; qy < draw_height; qy += 2) {
+    for (Bit32u qx = 0; qx < draw_width; qx += 2) {
       float xy[4][2];
       for (Bit32u fi = 0; fi < 4; fi++) {
         discard[fi] = false;
