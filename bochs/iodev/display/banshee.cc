@@ -2722,7 +2722,7 @@ void bx_banshee_c::blt_rectangle_fill()
     BLT.busy = 0;
     return;
   }
-  if (dbase + (dy + h - 1) * dpitch + (dx + w - 1) * dpxsize > v->fbi.mask) {
+  if (dbase + (dy + h - 1) * dpitch + (dx + w) * dpxsize - 1 > v->fbi.mask) {
     BX_ERROR(("skip address wrap during blt_rectangle_fill()"));
     BLT.busy = 0;
     return;
