@@ -3171,6 +3171,8 @@ do                                                                              
     {                                                                            \
       int exp = count_leading_zeros(temp);                                       \
       wfloat = ((exp << 12) | ((~temp >> (19 - exp)) & 0xfff)) + 1;              \
+      if (wfloat > 0xffff)                                                       \
+        wfloat = 0xffff;                                                         \
     }                                                                            \
   }                                                                              \
                                                                                  \
@@ -3192,6 +3194,8 @@ do                                                                              
       {                                                                          \
         int exp = count_leading_zeros(temp);                                     \
         depthval = ((exp << 12) | ((~temp >> (19 - exp)) & 0xfff)) + 1;          \
+        if (depthval > 0xffff)                                                   \
+          depthval = 0xffff;                                                     \
       }                                                                          \
     }                                                                            \
   }                                                                              \
