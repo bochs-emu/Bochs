@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2018-2025  The Bochs Project
+//  Copyright (C) 2018-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -283,6 +283,23 @@ void bx_ddc_c::init()
     s.edid_data[127] = (Bit8u)-checksum;
   }
   s.init_done = true;
+}
+
+// transfer state (the EDID data is created by init())
+void bx_ddc_c::register_state(bx_list_c *parent)
+{
+  bx_list_c *list = new bx_list_c(parent, "ddc", "DDC State");
+  new bx_shadow_num_c(list, "ddc_mode", &s.ddc_mode);
+  BXRS_PARAM_BOOL(list, DCKhost, s.DCKhost);
+  BXRS_PARAM_BOOL(list, DDAhost, s.DDAhost);
+  BXRS_PARAM_BOOL(list, DDAmon, s.DDAmon);
+  new bx_shadow_num_c(list, "ddc_stage", &s.ddc_stage);
+  new bx_shadow_num_c(list, "ddc_bitshift", &s.ddc_bitshift);
+  BXRS_PARAM_BOOL(list, ddc_ack, s.ddc_ack);
+  BXRS_PARAM_BOOL(list, ddc_rw, s.ddc_rw);
+  new bx_shadow_num_c(list, "ddc_byte", &s.ddc_byte, BASE_HEX);
+  new bx_shadow_num_c(list, "edid_index", &s.edid_index);
+  BXRS_PARAM_BOOL(list, edid_extblock, s.edid_extblock);
 }
 
 Bit8u bx_ddc_c::read()

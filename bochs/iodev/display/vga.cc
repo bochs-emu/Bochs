@@ -257,6 +257,7 @@ void bx_vga_c::register_state(void)
     BXRS_PARAM_BOOL(vbe, get_capabilities, BX_VGA_THIS vbe.get_capabilities);
     BXRS_PARAM_BOOL(vbe, dac_8bit, BX_VGA_THIS vbe.dac_8bit);
     BXRS_PARAM_BOOL(vbe, ddc_enabled, BX_VGA_THIS vbe.ddc_enabled);
+    BX_VGA_THIS ddc.register_state(vbe);
   }
 }
 

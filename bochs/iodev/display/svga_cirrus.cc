@@ -388,6 +388,7 @@ void bx_svga_cirrus_c::register_state(void)
   new bx_shadow_num_c(hdac, "lockindex", &BX_CIRRUS_THIS hidden_dac.lockindex, BASE_HEX);
   new bx_shadow_num_c(hdac, "data", &BX_CIRRUS_THIS hidden_dac.data, BASE_HEX);
   new bx_shadow_data_c(hdac, "palette", BX_CIRRUS_THIS hidden_dac.palette, 48, 1);
+  BX_CIRRUS_THIS ddc.register_state(list);
   BXRS_PARAM_BOOL(list, svga_unlock_special, BX_CIRRUS_THIS svga_unlock_special);
   BXRS_PARAM_BOOL(list, svga_double_width, BX_CIRRUS_THIS svga_double_width);
   new bx_shadow_num_c(list, "svga_xres", &BX_CIRRUS_THIS svga_xres);

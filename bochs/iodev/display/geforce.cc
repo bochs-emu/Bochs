@@ -417,6 +417,7 @@ void bx_geforce_c::register_state(void)
   bx_list_c *crtc = new bx_list_c(list, "crtc");
   new bx_shadow_num_c(crtc, "index", &BX_GEFORCE_THIS crtc.index, BASE_HEX);
   new bx_shadow_data_c(crtc, "reg", BX_GEFORCE_THIS crtc.reg, GEFORCE_CRTC_MAX + 1, 1);
+  BX_GEFORCE_THIS ddc.register_state(list);
   BXRS_PARAM_BOOL(list, svga_unlock_special, BX_GEFORCE_THIS svga_unlock_special);
   BXRS_PARAM_BOOL(list, svga_double_width, BX_GEFORCE_THIS svga_double_width);
   new bx_shadow_num_c(list, "svga_xres", &BX_GEFORCE_THIS svga_xres);

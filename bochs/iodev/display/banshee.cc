@@ -275,6 +275,7 @@ void bx_banshee_c::register_state(void)
 {
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "voodoo", "Voodoo Banshee State");
   voodoo_register_state(list);
+  ddc.register_state(list);
   bx_list_c *banshee = new bx_list_c(list, "banshee", "Banshee State");
   new bx_shadow_data_c(banshee, "io", (Bit8u*)v->banshee.io, 256, 1);
   new bx_shadow_data_c(banshee, "agp", (Bit8u*)v->banshee.agp, sizeof(v->banshee.agp), 1);
