@@ -8157,6 +8157,10 @@ void bx_geforce_c::d3d_mh_combiner_control(gf_channel* ch, Bit32u cls, Bit32u me
 {
   ch->d3d_combiner_control = param;
   ch->d3d_combiner_control_num_stages = param & 0xf;
+  if (ch->d3d_combiner_control_num_stages > 8) {
+    BX_ERROR(("register combiners: %d stages, using 8", ch->d3d_combiner_control_num_stages));
+    ch->d3d_combiner_control_num_stages = 8;
+  }
 }
 
 void bx_geforce_c::d3d_mh_tex_shader_op(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
