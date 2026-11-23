@@ -2345,7 +2345,8 @@ void bx_svga_cirrus_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u val
 
   if (update_pitch) {
     if ((BX_CIRRUS_THIS crtc.reg[0x1b] & 0x02) != 0) {
-      BX_CIRRUS_THIS s.vgamem_mask = 0xfffff;
+      // CR1B bit 1: the VGA modes address all of the video memory
+      BX_CIRRUS_THIS s.vgamem_mask = (CIRRUS_VIDEO_MEMORY_BYTES >> 2) - 1;
       BX_CIRRUS_THIS s.ext_start_addr = ((BX_CIRRUS_THIS crtc.reg[0x1b] & 0x01) << 16) |
                                         ((BX_CIRRUS_THIS crtc.reg[0x1b] & 0x04) << 15);
       BX_CIRRUS_THIS s.ext_offset = BX_CIRRUS_THIS bank_base[0];
