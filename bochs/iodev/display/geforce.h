@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2025  The Bochs Project
+//  Copyright (C) 2025-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -361,9 +361,10 @@ struct gf_channel
   Bit32u d3d_clear_surface;
   Bit32u d3d_combiner_control;
   Bit32u d3d_combiner_control_num_stages;
-  Bit32u d3d_tex_shader_op[4];
-  Bit32u d3d_tex_shader_dotmapping[4];
-  Bit32u d3d_tex_shader_previous[4];
+  // indexed by texture coordinate set (up to 8)
+  Bit32u d3d_tex_shader_op[8];
+  Bit32u d3d_tex_shader_dotmapping[8];
+  Bit32u d3d_tex_shader_previous[8];
   Bit32u d3d_transform_execution_mode;
   Bit32u d3d_transform_program_load;
   Bit32u d3d_transform_program_start;
