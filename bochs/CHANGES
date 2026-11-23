@@ -1,6 +1,6 @@
 Changes after Bochs 3.1 release:
 
-(up to date with commits done till 21 Nov 2026)
+(up to date with commits done till 23 Nov 2026)
 
 - CPU emulation and instrumentation
   ! CPUDB: Added AMD Zen3 (Vermeer) CPUID model (features X2APIC, CLWB, UMIP, PKU, CET, VAES, RDPID + introduces CPUID 0x80000021: AMD Extended Feature Identification 2)
@@ -44,21 +44,21 @@ Changes after Bochs 3.1 release:
     - Fixed debugger hang on binary compiled without readline (for example Win32) on a whitespace-only line at the prompt;
       blank lines in sourced scripts no longer repeat the previous command
   - Activation of the internal debugger at runtime, when Bochs compiled with the internal debugger
-    was started without -dbg option (currently with the win32 display library only). The gui debugger
-    is activated if it is selected with 'debugger: gui=1' (requires the win32 config interface),
+    was started without -dbg option (currently with the win32 and x11 display libraries). The gui debugger
+    is activated if it is selected with 'debugger: gui=1' (win32 or GTK debugger gui),
     the command line debugger otherwise:
     - Magic breakpoint activates the debugger. Use 'magic_break: enabled=0' to disable it.
-    - New debugger button in the win32 headerbar (also command mode key 'd'), it breaks into the
+    - New debugger button in the win32 and x11 headerbar (also win32 command mode key 'd'), it breaks into the
       debugger if it is already active
     - "Continue and enter debugger" choice in the runtime config (text menu and win32 dialog)
-    - The debugger choice of the panic / error "ask" dialog (textconfig and win32 dialog). With
+    - The debugger choice of the panic / error "ask" dialog (textconfig, win32 and x11 dialog). With
       'panic: action=ask' this includes Ctrl-C pressed in the console.
   - Added 'activate' parameter to the 'debugger' bochsrc option: start the debugger on startup
     (same as the -dbg command line option), e.g. 'debugger: activate=1, gui=1' starts the gui debugger
   - Added 'detach' debugger command: leave the debugger and continue simulation at full speed without it,
     the debugger is activated again by magic breakpoint or time breakpoint. With the gui debugger its
     window stays open and its Break button activates the debugger again.
-    With display libraries other than win32 the debugger cannot be activated again after 'detach'.
+    With display libraries other than win32 and x11 the debugger cannot be activated again after 'detach'.
 
 - Enhanced (gui) debugger enhancements and bugfixes
   - Editing memory in linear memory dump translates the linear address (bytes were written to physical address equal to the linear address)
@@ -107,18 +107,27 @@ Changes after Bochs 3.1 release:
     - Fixed 256-color word mode screen update address calculation
     - Writing the DAC read index (3C7h) also sets the write index (wrong palette colors in Star Control II) (#974)
     - VBE: virtual width smaller than the X resolution is rejected (host heap over-read), fixed virtual height truncation
+    - Text modes with more than 255 rows are rejected instead of being passed to the display library
   - Voodoo
     - Fixed crash when the screen is redrawn (e.g. by the debugger) before a display mode is set (#666)
+    - Voodoo2: memory FIFO works after restoring a saved state (all writes were dropped)
   - Banshee
     - Fixed clip window for bottom-to-top 2D BLTs
     - Y direction bit is applied only to screen-to-screen and host-to-screen BLTs (not to fills, lines and polygons)
     - Screen-to-screen BLT with pattern ROP uses the right pattern row for each line, aligned to the destination
     - Fixed host heap over-read in host-to-screen stretch BLT and emulator hang on zero sized stretch BLT
+    - DAC palette data reads return the palette entry (returned the last written value and overwrote the palette entry)
   - Cirrus
     - Fixed guest-to-host stack buffer overflow in color expand video-to-video BitBLT
     - Reject BitBLT operations crossing the video memory boundaries
     - Fixed division by zero in SVGA memory write with zero pitch
     - Wide I/O port accesses are split into byte accesses (PANIC "SVGA write: io_len != 1") (#981)
+    - Fixed 24 bpp pattern BitBLT with the pattern supplied by the CPU
+  - Display adapters (VGA, Cirrus, Voodoo, Banshee, GeForce)
+    - Fixed many guest-triggerable host memory corruptions, crashes and hangs (out of bounds BitBLT, video memory
+      latch and GeForce command / shader state accesses, division by zero, endless loops on huge sizes)
+    - Save/restore: the DDC, VBE, CRTC start address, Voodoo FIFO / DAC / blitter and Banshee polygon state is
+      saved, texture lookup tables are rebuilt after restore, a 4 bpp VBE mode no longer PANICs on restore
   - GeForce
     - Continue to improve GeForce model
       - #846: Add volume texture support
