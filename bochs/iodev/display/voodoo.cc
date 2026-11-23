@@ -388,6 +388,12 @@ void bx_voodoo_base_c::voodoo_register_state(bx_list_c *parent)
   new bx_shadow_data_c(vstate, "reg", (Bit8u*)v->reg, sizeof(v->reg));
   new bx_shadow_num_c(vstate, "alt_regmap", &v->alt_regmap);
   new bx_shadow_num_c(vstate, "pci_init_enable", &v->pci.init_enable, BASE_HEX);
+  bx_list_c *pcififo = new bx_list_c(vstate, "pci_fifo", "PCI FIFO");
+  BXRS_PARAM_BOOL(pcififo, enabled, v->pci.fifo.enabled);
+  new bx_shadow_num_c(pcififo, "in", &v->pci.fifo.in);
+  new bx_shadow_num_c(pcififo, "out", &v->pci.fifo.out);
+  new bx_shadow_num_c(pcififo, "op_pending", &v->pci.op_pending);
+  new bx_shadow_data_c(pcififo, "mem", (Bit8u*)v->pci.fifo_mem, sizeof(v->pci.fifo_mem));
   bx_list_c *dac = new bx_list_c(vstate, "dac", "DAC");
   for (i = 0; i < 8; i++) {
     sprintf(name, "reg%d", i);
@@ -395,6 +401,10 @@ void bx_voodoo_base_c::voodoo_register_state(bx_list_c *parent)
   }
   new bx_shadow_num_c(dac, "read_result", &v->dac.read_result, BASE_HEX);
   new bx_shadow_num_c(dac, "vidclk", &v->vidclk);
+  new bx_shadow_num_c(dac, "data_size", &v->dac.data_size);
+  new bx_shadow_num_c(dac, "clk0_m", &v->dac.clk0_m);
+  new bx_shadow_num_c(dac, "clk0_n", &v->dac.clk0_n);
+  new bx_shadow_num_c(dac, "clk0_p", &v->dac.clk0_p);
   BXRS_PARAM_BOOL(vstate, vtimer_running, v->vtimer_running);
   bx_list_c *fbi = new bx_list_c(vstate, "fbi", "framebuffer");
   if ((s.model < VOODOO_BANSHEE) || (theVoodooVga == NULL)) {
@@ -465,6 +475,9 @@ void bx_voodoo_base_c::voodoo_register_state(bx_list_c *parent)
     new bx_shadow_num_c(num, "t1", &v->fbi.svert[i].t1);
   }
   BXRS_PARAM_BOOL(fbi, fifo_enabled, v->fbi.fifo.enabled);
+  // memory FIFO data is part of the framebuffer memory
+  new bx_shadow_num_c(fbi, "fifo_in", &v->fbi.fifo.in);
+  new bx_shadow_num_c(fbi, "fifo_out", &v->fbi.fifo.out);
   bx_list_c *cmdfifo = new bx_list_c(fbi, "cmdfifo", "");
   for (i = 0; i < 2; i++) {
     sprintf(name, "%d", i);
@@ -480,6 +493,8 @@ void bx_voodoo_base_c::voodoo_register_state(bx_list_c *parent)
     new bx_shadow_num_c(num, "depth_needed", &v->fbi.cmdfifo[i].depth_needed);
     new bx_shadow_num_c(num, "holes", &v->fbi.cmdfifo[i].holes);
     BXRS_PARAM_BOOL(num, cmd_ready, v->fbi.cmdfifo[i].cmd_ready);
+    BXRS_PARAM_BOOL(num, jsr, v->fbi.cmdfifo[i].jsr);
+    new bx_shadow_num_c(num, "retAddr", &v->fbi.cmdfifo[i].retAddr, BASE_HEX);
   }
   bx_list_c *fogblend = new bx_list_c(fbi, "fogblend", "");
   for (i = 0; i < 64; i++) {
@@ -553,6 +568,8 @@ void bx_voodoo_base_c::voodoo_register_state(bx_list_c *parent)
     new bx_shadow_data_c(num, "palettea", (Bit8u*)v->tmu[i].palettea, 256 * sizeof(rgb_t));
   }
   new bx_shadow_num_c(vstate, "send_config", &v->send_config);
+  // Voodoo2 blitter (plain data, no pointers)
+  new bx_shadow_data_c(vstate, "blt", (Bit8u*)&v->blt, sizeof(v->blt));
 
   register_pci_state(parent);
 }
