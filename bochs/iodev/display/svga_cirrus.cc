@@ -308,6 +308,10 @@ void bx_svga_cirrus_c::svga_init_members()
   BX_CIRRUS_THIS bank_limit[1] = 0;
 
   svga_reset_bitblt();
+  BX_CIRRUS_THIS bitblt.bitblt_ptr = NULL;
+  BX_CIRRUS_THIS svga_dispbpp = 8;
+  memset(BX_CIRRUS_THIS hidden_dac.palette, 0, sizeof(BX_CIRRUS_THIS hidden_dac.palette));
+  memset(BX_CIRRUS_THIS ext_latch, 0, sizeof(BX_CIRRUS_THIS ext_latch));
 
   BX_CIRRUS_THIS hw_cursor.x = 0;
   BX_CIRRUS_THIS hw_cursor.y = 0;
