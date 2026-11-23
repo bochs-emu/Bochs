@@ -285,6 +285,10 @@ void bx_svga_cirrus_c::svga_init_members()
   for (i = 0; i <= CIRRUS_CRTC_MAX; i++)
     BX_CIRRUS_THIS crtc.reg[i] = 0x00;
   BX_CIRRUS_THIS s.CRTC.max_reg = CIRRUS_CRTC_MAX;
+  // VGA core state derived from the cleared CR1B (standard VGA addressing)
+  BX_CIRRUS_THIS s.vgamem_mask = 0x3ffff;
+  BX_CIRRUS_THIS s.ext_start_addr = 0;
+  BX_CIRRUS_THIS s.ext_offset = 0;
   BX_CIRRUS_THIS hidden_dac.lockindex = 0;
   BX_CIRRUS_THIS hidden_dac.data = 0x00;
 
