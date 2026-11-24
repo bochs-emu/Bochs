@@ -1444,14 +1444,15 @@ void bx_svga_cirrus_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
       }
       break;
     case 0x03c6: /* Hidden DAC */
-      if (BX_CIRRUS_THIS is_unlocked()) {
-        if (BX_CIRRUS_THIS hidden_dac.lockindex == 4) {
-          BX_DEBUG(("hidden_dac: write 0x%02x", (unsigned)value));
-          BX_CIRRUS_THIS hidden_dac.data = value;
-        }
+      // only the write after 4 reads goes to the hidden DAC register,
+      // all other writes go to the DAC pixel mask
+      if (BX_CIRRUS_THIS is_unlocked() && (BX_CIRRUS_THIS hidden_dac.lockindex == 4)) {
+        BX_DEBUG(("hidden_dac: write 0x%02x", (unsigned)value));
+        BX_CIRRUS_THIS hidden_dac.data = value;
         BX_CIRRUS_THIS hidden_dac.lockindex = 0;
         return;
       }
+      BX_CIRRUS_THIS hidden_dac.lockindex = 0;
       break;
     case 0x03c9: /* PEL Data Register, hidden pel colors 00..0F */
       BX_CIRRUS_THIS svga_needs_update_dispentire = 1;
@@ -1594,7 +1595,7 @@ void bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_ti
       ((xc + w) > hwcx) &&
       (yc < (unsigned)(hwcy + size)) &&
       ((yc + h) > hwcy)) {
-    int i;
+    int i, bpp;
     unsigned pitch, cx, cy, cx0, cy0, cx1, cy1;
 
     Bit8u *tile_ptr2;
@@ -1609,8 +1610,9 @@ void bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_ti
     cx1 = (unsigned)(hwcx + size) < (xc + w) ? hwcx + size : xc + w;
     cy1 = (unsigned)(hwcy + size) < (yc + h) ? hwcy + size : yc + h;
 
-    if (info->bpp == 15) info->bpp = 16;
-    tile_ptr += info->pitch * (cy0 - yc) + (info->bpp / 8) * (cx0 - xc);
+    // 15 bpp uses 2 bytes per pixel (the caller's info must not change)
+    bpp = (info->bpp == 15) ? 16 : info->bpp;
+    tile_ptr += info->pitch * (cy0 - yc) + (bpp / 8) * (cx0 - xc);
     if (BX_CIRRUS_THIS svga_dispbpp == 4) {
       hwc_offset = 0x200000 - 16384; // VGA
     } else {
@@ -1655,7 +1657,7 @@ void bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_ti
     plane0_ptr += pitch * (cy0 - hwcy);
     plane1_ptr += pitch * (cy0 - hwcy);
     for (cy=cy0; cy<cy1; cy++) {
-      tile_ptr2 = tile_ptr + (info->bpp/8) * (cx1 - cx0) - 1;
+      tile_ptr2 = tile_ptr + (bpp/8) * (cx1 - cx0) - 1;
       plane0_ptr2 = plane0_ptr;
       plane1_ptr2 = plane1_ptr;
       plane0 = plane1 = 0;
@@ -1669,32 +1671,32 @@ void bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_ti
         if (plane0 & 1) {
           if (plane1 & 1) {
             if (info->is_little_endian) {
-              for (i=info->bpp-8; i>-8; i-=8) {
+              for (i=bpp-8; i>-8; i-=8) {
                 *(tile_ptr2--) = (Bit8u)(fgcol >> i);
               }
             } else {
-              for (i=0; i<info->bpp; i+=8) {
+              for (i=0; i<bpp; i+=8) {
                 *(tile_ptr2--) = (Bit8u)(fgcol >> i);
               }
             }
           } else {
-            for (i=0; i<info->bpp; i+=8) {
+            for (i=0; i<bpp; i+=8) {
               *(tile_ptr2--) ^= 0xff;
             }
           }
         } else {
           if (plane1 & 1) {
             if (info->is_little_endian) {
-              for (i=info->bpp-8; i>-8; i-=8) {
+              for (i=bpp-8; i>-8; i-=8) {
                 *(tile_ptr2--) = (Bit8u)(bgcol >> i);
               }
             } else {
-              for (i=0; i<info->bpp; i+=8) {
+              for (i=0; i<bpp; i+=8) {
                 *(tile_ptr2--) = (Bit8u)(bgcol >> i);
               }
             }
           } else {
-            tile_ptr2 -= (info->bpp/8);
+            tile_ptr2 -= (bpp/8);
           }
         }
         plane0 >>= 1;
@@ -3419,6 +3421,10 @@ void bx_svga_cirrus_c::svga_setup_bitblt_cputovideo(Bit32u dstaddr,Bit32u srcadd
         BX_CIRRUS_THIS bitblt.srcpitch * BX_CIRRUS_THIS bitblt.bltheight;
   }
   BX_CIRRUS_THIS bitblt.memsrc_endptr += BX_CIRRUS_THIS bitblt.srcpitch;
+  if (BX_CIRRUS_THIS bitblt.memsrc_needed <= 0) {
+    // color expansion narrower than one pixel: no source data, BLT done
+    svga_reset_bitblt();
+  }
 }
 
 void bx_svga_cirrus_c::svga_setup_bitblt_videotocpu(Bit32u dstaddr,Bit32u srcaddr)
@@ -3444,6 +3450,9 @@ void bx_svga_cirrus_c::svga_setup_bitblt_videotocpu(Bit32u dstaddr,Bit32u srcadd
   else {
     BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_simplebitblt_memdst_static;
   }
+#else
+  // terminate the BLT (the guest would wait for the BUSY bit forever)
+  svga_reset_bitblt();
 #endif
 }
 
@@ -4030,6 +4039,9 @@ bx_svga_cirrus_c::svga_asyncbitblt_next()
       memmove(&BX_CIRRUS_THIS bitblt.memsrc[0], BX_CIRRUS_THIS bitblt.memsrc_ptr, count);
       BX_CIRRUS_THIS bitblt.memsrc_ptr = &BX_CIRRUS_THIS bitblt.memsrc[count];
     }
+  } else if (BX_CIRRUS_THIS bitblt.memdst_needed <= 0) {
+    // the pattern copy uses its whole source at once
+    goto cleanup;
   }
 
   return 0;
