@@ -1401,6 +1401,9 @@ void bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsi
   } else {
     BX_PANIC(("%d bpp graphics mode not supported", bpp));
   }
+  if ((x > x11_max_xres) || (y > x11_max_yres)) {
+    BX_PANIC(("Display resolution %d x %d out of bounds", x, y));
+  }
   guest_textmode = (fheight > 0);
   guest_fwidth = fwidth;
   guest_fheight = fheight;
