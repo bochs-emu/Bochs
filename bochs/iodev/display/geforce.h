@@ -39,6 +39,7 @@
 #define GEFORCE_CHANNEL_COUNT 32
 #define GEFORCE_SUBCHANNEL_COUNT 8
 #define GEFORCE_CACHE1_SIZE 64
+#define GEFORCE_VS_PROGRAM_SIZE 544
 
 #define GEFORCE_CLASS_COUNT 0x10000
 #define GEFORCE_METHOD_COUNT 0x800
@@ -101,6 +102,43 @@ struct gf_combiner_stage
   Bit32u color_ocw;
   Bit32u alpha_ocw;
   float const_color[2][4];
+};
+
+struct gf_vs_src
+{
+  Bit32u reg_type;
+  Bit32u tmp_index;
+  Bit32u swizzle[4];
+  bool absolute;
+  bool negate;
+};
+
+struct gf_vs_insn
+{
+  Bit32u tokens[4];
+  gf_vs_src src[3];
+  Bit32u in_index;
+  Bit32u const_index;
+  bool const_relative;
+  Bit32u addr_reg_sel;
+  Bit32u addr_swz;
+  Bit32u vec_op;
+  Bit32u sca_op;
+  // destination fields, the used ones depend on the card type
+  Bit32u dst_out_reg;
+  Bit32u dst_tmp_reg;
+  Bit32u dst_vec_mask;
+  Bit32u dst_sca_mask;
+  Bit32u dst_out_mask;
+  bool dst_out_sca;
+  Bit32u dst_vec_out_mask;
+  Bit32u dst_sca_out_mask;
+  Bit32u dst_vec_tmp_mask;
+  Bit32u dst_sca_tmp_mask;
+  Bit32u dst_tmp_vec;
+  Bit32u dst_tmp_sca;
+  bool dst_out_vec;
+  bool end;
 };
 
 struct gf_channel
@@ -330,7 +368,7 @@ struct gf_channel
   float d3d_viewport_offset[4];
   float d3d_eye_position[4];
   float d3d_viewport_scale[4];
-  Bit32u d3d_transform_program[544][4];
+  gf_vs_insn d3d_transform_program[GEFORCE_VS_PROGRAM_SIZE];
   float d3d_transform_constant[512][4];
   gf_light d3d_light[8];
   Bit32u d3d_attrib_count;
