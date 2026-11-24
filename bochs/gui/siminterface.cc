@@ -178,6 +178,10 @@ public:
   virtual void debug_interpret_cmd(char *cmd);
   virtual char *debug_get_next_command();
   virtual void debug_puts(const char *cmd);
+  virtual void debugger_idle() {
+    if (bx_gui != NULL)
+      bx_gui->debugger_idle();
+  }
 #endif
   virtual void register_configuration_interface (
     const char* name,

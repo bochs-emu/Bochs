@@ -726,6 +726,8 @@ public:
   virtual void debug_interpret_cmd(char *cmd) {}
   virtual char *debug_get_next_command() {return NULL;}
   virtual void debug_puts(const char *text) {}
+  // called periodically while the debugger waits for a command
+  virtual void debugger_idle() {}
 #endif
   virtual void register_configuration_interface(
     const char* name,
