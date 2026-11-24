@@ -376,7 +376,14 @@ void BX_CPU_C::SvmExitSaveGuestState(void)
 
   // update V_IRQ and VGIF (when Virtual GIF is enabled), keep other bits of the VMCB field
   Bit8u virq_control = vmcb_read8(SVM_CONTROL_VIRQ) & ~0x1;
-  if (is_pending(BX_EVENT_SVM_VIRQ_PENDING))
+  if (ctrls->avic_enable) {
+    // with AVIC V_IRQ is set when the backing page holds an interrupt deliverable by priority against
+    // the backing page TPR and ISR, V_TPR is not used; V_INTR_PRIO and V_INTR_VECTOR are not written
+    // (real hardware)
+    if (SvmAvicPendingVector(false) >= 0)
+      virq_control |= 0x1;
+  }
+  else if (is_pending(BX_EVENT_SVM_VIRQ_PENDING))
     virq_control |= 0x1;
   if (ctrls->v_gif_enable)
     virq_control = (virq_control & ~0x2) | (ctrls->v_gif ? 0x2 : 0);
@@ -401,38 +408,37 @@ bool BX_CPU_C::SvmEnterLoadCheckAvic(SVM_CONTROLS *ctrls)
     return false;
   }
 
-  // All AVIC addresses must be legal and 4K aligned, bits 11:0 of the AVIC Physical APIC ID table
-  // pointer hold AVIC_PHYSICAL_MAX_INDEX (APM 15.29.4.3)
+  // All AVIC addresses must be legal (APM 15.29.4.3). Bits 11:0 of the V_APIC_BAR, backing page and
+  // Logical APIC ID table pointers are ignored (real hardware), bits 11:0 of the Physical APIC ID
+  // table pointer hold AVIC_PHYSICAL_MAX_INDEX
   Bit64u apic_bar = vmcb_read64(SVM_VIRTUAL_APIC_BAR);
-  if (! IsValidPageAlignedPhyAddr(apic_bar)) {
+  ctrls->avic_apic_bar = (bx_phy_address) PPFOf(apic_bar);
+  if (! IsValidPhyAddr(ctrls->avic_apic_bar)) {
     BX_ERROR(("VMRUN: invalid AVIC V_APIC_BAR 0x" FMT_ADDRX64 " !", apic_bar));
     return false;
   }
-  ctrls->avic_apic_bar = (bx_phy_address) apic_bar;
 
   Bit64u backing_page = vmcb_read64(SVM_AVIC_BACKING_PAGE);
-  if (! IsValidPageAlignedPhyAddr(backing_page)) {
+  ctrls->avic_backing_page = (bx_phy_address) PPFOf(backing_page);
+  if (! IsValidPhyAddr(ctrls->avic_backing_page)) {
     BX_ERROR(("VMRUN: invalid AVIC backing page pointer 0x" FMT_ADDRX64 " !", backing_page));
     return false;
   }
-  ctrls->avic_backing_page = (bx_phy_address) backing_page;
 
   Bit64u logical_table = vmcb_read64(SVM_AVIC_LOGICAL_TABLE_PTR);
-  if (! IsValidPageAlignedPhyAddr(logical_table)) {
+  ctrls->avic_logical_table = (bx_phy_address) PPFOf(logical_table);
+  if (! IsValidPhyAddr(ctrls->avic_logical_table)) {
     BX_ERROR(("VMRUN: invalid AVIC Logical APIC ID table pointer 0x" FMT_ADDRX64 " !", logical_table));
     return false;
   }
-  ctrls->avic_logical_table = (bx_phy_address) logical_table;
 
   Bit64u physical_table = vmcb_read64(SVM_AVIC_PHYSICAL_TABLE_PTR);
-  ctrls->avic_physical_max_index = (unsigned) PAGE_OFFSET(physical_table);
+  // AVIC_PHYSICAL_MAX_INDEX above 255 is accepted by VMRUN, only bits 7:0 are used by IPIs
+  // (real hardware: max index 256 behaves as 0)
+  ctrls->avic_physical_max_index = (unsigned) PAGE_OFFSET(physical_table) & 0xff;
   ctrls->avic_physical_table = (bx_phy_address) PPFOf(physical_table);
   if (! IsValidPhyAddr(ctrls->avic_physical_table)) {
     BX_ERROR(("VMRUN: invalid AVIC Physical APIC ID table pointer 0x" FMT_ADDRX64 " !", physical_table));
-    return false;
-  }
-  if (ctrls->avic_physical_max_index > 255) {
-    BX_ERROR(("VMRUN: AVIC_PHYSICAL_MAX_INDEX %d is greater than 255 in xAVIC mode !", ctrls->avic_physical_max_index));
     return false;
   }
 
@@ -825,9 +831,8 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   setEFlags((Bit32u) guest.eflags);
 
   if (ctrls->avic_enable) {
-    // V_IRQ, V_INTR_PRIO, V_INTR_VECTOR and V_IGN_TPR are ignored when AVIC is enabled (APM 15.29.8.3)
-    if (vmcb_read8(SVM_CONTROL_VIRQ) & 0x1)
-      BX_PANIC(("VMRUN AVIC: V_IRQ is set, V_IRQ state on #VMEXIT with AVIC is not defined by APM (avic-implementation-plan Q16)"));
+    // V_IRQ, V_INTR_PRIO, V_INTR_VECTOR and V_IGN_TPR are ignored when AVIC is enabled (APM 15.29.8.3),
+    // V_IRQ on #VMEXIT reflects the AVIC interrupt state only (real hardware)
 
     // evaluate pending interrupts in the AVIC backing page
     SvmAvicVmrun();
@@ -1726,7 +1731,6 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   BXRS_PARAM_BOOL(svm, in_svm_guest, BX_CPU_THIS_PTR in_svm_guest);
   BXRS_PARAM_BOOL(svm, gif, BX_CPU_THIS_PTR svm_gif);
   BXRS_HEX_PARAM_FIELD(svm, avic_trap_offset, BX_CPU_THIS_PTR avic_trap_offset);
-  BXRS_HEX_PARAM_FIELD(svm, avic_trap_len, BX_CPU_THIS_PTR avic_trap_len);
 
   //
   // VMCB Control Fields

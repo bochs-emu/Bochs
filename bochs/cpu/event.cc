@@ -287,10 +287,9 @@ bool BX_CPU_C::handleAsyncEvent(void)
 #endif
 
 #if BX_SUPPORT_SVM
-  // AVIC actions and trap-like #VMEXIT(AVIC_NOACCEL) after the vAPIC write instruction
+  // AVIC actions and trap-like #VMEXIT(AVIC_NOACCEL) after the vAPIC write instruction,
+  // a pending debug trap of the same instruction is handled in SvmAvicTrap()
   if (is_pending(BX_EVENT_SVM_AVIC_TRAP)) {
-    if (BX_CPU_THIS_PTR debug_trap & 0xf000)
-      BX_PANIC(("AVIC: priority of AVIC trap vs pending debug trap is not defined by APM (avic-implementation-plan Q35)"));
     SvmAvicTrap();
   }
 #endif

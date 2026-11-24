@@ -781,13 +781,6 @@ void BX_CPU_C::prefetch(void)
       VMexit(VMX_VMEXIT_APIC_ACCESS, pageOffset | VMX_APIC_INSTRUCTION_FETCH);
 #endif
 
-#if BX_SUPPORT_SVM
-    // Bochs prefetch requires direct host pointer to the whole code page. Direct pointer to the
-    // AVIC backing page cannot be given because it would bypass the vAPIC register access filter.
-    if (is_avic_backing_page(BX_CPU_THIS_PTR pAddrFetchPage))
-      BX_PANIC(("prefetch: instruction fetch from the guest vAPIC page with AVIC enabled is not supported"));
-#endif
-
     BX_CPU_THIS_PTR eipFetchPtr = (const Bit8u*) getHostMemAddr(BX_CPU_THIS_PTR pAddrFetchPage, BX_EXECUTE);
 
     // Sanity checks

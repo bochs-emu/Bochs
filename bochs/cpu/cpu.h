@@ -1207,9 +1207,8 @@ public: // for now...
 #endif
   VMCB_CACHE *vmcb;
 
-  // AVIC: backing page offset and length of the guest write waiting for trap-like processing
+  // AVIC: backing page offset of the guest write waiting for trap-like processing
   Bit16u avic_trap_offset;
-  Bit8u avic_trap_len;
 
 // make SVM integration easier
 #define SVM_GIF (BX_CPU_THIS_PTR svm_gif)
@@ -6521,6 +6520,7 @@ public: // for now...
   BX_SMF bool is_avic_backing_page(bx_phy_address paddr) BX_CPP_AttrRegparmN(1);
   BX_SMF void SvmAvicRead(bx_phy_address paddr, unsigned len);
   BX_SMF void SvmAvicWrite(bx_phy_address paddr, unsigned len, void *data);
+  BX_SMF void SvmAvicWriteTickle(bx_address laddr, unsigned len);
   BX_SMF void SvmAvicTrap(void);
   BX_SMF Bit32u SvmAvicRead32(unsigned offset);
   BX_SMF void SvmAvicWrite32(unsigned offset, Bit32u val_32);
@@ -6528,10 +6528,10 @@ public: // for now...
   BX_SMF Bit32u SvmAvicReadLogicalEntry(unsigned index);
   BX_SMF int SvmAvicHighestVector(unsigned arrbase);
   BX_SMF void SvmAvicUpdatePPR(void);
-  BX_SMF void SvmAvicTprWrite(void);
+  BX_SMF void SvmAvicTprWrite(Bit32u tpr);
   BX_SMF void SvmAvicWriteCR8(unsigned tpr);
   BX_SMF void SvmAvicEoi(void);
-  BX_SMF int SvmAvicPendingVector(void);
+  BX_SMF int SvmAvicPendingVector(bool use_v_tpr);
   BX_SMF void SvmAvicEvaluatePendingInterrupt(void);
   BX_SMF void SvmAvicDeliverInterrupt(void);
   BX_SMF void SvmAvicSendIPI(void);

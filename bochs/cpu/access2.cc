@@ -420,6 +420,10 @@ BX_CPU_C::tickle_write_linear(unsigned s, bx_address laddr, unsigned len)
     BX_CPU_THIS_PTR address_xlation.memtype2  = tlbEntry->get_memtype();
 #endif
   }
+
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) SvmAvicWriteTickle(laddr, len);
+#endif
 }
 
   Bit8u BX_CPP_AttrRegparmN(2)

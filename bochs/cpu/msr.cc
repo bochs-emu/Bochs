@@ -845,8 +845,9 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     return true;
 
   case BX_SVM_AVIC_DOORBELL_MSR:
-    // AVIC Doorbell Register: [7:0] physical APIC ID, [63:8] reserved MBZ
-    // the MSR is supported if AVIC is supported, independent of EFER.SVME
+    // AVIC Doorbell Register: [7:0] physical APIC ID, [63:8] reserved MBZ (#GP on Zen+ hardware,
+    // Zen3 hardware does not check bit 8); the MSR is supported if AVIC is supported, independent
+    // of EFER.SVME
     if (BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_AVIC)) {
       if (val_64 >> 8) {
         BX_ERROR(("WRMSR AVIC_DOORBELL: attempt to set reserved bits"));

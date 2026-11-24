@@ -2046,8 +2046,10 @@ bx_phy_address BX_CPU_C::nested_walk(bx_phy_address guest_paddr, unsigned rw, bo
     paddr = nested_walk_legacy(guest_paddr, rw, is_page_walk, memtype);
 
   // AVIC: accesses to the guest vAPIC page are redirected to the vAPIC backing page, the nested
-  // page table walk is done only for permission checks, its translation is ignored (APM 15.29.3)
-  if (SVM_AVIC_ENABLED && PPFOf(guest_paddr) == BX_CPU_THIS_PTR vmcb->ctrls.avic_apic_bar) {
+  // page table walk is done only for permission checks, its translation is ignored (APM 15.29.3).
+  // Guest page table walks are not redirected, they access the page mapped by the nested page
+  // table (real hardware)
+  if (! is_page_walk && SVM_AVIC_ENABLED && PPFOf(guest_paddr) == BX_CPU_THIS_PTR vmcb->ctrls.avic_apic_bar) {
     paddr = BX_CPU_THIS_PTR vmcb->ctrls.avic_backing_page | PAGE_OFFSET(guest_paddr);
     BX_DEBUG(("AVIC: guest vAPIC access 0x" FMT_PHY_ADDRX " redirected to backing page 0x" FMT_PHY_ADDRX, guest_paddr, paddr));
   }
@@ -2718,7 +2720,10 @@ bx_hostpageaddr_t BX_CPU_C::getHostMemAddr(bx_phy_address paddr, unsigned rw)
 #endif
 
 #if BX_SUPPORT_SVM
-  if (is_avic_backing_page(paddr))
+  // Data accesses to the AVIC backing page go through the vAPIC register access filter.
+  // Instruction fetch reads the backing page without the filter (real hardware), the direct
+  // pointer is used only by the instruction TLB and prefetch.
+  if (rw != BX_EXECUTE && is_avic_backing_page(paddr))
     return 0; // Do not allow direct access to AVIC backing page
 #endif
 
