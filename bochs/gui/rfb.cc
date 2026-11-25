@@ -607,12 +607,21 @@ bx_svga_tileinfo_t *bx_rfb_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
 {
   info->bpp = 8;
   info->pitch = rfbWindowX;
-  info->red_shift = 3;
-  info->green_shift = 6;
-  info->blue_shift = 8;
-  info->red_mask = 0x07;
-  info->green_mask = 0x38;
-  info->blue_mask = 0xc0;
+  if (rfbBGR233Format) {
+    info->red_shift = 3;
+    info->green_shift = 6;
+    info->blue_shift = 8;
+    info->red_mask = 0x07;
+    info->green_mask = 0x38;
+    info->blue_mask = 0xc0;
+  } else {
+    info->red_shift = 8;
+    info->green_shift = 5;
+    info->blue_shift = 2;
+    info->red_mask = 0xe0;
+    info->green_mask = 0x1c;
+    info->blue_mask = 0x03;
+  }
   info->is_indexed = 0;
 #ifdef BX_LITTLE_ENDIAN
   info->is_little_endian = 1;
