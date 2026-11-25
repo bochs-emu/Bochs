@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2025  The Bochs Project
+//  Copyright (C) 2012-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -184,6 +184,7 @@ private:
   void   blt_host_to_screen_pattern(void);
   void   blt_line(bool pline);
   void   blt_polygon_fill(bool force);
+  void   blt_reg_write_locked(Bit8u reg, Bit32u value);
 
   Bit32u get_overlay_pixel(unsigned x, unsigned y, Bit8u bpp);
   bool   chromakey_check(Bit32u color, Bit8u bpp);

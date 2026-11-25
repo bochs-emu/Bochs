@@ -2006,7 +2006,16 @@ Bit32u bx_banshee_c::blt_reg_read(Bit8u reg)
   return result;
 }
 
+// the 2D engine is used by the CPU thread (MMIO, I/O) and the FIFO thread
+// (CMDFIFO packets)
 void bx_banshee_c::blt_reg_write(Bit8u reg, Bit32u value)
+{
+  BX_LOCK(blt_mutex);
+  blt_reg_write_locked(reg, value);
+  BX_UNLOCK(blt_mutex);
+}
+
+void bx_banshee_c::blt_reg_write_locked(Bit8u reg, Bit32u value)
 {
   Bit8u old_cmd;
   Bit8u colorkey_en = BLT.reg[blt_commandExtra] & 3;

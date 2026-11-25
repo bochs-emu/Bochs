@@ -66,6 +66,8 @@ BX_THREAD_VAR(fifo_thread_var);
 BX_MUTEX(cmdfifo_mutex);
 /* render mutex (Banshee) */
 BX_MUTEX(render_mutex);
+/* 2D engine mutex (Banshee): register writes from the CPU and the FIFO thread */
+BX_MUTEX(blt_mutex);
 /* FIFO event stuff */
 BX_MUTEX(fifo_mutex);
 bx_thread_sem_t fifo_wakeup;

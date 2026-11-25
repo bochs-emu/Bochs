@@ -1830,6 +1830,7 @@ struct _voodoo_state
 // FIFO event handling
 
 extern BX_MUTEX(fifo_mutex);
+extern BX_MUTEX(blt_mutex);
 extern bx_thread_sem_t fifo_wakeup;
 extern bx_thread_sem_t fifo_not_full;
 

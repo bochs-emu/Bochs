@@ -299,6 +299,7 @@ bx_voodoo_base_c::~bx_voodoo_base_c()
     BX_THREAD_JOIN(fifo_thread_var);
     BX_FINI_MUTEX(fifo_mutex);
     BX_FINI_MUTEX(render_mutex);
+    BX_FINI_MUTEX(blt_mutex);
     if (s.model >= VOODOO_2) {
       BX_FINI_MUTEX(cmdfifo_mutex);
     }
@@ -350,6 +351,7 @@ void bx_voodoo_base_c::init(void)
 
   BX_INIT_MUTEX(fifo_mutex);
   BX_INIT_MUTEX(render_mutex);
+  BX_INIT_MUTEX(blt_mutex);
   if (s.model >= VOODOO_2) {
     v->fbi.cmdfifo[0].depth_needed = BX_MAX_BIT32U;
     v->fbi.cmdfifo[1].depth_needed = BX_MAX_BIT32U;
