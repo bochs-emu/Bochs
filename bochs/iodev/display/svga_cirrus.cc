@@ -434,10 +434,11 @@ void bx_svga_cirrus_c::after_restore_state(void)
     BX_CIRRUS_THIS bx_vgacore_c::after_restore_state();
   } else {
     for (unsigned i=0; i<256; i++) {
-      bx_gui->palette_change_common(i, BX_CIRRUS_THIS s.pel.data[i].red<<2,
-                                    BX_CIRRUS_THIS s.pel.data[i].green<<2,
-                                    BX_CIRRUS_THIS s.pel.data[i].blue<<2);
+      bx_gui->palette_change_common(i, BX_CIRRUS_THIS s.pel.data[i].red   << BX_CIRRUS_THIS s.dac_shift,
+                                    BX_CIRRUS_THIS s.pel.data[i].green << BX_CIRRUS_THIS s.dac_shift,
+                                    BX_CIRRUS_THIS s.pel.data[i].blue  << BX_CIRRUS_THIS s.dac_shift);
     }
+    BX_CIRRUS_THIS calculate_retrace_timing();
     BX_CIRRUS_THIS svga_needs_update_mode = 1;
     BX_CIRRUS_THIS update();
   }
@@ -1587,14 +1588,15 @@ void bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_ti
   } else {
     tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
   }
-  if (BX_CIRRUS_THIS svga_double_width) {
-    hwcx <<= 1; // FIXME: untested
-  }
+  // double width / doublescan modes show every cursor pixel 2x
+  unsigned sx = BX_CIRRUS_THIS svga_double_width ? 2 : 1;
+  unsigned sy = BX_CIRRUS_THIS s.y_doublescan ? 2 : 1;
+  unsigned hx = hwcx * sx, hy = hwcy * sy;
   if ((size > 0) &&
-      (xc < (unsigned)(hwcx + size)) &&
-      ((xc + w) > hwcx) &&
-      (yc < (unsigned)(hwcy + size)) &&
-      ((yc + h) > hwcy)) {
+      (xc < (hx + size * sx)) &&
+      ((xc + w) > hx) &&
+      (yc < (hy + size * sy)) &&
+      ((yc + h) > hy)) {
     int i, bpp;
     unsigned pitch, cx, cy, cx0, cy0, cx1, cy1;
 
@@ -1605,10 +1607,10 @@ void bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_ti
     Bit32u hwc_offset;
     Bit64u plane0, plane1;
 
-    cx0 = hwcx > xc ? hwcx : xc;
-    cy0 = hwcy > yc ? hwcy : yc;
-    cx1 = (unsigned)(hwcx + size) < (xc + w) ? hwcx + size : xc + w;
-    cy1 = (unsigned)(hwcy + size) < (yc + h) ? hwcy + size : yc + h;
+    cx0 = hx > xc ? hx : xc;
+    cy0 = hy > yc ? hy : yc;
+    cx1 = (hx + size * sx) < (xc + w) ? hx + size * sx : xc + w;
+    cy1 = (hy + size * sy) < (yc + h) ? hy + size * sy : yc + h;
 
     // 15 bpp uses 2 bytes per pixel (the caller's info must not change)
     bpp = (info->bpp == 15) ? 16 : info->bpp;
@@ -1654,57 +1656,42 @@ void bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_ti
       bgcol = 0x00;
     }
 
-    plane0_ptr += pitch * (cy0 - hwcy);
-    plane1_ptr += pitch * (cy0 - hwcy);
     for (cy=cy0; cy<cy1; cy++) {
-      tile_ptr2 = tile_ptr + (bpp/8) * (cx1 - cx0) - 1;
-      plane0_ptr2 = plane0_ptr;
-      plane1_ptr2 = plane1_ptr;
+      unsigned row = (cy - hy) / sy;
+      tile_ptr2 = tile_ptr;
+      plane0_ptr2 = plane0_ptr + pitch * row;
+      plane1_ptr2 = plane1_ptr + pitch * row;
       plane0 = plane1 = 0;
       for (i=0; i<size; i+=8) {
         plane0 = (plane0 << 8) | *(plane0_ptr2++);
         plane1 = (plane1 << 8) | *(plane1_ptr2++);
       }
-      plane0 >>= hwcx+size - cx1;
-      plane1 >>= hwcx+size - cx1;
       for (cx=cx0; cx<cx1; cx++) {
-        if (plane0 & 1) {
-          if (plane1 & 1) {
-            if (info->is_little_endian) {
-              for (i=bpp-8; i>-8; i-=8) {
-                *(tile_ptr2--) = (Bit8u)(fgcol >> i);
-              }
-            } else {
-              for (i=0; i<bpp; i+=8) {
-                *(tile_ptr2--) = (Bit8u)(fgcol >> i);
-              }
+        unsigned bit = size - 1 - (cx - hx) / sx;
+        bool p0 = ((plane0 >> bit) & 1) != 0;
+        bool p1 = ((plane1 >> bit) & 1) != 0;
+        if (p0 && !p1) {
+          // inverted pixel
+          for (i=0; i<bpp; i+=8) {
+            *(tile_ptr2++) ^= 0xff;
+          }
+        } else if (p1) {
+          unsigned long col = p0 ? fgcol : bgcol;
+          if (info->is_little_endian) {
+            for (i=0; i<bpp; i+=8) {
+              *(tile_ptr2++) = (Bit8u)(col >> i);
             }
           } else {
-            for (i=0; i<bpp; i+=8) {
-              *(tile_ptr2--) ^= 0xff;
+            for (i=bpp-8; i>=0; i-=8) {
+              *(tile_ptr2++) = (Bit8u)(col >> i);
             }
           }
         } else {
-          if (plane1 & 1) {
-            if (info->is_little_endian) {
-              for (i=bpp-8; i>-8; i-=8) {
-                *(tile_ptr2--) = (Bit8u)(bgcol >> i);
-              }
-            } else {
-              for (i=0; i<bpp; i+=8) {
-                *(tile_ptr2--) = (Bit8u)(bgcol >> i);
-              }
-            }
-          } else {
-            tile_ptr2 -= (bpp/8);
-          }
+          // transparent pixel
+          tile_ptr2 += (bpp/8);
         }
-        plane0 >>= 1;
-        plane1 >>= 1;
       }
       tile_ptr += info->pitch;
-      plane0_ptr += pitch;
-      plane1_ptr += pitch;
     }
   }
 }
