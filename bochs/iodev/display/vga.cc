@@ -908,50 +908,13 @@ bool bx_vga_c::vbe_mmio_read_handler(bx_phy_address addr, unsigned len, void *da
 
   if (offset >= PCI_VGA_BOCHS_OFFSET && offset < (PCI_VGA_BOCHS_OFFSET + PCI_VGA_BOCHS_SIZE)) {
     Bit32u reg_offset = offset - PCI_VGA_BOCHS_OFFSET;
-    Bit16u index = reg_offset >> 1;
-    class_ptr->vbe.curindex = index;
+    Bit16u saved_index = class_ptr->vbe.curindex;
 
-    switch (index) {
-      case VBE_DISPI_INDEX_ID:
-        value = class_ptr->vbe.cur_dispi;
-        break;
-      case VBE_DISPI_INDEX_XRES:
-        value = class_ptr->vbe.get_capabilities ? class_ptr->vbe.max_xres : class_ptr->vbe.xres;
-        break;
-      case VBE_DISPI_INDEX_YRES:
-        value = class_ptr->vbe.get_capabilities ? class_ptr->vbe.max_yres : class_ptr->vbe.yres;
-        break;
-      case VBE_DISPI_INDEX_BPP:
-        value = class_ptr->vbe.get_capabilities ? class_ptr->vbe.max_bpp : class_ptr->vbe.bpp;
-        break;
-      case VBE_DISPI_INDEX_ENABLE:
-        value = class_ptr->vbe.enabled;
-        if (class_ptr->vbe.get_capabilities) value |= VBE_DISPI_GETCAPS;
-        if (class_ptr->vbe.dac_8bit) value |= VBE_DISPI_8BIT_DAC;
-        break;
-      case VBE_DISPI_INDEX_BANK:
-        value = class_ptr->vbe.bank[0];
-        break;
-      case VBE_DISPI_INDEX_X_OFFSET:
-        value = class_ptr->vbe.offset_x;
-        break;
-      case VBE_DISPI_INDEX_Y_OFFSET:
-        value = class_ptr->vbe.offset_y;
-        break;
-      case VBE_DISPI_INDEX_VIRT_WIDTH:
-        value = class_ptr->vbe.virtual_xres;
-        break;
-      case VBE_DISPI_INDEX_VIRT_HEIGHT:
-        value = class_ptr->vbe.virtual_yres;
-        break;
-      case VBE_DISPI_INDEX_VIDEO_MEMORY_64K:
-        value = (Bit16u)(class_ptr->s.memsize >> 16);
-        break;
-      default:
-        BX_ERROR(("VBE MMIO read: unknown index 0x%x", index));
-        value = 0;
-        break;
-    }
+    // same registers as the I/O interface, the index register of the I/O
+    // interface is not changed
+    class_ptr->vbe.curindex = reg_offset >> 1;
+    value = vbe_read_handler(class_ptr, VBE_DISPI_IOPORT_DATA, 2);
+    class_ptr->vbe.curindex = saved_index;
   }
 
   if (len == 1) {
@@ -985,10 +948,11 @@ bool bx_vga_c::vbe_mmio_write_handler(bx_phy_address addr, unsigned len, void *d
 
   if (offset >= PCI_VGA_BOCHS_OFFSET && offset < (PCI_VGA_BOCHS_OFFSET + PCI_VGA_BOCHS_SIZE)) {
     Bit32u reg_offset = offset - PCI_VGA_BOCHS_OFFSET;
-    Bit16u index = reg_offset >> 1;
+    Bit16u saved_index = class_ptr->vbe.curindex;
 
-    class_ptr->vbe.curindex = index;
+    class_ptr->vbe.curindex = reg_offset >> 1;
     vbe_write_handler(class_ptr, VBE_DISPI_IOPORT_DATA, value, (len == 1) ? 1U : 2U);
+    class_ptr->vbe.curindex = saved_index;
   }
 
   return true;

@@ -1004,6 +1004,8 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bool no_
       break;
 
     case 0x03c9: /* PEL Data Register, colors 00..FF */
+      // a 6-bit DAC keeps the lower 6 bits only (read back as written)
+      value &= (0xff >> BX_VGA_THIS s.dac_shift);
       switch (BX_VGA_THIS s.pel.write_data_cycle) {
         case 0:
           BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].red = value;
