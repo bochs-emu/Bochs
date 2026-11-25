@@ -271,10 +271,10 @@ void bx_vga_c::after_restore_state(void)
 #endif
   if (BX_VGA_THIS vbe.enabled) {
     if (BX_VGA_THIS vbe.bpp > 4) {
-      bx_gui->dimension_update(BX_VGA_THIS vbe.xres, BX_VGA_THIS vbe.yres, 0, 0, BX_VGA_THIS vbe.bpp);
+      bx_gui->dimension_update_common(BX_VGA_THIS vbe.xres, BX_VGA_THIS vbe.yres, 0, 0, BX_VGA_THIS vbe.bpp);
     } else {
       // 4 bpp modes are drawn with the default 8 bpp tiles (see update())
-      bx_gui->dimension_update(BX_VGA_THIS vbe.xres, BX_VGA_THIS vbe.yres);
+      bx_gui->dimension_update_common(BX_VGA_THIS vbe.xres, BX_VGA_THIS vbe.yres);
     }
   }
 }
@@ -670,11 +670,13 @@ void bx_vga_c::update(void)
       }
       if ((iWidth != BX_VGA_THIS s.last_xres) || (iHeight != BX_VGA_THIS s.last_yres) ||
            (BX_VGA_THIS s.last_bpp > 8)) {
-        bx_gui->dimension_update(iWidth, iHeight);
+        bx_gui->dimension_update_common(iWidth, iHeight);
         BX_VGA_THIS s.last_xres = iWidth;
         BX_VGA_THIS s.last_yres = iHeight;
         BX_VGA_THIS s.last_bpp = 8;
       }
+      if (bx_gui->display_out_of_range())
+        return;
 
       for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
         for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
@@ -1308,7 +1310,7 @@ void bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
               memset(BX_VGA_THIS s.memory, 0, BX_VGA_THIS s.memsize);
             }
             if (depth > 4) {
-              bx_gui->dimension_update(BX_VGA_THIS vbe.xres, BX_VGA_THIS vbe.yres, 0, 0, depth);
+              bx_gui->dimension_update_common(BX_VGA_THIS vbe.xres, BX_VGA_THIS vbe.yres, 0, 0, depth);
               BX_VGA_THIS s.last_bpp = depth;
               BX_VGA_THIS s.last_fh = 0;
             } else {

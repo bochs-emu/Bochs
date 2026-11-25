@@ -736,6 +736,8 @@ bool bx_banshee_c::update(void)
   if (v->banshee.needs_update_mode) {
     theVoodooVga->banshee_update_mode();
   }
+  if (bx_gui->display_out_of_range())
+    return false;
   if ((v->banshee.io[io_vidProcCfg] & 0x81) == 0x81) {
     BX_LOCK(render_mutex);
     bpp = v->banshee.disp_bpp;
@@ -4117,7 +4119,7 @@ void bx_voodoo_vga_c::banshee_update_mode(void)
   theVoodooDevice->update_timing();
   BX_INFO(("switched to %d x %d x %d @ %d Hz", v->fbi.width, v->fbi.height,
            v->banshee.disp_bpp, (unsigned)v->vertfreq));
-  bx_gui->dimension_update(v->fbi.width, v->fbi.height, 0, 0, v->banshee.disp_bpp);
+  bx_gui->dimension_update_common(v->fbi.width, v->fbi.height, 0, 0, v->banshee.disp_bpp);
   bx_virt_timer.deactivate_timer(vga_vtimer_id);
   // compatibilty settings for VGA core
   BX_VVGA_THIS s.last_xres = v->fbi.width;

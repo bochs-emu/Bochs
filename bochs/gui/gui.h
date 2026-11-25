@@ -208,6 +208,9 @@ public:
 
   void init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
             unsigned x_tilesize, unsigned y_tilesize);
+  void dimension_update_common(unsigned x, unsigned y, unsigned fheight=0,
+                               unsigned fwidth=0, unsigned bpp=8);
+  bool display_out_of_range() { return display_out_of_range_active; }
   void cleanup(void);
   void draw_char_common(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                         Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
@@ -426,6 +429,7 @@ protected:
 #endif
     bool nokeyrepeat;
   } gui_opts;
+  bool display_out_of_range_active;
 };
 
 

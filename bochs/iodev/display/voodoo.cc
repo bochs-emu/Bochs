@@ -633,6 +633,8 @@ bool bx_voodoo_base_c::update(void)
   Bit16u index;
   bx_svga_tileinfo_t info;
 
+  if (bx_gui->display_out_of_range())
+    return false;
   BX_LOCK(render_mutex);
   bool retval = s.vdraw.vfreq_update;
   s.vdraw.vfreq_update = false;
@@ -1082,7 +1084,7 @@ bool bx_voodoo_1_2_c::update_timing(void)
       (s.vdraw.height != v->fbi.height)) {
     s.vdraw.width = v->fbi.width;
     s.vdraw.height = v->fbi.height;
-    bx_gui->dimension_update(v->fbi.width, v->fbi.height, 0, 0, 16);
+    bx_gui->dimension_update_common(v->fbi.width, v->fbi.height, 0, 0, 16);
     v->fbi.vblank_swap_pending = 0;
     vertical_timer_handler(this);
   }

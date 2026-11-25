@@ -371,6 +371,7 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
       bx_virt_timer.register_timer(this, led_timer_handler, 100000, 1, 1, 1,
                                    "status bar LEDs");
   }
+  display_out_of_range_active = false;
 }
 
 void bx_gui_c::cleanup(void)
@@ -492,6 +493,11 @@ void bx_gui_c::power_handler(void)
   // the user pressed power button, so there's no doubt they want bochs
   // to quit.  Change panics to fatal for the GUI and then do a panic.
   bx_user_quit = 1;
+#if BX_USE_GUI_CONSOLE
+  if (bx_gui->console_running()) {
+    bx_gui->console_cleanup();
+  }
+#endif
   BX_FATAL(("POWER button turned off."));
   // shouldn't reach this point, but if you do, QUIT!!!
   fprintf (stderr, "Bochs is exiting because you pressed the power button.\n");
@@ -956,7 +962,7 @@ void bx_gui_c::headerbar_click(int x)
     else
       xorigin = guest_xres - bx_headerbar_entry[i].xorigin;
     if ((x>=xorigin) && (x<(xorigin+int(bx_headerbar_entry[i].xdim)))) {
-      if (console_running() && (i != power_hbar_id))
+      if (console_running() && (i != power_hbar_id) && ((disp_mode != DISP_MODE_SIM) && (i != reset_hbar_id)))
         return;
       bx_headerbar_entry[i].f();
       return;
@@ -1147,6 +1153,34 @@ void bx_gui_c::close_debug_dialog()
   CloseDebugDialog();
 }
 #endif
+
+void bx_gui_c::dimension_update_common(unsigned x, unsigned y, unsigned fheight,
+                                       unsigned fwidth, unsigned bpp)
+{
+  Bit16u max_xres, max_yres, max_bpp;
+
+  get_capabilities(&max_xres, &max_yres, &max_bpp);
+  if ((x <= max_xres) && (y <= max_yres) && ((bpp == 8) || (max_bpp > 8))) {
+#if BX_USE_GUI_CONSOLE
+    if (console.running) {
+      console_cleanup();
+    }
+#endif
+    dimension_update(x, y, fheight, fwidth, bpp);
+    display_out_of_range_active = false;
+  } else {
+#if BX_USE_GUI_CONSOLE
+    if (console.present) {
+      SIM->bx_printf("\n\n\n\n\n\n\n\n\n\n\n\n             Display parameters out of bounds (%d x %d x %d)", x, y, bpp);
+    } else
+#endif
+    {
+      clear_screen();
+      BX_ERROR(("Display parameters out of bounds (%d x %d x %d)", x, y, bpp));
+    }
+    display_out_of_range_active = true;
+  }
+}
 
 // new graphics API (compatibility code)
 
@@ -1580,6 +1614,7 @@ void bx_gui_c::console_init(void)
 
 void bx_gui_c::console_cleanup(void)
 {
+  console.running = 0;
   delete [] console.screen;
   delete [] console.oldscreen;
   palette_change_common(0x00, console.saved_palette[2], console.saved_palette[1],
@@ -1592,7 +1627,6 @@ void bx_gui_c::console_cleanup(void)
   dimension_update(console.saved_xres, console.saved_yres, fheight, fwidth,
                    console.saved_bpp);
   DEV_vga_refresh(1);
-  console.running = 0;
 }
 
 void bx_gui_c::console_refresh(bool force)

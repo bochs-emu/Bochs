@@ -1235,8 +1235,8 @@ void bx_vgacore_c::set_override(bool enabled, void *dev)
   BX_VGA_THIS s.nvgadev = (bx_nonvga_device_c*)dev;
 #endif
   if (!enabled) {
-    bx_gui->dimension_update(BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres,
-                             BX_VGA_THIS s.last_fh, BX_VGA_THIS s.last_fw, BX_VGA_THIS s.last_bpp);
+    bx_gui->dimension_update_common(BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres,
+                                    BX_VGA_THIS s.last_fh, BX_VGA_THIS s.last_fw, BX_VGA_THIS s.last_bpp);
     BX_VGA_THIS vga_redraw_area(0, 0, BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres);
     BX_VGA_THIS start_vertical_timer();
   } else {
@@ -1392,7 +1392,7 @@ void bx_vgacore_c::update(void)
     if((iWidth != BX_VGA_THIS s.last_xres) || (iHeight != BX_VGA_THIS s.last_yres) ||
         (BX_VGA_THIS s.last_bpp > 8))
     {
-      bx_gui->dimension_update(iWidth, iHeight);
+      bx_gui->dimension_update_common(iWidth, iHeight);
       BX_VGA_THIS s.last_xres = iWidth;
       BX_VGA_THIS s.last_yres = iHeight;
       BX_VGA_THIS s.last_bpp = 8;
@@ -1690,7 +1690,7 @@ void bx_vgacore_c::update(void)
         (cWidth != BX_VGA_THIS s.last_fw) ||((MSL+1) != BX_VGA_THIS s.last_fh) ||
         (BX_VGA_THIS s.last_bpp > 8))
     {
-      bx_gui->dimension_update(iWidth, iHeight, MSL+1, cWidth);
+      bx_gui->dimension_update_common(iWidth, iHeight, MSL+1, cWidth);
       BX_VGA_THIS s.last_xres = iWidth;
       BX_VGA_THIS s.last_yres = iHeight;
       BX_VGA_THIS s.last_fw = cWidth;

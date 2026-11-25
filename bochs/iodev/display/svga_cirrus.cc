@@ -1748,7 +1748,7 @@ void bx_svga_cirrus_c::update(void)
     height = BX_CIRRUS_THIS svga_yres;
     pitch = BX_CIRRUS_THIS svga_pitch;
     if (BX_CIRRUS_THIS svga_needs_update_mode) {
-      bx_gui->dimension_update(width, height, 0, 0, BX_CIRRUS_THIS svga_dispbpp);
+      bx_gui->dimension_update_common(width, height, 0, 0, BX_CIRRUS_THIS svga_dispbpp);
       BX_CIRRUS_THIS s.last_bpp = BX_CIRRUS_THIS svga_dispbpp;
       BX_CIRRUS_THIS svga_needs_update_mode = 0;
       BX_CIRRUS_THIS svga_needs_update_dispentire = 1;
@@ -1758,12 +1758,14 @@ void bx_svga_cirrus_c::update(void)
     pitch = BX_CIRRUS_THIS s.line_offset;
     if ((width != BX_CIRRUS_THIS s.last_xres) || (height != BX_CIRRUS_THIS s.last_yres) ||
         (BX_CIRRUS_THIS s.last_bpp > 8)) {
-      bx_gui->dimension_update(width, height);
+      bx_gui->dimension_update_common(width, height);
       BX_CIRRUS_THIS s.last_xres = width;
       BX_CIRRUS_THIS s.last_yres = height;
       BX_CIRRUS_THIS s.last_bpp = 8;
     }
   }
+  if (bx_gui->display_out_of_range())
+    return;
 
   if (BX_CIRRUS_THIS svga_needs_update_dispentire) {
     BX_CIRRUS_THIS redraw_area(0,0,width,height);
