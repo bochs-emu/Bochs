@@ -3186,6 +3186,7 @@ void bx_svga_cirrus_c::svga_bitblt()
   Bit32u srcaddr;
   Bit32u offset;
   Bit32u offset2;
+  int bltbytes;
   bool backwards;
   Bit8u *cregs = BX_CIRRUS_THIS control.reg;
 
@@ -3254,7 +3255,21 @@ void bx_svga_cirrus_c::svga_bitblt()
   }
 
   BX_CIRRUS_THIS bitblt.bltmode &= ~CIRRUS_BLTMODE_PIXELWIDTHMASK;
+  // the per pixel BLT loops access full pixels, the last one may end
+  // after 'bltwidth' bytes
+  bltbytes = ((BX_CIRRUS_THIS bitblt.bltwidth + BX_CIRRUS_THIS bitblt.pixelwidth - 1) /
+              BX_CIRRUS_THIS bitblt.pixelwidth) * BX_CIRRUS_THIS bitblt.pixelwidth;
   backwards = (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_BACKWARDS) != 0;
+
+  // the color expand, transparent compare and pattern copy BLT loops
+  // only support the forward direction
+  if (backwards && (BX_CIRRUS_THIS bitblt.bltmode & (CIRRUS_BLTMODE_COLOREXPAND |
+                                                     CIRRUS_BLTMODE_TRANSPARENTCOMP |
+                                                     CIRRUS_BLTMODE_PATTERNCOPY))) {
+    BX_ERROR(("BLT: backwards BLT with mode 0x%02x not supported, ignored",
+      (unsigned)BX_CIRRUS_THIS bitblt.bltmode));
+    goto ignoreblt;
+  }
 
   if ((BX_CIRRUS_THIS bitblt.bltmode & (CIRRUS_BLTMODE_MEMSYSSRC|CIRRUS_BLTMODE_MEMSYSDEST))
                                    == (CIRRUS_BLTMODE_MEMSYSSRC|CIRRUS_BLTMODE_MEMSYSDEST)) {
@@ -3269,7 +3284,7 @@ void bx_svga_cirrus_c::svga_bitblt()
                              CIRRUS_BLTMODE_PATTERNCOPY |
                              CIRRUS_BLTMODE_COLOREXPAND)) ==
       (CIRRUS_BLTMODE_PATTERNCOPY | CIRRUS_BLTMODE_COLOREXPAND)) {
-    if (!cirrus_blt_area_valid(dstaddr, BX_CIRRUS_THIS bitblt.dstpitch, BX_CIRRUS_THIS bitblt.bltwidth,
+    if (!cirrus_blt_area_valid(dstaddr, BX_CIRRUS_THIS bitblt.dstpitch, bltbytes,
                                BX_CIRRUS_THIS bitblt.bltheight, BX_CIRRUS_THIS s.memsize, 0)) {
       BX_ERROR(("BLT: solid fill destination out of video memory, ignored"));
       goto ignoreblt;
@@ -3314,7 +3329,7 @@ void bx_svga_cirrus_c::svga_bitblt()
     // wrapping (except the pattern copy destination), reject BLT operations
     // crossing the video memory boundaries
     if (!(BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_PATTERNCOPY) &&
-        !cirrus_blt_area_valid(dstaddr, BX_CIRRUS_THIS bitblt.dstpitch, BX_CIRRUS_THIS bitblt.bltwidth,
+        !cirrus_blt_area_valid(dstaddr, BX_CIRRUS_THIS bitblt.dstpitch, bltbytes,
                                BX_CIRRUS_THIS bitblt.bltheight, BX_CIRRUS_THIS s.memsize, backwards)) {
       BX_ERROR(("BLT: destination out of video memory, ignored"));
       goto ignoreblt;
@@ -3322,7 +3337,7 @@ void bx_svga_cirrus_c::svga_bitblt()
     if ((BX_CIRRUS_THIS bitblt.bltmode & (CIRRUS_BLTMODE_MEMSYSSRC|CIRRUS_BLTMODE_MEMSYSDEST)) == 0) {
       Bit32u srcstart = srcaddr;
       int srcpitch = BX_CIRRUS_THIS bitblt.srcpitch;
-      int srcwidth = BX_CIRRUS_THIS bitblt.bltwidth;
+      int srcwidth = bltbytes;
       int srcheight = BX_CIRRUS_THIS bitblt.bltheight;
       if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_PATTERNCOPY) {
         // 8x8 pattern
@@ -3697,7 +3712,8 @@ void bx_svga_cirrus_c::svga_patterncopy()
             bits = BX_CIRRUS_THIS bitblt.src[pattern_y] ^ bits_xor;
           }
           dst = BX_CIRRUS_THIS s.memory + dstaddr;
-          if (bits & bitmask) {
+          if ((bits & bitmask) &&
+              (dstaddr <= (BX_CIRRUS_THIS s.memsize - BX_CIRRUS_THIS bitblt.pixelwidth))) {
             (*BX_CIRRUS_THIS bitblt.rop_handler)(
               dst, &color[0], 0, 0, BX_CIRRUS_THIS bitblt.pixelwidth, 1);
           }
@@ -3732,8 +3748,11 @@ void bx_svga_cirrus_c::svga_patterncopy()
     for (x = pattern_x; x < bltbytes; x += BX_CIRRUS_THIS bitblt.pixelwidth) {
       src2 = srcc + (x % patternbytes);
       dst = BX_CIRRUS_THIS s.memory + dstaddr;
-      (*BX_CIRRUS_THIS bitblt.rop_handler)(
-        dst, src2, 0, 0, BX_CIRRUS_THIS bitblt.pixelwidth, 1);
+      // the destination address wraps, skip a pixel crossing the end of video memory
+      if (dstaddr <= (BX_CIRRUS_THIS s.memsize - BX_CIRRUS_THIS bitblt.pixelwidth)) {
+        (*BX_CIRRUS_THIS bitblt.rop_handler)(
+          dst, src2, 0, 0, BX_CIRRUS_THIS bitblt.pixelwidth, 1);
+      }
       dstaddr = (dstaddr + BX_CIRRUS_THIS bitblt.pixelwidth) & BX_CIRRUS_THIS memsize_mask;
     }
     pattern_y = (pattern_y + 1) & 7;
