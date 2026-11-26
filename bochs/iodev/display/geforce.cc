@@ -1961,22 +1961,31 @@ Bit8u bx_geforce_c::vram_read8(Bit32u address)
 
 Bit16u bx_geforce_c::vram_read16(Bit32u address)
 {
+#ifndef BX_LITTLE_ENDIAN
   return
     BX_GEFORCE_THIS s.memory[address + 0] << 0 |
     BX_GEFORCE_THIS s.memory[address + 1] << 8;
+#else
+  return *(Bit16u*)(BX_GEFORCE_THIS s.memory + address);
+#endif
 }
 
 Bit32u bx_geforce_c::vram_read32(Bit32u address)
 {
+#ifndef BX_LITTLE_ENDIAN
   return
     BX_GEFORCE_THIS s.memory[address + 0] << 0 |
     BX_GEFORCE_THIS s.memory[address + 1] << 8 |
     BX_GEFORCE_THIS s.memory[address + 2] << 16 |
     BX_GEFORCE_THIS s.memory[address + 3] << 24;
+#else
+  return *(Bit32u*)(BX_GEFORCE_THIS s.memory + address);
+#endif
 }
 
 Bit64u bx_geforce_c::vram_read64(Bit32u address)
 {
+#ifndef BX_LITTLE_ENDIAN
   return
     (Bit64u)BX_GEFORCE_THIS s.memory[address + 0] << 0 |
     (Bit64u)BX_GEFORCE_THIS s.memory[address + 1] << 8 |
@@ -1986,6 +1995,9 @@ Bit64u bx_geforce_c::vram_read64(Bit32u address)
     (Bit64u)BX_GEFORCE_THIS s.memory[address + 5] << 40 |
     (Bit64u)BX_GEFORCE_THIS s.memory[address + 6] << 48 |
     (Bit64u)BX_GEFORCE_THIS s.memory[address + 7] << 56;
+#else
+  return *(Bit64u*)(BX_GEFORCE_THIS s.memory + address);
+#endif
 }
 
 void bx_geforce_c::vram_write8(Bit32u address, Bit8u value)
@@ -1995,20 +2007,29 @@ void bx_geforce_c::vram_write8(Bit32u address, Bit8u value)
 
 void bx_geforce_c::vram_write16(Bit32u address, Bit16u value)
 {
+#ifndef BX_LITTLE_ENDIAN
   BX_GEFORCE_THIS s.memory[address + 0] = (value >> 0) & 0xFF;
   BX_GEFORCE_THIS s.memory[address + 1] = (value >> 8) & 0xFF;
+#else
+  *(Bit16u*)(BX_GEFORCE_THIS s.memory + address) = value;
+#endif
 }
 
 void bx_geforce_c::vram_write32(Bit32u address, Bit32u value)
 {
+#ifndef BX_LITTLE_ENDIAN
   BX_GEFORCE_THIS s.memory[address + 0] = (value >> 0) & 0xFF;
   BX_GEFORCE_THIS s.memory[address + 1] = (value >> 8) & 0xFF;
   BX_GEFORCE_THIS s.memory[address + 2] = (value >> 16) & 0xFF;
   BX_GEFORCE_THIS s.memory[address + 3] = (value >> 24) & 0xFF;
+#else
+  *(Bit32u*)(BX_GEFORCE_THIS s.memory + address) = value;
+#endif
 }
 
 void bx_geforce_c::vram_write64(Bit32u address, Bit64u value)
 {
+#ifndef BX_LITTLE_ENDIAN
   BX_GEFORCE_THIS s.memory[address + 0] = (value >> 0) & 0xFF;
   BX_GEFORCE_THIS s.memory[address + 1] = (value >> 8) & 0xFF;
   BX_GEFORCE_THIS s.memory[address + 2] = (value >> 16) & 0xFF;
@@ -2017,6 +2038,9 @@ void bx_geforce_c::vram_write64(Bit32u address, Bit64u value)
   BX_GEFORCE_THIS s.memory[address + 5] = (value >> 40) & 0xFF;
   BX_GEFORCE_THIS s.memory[address + 6] = (value >> 48) & 0xFF;
   BX_GEFORCE_THIS s.memory[address + 7] = (value >> 56) & 0xFF;
+#else
+  *(Bit64u*)(BX_GEFORCE_THIS s.memory + address) = value;
+#endif
 }
 
 Bit8u bx_geforce_c::ramin_read8(Bit32u address)
@@ -2055,23 +2079,35 @@ Bit16u bx_geforce_c::physical_read16(Bit32u address)
 {
   Bit8u data[2];
   DEV_MEM_READ_PHYSICAL(address, 2, data);
+#ifndef BX_LITTLE_ENDIAN
   return data[0] << 0 | data[1] << 8;
+#else
+  return *(Bit16u*)data;
+#endif
 }
 
 Bit32u bx_geforce_c::physical_read32(Bit32u address)
 {
   Bit8u data[4];
   DEV_MEM_READ_PHYSICAL(address, 4, data);
+#ifndef BX_LITTLE_ENDIAN
   return data[0] << 0 | data[1] << 8 | data[2] << 16 | data[3] << 24;
+#else
+  return *(Bit32u*)data;
+#endif
 }
 
 Bit64u bx_geforce_c::physical_read64(Bit32u address)
 {
   Bit8u data[8];
   DEV_MEM_READ_PHYSICAL(address, 8, data);
+#ifndef BX_LITTLE_ENDIAN
   return (Bit64u)data[0] << 0 | (Bit64u)data[1] << 8 | (Bit64u)data[2] << 16 |
     (Bit64u)data[3] << 24 | (Bit64u)data[4] << 32 | (Bit64u)data[5] << 40 |
     (Bit64u)data[6] << 48 | (Bit64u)data[7] << 56;
+#else
+  return *(Bit64u*)data;
+#endif
 }
 
 void bx_geforce_c::physical_write8(Bit32u address, Bit8u value)
