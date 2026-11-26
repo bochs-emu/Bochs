@@ -1168,7 +1168,7 @@ void bx_gui_c::dimension_update_common(unsigned x, unsigned y, unsigned fheight,
 #endif
     dimension_update(x, y, fheight, fwidth, bpp);
     display_out_of_range_active = false;
-  } else {
+  } else if (!display_out_of_range_active) {
 #if BX_USE_GUI_CONSOLE
     if (console.present) {
       SIM->bx_printf("\n\n\n\n\n\n\n\n\n\n\n\n             Display parameters out of bounds (%d x %d x %d)", x, y, bpp);

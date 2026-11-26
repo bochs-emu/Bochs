@@ -56,6 +56,7 @@ public:
 #if BX_SHOW_IPS
   void show_ips(Bit32u ips_count);
 #endif
+  virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -270,6 +271,9 @@ void bx_term_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     BX_ERROR(("WARNING: private_colormap option ignored."));
 
   initialized = 1;
+#if BX_USE_GUI_CONSOLE
+  console.present = 1;
+#endif
 }
 
 void term_set_command_mode(bool enable)
@@ -861,5 +865,12 @@ void bx_term_gui_c::show_ips(Bit32u ips_count)
 }
 
 #endif
+
+void bx_term_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
+{
+  *xres = 720;
+  *yres = 400;
+  *bpp = 4;
+}
 
 #endif /* if BX_WITH_TERM */
