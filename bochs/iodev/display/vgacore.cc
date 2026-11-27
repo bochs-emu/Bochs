@@ -1710,6 +1710,9 @@ void bx_vgacore_c::update(void)
     }
     if (BX_VGA_THIS s.text_buffer_update) {
       int size = text_snap_size[BX_VGA_THIS s.graphics_ctrl.memory_mapping];
+      // characters and attributes are in planes 0 and 1 (memory[i * 4 + 0/1])
+      if ((Bit32u)size > (BX_VGA_THIS s.memsize >> 2))
+        size = BX_VGA_THIS s.memsize >> 2;
       for (int i = 0; i < size; i += 2) {
         BX_VGA_THIS s.text_buffer[i] = BX_VGA_THIS s.memory[i * 4];
         BX_VGA_THIS s.text_buffer[i + 1] = BX_VGA_THIS s.memory[i * 4 + 1];
