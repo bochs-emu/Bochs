@@ -131,11 +131,17 @@ void BX_CPU_C::handleInterruptMaskChange(void)
 
 #if BX_SUPPORT_SVM
     if (BX_CPU_THIS_PTR in_svm_guest) {
-      // virtual interrupts are masked when Virtual GIF is enabled and VGIF is 0
-      if (SVM_V_GIF_ENABLE && ! SVM_V_GIF)
-        mask_event(BX_EVENT_SVM_VIRQ_PENDING);
-      else if ((SVM_V_INTR_PRIO > SVM_V_TPR) || SVM_V_IGNORE_TPR)
-        unmask_event(BX_EVENT_SVM_VIRQ_PENDING);
+      // virtual interrupts (also AVIC ones) are masked when Virtual GIF is enabled and VGIF is 0
+      if (SVM_V_GIF_ENABLE && ! SVM_V_GIF) {
+        mask_event(BX_EVENT_SVM_VIRQ_PENDING | BX_EVENT_SVM_AVIC_INTR);
+      }
+      else {
+        if ((SVM_V_INTR_PRIO > SVM_V_TPR) || SVM_V_IGNORE_TPR)
+          unmask_event(BX_EVENT_SVM_VIRQ_PENDING);
+
+        // priority of AVIC virtual interrupt is checked when the backing page is evaluated
+        unmask_event(BX_EVENT_SVM_AVIC_INTR);
+      }
     }
 #endif
   }
@@ -156,7 +162,8 @@ void BX_CPU_C::handleInterruptMaskChange(void)
                BX_EVENT_PENDING_INTR |
                BX_EVENT_PENDING_LAPIC_INTR |
                BX_EVENT_PENDING_VMX_VIRTUAL_INTR |
-               BX_EVENT_SVM_VIRQ_PENDING);
+               BX_EVENT_SVM_VIRQ_PENDING |
+               BX_EVENT_SVM_AVIC_INTR);
   }
 
 #if BX_SUPPORT_SVM

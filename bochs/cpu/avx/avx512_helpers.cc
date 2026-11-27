@@ -228,8 +228,8 @@ void BX_CPU_C::avx_masked_store8(bxInstruction_c *i, bx_address eaddr, const BxP
 
   // see if you can successfully write all the elements first, the selected elements span at most
   // two pages: check the last byte of the last element and the first byte of the first element
-  tickle_write_virtual(i->seg(), eaddr + last, 1);
-  tickle_write_virtual(i->seg(), eaddr + first, 1);
+  tickle_write_virtual(i->seg(), eaddr + last);
+  tickle_write_virtual(i->seg(), eaddr + first);
 
   for (unsigned n=first; n <= last; n++) {
     if (mask & (BX_CONST64(1)<<n))
@@ -273,8 +273,8 @@ void BX_CPU_C::avx_masked_store16(bxInstruction_c *i, bx_address eaddr, const Bx
 
   // see if you can successfully write all the elements first, the selected elements span at most
   // two pages: check the last byte of the last element and the first byte of the first element
-  tickle_write_virtual(i->seg(), eaddr + 2*last + 1, 1);
-  tickle_write_virtual(i->seg(), eaddr + 2*first, 1);
+  tickle_write_virtual(i->seg(), eaddr + 2*last + 1);
+  tickle_write_virtual(i->seg(), eaddr + 2*first);
 
   for (unsigned n=first; n <= last; n++) {
     if (mask & (1<<n))
@@ -318,8 +318,8 @@ void BX_CPU_C::avx_masked_store32(bxInstruction_c *i, bx_address eaddr, const Bx
 
   // see if you can successfully write all the elements first, the selected elements span at most
   // two pages: check the last byte of the last element and the first byte of the first element
-  tickle_write_virtual(i->seg(), eaddr + 4*last + 3, 1);
-  tickle_write_virtual(i->seg(), eaddr + 4*first, 1);
+  tickle_write_virtual(i->seg(), eaddr + 4*last + 3);
+  tickle_write_virtual(i->seg(), eaddr + 4*first);
 
   for (unsigned n=first; n <= last; n++) {
     if (mask & (1<<n))
@@ -363,8 +363,8 @@ void BX_CPU_C::avx_masked_store64(bxInstruction_c *i, bx_address eaddr, const Bx
 
   // see if you can successfully write all the elements first, the selected elements span at most
   // two pages: check the last byte of the last element and the first byte of the first element
-  tickle_write_virtual(i->seg(), eaddr + 8*last + 7, 1);
-  tickle_write_virtual(i->seg(), eaddr + 8*first, 1);
+  tickle_write_virtual(i->seg(), eaddr + 8*last + 7);
+  tickle_write_virtual(i->seg(), eaddr + 8*first);
 
   for (unsigned n=first; n <= last; n++) {
     if (mask & (1<<n))

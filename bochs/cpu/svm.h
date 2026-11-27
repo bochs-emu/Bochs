@@ -186,6 +186,41 @@ enum {
 #define SVM_AVIC_LOGICAL_TABLE_PTR              (0x0f0)
 #define SVM_AVIC_PHYSICAL_TABLE_PTR             (0x0f8)
 
+// AVIC enable is VMCB offset 060h bit 31 (bit 7 of SVM_CONTROL_VINTR_MASKING byte)
+#define SVM_AVIC_ENABLE_MASK                    (0x80)
+
+// AVIC Physical APIC ID table entry
+//   [11:0]  Host Physical APIC ID
+//  [51:12]  Backing Page Pointer
+//  [61:52]  reserved, SBZ
+//     [62]  IsRunning
+//     [63]  Valid
+#define SVM_AVIC_PHYSICAL_ENTRY_HOST_ID_MASK    BX_CONST64(0x0000000000000fff)
+#define SVM_AVIC_PHYSICAL_ENTRY_BACKING_MASK    BX_CONST64(0x000ffffffffff000)
+#define SVM_AVIC_PHYSICAL_ENTRY_RESERVED_MASK   BX_CONST64(0x3ff0000000000000)
+#define SVM_AVIC_PHYSICAL_ENTRY_IS_RUNNING      BX_CONST64(0x4000000000000000)
+#define SVM_AVIC_PHYSICAL_ENTRY_VALID           BX_CONST64(0x8000000000000000)
+
+// AVIC Logical APIC ID table entry
+//    [7:0]  Guest Physical APIC ID
+//   [30:8]  reserved, SBZ
+//     [31]  Valid
+#define SVM_AVIC_LOGICAL_ENTRY_GUEST_ID_MASK    (0x000000ff)
+#define SVM_AVIC_LOGICAL_ENTRY_RESERVED_MASK    (0x7fffff00)
+#define SVM_AVIC_LOGICAL_ENTRY_VALID            (0x80000000)
+
+// AVIC_INCOMPLETE_IPI EXITINFO2[63:32] failure ID (APM Table 15-27)
+enum {
+  SVM_AVIC_IPI_INVALID_INT_TYPE = 0,
+  SVM_AVIC_IPI_TARGET_NOT_RUNNING = 1,
+  SVM_AVIC_IPI_INVALID_TARGET = 2,
+  SVM_AVIC_IPI_INVALID_BACKING_PAGE = 3,
+  SVM_AVIC_IPI_INVALID_VECTOR = 4
+};
+
+// AVIC_NOACCEL EXITINFO1[32]: write access
+#define SVM_AVIC_NOACCEL_WRITE                  BX_CONST64(0x100000000)
+
 // ======================
 //  VMCB save state area
 // ======================
@@ -397,6 +432,13 @@ struct SVM_CONTROLS
   bool v_gif_enable;
   bool v_gif;
 
+  bool avic_enable;                       // AVIC enabled for this guest (VMCB 060h bit 31)
+  bx_phy_address avic_apic_bar;           // guest physical page of the guest vAPIC (VMCB 098h)
+  bx_phy_address avic_backing_page;       // host physical address of vAPIC backing page (VMCB 0E0h)
+  bx_phy_address avic_logical_table;      // host physical address of Logical APIC ID table (VMCB 0F0h)
+  bx_phy_address avic_physical_table;     // host physical address of Physical APIC ID table (VMCB 0F8h)
+  unsigned avic_physical_max_index;       // index of the last Physical APIC ID table entry (VMCB 0F8h[11:0])
+
   bool nested_paging;
   Bit64u ncr3;
 #if BX_SUPPORT_CET
@@ -533,6 +575,8 @@ enum {
   (BX_CPU_THIS_PTR vmcb->ctrls.dr_wr_ctrl & (1<<(reg_num)))
 
 #define SVM_NESTED_PAGING_ENABLED (BX_CPU_THIS_PTR vmcb->ctrls.nested_paging)
+
+#define SVM_AVIC_ENABLED (BX_CPU_THIS_PTR vmcb->ctrls.avic_enable)
 
 #endif // BX_SUPPORT_SVM
 

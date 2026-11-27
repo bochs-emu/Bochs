@@ -360,17 +360,11 @@ BX_CPU_C::tickle_read_linear(unsigned s, bx_address laddr, unsigned len)
   }
 }
 
-  void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::tickle_write_linear(unsigned s, bx_address laddr, unsigned len)
+  void BX_CPP_AttrRegparmN(2)
+BX_CPU_C::tickle_write_linear(unsigned s, bx_address laddr)
 {
-  len--;
-
-  bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr, len);
-#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
-  bx_address lpf = AlignedAccessLPFOf(laddr, (len & BX_CPU_THIS_PTR alignment_check_mask));
-#else
+  bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr, 0);
   bx_address lpf = LPFOf(laddr);
-#endif
   Bit32u pageOffset = PAGE_OFFSET(laddr);
 
   if (tlbEntry->lpf == lpf) {
@@ -386,40 +380,21 @@ BX_CPU_C::tickle_write_linear(unsigned s, bx_address laddr, unsigned len)
   }
 
 #if BX_SUPPORT_X86_64
-  if (! IsCanonicalAccess(laddr, BX_WRITE, USER_PL) || ! IsCanonicalAccess(laddr+len, BX_WRITE, USER_PL)) {
+  if (! IsCanonicalAccess(laddr, BX_WRITE, USER_PL)) {
     BX_ERROR(("tickle_write_linear(): canonical failure"));
     exception(int_number(s), 0);
   }
 #endif
 
-#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  if (BX_CPU_THIS_PTR alignment_check() && USER_PL) {
-    // 16/32/64-byte accesses never generate #AC, same as the vector write that follows
-    if (len < 8 && (pageOffset & len)) {
-      BX_ERROR(("tickle_write_linear(): #AC misaligned access"));
-      exception(BX_AC_EXCEPTION, 0);
-    }
-  }
-#endif
-
-  // access spans across two pages
-  tlbEntry = BX_DTLB_ENTRY_OF(laddr, 0);
   BX_CPU_THIS_PTR address_xlation.pages     = 1;
   BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, USER_PL, BX_WRITE);
 #if BX_SUPPORT_MEMTYPE
   BX_CPU_THIS_PTR address_xlation.memtype1  = tlbEntry->get_memtype();
 #endif
 
-  if ((laddr>>12) != (laddr + len) >> 12) {
-    bx_address laddr2 = LPFOf(laddr + len);
-    bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr2, 1);
-
-    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry, laddr2, USER_PL, BX_WRITE);
-    BX_CPU_THIS_PTR address_xlation.pages     = 2;
-#if BX_SUPPORT_MEMTYPE
-    BX_CPU_THIS_PTR address_xlation.memtype2  = tlbEntry->get_memtype();
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) SvmAvicWriteTickle();
 #endif
-  }
 }
 
   Bit8u BX_CPP_AttrRegparmN(2)

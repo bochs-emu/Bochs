@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -206,7 +206,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER16_IwIb(bxInstruction_c *i)
 
     // ENTER finishes with memory write check on the final stack pointer
     // the memory is touched but no write actually occurs
-    tickle_write_linear(BX_SEG_REG_SS, RSP, 2);
+    // emulate it by doing RMW read access from SS:RSP
+    read_RMW_linear_word(BX_SEG_REG_SS, RSP); // no lock, should be touch only
   }
   else
 #endif
@@ -229,7 +230,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER16_IwIb(bxInstruction_c *i)
 
     // ENTER finishes with memory write check on the final stack pointer
     // the memory is touched but no write actually occurs
-    tickle_write_virtual_32(BX_SEG_REG_SS, ESP, 2);
+    // emulate it by doing RMW read access from SS:ESP
+    read_RMW_virtual_word_32(BX_SEG_REG_SS, ESP); // no lock, should be touch only
   }
   else {
     Bit16u bp = BP;
@@ -250,7 +252,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER16_IwIb(bxInstruction_c *i)
 
     // ENTER finishes with memory write check on the final stack pointer
     // the memory is touched but no write actually occurs
-    tickle_write_virtual_32(BX_SEG_REG_SS, SP, 2);
+    // emulate it by doing RMW read access from SS:SP
+    read_RMW_virtual_word_32(BX_SEG_REG_SS, SP); // no lock, should be touch only
   }
 
   BP = frame_ptr16;

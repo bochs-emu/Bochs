@@ -246,7 +246,7 @@ Bit32u ryzen_t::get_svm_extensions_bitmask(void) const
   // * [10:10] Pause filter support
   //   [11:11] Reserved
   // * [12:12] Pause filter threshold support
-  // ! [13:13] AVIC: Advanced Virtual Interrupt Controller support
+  // * [13:13] AVIC: Advanced Virtual Interrupt Controller support
   //   [14:14] Reserved
   // * [15:15] Nested Virtualization
   // * [16:16] Virtualize the Global Interrupt Flag
@@ -275,7 +275,7 @@ Bit32u ryzen_t::get_svm_extensions_bitmask(void) const
          BX_CPUID_SVM_DECODE_ASSIST |
          BX_CPUID_SVM_PAUSE_FILTER |
          BX_CPUID_SVM_PAUSE_FILTER_THRESHOLD |
-//       BX_CPUID_SVM_AVIC | // not implemented yet
+         BX_CPUID_SVM_AVIC |
          BX_CPUID_SVM_NESTED_VIRTUALIZATION |
          BX_CPUID_SVM_VIRTUAL_GIF;
 }

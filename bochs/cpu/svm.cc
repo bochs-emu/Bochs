@@ -376,12 +376,77 @@ void BX_CPU_C::SvmExitSaveGuestState(void)
 
   // update V_IRQ and VGIF (when Virtual GIF is enabled), keep other bits of the VMCB field
   Bit8u virq_control = vmcb_read8(SVM_CONTROL_VIRQ) & ~0x1;
-  if (is_pending(BX_EVENT_SVM_VIRQ_PENDING))
+  if (ctrls->avic_enable) {
+    // with AVIC V_IRQ is set when the backing page holds an interrupt deliverable by priority against
+    // the backing page TPR and ISR, V_TPR is not used; V_INTR_PRIO and V_INTR_VECTOR are not written
+    // (real hardware)
+    if (SvmAvicPendingVector(false) >= 0)
+      virq_control |= 0x1;
+  }
+  else if (is_pending(BX_EVENT_SVM_VIRQ_PENDING))
     virq_control |= 0x1;
   if (ctrls->v_gif_enable)
     virq_control = (virq_control & ~0x2) | (ctrls->v_gif ? 0x2 : 0);
   vmcb_write8(SVM_CONTROL_VIRQ, virq_control);
   clear_event(BX_EVENT_SVM_VIRQ_PENDING);
+}
+
+// AVIC controls, called from SvmEnterLoadCheckControls() when AVIC is enabled,
+// returns false if VMRUN must fail with VMEXIT_INVALID
+bool BX_CPU_C::SvmEnterLoadCheckAvic(SVM_CONTROLS *ctrls)
+{
+  if (! BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_AVIC)) {
+    BX_ERROR(("VMRUN: AVIC is not supported in this SVM configuration !"));
+    ctrls->avic_enable = false;
+    return true;
+  }
+
+  // VMCB offset 060h bit 30 (x2AVIC Mode Enable) is not defined for xAVIC only implementation and ignored
+
+  if (! ctrls->nested_paging) {
+    BX_ERROR(("VMRUN: attempt to enable AVIC with nested paging disabled !"));
+    return false;
+  }
+
+  // All AVIC addresses must be legal (APM 15.29.4.3). Bits 11:0 of the V_APIC_BAR, backing page and
+  // Logical APIC ID table pointers are ignored (real hardware), bits 11:0 of the Physical APIC ID
+  // table pointer hold AVIC_PHYSICAL_MAX_INDEX
+  Bit64u apic_bar = vmcb_read64(SVM_VIRTUAL_APIC_BAR);
+  ctrls->avic_apic_bar = (bx_phy_address) PPFOf(apic_bar);
+  if (! IsValidPhyAddr(ctrls->avic_apic_bar)) {
+    BX_ERROR(("VMRUN: invalid AVIC V_APIC_BAR 0x" FMT_ADDRX64 " !", apic_bar));
+    return false;
+  }
+
+  Bit64u backing_page = vmcb_read64(SVM_AVIC_BACKING_PAGE);
+  ctrls->avic_backing_page = (bx_phy_address) PPFOf(backing_page);
+  if (! IsValidPhyAddr(ctrls->avic_backing_page)) {
+    BX_ERROR(("VMRUN: invalid AVIC backing page pointer 0x" FMT_ADDRX64 " !", backing_page));
+    return false;
+  }
+
+  Bit64u logical_table = vmcb_read64(SVM_AVIC_LOGICAL_TABLE_PTR);
+  ctrls->avic_logical_table = (bx_phy_address) PPFOf(logical_table);
+  if (! IsValidPhyAddr(ctrls->avic_logical_table)) {
+    BX_ERROR(("VMRUN: invalid AVIC Logical APIC ID table pointer 0x" FMT_ADDRX64 " !", logical_table));
+    return false;
+  }
+
+  Bit64u physical_table = vmcb_read64(SVM_AVIC_PHYSICAL_TABLE_PTR);
+  // AVIC_PHYSICAL_MAX_INDEX above 255 is accepted by VMRUN, only bits 7:0 are used by IPIs
+  // (real hardware: max index 256 behaves as 0)
+  ctrls->avic_physical_max_index = (unsigned) PAGE_OFFSET(physical_table) & 0xff;
+  ctrls->avic_physical_table = (bx_phy_address) PPFOf(physical_table);
+  if (! IsValidPhyAddr(ctrls->avic_physical_table)) {
+    BX_ERROR(("VMRUN: invalid AVIC Physical APIC ID table pointer 0x" FMT_ADDRX64 " !", physical_table));
+    return false;
+  }
+
+  BX_DEBUG(("VMRUN AVIC: V_APIC_BAR=0x" FMT_PHY_ADDRX " backing page=0x" FMT_PHY_ADDRX, ctrls->avic_apic_bar, ctrls->avic_backing_page));
+  BX_DEBUG(("VMRUN AVIC: logical table=0x" FMT_PHY_ADDRX " physical table=0x" FMT_PHY_ADDRX " max index=%d",
+    ctrls->avic_logical_table, ctrls->avic_physical_table, ctrls->avic_physical_max_index));
+
+  return true;
 }
 
 extern bool isValidMSR_PAT(Bit64u pat_msr);
@@ -508,6 +573,12 @@ bool BX_CPU_C::SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls)
     }
 
     BX_DEBUG(("VMRUN: Starting Nested Paging Mode !"));
+  }
+
+  ctrls->avic_enable = (vmcb_read8(SVM_CONTROL_VINTR_MASKING) & SVM_AVIC_ENABLE_MASK) != 0;
+  if (ctrls->avic_enable) {
+    if (! SvmEnterLoadCheckAvic(ctrls))
+      return false;
   }
 
   return true;
@@ -759,10 +830,19 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
 
   setEFlags((Bit32u) guest.eflags);
 
-  // injecting virtual interrupt
-  Bit8u v_irq = vmcb_read8(SVM_CONTROL_VIRQ) & 0x1;
-  if (v_irq)
-    signal_event(BX_EVENT_SVM_VIRQ_PENDING);
+  if (ctrls->avic_enable) {
+    // V_IRQ, V_INTR_PRIO, V_INTR_VECTOR and V_IGN_TPR are ignored when AVIC is enabled (APM 15.29.8.3),
+    // V_IRQ on #VMEXIT reflects the AVIC interrupt state only (real hardware)
+
+    // evaluate pending interrupts in the AVIC backing page
+    SvmAvicVmrun();
+  }
+  else {
+    // injecting virtual interrupt
+    Bit8u v_irq = vmcb_read8(SVM_CONTROL_VIRQ) & 0x1;
+    if (v_irq)
+      signal_event(BX_EVENT_SVM_VIRQ_PENDING);
+  }
 
   handleCpuContextChange();
 
@@ -926,6 +1006,7 @@ void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1, Bit64u exitinfo2)
 #endif
 
   mask_event(BX_EVENT_SVM_VIRQ_PENDING);
+  clear_event(BX_EVENT_SVM_AVIC_TRAP | BX_EVENT_SVM_AVIC_INTR);
 
   BX_CPU_THIS_PTR in_svm_guest = false;
   BX_CPU_THIS_PTR svm_gif = false;
@@ -1649,6 +1730,7 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(svm, vmcbptr, BX_CPU_THIS_PTR vmcbptr);
   BXRS_PARAM_BOOL(svm, in_svm_guest, BX_CPU_THIS_PTR in_svm_guest);
   BXRS_PARAM_BOOL(svm, gif, BX_CPU_THIS_PTR svm_gif);
+  BXRS_HEX_PARAM_FIELD(svm, avic_trap_offset, BX_CPU_THIS_PTR avic_trap_offset);
 
   //
   // VMCB Control Fields
@@ -1677,6 +1759,12 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, v_intr_vector, BX_CPU_THIS_PTR vmcb->ctrls.v_intr_vector);
   BXRS_PARAM_BOOL(vmcb_ctrls, v_gif_enable, BX_CPU_THIS_PTR vmcb->ctrls.v_gif_enable);
   BXRS_PARAM_BOOL(vmcb_ctrls, v_gif, BX_CPU_THIS_PTR vmcb->ctrls.v_gif);
+  BXRS_PARAM_BOOL(vmcb_ctrls, avic_enable, BX_CPU_THIS_PTR vmcb->ctrls.avic_enable);
+  BXRS_HEX_PARAM_FIELD(vmcb_ctrls, avic_apic_bar, BX_CPU_THIS_PTR vmcb->ctrls.avic_apic_bar);
+  BXRS_HEX_PARAM_FIELD(vmcb_ctrls, avic_backing_page, BX_CPU_THIS_PTR vmcb->ctrls.avic_backing_page);
+  BXRS_HEX_PARAM_FIELD(vmcb_ctrls, avic_logical_table, BX_CPU_THIS_PTR vmcb->ctrls.avic_logical_table);
+  BXRS_HEX_PARAM_FIELD(vmcb_ctrls, avic_physical_table, BX_CPU_THIS_PTR vmcb->ctrls.avic_physical_table);
+  BXRS_HEX_PARAM_FIELD(vmcb_ctrls, avic_physical_max_index, BX_CPU_THIS_PTR vmcb->ctrls.avic_physical_max_index);
   BXRS_PARAM_BOOL(vmcb_ctrls, nested_paging, BX_CPU_THIS_PTR vmcb->ctrls.nested_paging);
   BXRS_PARAM_BOOL(vmcb_ctrls, virt_vmload_vmsave, BX_CPU_THIS_PTR vmcb->ctrls.virt_vmload_vmsave);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, ncr3, BX_CPU_THIS_PTR vmcb->ctrls.ncr3);

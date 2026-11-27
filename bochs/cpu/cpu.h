@@ -338,7 +338,8 @@ enum AccessReason {
   BX_VMX_VAPIC_ACCESS,
   BX_VMX_PML_WRITE,
   BX_VMX_PID,
-  BX_SMRAM_ACCESS
+  BX_SMRAM_ACCESS,
+  BX_SVM_AVIC_ACCESS
 };
 
 enum BX_Exception {
@@ -1206,6 +1207,9 @@ public: // for now...
 #endif
   VMCB_CACHE *vmcb;
 
+  // AVIC: backing page offset of the guest write waiting for trap-like processing
+  Bit16u avic_trap_offset;
+
 // make SVM integration easier
 #define SVM_GIF (BX_CPU_THIS_PTR svm_gif)
 
@@ -1256,6 +1260,8 @@ public: // for now...
 #define BX_EVENT_VMX_VTPR_UPDATE              (1 << 13)
 #define BX_EVENT_VMX_VEOI_UPDATE              (1 << 14)
 #define BX_EVENT_VMX_VIRTUAL_APIC_WRITE       (1 << 15)
+#define BX_EVENT_SVM_AVIC_TRAP                (1 << 16)
+#define BX_EVENT_SVM_AVIC_INTR                (1 << 17)
   Bit32u  pending_event;
   Bit32u  event_mask;
   Bit32u  async_event; // keep 32-bit because of BX_ASYNC_EVENT_STOP_TRACE
@@ -5579,9 +5585,8 @@ public: // for now...
   BX_SMF void tickle_read_virtual_32(unsigned seg, Bit32u offset, unsigned len) BX_CPP_AttrRegparmN(3);
   BX_SMF void tickle_read_virtual(unsigned seg, bx_address offset, unsigned len) BX_CPP_AttrRegparmN(3);
 
-  BX_SMF void tickle_write_linear(unsigned seg, bx_address offset, unsigned len) BX_CPP_AttrRegparmN(3);
-  BX_SMF void tickle_write_virtual_32(unsigned seg, Bit32u offset, unsigned len) BX_CPP_AttrRegparmN(3);
-  BX_SMF void tickle_write_virtual(unsigned seg, bx_address offset, unsigned len) BX_CPP_AttrRegparmN(3);
+  BX_SMF void tickle_write_linear(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF void tickle_write_virtual(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
 
   BX_SMF Bit8u read_virtual_byte_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit16u read_virtual_word_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
@@ -6508,6 +6513,32 @@ public: // for now...
   BX_SMF void SvmVirtualInterruptAcknowledge(void);
   BX_SMF void Svm_Update_VM_CR_MSR(Bit64u val);
   BX_SMF void register_svm_state(bx_param_c *parent);
+  // AVIC
+  BX_SMF bool SvmEnterLoadCheckAvic(SVM_CONTROLS *ctrls);
+  BX_SMF void SvmAvicVmrun(void);
+  BX_SMF bool is_avic_backing_page(bx_phy_address paddr) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SvmAvicRead(bx_phy_address paddr, unsigned len);
+  BX_SMF void SvmAvicWrite(bx_phy_address paddr, unsigned len, void *data);
+  BX_SMF void SvmAvicWriteTickle(void);
+  BX_SMF void SvmAvicTrap(void);
+  BX_SMF Bit32u SvmAvicRead32(unsigned offset);
+  BX_SMF void SvmAvicWrite32(unsigned offset, Bit32u val_32);
+  BX_SMF Bit64u SvmAvicReadPhysicalEntry(unsigned index);
+  BX_SMF Bit32u SvmAvicReadLogicalEntry(unsigned index);
+  BX_SMF int SvmAvicHighestVector(unsigned arrbase);
+  BX_SMF void SvmAvicUpdatePPR(void);
+  BX_SMF void SvmAvicTprWrite(Bit32u tpr);
+  BX_SMF void SvmAvicWriteCR8(unsigned tpr);
+  BX_SMF void SvmAvicEoi(void);
+  BX_SMF int SvmAvicPendingVector(bool use_v_tpr);
+  BX_SMF void SvmAvicEvaluatePendingInterrupt(void);
+  BX_SMF void SvmAvicDeliverInterrupt(void);
+  BX_SMF void SvmAvicSendIPI(void);
+  BX_SMF unsigned SvmAvicSelfPhysicalIndex(void);
+  BX_SMF void SvmAvicIncompleteIPI(unsigned id, unsigned index);
+  BX_SMF void SvmAvicSetTargetIRR(bx_phy_address backing_page, Bit8u vector);
+  BX_SMF void SvmAvicRingDoorbell(unsigned host_apic_id);
+  BX_SMF void SvmAvicDoorbell(void);
 #endif
 
 #if BX_CPU_LEVEL >= 5

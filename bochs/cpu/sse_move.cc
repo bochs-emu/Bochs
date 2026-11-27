@@ -105,7 +105,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
 
   // check that we would not fault while attempting to write, check that we can write-access byte 511 of the
   // FXSAVE image (the first byte is checked by the very first write), touch the memory but no write actually occurs
-  tickle_write_virtual(i->seg(), (eaddr + 511) & asize_mask, 1);
+  tickle_write_virtual(i->seg(), (eaddr + 511) & asize_mask);
 
   xsave_x87_state(i, eaddr);
 

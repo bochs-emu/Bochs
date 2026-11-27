@@ -145,8 +145,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   if (requested_feature_bitmap) {
     // check that we would not fault while attempting to write, check that we can write-access last and first bytes of the XSAVE area
     // to be written, touch the memory but no write actually occurs
-    tickle_write_virtual(i->seg(), (eaddr + xsave_area_last_byte(requested_feature_bitmap) - 1) & asize_mask, 1);
-    tickle_write_virtual(i->seg(), (eaddr + xsave_area_first_byte(requested_feature_bitmap, false)) & asize_mask, 1);
+    tickle_write_virtual(i->seg(), (eaddr + xsave_area_last_byte(requested_feature_bitmap) - 1) & asize_mask);
+    tickle_write_virtual(i->seg(), (eaddr + xsave_area_first_byte(requested_feature_bitmap, false)) & asize_mask);
 
     /////////////////////////////////////////////////////////////////////////////
     if ((requested_feature_bitmap & BX_XCR0_FPU_MASK) != 0)
@@ -249,8 +249,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
 
   // check that we would not fault while attempting to write, check that we can write-access last (at least the XSAVE header)
   // and first bytes of the XSAVE area before anything is written, touch the memory but no write actually occurs
-  tickle_write_virtual(i->seg(), (eaddr + xsave_area_last_byte_compaction(requested_feature_bitmap, requested_feature_bitmap) - 1) & asize_mask, 1);
-  tickle_write_virtual(i->seg(), (eaddr + xsave_area_first_byte(requested_feature_bitmap, true)) & asize_mask, 1);
+  tickle_write_virtual(i->seg(), (eaddr + xsave_area_last_byte_compaction(requested_feature_bitmap, requested_feature_bitmap) - 1) & asize_mask);
+  tickle_write_virtual(i->seg(), (eaddr + xsave_area_first_byte(requested_feature_bitmap, true)) & asize_mask);
 
   if ((xstate_bv & BX_XCR0_FPU_MASK) != 0)
   {

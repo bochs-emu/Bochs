@@ -57,7 +57,8 @@ bool BX_CPU_C::handleWaitForEvent(void)
     // external interrupt masking is tracked by the event mask: EFLAGS.IF, or host EFLAGS.IF for SVM guest
     // with V_INTR_MASKING, or not masked at all for VMX guest with external-interrupt exiting
     // virtual-interrupt delivery wakes the logical processor from the same states as an external interrupt
-    if (is_unmasked_event_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR | BX_EVENT_PENDING_VMX_VIRTUAL_INTR) ||
+    // same for SVM AVIC virtual interrupt
+    if (is_unmasked_event_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR | BX_EVENT_PENDING_VMX_VIRTUAL_INTR | BX_EVENT_SVM_AVIC_INTR) ||
         (is_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR | BX_EVENT_PENDING_VMX_VIRTUAL_INTR) &&
             BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF) ||
 #if BX_SUPPORT_UINTR
@@ -285,6 +286,14 @@ bool BX_CPU_C::handleAsyncEvent(void)
   }
 #endif
 
+#if BX_SUPPORT_SVM
+  // AVIC actions and trap-like #VMEXIT(AVIC_NOACCEL) after the vAPIC write instruction,
+  // a pending debug trap of the same instruction is handled in SvmAvicTrap()
+  if (is_pending(BX_EVENT_SVM_AVIC_TRAP)) {
+    SvmAvicTrap();
+  }
+#endif
+
   // Priority 2: Trap on Task Switch
   //   T flag in TSS is set
   if (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_TASK_SWITCH_BIT) {
@@ -441,6 +450,10 @@ bool BX_CPU_C::handleAsyncEvent(void)
   else if (is_unmasked_event_pending(BX_EVENT_SVM_VIRQ_PENDING))
   {
     SvmVirtualInterruptAcknowledge();
+  }
+  else if (is_unmasked_event_pending(BX_EVENT_SVM_AVIC_INTR))
+  {
+    SvmAvicDeliverInterrupt();
   }
 #endif
   else if (BX_HRQ && BX_DBG_ASYNC_DMA) {

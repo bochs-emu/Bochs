@@ -75,6 +75,7 @@ OBJS = \
 	sm3.o \
 	sm4.o \
 	svm.o \
+	svm_avic.o \
 	vmx.o \
 	vmcs.o \
 	vmexit.o \
@@ -775,6 +776,13 @@ svm.o: svm.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../pc_system.h ../gui/paramtree.h decoder/ia_opcodes.h \
  decoder/ia_opcodes.def decoder/ia_opcodes_evex.def ../bx_debug/debug.h \
  ../osdep.h ../cpu/decoder/decoder.h
+svm_avic.o: svm_avic.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
+ ../misc/bswap.h cpu.h decoder/decoder.h decoder/features.h \
+ ../instrument/stubs/instrument.h i387.h \
+ softfloat3e/include/softfloat_types.h ../config.h fpu/status_w.h \
+ fpu/control_w.h crregs.h descriptor.h decoder/instr.h lazy_flags.h tlb.h \
+ xmm.h vmx.h vmx_ctrls.h stack.h access.h svm.h cpuid.h scalar_arith.h \
+ ../memory/memory-bochs.h apic.h
 tasking.o: tasking.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h cpu.h decoder/decoder.h decoder/features.h \
  ../instrument/stubs/instrument.h i387.h \

@@ -374,7 +374,8 @@ void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, un
     "VAPIC",
     "PML",
     "PID",
-    "SMRAM"
+    "SMRAM",
+    "AVIC"
   };
 
   if (memtype > BX_MEMTYPE_INVALID) memtype = BX_MEMTYPE_INVALID;

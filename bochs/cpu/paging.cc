@@ -2037,12 +2037,24 @@ bx_phy_address BX_CPU_C::nested_walk(bx_phy_address guest_paddr, unsigned rw, bo
 
   BX_DEBUG(("Nested walk for guest paddr 0x" FMT_PHY_ADDRX, guest_paddr));
 
+  bx_phy_address paddr;
   if (host_state->efer.get_LMA())
-    return nested_walk_long_mode(guest_paddr, rw, is_page_walk, memtype, supervisor_shadow_stack);
+    paddr = nested_walk_long_mode(guest_paddr, rw, is_page_walk, memtype, supervisor_shadow_stack);
   else if (host_state->cr4.get_PAE())
-    return nested_walk_PAE(guest_paddr, rw, is_page_walk, memtype, supervisor_shadow_stack);
+    paddr = nested_walk_PAE(guest_paddr, rw, is_page_walk, memtype, supervisor_shadow_stack);
   else
-    return nested_walk_legacy(guest_paddr, rw, is_page_walk, memtype);
+    paddr = nested_walk_legacy(guest_paddr, rw, is_page_walk, memtype);
+
+  // AVIC: accesses to the guest vAPIC page are redirected to the vAPIC backing page, the nested
+  // page table walk is done only for permission checks, its translation is ignored (APM 15.29.3).
+  // Guest page table walks are not redirected, they access the page mapped by the nested page
+  // table (real hardware)
+  if (! is_page_walk && SVM_AVIC_ENABLED && PPFOf(guest_paddr) == BX_CPU_THIS_PTR vmcb->ctrls.avic_apic_bar) {
+    paddr = BX_CPU_THIS_PTR vmcb->ctrls.avic_backing_page | PAGE_OFFSET(guest_paddr);
+    BX_DEBUG(("AVIC: guest vAPIC access 0x" FMT_PHY_ADDRX " redirected to backing page 0x" FMT_PHY_ADDRX, guest_paddr, paddr));
+  }
+
+  return paddr;
 }
 
 #endif
@@ -2707,6 +2719,14 @@ bx_hostpageaddr_t BX_CPU_C::getHostMemAddr(bx_phy_address paddr, unsigned rw)
     return 0; // Do not allow direct access to virtual apic page
 #endif
 
+#if BX_SUPPORT_SVM
+  // Data accesses to the AVIC backing page go through the vAPIC register access filter.
+  // Instruction fetch reads the backing page without the filter (real hardware), the direct
+  // pointer is used only by the instruction TLB and prefetch.
+  if (rw != BX_EXECUTE && is_avic_backing_page(paddr))
+    return 0; // Do not allow direct access to AVIC backing page
+#endif
+
 #if BX_SUPPORT_APIC
   if (BX_CPU_THIS_PTR lapic->is_selected(paddr))
     return 0; // Vetoed!  APIC address space
@@ -2720,6 +2740,14 @@ void BX_CPU_C::access_read_physical(bx_phy_address paddr, unsigned len, void *da
 #if BX_SUPPORT_VMX && BX_SUPPORT_X86_64
   if (is_virtual_apic_page(paddr)) {
     paddr = VMX_Virtual_Apic_Read(paddr, len, data);
+  }
+#endif
+
+#if BX_SUPPORT_SVM
+  if (is_avic_backing_page(paddr)) {
+    SvmAvicRead(paddr, len); // #VMEXIT if the read is not allowed
+    BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, paddr, len, data);
+    return;
   }
 #endif
 
@@ -2770,6 +2798,13 @@ void BX_CPU_C::access_write_physical(bx_phy_address paddr, unsigned len, void *d
 #if BX_SUPPORT_VMX && BX_SUPPORT_X86_64
   if (is_virtual_apic_page(paddr)) {
     VMX_Virtual_Apic_Write(paddr, len, data);
+    return;
+  }
+#endif
+
+#if BX_SUPPORT_SVM
+  if (is_avic_backing_page(paddr)) {
+    SvmAvicWrite(paddr, len, data);
     return;
   }
 #endif
