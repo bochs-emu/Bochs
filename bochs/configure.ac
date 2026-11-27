@@ -55,7 +55,7 @@ case "$target" in
     NO_LT=1           # do not use libtool at all
     NOT_FOR_MSVC='#'
     case "$target" in
-      x86_64*)
+      x86_64* | aarch64*)
         MSVC_TARGET=64
         AC_DEFINE(MSVC_TARGET, 64)
         ;;
