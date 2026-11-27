@@ -870,7 +870,7 @@ void bx_term_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
 {
   *xres = 720;
   *yres = 400;
-  *bpp = 4;
+  *bpp = BX_GUI_BPP_TEXT;
 }
 
 #endif /* if BX_WITH_TERM */

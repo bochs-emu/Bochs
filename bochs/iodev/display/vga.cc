@@ -1300,7 +1300,9 @@ void bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
             if (max_yres < BX_VGA_THIS vbe.max_yres) {
               BX_VGA_THIS vbe.max_yres = max_yres;
             }
-            if (max_bpp < BX_VGA_THIS vbe.max_bpp) {
+            if ((max_bpp == BX_GUI_BPP_TEXT) || (max_bpp == BX_GUI_BPP_PAL8)) {
+              BX_VGA_THIS vbe.max_bpp = 8;
+            } else if (max_bpp < BX_VGA_THIS vbe.max_bpp) {
               BX_VGA_THIS vbe.max_bpp = max_bpp;
             }
           }

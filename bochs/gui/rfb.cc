@@ -451,11 +451,7 @@ void bx_rfb_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 
 void bx_rfb_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
-  if (bpp == 8) {
-    guest_bpp = bpp;
-  } else {
-    BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
-  }
+  // graphics modes > 8 bpp scaled down to BGR233 or RGB332
   guest_textmode = (fheight > 0);
   guest_fwidth = fwidth;
   guest_fheight = fheight;

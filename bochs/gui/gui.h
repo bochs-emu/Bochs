@@ -97,6 +97,10 @@
 #define BX_GUI_OPT_CMDMODE        0x04
 #define BX_GUI_OPT_NO_GUI_CONSOLE 0x08
 
+// special bpp values returned by get_capabilities()
+#define BX_GUI_BPP_TEXT 0
+#define BX_GUI_BPP_PAL8 1
+
 typedef struct {
   Bit16u  start_address;
   Bit8u   cs_start;

@@ -1160,7 +1160,8 @@ void bx_gui_c::dimension_update_common(unsigned x, unsigned y, unsigned fheight,
   Bit16u max_xres, max_yres, max_bpp;
 
   get_capabilities(&max_xres, &max_yres, &max_bpp);
-  if ((x <= max_xres) && (y <= max_yres) && ((bpp == 8) || (max_bpp > 8))) {
+  if ((x <= max_xres) && (y <= max_yres) && 
+      ((fheight > 0) || ((bpp == 8) && (max_bpp == BX_GUI_BPP_PAL8)) || (max_bpp >= 8))) {
 #if BX_USE_GUI_CONSOLE
     if (console.running) {
       console_cleanup();
