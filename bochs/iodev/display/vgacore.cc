@@ -1674,8 +1674,10 @@ void bx_vgacore_c::update(void)
     }
     rows = (VDE+1)/(MSL+1);
     // the text buffer and the text snapshot hold 128K, the displayed text
-    // (plus one more row for vertical panning) starts at the start address
-    if ((tm_info.start_address + (rows + 1) * tm_info.line_offset) > (1 << 17)) {
+    // (plus one more row for vertical panning) starts at the start address,
+    // the display libraries read (cols + 1) characters per row
+    if (((tm_info.start_address + (rows + 1) * tm_info.line_offset) > (1 << 17)) ||
+        ((tm_info.start_address + rows * tm_info.line_offset + (cols + 1) * 2) > (1 << 17))) {
       BX_ERROR(("update(): text mode: out of memory"));
       return;
     }
