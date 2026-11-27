@@ -40,6 +40,7 @@
 #define GEFORCE_SUBCHANNEL_COUNT 8
 #define GEFORCE_CACHE1_SIZE 64
 #define GEFORCE_VS_PROGRAM_SIZE 544
+#define GEFORCE_PS_CACHE_SIZE 4096
 
 #define GEFORCE_CLASS_COUNT 0x10000
 #define GEFORCE_METHOD_COUNT 0x800
@@ -139,6 +140,35 @@ struct gf_vs_insn
   Bit32u dst_tmp_sca;
   bool dst_out_vec;
   bool end;
+};
+
+struct gf_ps_src
+{
+  Bit32u reg_type;
+  Bit32u tmp_index;
+  bool fp16;
+  Bit32u swizzle[4];
+  bool negate;
+  bool src_abs;
+};
+
+struct gf_ps_insn
+{
+  gf_ps_src src[3];
+  float cnst[4];
+  Bit32u cond;
+  Bit32u cond_swizzle[4];
+  float dst_scale;
+  Bit32u dst_tmp_reg;
+  bool dst_fp16;
+  bool set_cc;
+  Bit32u mask;
+  Bit32u in_index;
+  Bit32u tex_unit;
+  bool exp_tex;
+  Bit32u op;
+  bool no_dst;
+  bool saturate;
 };
 
 struct gf_channel
@@ -355,9 +385,8 @@ struct gf_channel
   Bit32u d3d_scissor_width;
   Bit32u d3d_scissor_y;
   Bit32u d3d_scissor_height;
-  Bit32u d3d_shader_program;
-  Bit32u d3d_shader_obj;
-  Bit32u d3d_shader_offset;
+  Bit32u d3d_shader_program_size;
+  gf_ps_insn d3d_shader_program[GEFORCE_PS_CACHE_SIZE];
   float d3d_specular_params[6];
   float d3d_specular_power;
   float d3d_scene_ambient_color[4];
