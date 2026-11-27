@@ -36,7 +36,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AADD_EdGdM(bxInstruction_c *i)
 
 #if BX_SUPPORT_MEMTYPE
   // translate without accessing the memory, #GP(0) if memory type is not WB
-  tickle_write_linear(i->seg(), laddr, 4);
+  tickle_write_linear(i->seg(), laddr);
   if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) {
     BX_DEBUG(("%s for non-WB memory type phys_addr=0x" FMT_PHY_ADDRX, i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR address_xlation.paddress1));
     exception(BX_GP_EXCEPTION, 0);
@@ -62,7 +62,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AADD_EqGqM(bxInstruction_c *i)
 
 #if BX_SUPPORT_MEMTYPE
   // translate without accessing the memory, #GP(0) if memory type is not WB
-  tickle_write_linear(i->seg(), laddr, 8);
+  tickle_write_linear(i->seg(), laddr);
   if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) {
     BX_DEBUG(("%s for non-WB memory type phys_addr=0x" FMT_PHY_ADDRX, i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR address_xlation.paddress1));
     exception(BX_GP_EXCEPTION, 0);
@@ -88,7 +88,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AAND_EdGdM(bxInstruction_c *i)
 
 #if BX_SUPPORT_MEMTYPE
   // translate without accessing the memory, #GP(0) if memory type is not WB
-  tickle_write_linear(i->seg(), laddr, 4);
+  tickle_write_linear(i->seg(), laddr);
   if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) {
     BX_DEBUG(("%s for non-WB memory type phys_addr=0x" FMT_PHY_ADDRX, i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR address_xlation.paddress1));
     exception(BX_GP_EXCEPTION, 0);
@@ -114,7 +114,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AAND_EqGqM(bxInstruction_c *i)
 
 #if BX_SUPPORT_MEMTYPE
   // translate without accessing the memory, #GP(0) if memory type is not WB
-  tickle_write_linear(i->seg(), laddr, 8);
+  tickle_write_linear(i->seg(), laddr);
   if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) {
     BX_DEBUG(("%s for non-WB memory type phys_addr=0x" FMT_PHY_ADDRX, i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR address_xlation.paddress1));
     exception(BX_GP_EXCEPTION, 0);
@@ -140,7 +140,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AOR_EdGdM(bxInstruction_c *i)
 
 #if BX_SUPPORT_MEMTYPE
   // translate without accessing the memory, #GP(0) if memory type is not WB
-  tickle_write_linear(i->seg(), laddr, 4);
+  tickle_write_linear(i->seg(), laddr);
   if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) {
     BX_DEBUG(("%s for non-WB memory type phys_addr=0x" FMT_PHY_ADDRX, i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR address_xlation.paddress1));
     exception(BX_GP_EXCEPTION, 0);
@@ -166,7 +166,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AOR_EqGqM(bxInstruction_c *i)
 
 #if BX_SUPPORT_MEMTYPE
   // translate without accessing the memory, #GP(0) if memory type is not WB
-  tickle_write_linear(i->seg(), laddr, 8);
+  tickle_write_linear(i->seg(), laddr);
   if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) {
     BX_DEBUG(("%s for non-WB memory type phys_addr=0x" FMT_PHY_ADDRX, i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR address_xlation.paddress1));
     exception(BX_GP_EXCEPTION, 0);
@@ -192,7 +192,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AXOR_EdGdM(bxInstruction_c *i)
 
 #if BX_SUPPORT_MEMTYPE
   // translate without accessing the memory, #GP(0) if memory type is not WB
-  tickle_write_linear(i->seg(), laddr, 4);
+  tickle_write_linear(i->seg(), laddr);
   if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) {
     BX_DEBUG(("%s for non-WB memory type phys_addr=0x" FMT_PHY_ADDRX, i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR address_xlation.paddress1));
     exception(BX_GP_EXCEPTION, 0);
@@ -218,7 +218,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AXOR_EqGqM(bxInstruction_c *i)
 
 #if BX_SUPPORT_MEMTYPE
   // translate without accessing the memory, #GP(0) if memory type is not WB
-  tickle_write_linear(i->seg(), laddr, 8);
+  tickle_write_linear(i->seg(), laddr);
   if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) {
     BX_DEBUG(("%s for non-WB memory type phys_addr=0x" FMT_PHY_ADDRX, i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR address_xlation.paddress1));
     exception(BX_GP_EXCEPTION, 0);

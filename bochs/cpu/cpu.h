@@ -5585,9 +5585,8 @@ public: // for now...
   BX_SMF void tickle_read_virtual_32(unsigned seg, Bit32u offset, unsigned len) BX_CPP_AttrRegparmN(3);
   BX_SMF void tickle_read_virtual(unsigned seg, bx_address offset, unsigned len) BX_CPP_AttrRegparmN(3);
 
-  BX_SMF void tickle_write_linear(unsigned seg, bx_address offset, unsigned len) BX_CPP_AttrRegparmN(3);
-  BX_SMF void tickle_write_virtual_32(unsigned seg, Bit32u offset, unsigned len) BX_CPP_AttrRegparmN(3);
-  BX_SMF void tickle_write_virtual(unsigned seg, bx_address offset, unsigned len) BX_CPP_AttrRegparmN(3);
+  BX_SMF void tickle_write_linear(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF void tickle_write_virtual(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
 
   BX_SMF Bit8u read_virtual_byte_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit16u read_virtual_word_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
@@ -6520,7 +6519,7 @@ public: // for now...
   BX_SMF bool is_avic_backing_page(bx_phy_address paddr) BX_CPP_AttrRegparmN(1);
   BX_SMF void SvmAvicRead(bx_phy_address paddr, unsigned len);
   BX_SMF void SvmAvicWrite(bx_phy_address paddr, unsigned len, void *data);
-  BX_SMF void SvmAvicWriteTickle(bx_address laddr, unsigned len);
+  BX_SMF void SvmAvicWriteTickle(void);
   BX_SMF void SvmAvicTrap(void);
   BX_SMF Bit32u SvmAvicRead32(unsigned offset);
   BX_SMF void SvmAvicWrite32(unsigned offset, Bit32u val_32);

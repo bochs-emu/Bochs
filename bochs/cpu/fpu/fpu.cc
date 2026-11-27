@@ -82,12 +82,12 @@ bx_address BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
 
     // check that we would not fault while attempting to write, check that we can write-access first and last bytes
     // of the memory image to be written, touch the memory but no write actually occurs
-    tickle_write_virtual(i->seg(), eaddr, 1);
+    tickle_write_virtual(i->seg(), eaddr);
 
     // FNSAVE memory image also includes 8 FPU data registers (80 bytes) following the environment
     unsigned regs_size = (i->getIaOpcode() == BX_IA_FNSAVE) ? 80 : 0;
 
-    tickle_write_virtual(i->seg(), (eaddr + offset - 1 + regs_size) & asize_mask, 1);
+    tickle_write_virtual(i->seg(), (eaddr + offset - 1 + regs_size) & asize_mask);
 
     if (protected_mode())  /* Protected Mode */
     {

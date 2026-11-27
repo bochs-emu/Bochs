@@ -267,41 +267,22 @@ void BX_CPU_C::SvmAvicWrite(bx_phy_address paddr, unsigned len, void *data)
   signal_event(BX_EVENT_SVM_AVIC_TRAP);
 }
 
-// write fault check of one byte of the vAPIC backing page
-static bool avic_write_faults(bx_phy_address paddr)
-{
-  return avic_register_access((unsigned) PAGE_OFFSET(paddr) & ~0xf, true /* write */) == BX_AVIC_FAULT;
-}
-
 // Write tickle of an instruction which writes its memory area in several chunks (FNSAVE, FXSAVE,
-// stack pushes ...), called from tickle_write_linear() after the translation of the area
-// (address_xlation): the vAPIC register filter is checked for the first and the last byte, a
-// faulting register there makes the whole instruction fault before any byte is written. Real
-// hardware (FNSAVE ending in an ISR register) reports the register slot of the tickled byte.
-// 'len' is the offset of the last byte from 'laddr' (the AVIC backing page never has a direct
-// host pointer, so a tickle of it always reaches the translation).
-void BX_CPU_C::SvmAvicWriteTickle(bx_address laddr, unsigned len)
+// XSAVE ...), called from tickle_write_linear() after the translation of the tickled byte
+// (address_xlation.paddress1): such instructions tickle the first and the last byte of the area,
+// a faulting vAPIC register there makes the whole instruction fault before any byte is written.
+// Real hardware (FNSAVE ending in an ISR register) reports the register slot of the tickled byte.
+// The AVIC backing page never has a direct host pointer, so a tickle of it always reaches the
+// translation.
+void BX_CPU_C::SvmAvicWriteTickle(void)
 {
   bx_phy_address paddr = BX_CPU_THIS_PTR address_xlation.paddress1;
-  bx_phy_address paddr_last;
+  if (! is_avic_backing_page(paddr)) return;
 
-  if (BX_CPU_THIS_PTR address_xlation.pages == 1) {
-    if (! is_avic_backing_page(paddr)) return;
-    paddr_last = paddr + len;    // same page, can be another vAPIC register
-  }
-  else {
-    paddr_last = BX_CPU_THIS_PTR address_xlation.paddress2 + PAGE_OFFSET(laddr + len);
-    if (! is_avic_backing_page(paddr)) paddr = paddr_last;    // only the second page can be the vAPIC page
-    if (! is_avic_backing_page(paddr)) return;
-  }
-
-  if (avic_write_faults(paddr)) {
-    BX_DEBUG(("AVIC: #VMEXIT(AVIC_NOACCEL) fault on write tickle of vAPIC offset 0x%03x", (unsigned) PAGE_OFFSET(paddr)));
-    Svm_Vmexit(SVM_VMEXIT_AVIC_NOACCEL, SVM_AVIC_NOACCEL_WRITE | (PAGE_OFFSET(paddr) & ~0xf), 0);
-  }
-  if (paddr_last != paddr && is_avic_backing_page(paddr_last) && avic_write_faults(paddr_last)) {
-    BX_DEBUG(("AVIC: #VMEXIT(AVIC_NOACCEL) fault on write tickle of vAPIC offset 0x%03x", (unsigned) PAGE_OFFSET(paddr_last)));
-    Svm_Vmexit(SVM_VMEXIT_AVIC_NOACCEL, SVM_AVIC_NOACCEL_WRITE | (PAGE_OFFSET(paddr_last) & ~0xf), 0);
+  unsigned slot = (unsigned) PAGE_OFFSET(paddr) & ~0xf;
+  if (avic_register_access(slot, true /* write */) == BX_AVIC_FAULT) {
+    BX_DEBUG(("AVIC: #VMEXIT(AVIC_NOACCEL) fault on write tickle of vAPIC offset 0x%03x", slot));
+    Svm_Vmexit(SVM_VMEXIT_AVIC_NOACCEL, SVM_AVIC_NOACCEL_WRITE | slot, 0);
   }
 }
 

@@ -1234,9 +1234,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF32x4_MASK_WpsVpsIbM(bxInstruction
   unsigned len = i->getVL(), offset = i->Ib() & (len - 1);
   op = BX_READ_AVX_REG_LANE(i->src(), offset);
 
-  // first check that memory could be written (no fault suppression)
+  // first check that memory could be written (no fault suppression), the destination spans at
+  // most two pages: check its first and its last byte
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  tickle_write_virtual(i->seg(), eaddr, 16);
+  tickle_write_virtual(i->seg(), eaddr);
+  tickle_write_virtual(i->seg(), eaddr + 15);
 
   Bit32u mask = BX_READ_8BIT_OPMASK(i->opmask()) & 0xf;
 
@@ -1272,9 +1274,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF64x2_MASK_WpdVpdIbM(bxInstruction
   unsigned len = i->getVL(), offset = i->Ib() & (len - 1);
   op = BX_READ_AVX_REG_LANE(i->src(), offset);
 
-  // first check that memory could be written (no fault suppression)
+  // first check that memory could be written (no fault suppression), the destination spans at
+  // most two pages: check its first and its last byte
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  tickle_write_virtual(i->seg(), eaddr, 16);
+  tickle_write_virtual(i->seg(), eaddr);
+  tickle_write_virtual(i->seg(), eaddr + 15);
 
   Bit32u mask = BX_READ_8BIT_OPMASK(i->opmask()) & 0x3;
 
@@ -1321,9 +1325,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF64x4_MASK_WpdVpdIbM(bxInstruction
 
   Bit32u mask = BX_READ_8BIT_OPMASK(i->opmask()) & 0xf;
 
-  // first check that memory could be written (no fault suppression)
+  // first check that memory could be written (no fault suppression), the destination spans at
+  // most two pages: check its first and its last byte
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  tickle_write_virtual(i->seg(), eaddr, 32);
+  tickle_write_virtual(i->seg(), eaddr);
+  tickle_write_virtual(i->seg(), eaddr + 31);
 
   if (mask) {
     // all permission already checked - perform RMW for simplicity and speed
@@ -1353,9 +1359,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF32x8_MASK_WpsVpsIbM(bxInstruction
 
   Bit32u mask = BX_READ_8BIT_OPMASK(i->opmask());
 
-  // first check that memory could be written (no fault suppression)
+  // first check that memory could be written (no fault suppression), the destination spans at
+  // most two pages: check its first and its last byte
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  tickle_write_virtual(i->seg(), eaddr, 32);
+  tickle_write_virtual(i->seg(), eaddr);
+  tickle_write_virtual(i->seg(), eaddr + 31);
 
   if (mask) {
     // all permission already checked - perform RMW for simplicity and speed
