@@ -1281,11 +1281,14 @@ void bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
               BX_VGA_THIS s.ext_offset = (BX_VGA_THIS vbe.bank[0] << 16);
             }
             BX_VGA_THIS s.vgamem_mask = BX_VGA_THIS s.memsize - 1;
+            // show the video memory content (also kept with NOCLEARMEM)
+            needs_update = 1;
           } else if (((value & VBE_DISPI_ENABLED) == 0) && BX_VGA_THIS vbe.enabled) {
             BX_INFO(("VBE disabling"));
             BX_VGA_THIS s.text_buffer_update = true;
             BX_VGA_THIS s.ext_offset = 0;
             BX_VGA_THIS s.vgamem_mask = 0x3ffff;
+            needs_update = 1;
           }
           BX_VGA_THIS vbe.enabled = ((value & VBE_DISPI_ENABLED) != 0);
           BX_VGA_THIS vbe.get_capabilities = ((value & VBE_DISPI_GETCAPS) != 0);
