@@ -87,9 +87,14 @@
 
 #define MSVC_TARGET 0
 #if defined(_MSC_VER) && defined(MSVC_TARGET)
-#if defined(_M_X64) && (MSVC_TARGET != 64)
+#if defined(_M_X64) || defined(_M_ARM64)
+#define MSVC_TARGET_IS_64 1
+#else
+#define MSVC_TARGET_IS_64 0
+#endif
+#if MSVC_TARGET_IS_64 && (MSVC_TARGET != 64)
 #error Bochs not configured for MSVC WIN64
-#elif !defined(_M_X64) && (MSVC_TARGET != 32)
+#elif !MSVC_TARGET_IS_64 && (MSVC_TARGET != 32)
 #error Bochs not configured for MSVC WIN32
 #endif
 #endif
