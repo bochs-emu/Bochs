@@ -2316,6 +2316,9 @@ void bx_vgacore_c::get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
     MSL = BX_VGA_THIS s.CRTC.reg[0x09] & 0x1f;
     *txHeight = (VDE+1)/(MSL+1);
     *txWidth = BX_VGA_THIS s.CRTC.reg[1] + 1;
+    // the text snapshot holds 128K (characters and attributes)
+    if ((*txHeight * *txWidth * 2) > (1 << 17))
+      *txHeight = (1 << 17) / (*txWidth * 2);
   } else {
     *txHeight = 0;
     *txWidth = 0;
