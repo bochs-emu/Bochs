@@ -1899,10 +1899,11 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
       if (BX_VGA_THIS s.line_offset > 0) {
         if (BX_VGA_THIS s.line_compare < BX_VGA_THIS s.vertical_display_end) {
           x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 2);
+          // the lower screen starts at scanline line_compare + 1
           if (BX_VGA_THIS s.y_doublescan) {
-            y_tileno = ((offset / BX_VGA_THIS s.line_offset) + BX_VGA_THIS s.line_compare + 1) / Y_TILESIZE;
+            y_tileno = ((offset / BX_VGA_THIS s.line_offset) * 2 + BX_VGA_THIS s.line_compare + 1) / Y_TILESIZE;
           } else {
-            y_tileno = ((offset / BX_VGA_THIS s.line_offset) + BX_VGA_THIS s.line_compare + 1) / (Y_TILESIZE / 2);
+            y_tileno = ((offset / BX_VGA_THIS s.line_offset) + BX_VGA_THIS s.line_compare + 1) / Y_TILESIZE;
           }
           SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
         }
