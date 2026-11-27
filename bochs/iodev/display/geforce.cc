@@ -4637,70 +4637,53 @@ void bx_geforce_c::d3d_pixel_quad_shader(gf_channel* ch, float in[4][16][4],
   bool discard[4], float tmp_regs16[4][64][4], float tmp_regs32[4][64][4])
 {
   static bool unknown_opcode_reported = false;
-  Bit32u ps_offset = ch->d3d_shader_offset;
   Bit32u cc[4][4] = { { 0 } };
-  for (;;) {
-    Bit32u dst_word = dma_read32(ch->d3d_shader_obj, ps_offset);
-    ps_offset += 4;
-    Bit32u src_words[3];
-    for (int pi = 0; pi < 3; pi++) {
-      src_words[pi] = dma_read32(ch->d3d_shader_obj, ps_offset);
-      ps_offset += 4;
-    }
-    float cnst[4];
+  for (Bit32u ii = 0; ii < ch->d3d_shader_program_size; ii++) {
     float paramsq[4][3][4];
-    bool const_loaded = false;
-    for (int pi = 0; pi < 3; pi++) {
-      Bit32u reg_type = src_words[pi] & 3;
-      if (reg_type == 2 && !const_loaded) {
-        for (int comp_index = 0; comp_index < 4; comp_index++) {
-          cnst[comp_index] = uint32_as_float(
-            dma_read32(ch->d3d_shader_obj, ps_offset));
-          ps_offset += 4;
+    gf_ps_insn* insn = &ch->d3d_shader_program[ii];
+    for (Bit32u pi = 0; pi < 3; pi++) {
+      gf_ps_src* src = &insn->src[pi];
+      if (src->reg_type == 0) {
+        if (src->fp16) {
+          for (Bit32u fi = 0; fi < 4; fi++)
+            for (Bit32u ci = 0; ci < 4; ci++)
+              paramsq[fi][pi][ci] = tmp_regs16[fi][src->tmp_index][src->swizzle[ci]];
+        } else {
+          for (Bit32u fi = 0; fi < 4; fi++)
+            for (Bit32u ci = 0; ci < 4; ci++)
+              paramsq[fi][pi][ci] = tmp_regs32[fi][src->tmp_index][src->swizzle[ci]];
         }
-        const_loaded = true;
+      } else if (src->reg_type == 1) {
+        for (Bit32u fi = 0; fi < 4; fi++)
+          for (Bit32u ci = 0; ci < 4; ci++)
+            paramsq[fi][pi][ci] = in[fi][insn->in_index][src->swizzle[ci]];
+      } else if (src->reg_type == 2) {
+        for (Bit32u fi = 0; fi < 4; fi++)
+          for (Bit32u ci = 0; ci < 4; ci++)
+            paramsq[fi][pi][ci] = insn->cnst[src->swizzle[ci]];
+      } else { // reg_type == 3
+        for (Bit32u fi = 0; fi < 4; fi++)
+          for (Bit32u ci = 0; ci < 4; ci++)
+            paramsq[fi][pi][ci] = 0.0f; // default case to avoid non-initialized variable warning
       }
-      Bit32u swizzle[4];
-      for (int i = 0; i < 4; i++)
-        swizzle[i] = (src_words[pi] >> (9 + i * 2)) & 3;
-      bool negate = (src_words[pi] >> 17) & 1;
-      bool src_abs = (pi == 0 ? src_words[0] >> 29 : src_words[pi] >> 18) & 1;
-      for (Bit32u fi = 0; fi < 4; fi++) {
-        for (int comp_index = 0; comp_index < 4; comp_index++) {
-          float* paramc = &paramsq[fi][pi][comp_index];
-          int comp_index_swizzle = swizzle[comp_index];
-          if (reg_type == 0) {
-            Bit32u tmp_index = (src_words[pi] >> 2) & 0x3f;
-            bool fp16 = (src_words[pi] >> 8) & 1;
-            *paramc = fp16 ?
-              tmp_regs16[fi][tmp_index][comp_index_swizzle] :
-              tmp_regs32[fi][tmp_index][comp_index_swizzle];
-          } else if (reg_type == 1) {
-            Bit32u in_index = (dst_word >> 13) & 0xf;
-            *paramc = in[fi][in_index][comp_index_swizzle];
-          } else if (reg_type == 2) {
-            *paramc = cnst[comp_index_swizzle];
-          } else { // reg_type == 3
-            *paramc = 0; // default case to avoid non-initialized variable warning
-          }
-          if (src_abs)
-            *paramc = fabs(*paramc);
-          if (negate)
-            *paramc = -*paramc;
-        }
-      }
+      if (src->src_abs)
+        for (Bit32u fi = 0; fi < 4; fi++)
+          for (Bit32u ci = 0; ci < 4; ci++)
+            paramsq[fi][pi][ci] = fabs(paramsq[fi][pi][ci]);
+      if (src->negate)
+        for (Bit32u fi = 0; fi < 4; fi++)
+          for (Bit32u ci = 0; ci < 4; ci++)
+            paramsq[fi][pi][ci] = -paramsq[fi][pi][ci];
     }
-    Bit32u cond = (src_words[0] >> 18) & 7;
     bool execute[4];
-    if (cond == 7) {
+    if (insn->cond == 7) {
       for (Bit32u fi = 0; fi < 4; fi++)
         execute[fi] = true;
     } else {
       for (Bit32u fi = 0; fi < 4; fi++) {
         execute[fi] = false;
-        for (int i = 0; i < 4; i++) {
-          Bit32u cond_swizzle = (src_words[0] >> (21 + i * 2)) & 3;
-          if ((cc[fi][cond_swizzle] & cond) != 0) {
+        for (Bit32u i = 0; i < 4; i++) {
+          if ((cc[fi][insn->cond_swizzle[i]] & insn->cond) != 0) {
             execute[fi] = true;
             break;
           }
@@ -4708,8 +4691,7 @@ void bx_geforce_c::d3d_pixel_quad_shader(gf_channel* ch, float in[4][16][4],
       }
     }
     float op_results[4][4];
-    Bit32u op = (dst_word >> 24) & 0x3f;
-    switch (op) {
+    switch (insn->op) {
       case 0x15: { // DDX
         float ddx[4];
         compute_partials_x(paramsq[0][0], paramsq[1][0], ddx);
@@ -4739,9 +4721,8 @@ void bx_geforce_c::d3d_pixel_quad_shader(gf_channel* ch, float in[4][16][4],
       case 0x2f: // TXL
       case 0x31: // TXB
       case 0x17: { // TEX
-        Bit32u tex_unit = (dst_word >> 17) & 0xf;
-        gf_texture* tex = &ch->d3d_texture[tex_unit];
-        if (op == 0x18 /* TXP */ && !tex->cubemap) {
+        gf_texture* tex = &ch->d3d_texture[insn->tex_unit];
+        if (insn->op == 0x18 /* TXP */ && !tex->cubemap) {
           for (Bit32u fi = 0; fi < 4; fi++) {
             float winv = 1.0f / paramsq[fi][0][3];
             paramsq[fi][0][0] *= winv;
@@ -4750,10 +4731,10 @@ void bx_geforce_c::d3d_pixel_quad_shader(gf_channel* ch, float in[4][16][4],
           }
         }
         float lodq[4];
-        if (op == 0x2f) { // TXL
+        if (insn->op == 0x2f) { // TXL
           for (Bit32u fi = 0; fi < 4; fi++)
             lodq[fi] = paramsq[fi][1][0];
-        } else if (op == 0x19) { // TXD
+        } else if (insn->op == 0x19) { // TXD
           for (Bit32u fi = 0; fi < 4; fi++)
             lodq[fi] = compute_lod(tex, paramsq[fi][0], paramsq[fi][1], paramsq[fi][2]);
         } else {
@@ -4761,7 +4742,7 @@ void bx_geforce_c::d3d_pixel_quad_shader(gf_channel* ch, float in[4][16][4],
           float ddy[3];
           compute_partials(paramsq[0][0], paramsq[1][0], paramsq[2][0], ddx, ddy);
           float lambda_base = compute_lod(tex, paramsq[0][0], ddx, ddy);
-          if (op == 0x31) { // TXB
+          if (insn->op == 0x31) { // TXB
             for (Bit32u fi = 0; fi < 4; fi++)
               lodq[fi] = lambda_base + paramsq[fi][1][0];
           } else {
@@ -4772,7 +4753,7 @@ void bx_geforce_c::d3d_pixel_quad_shader(gf_channel* ch, float in[4][16][4],
         for (Bit32u fi = 0; fi < 4; fi++) {
           if (execute[fi]) {
             d3d_sample_texture(ch, tex, paramsq[fi][0], lodq[fi], op_results[fi]);
-            if (((dst_word >> 21) & 1) != 0)
+            if (insn->exp_tex)
               for (Bit32u ci = 0; ci < 4; ci++)
                 op_results[fi][ci] = op_results[fi][ci] * 2.0f - 1.0f;
           }
@@ -4796,8 +4777,7 @@ void bx_geforce_c::d3d_pixel_quad_shader(gf_channel* ch, float in[4][16][4],
             paramsq[fi][1][1] * paramsq[fi][2][3];
           coords[fi][2] = 0.0f;
         }
-        Bit32u tex_unit = (dst_word >> 17) & 0xf;
-        gf_texture* tex = &ch->d3d_texture[tex_unit];
+        gf_texture* tex = &ch->d3d_texture[insn->tex_unit];
         float ddx[3];
         float ddy[3];
         compute_partials(coords[0], coords[1], coords[2], ddx, ddy);
@@ -4805,7 +4785,7 @@ void bx_geforce_c::d3d_pixel_quad_shader(gf_channel* ch, float in[4][16][4],
         for (Bit32u fi = 0; fi < 4; fi++) {
           if (execute[fi]) {
             d3d_sample_texture(ch, tex, coords[fi], lod, op_results[fi]);
-            if (((dst_word >> 21) & 1) != 0)
+            if (insn->exp_tex)
               for (int ci = 0; ci < 4; ci++)
                 op_results[fi][ci] = op_results[fi][ci] * 2.0f - 1.0f;
           }
@@ -4817,7 +4797,7 @@ void bx_geforce_c::d3d_pixel_quad_shader(gf_channel* ch, float in[4][16][4],
           float (*params)[4] = paramsq[fi];
           float* op_result = op_results[fi];
           if (execute[fi]) {
-            switch (op) {
+            switch (insn->op) {
               case 0: // NOP
                 break;
               case 1: // MOV
@@ -4983,7 +4963,7 @@ void bx_geforce_c::d3d_pixel_quad_shader(gf_channel* ch, float in[4][16][4],
                 for (int comp_index = 0; comp_index < 4; comp_index++)
                   op_result[comp_index] = 0.5f;
                 if (!unknown_opcode_reported) {
-                  BX_ERROR(("Pixel shader: unknown opcode 0x%02x", op));
+                  BX_ERROR(("Pixel shader: unknown opcode 0x%02x", insn->op));
                   unknown_opcode_reported = true;
                 }
                 break;
@@ -4994,47 +4974,36 @@ void bx_geforce_c::d3d_pixel_quad_shader(gf_channel* ch, float in[4][16][4],
       }
     }
     for (Bit32u fi = 0; fi < 4; fi++) {
-      float* op_result = op_results[fi];
       if (execute[fi]) {
-        bool set_cc = (dst_word >> 8) & 1;
-        if (set_cc) {
-          for (int comp_index = 0; comp_index < 4; comp_index++) {
-            if (op_result[comp_index] < 0.0f)
-              cc[fi][comp_index] = 1;
-            else if (op_result[comp_index] == 0.0f)
-              cc[fi][comp_index] = 2;
+        if (insn->set_cc) {
+          for (Bit32u ci = 0; ci < 4; ci++) {
+            if (op_results[fi][ci] < 0.0f)
+              cc[fi][ci] = 1;
+            else if (op_results[fi][ci] == 0.0f)
+              cc[fi][ci] = 2;
             else
-              cc[fi][comp_index] = 4;
+              cc[fi][ci] = 4;
           }
         }
-        bool no_dst = (dst_word >> 30) & 1;
-        if (op != 0 && !no_dst) {
-          Bit32u mask = (dst_word >> 9) & 0xf;
-          Bit32u dst_tmp_reg = (dst_word >> 1) & 0x3f;
-          static const float dst_scales[] = {1.0f, 2.0f, 4.0f, 8.0f, 1.0f, 0.5f, 0.25f, 0.125f};
-          Bit32u dst_scale = (src_words[1] >> 28) & 7;
-          bool dst_fp16 = (dst_word >> 7) & 1;
-          bool saturate = (dst_word >> 31) & 1;
-          for (int comp_index = 0; comp_index < 4; comp_index++) {
-            if ((mask & (1 << comp_index)) != 0) {
-              float value = op_result[comp_index] * dst_scales[dst_scale];
-              if (saturate) {
+        if (insn->op != 0 && !insn->no_dst) {
+          for (Bit32u ci = 0; ci < 4; ci++) {
+            if ((insn->mask & (1 << ci)) != 0) {
+              float value = op_results[fi][ci] * insn->dst_scale;
+              if (insn->saturate) {
                 if (value < 0.0f)
                   value = 0.0f;
                 else if (value > 1.0f)
                   value = 1.0f;
               }
-              if (dst_fp16)
-                tmp_regs16[fi][dst_tmp_reg][comp_index] = value;
+              if (insn->dst_fp16)
+                tmp_regs16[fi][insn->dst_tmp_reg][ci] = value;
               else
-                tmp_regs32[fi][dst_tmp_reg][comp_index] = value;
+                tmp_regs32[fi][insn->dst_tmp_reg][ci] = value;
             }
           }
         }
       }
     }
-    if ((dst_word & 1) == 1)
-      break;
   }
 }
 
@@ -5596,7 +5565,7 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
   double b012inv = 1.0 / b012;
   bool stencil_test_enable = ch->d3d_stencil_test_enable && ch->d3d_depth_bytes != 2;
   bool zstencil_enable = ch->d3d_depth_test_enable || stencil_test_enable;
-  bool ps_enable = ch->d3d_shader_obj != 0;
+  bool ps_enable = ch->d3d_shader_program_size != 0;
   bool rc_enable = ch->d3d_combiner_control_num_stages != 0;
   float ps_tmp_regs16[4][64][4];
   float ps_tmp_regs32[4][64][4];
@@ -7394,15 +7363,66 @@ void bx_geforce_c::d3d_mh_scissor_y_height(gf_channel* ch, Bit32u cls, Bit32u me
 
 void bx_geforce_c::d3d_mh_shader_program(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
 {
-  ch->d3d_shader_program = param;
-  ch->d3d_shader_offset = ch->d3d_shader_program & ~3;
-  Bit32u location = ch->d3d_shader_program & 3;
-  if (location == 1)
-    ch->d3d_shader_obj = ch->d3d_a_obj;
-  else if (location == 2)
-    ch->d3d_shader_obj = ch->d3d_b_obj;
-  else
-    ch->d3d_shader_obj = 0;
+  ch->d3d_shader_program_size = 0;
+  Bit32u shader_offset = param & ~3;
+  Bit32u location = param & 3;
+  Bit32u shader_obj;
+  if (location == 1) {
+    shader_obj = ch->d3d_a_obj;
+  } else if (location == 2) {
+    shader_obj = ch->d3d_b_obj;
+  } else {
+    BX_ERROR(("Unknown pixel shader location"));
+    return;
+  }
+  Bit32u shader_ptr = shader_offset;
+  for (Bit32u ii = 0; ii < GEFORCE_PS_CACHE_SIZE; ii++) {
+    gf_ps_insn* insn = &ch->d3d_shader_program[ii];
+    Bit32u dst_word = dma_read32(shader_obj, shader_ptr);
+    shader_ptr += 4;
+    Bit32u src_words[3];
+    for (Bit32u pi = 0; pi < 3; pi++) {
+      src_words[pi] = dma_read32(shader_obj, shader_ptr);
+      shader_ptr += 4;
+    }
+    bool const_loaded = false;
+    for (Bit32u pi = 0; pi < 3; pi++) {
+      gf_ps_src* src = &insn->src[pi];
+      src->reg_type = src_words[pi] & 3;
+      if (src->reg_type == 2 && !const_loaded) {
+        for (Bit32u ci = 0; ci < 4; ci++) {
+          insn->cnst[ci] = uint32_as_float(dma_read32(shader_obj, shader_ptr));
+          shader_ptr += 4;
+        }
+        const_loaded = true;
+      }
+      src->tmp_index = (src_words[pi] >> 2) & 0x3f;
+      src->fp16 = (src_words[pi] >> 8) & 1;
+      for (Bit32u si = 0; si < 4; si++)
+        src->swizzle[si] = (src_words[pi] >> (9 + si * 2)) & 3;
+      src->negate = (src_words[pi] >> 17) & 1;
+      src->src_abs = (pi == 0 ? src_words[0] >> 29 : src_words[pi] >> 18) & 1;
+    }
+    insn->cond = (src_words[0] >> 18) & 7;
+    for (Bit32u si = 0; si < 4; si++)
+      insn->cond_swizzle[si] = (src_words[0] >> (21 + si * 2)) & 3;
+    static const float dst_scales[] = { 1.0f, 2.0f, 4.0f, 8.0f, 1.0f, 0.5f, 0.25f, 0.125f };
+    insn->dst_scale = dst_scales[(src_words[1] >> 28) & 7];
+    bool end = dst_word & 1;
+    insn->dst_tmp_reg = (dst_word >> 1) & 0x3f;
+    insn->dst_fp16 = (dst_word >> 7) & 1;
+    insn->set_cc = (dst_word >> 8) & 1;
+    insn->mask = (dst_word >> 9) & 0xf;
+    insn->in_index = (dst_word >> 13) & 0xf;
+    insn->tex_unit = (dst_word >> 17) & 0xf;
+    insn->exp_tex = (dst_word >> 21) & 1;
+    insn->op = (dst_word >> 24) & 0x3f;
+    insn->no_dst = (dst_word >> 30) & 1;
+    insn->saturate = (dst_word >> 31) & 1;
+    ch->d3d_shader_program_size++;
+    if (end)
+      break;
+  }
 }
 
 void bx_geforce_c::d3d_mh_0497_240(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
