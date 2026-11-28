@@ -878,6 +878,8 @@ static void           _write_byte_SS();
 static void           _write_word_SS();
 static void           bios_printf();
 
+static Bit8u          read_kbd_command_byte();
+static void           flush_kbd_output_buffer();
 static Bit8u          inhibit_mouse_int_and_events();
 static void           enable_mouse_int_and_events();
 static Bit8u          send_to_mouse_ctrl();
@@ -5062,6 +5064,31 @@ dequeue_key(scan_code, ascii_code, incr)
 
 static char panic_msg_keyb_buffer_full[] = "%s: keyboard input buffer full\n";
 
+  void
+flush_kbd_output_buffer()
+{
+  // discard all bytes waiting in the controller output buffer
+  while ( inb(PORT_PS2_STATUS) & 0x01 )
+    inb(PORT_PS2_DATA);
+}
+
+  Bit8u
+read_kbd_command_byte()
+{
+  Bit8u status;
+
+  // the controller ignores command 0x20 while its output buffer is full,
+  // a mouse byte loaded before the command was taken is dropped and
+  // the command is sent again
+  do {
+    flush_kbd_output_buffer();
+    outb(PORT_PS2_STATUS, 0x20); // get command byte
+    while ( ((status = inb(PORT_PS2_STATUS)) & 0x01) != 0x01 );
+  } while ( status & 0x20 );
+
+  return inb(PORT_PS2_DATA);
+}
+
   Bit8u
 inhibit_mouse_int_and_events()
 {
@@ -5070,9 +5097,7 @@ inhibit_mouse_int_and_events()
   // Turn off IRQ generation and aux data line
   if ( inb(PORT_PS2_STATUS) & 0x02 )
     BX_PANIC(panic_msg_keyb_buffer_full,"inhibmouse");
-  outb(PORT_PS2_STATUS, 0x20); // get command byte
-  while ( (inb(PORT_PS2_STATUS) & 0x01) != 0x01 );
-  prev_command_byte = inb(PORT_PS2_DATA);
+  prev_command_byte = read_kbd_command_byte();
   command_byte = prev_command_byte;
   //while ( (inb(PORT_PS2_STATUS) & 0x02) );
   if ( inb(PORT_PS2_STATUS) & 0x02 )
@@ -5081,6 +5106,9 @@ inhibit_mouse_int_and_events()
   command_byte |= 0x20; // disable mouse serial clock line
   outb(PORT_PS2_STATUS, 0x60); // write command byte
   outb(PORT_PS2_DATA, command_byte);
+  // drop a mouse byte loaded before the aux clock was disabled,
+  // otherwise it is taken as the response to the next mouse command
+  flush_kbd_output_buffer();
   return(prev_command_byte);
 }
 
@@ -5092,9 +5120,7 @@ enable_mouse_int_and_events()
   // Turn on IRQ generation and aux data line
   if ( inb(PORT_PS2_STATUS) & 0x02 )
     BX_PANIC(panic_msg_keyb_buffer_full,"enabmouse");
-  outb(PORT_PS2_STATUS, 0x20); // get command byte
-  while ( (inb(PORT_PS2_STATUS) & 0x01) != 0x01 );
-  command_byte = inb(PORT_PS2_DATA);
+  command_byte = read_kbd_command_byte();
   //while ( (inb(PORT_PS2_STATUS) & 0x02) );
   if ( inb(PORT_PS2_STATUS) & 0x02 )
     BX_PANIC(panic_msg_keyb_buffer_full,"enabmouse");
