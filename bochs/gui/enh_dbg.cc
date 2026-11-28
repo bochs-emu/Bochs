@@ -3074,6 +3074,8 @@ static BxEvent *enh_dbg_notify_callback(void *unused, BxEvent *event)
           if (vgaw_refresh != 0)  // is the GUI frontend requesting a VGAW refresh?
             SIM->refresh_vga();
           vgaw_refresh = 0;
+          // keep the Bochs window alive (guis handling it in this thread)
+          SIM->debugger_idle();
 #ifdef WIN32
           Sleep(10);
 #elif BX_HAVE_USLEEP

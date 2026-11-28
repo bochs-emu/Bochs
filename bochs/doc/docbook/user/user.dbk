@@ -4415,7 +4415,7 @@ and continue), report (print information to the console or log file), or ignore
 In Bochs compiled with the internal debugger the "ask" dialog also offers to
 continue in the debugger. If Bochs was started without the <option>-dbg</option>
 option, this choice activates the debugger at runtime (textconfig and the win32
-dialog, currently with the win32 display library only). Pressing Ctrl-C in the console while Bochs runs without the debugger
+dialog, currently with the win32, sdl2 and x11 display libraries). Pressing Ctrl-C in the console while Bochs runs without the debugger
 raises a panic, so with action=ask it shows the same dialog.
 </para>
 
@@ -5832,7 +5832,7 @@ behavoiur of Bochs at runtime if you click on one of these buttons:
 <para>debugger button</para>
 <para>
   This button is present only if Bochs is compiled with the internal debugger
-  (currently win32 only). If Bochs was started without the <option>-dbg</option>
+  (currently win32, sdl2 and x11). If Bochs was started without the <option>-dbg</option>
   option, it activates the internal debugger at runtime (see
   <xref linkend="internal-debugger">). If the debugger is active and the simulation
   is running, it breaks into the debugger like pressing Ctrl-C in the console.
@@ -5936,7 +5936,7 @@ will not be received by the OS running in Bochs.
   </row>
   <row>
     <entry>d</entry>
-    <entry>Press the Debugger button (win32 only)</entry>
+    <entry>Press the Debugger button (sdl2 and win32 only)</entry>
   </row>
   <row>
     <entry>f</entry>
@@ -6014,8 +6014,8 @@ a specific device, you can change the log options for this device only to get
 more information (e.g. report debug messages).
 </para>
 <para>
-If Bochs is compiled with the internal debugger and the win32 display library
-is used, the text mode runtime menu has
+If Bochs is compiled with the internal debugger and the win32, sdl2 or x11 display
+library is used, the text mode runtime menu has
 the additional choice "Continue and enter debugger" and the win32 runtime dialog
 has a "Debugger" button. Both continue the simulation and activate the internal
 debugger at runtime (or break into it if it is already active).
@@ -7929,7 +7929,8 @@ instead of the command line debugger. The bochsrc line
 does the same without any command line option.
 </para>
 <para>
-With the win32 display library the GUI debugger can also be started at runtime:
+With the win32, sdl2 and x11 display libraries the GUI debugger can also be started at runtime
+(sdl2 on Windows requires the win32 config interface):
 if Bochs was started without <option>-dbg</option> and the <option>gui</option>
 parameter of the <option>debugger</option> bochsrc option is set, the GUI debugger
 window is opened when the debugger is activated (debugger button, magic breakpoint,

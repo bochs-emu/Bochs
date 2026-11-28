@@ -59,6 +59,13 @@ public:
   virtual void show_ips(Bit32u ips_count);
 #endif
   virtual void set_console_edit_mode(bool mode);
+#if BX_DEBUGGER
+  virtual bool debugger_activation_allowed();
+  virtual void debugger_idle(void);
+#if BX_DEBUGGER_GUI
+  virtual bool start_debug_dialog(void);
+#endif
+#endif
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -407,11 +414,15 @@ Uint32 sdlTimer(Uint32 interval, void *param)
 
 
 #if defined(WIN32) && BX_DEBUGGER && BX_DEBUGGER_GUI
-DWORD WINAPI DebugGuiThread(LPVOID)
+// the optional parameter is an event signaled after the dialog init
+DWORD WINAPI DebugGuiThread(LPVOID param)
 {
   MSG msg;
 
   bx_gui->init_debug_dialog(sdl2_enh_dbg_global_ini);
+  if (param != NULL) {
+    SetEvent((HANDLE)param);
+  }
   while (GetMessage(&msg, NULL, 0, 0)) {
     TranslateMessage(&msg);
     DispatchMessage(&msg);
@@ -831,6 +842,11 @@ void bx_sdl2_gui_c::handle_events(void)
               bx_gui->floppyB_handler();
             } else if (sdl_event.key.keysym.sym == SDLK_c) {
               bx_gui->copy_handler();
+#if BX_DEBUGGER
+            } else if ((sdl_event.key.keysym.sym == SDLK_d) &&
+                       (debugger_hbar_id < BX_MAX_HEADERBAR_ENTRIES)) {
+              bx_gui->debugger_handler();
+#endif
             } else if (sdl_event.key.keysym.sym == SDLK_f) {
               sdl_fullscreen_toggle = !sdl_fullscreen_toggle;
               if (sdl_fullscreen_toggle == 0) {
@@ -1405,12 +1421,93 @@ void bx_sdl2_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
 
 // Optional bx_gui_c methods
 
+#if BX_DEBUGGER
+// The debugger can be activated at runtime: the gui debugger if it is
+// selected (debugger: gui=1), the command line debugger otherwise. If the
+// debugger is active the debugger button breaks into it.
+bool bx_sdl2_gui_c::debugger_activation_allowed()
+{
+  return 1;
+}
+
+#if BX_DEBUGGER_GUI
+// Start the gui debugger at runtime. On Windows it runs in a separate thread
+// (see specific_init) and requires the win32 config interface. Wait for the
+// dialog init: the simulation thread must not ask for a debugger command
+// before the notify callback is switched to the gui debugger.
+bool bx_sdl2_gui_c::start_debug_dialog(void)
+{
+#ifdef WIN32
+  if (strcmp(SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE)->get_selected(), "win32config")) {
+    return 0;
+  }
+  HANDLE hInitDone = CreateEvent(NULL, FALSE, FALSE, NULL);
+  if (hInitDone == NULL) {
+    return 0;
+  }
+  sdl2_enh_dbg_global_ini = bx_dbg.dbg_gui_globalini;
+  DWORD threadID;
+  HANDLE hThread = CreateThread(NULL, 0, DebugGuiThread, hInitDone, 0, &threadID);
+  if (hThread == NULL) {
+    CloseHandle(hInitDone);
+    return 0;
+  }
+  CloseHandle(hThread);
+  WaitForSingleObject(hInitDone, INFINITE);
+  CloseHandle(hInitDone);
+#else
+  init_debug_dialog(bx_dbg.dbg_gui_globalini);
+#endif
+  return 1;
+}
+#endif
+
+// The simulation thread waits for a debugger command: keep the window
+// responsive (pump the window messages), drop the keyboard and mouse input
+// (it would be dropped on resume anyway) and repaint the window if needed.
+void bx_sdl2_gui_c::debugger_idle(void)
+{
+  SDL_Event events[8];
+  bool redraw = 0;
+  int n;
+
+  SDL_PumpEvents();
+  SDL_FlushEvents(SDL_KEYDOWN, SDL_MOUSEWHEEL);
+  do {
+    n = SDL_PeepEvents(events, 8, SDL_GETEVENT, SDL_WINDOWEVENT, SDL_WINDOWEVENT);
+    for (int i = 0; i < n; i++) {
+      if ((events[i].window.event == SDL_WINDOWEVENT_EXPOSED) ||
+          (events[i].window.event == SDL_WINDOWEVENT_SIZE_CHANGED)) {
+        redraw = 1;
+      }
+    }
+  } while (n == 8);
+  if (redraw && (sdl_screen != NULL)) {
+    SDL_UpdateWindowSurface(window);
+  }
+}
+#endif
+
 void bx_sdl2_gui_c::set_display_mode(disp_mode_t newmode)
 {
   // if no mode change, do nothing.
   if (disp_mode == newmode) return;
   // remember the display mode for next time
   disp_mode = newmode;
+#if BX_DEBUGGER
+  if (newmode == DISP_MODE_SIM) {
+    // enable the debugger button before switching to fullscreen (no headerbar
+    // surface in fullscreen mode)
+    set_debugger_button(1);
+    // Events are not handled while the simulation is stopped (debugger prompt,
+    // config interface). Drop the keyboard and mouse input queued meanwhile,
+    // e.g. a click on the debugger button would break into the debugger again
+    // right after continuing.
+    SDL_PumpEvents();
+    SDL_FlushEvents(SDL_KEYDOWN, SDL_MOUSEWHEEL);
+    DEV_kbd_release_keys();
+  }
+#endif
   if ((newmode == DISP_MODE_SIM) && console_running()) {
     console_cleanup();
     return;
@@ -1429,6 +1526,12 @@ void bx_sdl2_gui_c::set_display_mode(disp_mode_t newmode)
         break;
     }
   }
+#if BX_DEBUGGER
+  if (newmode == DISP_MODE_CONFIG) {
+    // after the switch to windowed mode
+    set_debugger_button(0);
+  }
+#endif
 }
 
 
@@ -1538,7 +1641,7 @@ int sdl2_ask_dialog(BxEvent *event)
     i = 2;
   }
 #if BX_DEBUGGER || BX_GDBSTUB
-  if ((mode == BX_LOG_DLG_ASK) && (bx_dbg.debugger_active || BX_GDBSTUB)) {
+  if ((mode == BX_LOG_DLG_ASK) && (SIM->debugger_activation_allowed() || BX_GDBSTUB)) {
     buttondata[i].flags = 0;
     buttondata[i].buttonid = BX_LOG_ASK_CHOICE_ENTER_DEBUG;
     buttondata[i].text = "Debugger";
