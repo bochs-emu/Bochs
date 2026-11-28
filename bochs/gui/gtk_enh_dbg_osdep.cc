@@ -1941,7 +1941,11 @@ static gboolean BochsUpdateTick(GtkWidget *widget)
         gtk_text_view_scroll_to_mark(GTK_TEXT_VIEW(OText), EndMark, (gdouble) 0, TRUE, (gdouble) 1, (gdouble) 1);
     }
     if (HitBrkflag != FALSE)
+    {
+        gtk_widget_show(window);    // the window was hidden if the debugger was detached
+        gtk_window_present(GTK_WINDOW(window));
         OnBreak();
+    }
     HitBrkflag = FALSE;
     return TRUE;
 }
@@ -1958,7 +1962,6 @@ void HitBreak()
     }
     if (bx_user_quit == FALSE)      // may be in the middle of a "destroy"
         HitBrkflag = TRUE;
-    gtk_widget_show(window);
 }
 
 // special paint procedure for any colors on ListViews
