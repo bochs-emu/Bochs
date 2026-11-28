@@ -1,6 +1,6 @@
 Changes after Bochs 3.1 release:
 
-(up to date with commits done till 23 Nov 2026)
+(up to date with commits done till 28 Nov 2026)
 
 - CPU emulation and instrumentation
   ! CPUDB: Added AMD Zen3 (Vermeer) CPUID model (features X2APIC, CLWB, UMIP, PKU, CET, VAES, RDPID + introduces CPUID 0x80000021: AMD Extended Feature Identification 2)
@@ -88,6 +88,8 @@ Changes after Bochs 3.1 release:
   - Bochs now require C++11 support for compilation, enforced via configure
   - Removed configure option --enable-configurable-msrs, loading msrs.def is enabled by default for all models supporting MSR
   - bxdisasm tool can be compiled using 'make bxdisasm'
+  - Fixed Windows arm64 build (64-bit host was detected only for x86_64)
+  - ACPI works in builds without APIC support when plugins are enabled (#830)
 
 - Mac OS X guest support: OS X El Capitan 10.11.6 installs and boots to the login window
   (see the "Mac OS X" section of the guest operating systems chapter in the user documentation
@@ -109,6 +111,8 @@ Changes after Bochs 3.1 release:
     - Writing the DAC read index (3C7h) also sets the write index (wrong palette colors in Star Control II) (#974)
     - VBE: virtual width smaller than the X resolution is rejected (host heap over-read), fixed virtual height truncation
     - Text modes with more than 255 rows are rejected instead of being passed to the display library
+    - Screen is redrawn on VBE enable / disable (stale screen content after a mode switch)
+    - Fixed screen update below the split line in mode 13h (stale data in the lower screen part)
   - Voodoo
     - Fixed crash when the screen is redrawn (e.g. by the debugger) before a display mode is set (#666)
     - Voodoo2: memory FIFO works after restoring a saved state (all writes were dropped)
@@ -124,11 +128,14 @@ Changes after Bochs 3.1 release:
     - Fixed division by zero in SVGA memory write with zero pitch
     - Wide I/O port accesses are split into byte accesses (PANIC "SVGA write: io_len != 1") (#981)
     - Fixed 24 bpp pattern BitBLT with the pattern supplied by the CPU
+    - BitBLT operations that are not implemented or have no source data terminate (guest hang waiting for BLT busy bit)
+    - Hardware cursor is scaled in double width and doublescan modes
   - Display adapters (VGA, Cirrus, Voodoo, Banshee, GeForce)
     - Fixed many guest-triggerable host memory corruptions, crashes and hangs (out of bounds BitBLT, video memory
       latch and GeForce command / shader state accesses, division by zero, endless loops on huge sizes)
     - Save/restore: the DDC, VBE, CRTC start address, Voodoo FIFO / DAC / blitter and Banshee polygon state is
       saved, texture lookup tables are rebuilt after restore, a 4 bpp VBE mode no longer PANICs on restore
+      and the Cirrus palette uses the right DAC width after restore
   - GeForce
     - Continue to improve GeForce model
       - #846: Add volume texture support
@@ -153,6 +160,7 @@ Changes after Bochs 3.1 release:
       - #1005: Implement LIT and TIMESWTEX pixel shader operations (shading in marble and bump mapping demos with NV35)
       - #1012: Add Direct3D stencil operation values (stencil buffer demos with NV40)
       - #1017: Implement register combiners bias and scale (shadows in shadow mapping demo with NV20 and NV35)
+      - #1026, #1029, #1031: Faster vertex / pixel shader processing (shader cache) and VRAM access (20-25% speedup in 3D demos)
   - Hard drive / HD image
     - VVFAT: Fixed LongName handling in vvfat disks
     - VVFAT: Adding path prefix "fat32:" forces using FAT32 file system
@@ -229,6 +237,7 @@ Changes after Bochs 3.1 release:
     - Bytes queued while the 8042 output buffer was full are delivered to the right (keyboard or AUX) output buffer
     - Busmouse: motion is no longer lost while the counters are held
     - 8042 keyboard controller timer runs only while there is pending work (performance)
+    - 8042 raises IRQ1/IRQ12 as soon as the output buffer is loaded (Win98: glitchy mouse and false right-clicks after restart) (#154)
   - USB
     - Fixed USB SCSI disk seek truncated to int (USB disks larger than 2GB failed past 2GB)
     - USB HID: deactivate the idle timer before unregistering it (PANIC on exit after guest set HID idle rate)
@@ -306,6 +315,9 @@ Changes after Bochs 3.1 release:
     - Save/restore: negative signed values keep their sign bit (guest TSC jumped by 2^63, older Linux hang) (#964)
 
 - GUI and display libraries
+  - All guis
+    - Guest display modes out of the gui bounds (resolution, bpp) no longer PANIC, an error message is shown
+      instead until the guest switches to a valid mode or the reset / power button is pressed
   - win32 gui
     - Fixed crash on paste when the clipboard has no text
     - Faster text mode character drawing
@@ -336,6 +348,7 @@ Changes after Bochs 3.1 release:
   - rfb / vncsrv
     - Fixed hangs and deadlocks when the event queue is full or the headerbar is clicked
     - Fixed RFB protocol handling: client clipboard text is skipped, unknown message type closes the connection (was 100% CPU loop)
+    - Graphics modes with more than 8 bpp are supported (colors scaled down to 8 bpp), RGB332 client pixel format is supported
   - x11 gui
     - Faster graphics tile update
     - Header bar buttons ignore clicks while the mouse is captured (accidental reset / power off in USB tablet mode)
