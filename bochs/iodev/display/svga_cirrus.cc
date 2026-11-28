@@ -598,14 +598,7 @@ Bit8u bx_svga_cirrus_c::mem_read(bx_phy_address addr)
         }
       }
 
-      ptr = BX_CIRRUS_THIS s.memory;
-      if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x14) == 0x14) {
-        offset <<= 4;
-      } else if (BX_CIRRUS_THIS control.reg[0x0b] & 0x02) {
-        offset <<= 3;
-      }
-      offset &= BX_CIRRUS_THIS memsize_mask;
-      return *(ptr + offset);
+      return BX_CIRRUS_THIS svga_mem_read(offset);
     } else if ((addr >= BX_CIRRUS_THIS pci_bar[1].addr) &&
       (addr < (BX_CIRRUS_THIS pci_bar[1].addr + CIRRUS_PNPMMIO_SIZE))) {
 
@@ -650,14 +643,7 @@ Bit8u bx_svga_cirrus_c::mem_read(bx_phy_address addr)
     bank = (offset >> 15);
     offset &= 0x7fff;
     if (offset < bank_limit[bank]) {
-      offset += bank_base[bank];
-      if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x14) == 0x14) {
-        offset <<= 4;
-      } else if (BX_CIRRUS_THIS control.reg[0x0b] & 0x02) {
-        offset <<= 3;
-      }
-      offset &= BX_CIRRUS_THIS memsize_mask;
-      return *(BX_CIRRUS_THIS s.memory + offset);
+      return BX_CIRRUS_THIS svga_mem_read(offset + bank_base[bank]);
     }
     else {
       return 0xff;
@@ -674,10 +660,22 @@ Bit8u bx_svga_cirrus_c::mem_read(bx_phy_address addr)
   return 0xff;
 }
 
+// extended mode read, offset is the linear video memory offset before
+// the BY8 / BY16 address shift
+Bit8u bx_svga_cirrus_c::svga_mem_read(Bit32u offset)
+{
+  if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x14) == 0x14) {
+    offset <<= 4;
+  } else if (BX_CIRRUS_THIS control.reg[0x0b] & 0x02) {
+    offset <<= 3;
+  }
+  offset &= BX_CIRRUS_THIS memsize_mask;
+  return *(BX_CIRRUS_THIS s.memory + offset);
+}
+
 Bit8u bx_svga_cirrus_c::vga_mem_read(bx_phy_address addr)
 {
   Bit32u offset;
-  Bit8u read_map_select = BX_CIRRUS_THIS s.graphics_ctrl.read_map_select;
 
   switch (BX_CIRRUS_THIS s.graphics_ctrl.memory_mapping) {
     case 1: // 0xA0000 .. 0xAFFFF
@@ -704,18 +702,30 @@ Bit8u bx_svga_cirrus_c::vga_mem_read(bx_phy_address addr)
   }
   offset &= BX_CIRRUS_THIS s.vgamem_mask;
 
-  /* read mode 0 */
-  BX_CIRRUS_THIS s.graphics_ctrl.latch[0] = BX_CIRRUS_THIS s.memory[offset << 2];
-  BX_CIRRUS_THIS s.graphics_ctrl.latch[1] = BX_CIRRUS_THIS s.memory[(offset << 2) + 1];
-  BX_CIRRUS_THIS s.graphics_ctrl.latch[2] = BX_CIRRUS_THIS s.memory[(offset << 2) + 2];
-  BX_CIRRUS_THIS s.graphics_ctrl.latch[3] = BX_CIRRUS_THIS s.memory[(offset << 2) + 3];
+  return BX_CIRRUS_THIS planar_mem_read(offset);
+}
+
+void bx_svga_cirrus_c::load_latches(Bit32u plane_offset)
+{
+  Bit32u addr = plane_offset << 2;
+
+  BX_CIRRUS_THIS s.graphics_ctrl.latch[0] = BX_CIRRUS_THIS s.memory[addr];
+  BX_CIRRUS_THIS s.graphics_ctrl.latch[1] = BX_CIRRUS_THIS s.memory[addr + 1];
+  BX_CIRRUS_THIS s.graphics_ctrl.latch[2] = BX_CIRRUS_THIS s.memory[addr + 2];
+  BX_CIRRUS_THIS s.graphics_ctrl.latch[3] = BX_CIRRUS_THIS s.memory[addr + 3];
   if (BX_CIRRUS_THIS control.reg[0x0b] & 0x08) {
-    Bit32u ext_addr = ((offset + 1) & BX_CIRRUS_THIS s.vgamem_mask) << 2;
+    Bit32u ext_addr = ((plane_offset + 1) & BX_CIRRUS_THIS s.vgamem_mask) << 2;
     BX_CIRRUS_THIS ext_latch[0] = BX_CIRRUS_THIS s.memory[ext_addr];
     BX_CIRRUS_THIS ext_latch[1] = BX_CIRRUS_THIS s.memory[ext_addr + 1];
     BX_CIRRUS_THIS ext_latch[2] = BX_CIRRUS_THIS s.memory[ext_addr + 2];
     BX_CIRRUS_THIS ext_latch[3] = BX_CIRRUS_THIS s.memory[ext_addr + 3];
   }
+}
+
+Bit8u bx_svga_cirrus_c::planar_mem_read(Bit32u plane_offset)
+{
+  /* read mode 0 */
+  BX_CIRRUS_THIS load_latches(plane_offset);
   if (BX_CIRRUS_THIS s.graphics_ctrl.read_mode == 1) {
     /* read mode 1 */
     Bit8u color_compare   = BX_CIRRUS_THIS s.graphics_ctrl.color_compare & 0x0f;
@@ -739,7 +749,7 @@ Bit8u bx_svga_cirrus_c::vga_mem_read(bx_phy_address addr)
 
     return ~(latch0 | latch1 | latch2 | latch3);
   } else {
-    return BX_CIRRUS_THIS s.graphics_ctrl.latch[read_map_select];
+    return BX_CIRRUS_THIS s.graphics_ctrl.latch[BX_CIRRUS_THIS s.graphics_ctrl.read_map_select];
   }
 }
 
@@ -799,8 +809,6 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
 {
 #if BX_SUPPORT_PCI
   if (BX_CIRRUS_THIS pci_enabled) {
-    unsigned x, y;
-
     if ((addr >= BX_CIRRUS_THIS pci_bar[0].addr) &&
         (addr < (BX_CIRRUS_THIS pci_bar[0].addr + CIRRUS_PNPMEM_SIZE))) {
 
@@ -818,37 +826,7 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
       }
 
       // BX_DEBUG(("write offset 0x%08x,value 0x%02x",offset,value));
-      if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x14) == 0x14) {
-        offset <<= 4;
-      } else if (BX_CIRRUS_THIS control.reg[0x0b] & 0x02) {
-        offset <<= 3;
-      }
-      offset &= BX_CIRRUS_THIS memsize_mask;
-      Bit8u mode = BX_CIRRUS_THIS control.reg[0x05] & 0x07;
-      if ((mode < 4) || (mode > 5) || ((BX_CIRRUS_THIS control.reg[0x0b] & 0x4) == 0)) {
-        *(BX_CIRRUS_THIS s.memory + offset) = value;
-      } else {
-        if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x14) != 0x14) {
-          mem_write_mode4and5_8bpp(mode, offset, value);
-        } else {
-          mem_write_mode4and5_16bpp(mode, offset, value);
-        }
-      }
-      Bit32u dstart = (Bit32u)(BX_CIRRUS_THIS disp_ptr - BX_CIRRUS_THIS s.memory);
-      // svga_pitch is 0 if the guest programmed CRTC offset register 0x13 to 0
-      if ((offset >= dstart) && (BX_CIRRUS_THIS svga_pitch > 0)) {
-        BX_CIRRUS_THIS svga_needs_update_tile = 1;
-        offset -= dstart;
-        x = (offset % BX_CIRRUS_THIS svga_pitch) / (BX_CIRRUS_THIS svga_bpp / 8);
-        y = offset / BX_CIRRUS_THIS svga_pitch;
-        if (BX_CIRRUS_THIS s.y_doublescan) {
-          y <<= 1;
-        }
-        if (BX_CIRRUS_THIS svga_double_width) {
-          x <<= 1;
-        }
-        SET_TILE_UPDATED(BX_CIRRUS_THIS, x / X_TILESIZE, y / Y_TILESIZE, 1);
-      }
+      BX_CIRRUS_THIS svga_mem_write(offset, value);
       return;
     } else if ((addr >= BX_CIRRUS_THIS pci_bar[1].addr) &&
                (addr < (BX_CIRRUS_THIS pci_bar[1].addr + CIRRUS_PNPMMIO_SIZE))) {
@@ -876,8 +854,6 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
 
   if (addr >= 0xA0000 && addr <= 0xAFFFF) {
     Bit32u bank, offset;
-    Bit8u mode;
-    unsigned x, y;
 
     // cpu-to-video BLT
     if (BX_CIRRUS_THIS bitblt.memsrc_needed > 0) {
@@ -892,38 +868,7 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
     bank = (offset >> 15);
     offset &= 0x7fff;
     if (offset < bank_limit[bank]) {
-      offset += bank_base[bank];
-      if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x14) == 0x14) {
-        offset <<= 4;
-      } else if (BX_CIRRUS_THIS control.reg[0x0b] & 0x02) {
-        offset <<= 3;
-      }
-      offset &= BX_CIRRUS_THIS memsize_mask;
-      mode = BX_CIRRUS_THIS control.reg[0x05] & 0x07;
-      if ((mode < 4) || (mode > 5) || ((BX_CIRRUS_THIS control.reg[0x0b] & 0x4) == 0)) {
-        *(BX_CIRRUS_THIS s.memory + offset) = value;
-      } else {
-        if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x14) != 0x14) {
-          mem_write_mode4and5_8bpp(mode, offset, value);
-        } else {
-          mem_write_mode4and5_16bpp(mode, offset, value);
-        }
-      }
-      Bit32u dstart = (Bit32u)(BX_CIRRUS_THIS disp_ptr - BX_CIRRUS_THIS s.memory);
-      // svga_pitch is 0 if the guest programmed CRTC offset register 0x13 to 0
-      if ((offset >= dstart) && (BX_CIRRUS_THIS svga_pitch > 0)) {
-        BX_CIRRUS_THIS svga_needs_update_tile = 1;
-        offset -= dstart;
-        x = (offset % BX_CIRRUS_THIS svga_pitch) / (BX_CIRRUS_THIS svga_bpp / 8);
-        y = offset / BX_CIRRUS_THIS svga_pitch;
-        if (BX_CIRRUS_THIS s.y_doublescan) {
-          y <<= 1;
-        }
-        if (BX_CIRRUS_THIS svga_double_width) {
-          x <<= 1;
-        }
-        SET_TILE_UPDATED(BX_CIRRUS_THIS, x / X_TILESIZE, y / Y_TILESIZE, 1);
-      }
+      BX_CIRRUS_THIS svga_mem_write(offset + bank_base[bank], value);
     }
   } else if (addr >= 0xB8000 && addr < 0xB8100) {
     // memory-mapped I/O.
@@ -936,12 +881,49 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
   }
 }
 
+// extended mode write, offset is the linear video memory offset before
+// the BY8 / BY16 address shift
+void bx_svga_cirrus_c::svga_mem_write(Bit32u offset, Bit8u value)
+{
+  unsigned x, y;
+
+  if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x14) == 0x14) {
+    offset <<= 4;
+  } else if (BX_CIRRUS_THIS control.reg[0x0b] & 0x02) {
+    offset <<= 3;
+  }
+  offset &= BX_CIRRUS_THIS memsize_mask;
+  Bit8u mode = BX_CIRRUS_THIS control.reg[0x05] & 0x07;
+  if ((mode < 4) || (mode > 5) || ((BX_CIRRUS_THIS control.reg[0x0b] & 0x4) == 0)) {
+    *(BX_CIRRUS_THIS s.memory + offset) = value;
+  } else {
+    if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x14) != 0x14) {
+      mem_write_mode4and5_8bpp(mode, offset, value);
+    } else {
+      mem_write_mode4and5_16bpp(mode, offset, value);
+    }
+  }
+  Bit32u dstart = (Bit32u)(BX_CIRRUS_THIS disp_ptr - BX_CIRRUS_THIS s.memory);
+  // svga_pitch is 0 if the guest programmed CRTC offset register 0x13 to 0
+  if ((offset >= dstart) && (BX_CIRRUS_THIS svga_pitch > 0)) {
+    BX_CIRRUS_THIS svga_needs_update_tile = 1;
+    offset -= dstart;
+    x = (offset % BX_CIRRUS_THIS svga_pitch) / (BX_CIRRUS_THIS svga_bpp / 8);
+    y = offset / BX_CIRRUS_THIS svga_pitch;
+    if (BX_CIRRUS_THIS s.y_doublescan) {
+      y <<= 1;
+    }
+    if (BX_CIRRUS_THIS svga_double_width) {
+      x <<= 1;
+    }
+    SET_TILE_UPDATED(BX_CIRRUS_THIS, x / X_TILESIZE, y / Y_TILESIZE, 1);
+  }
+}
+
 void bx_svga_cirrus_c::vga_mem_write(bx_phy_address addr, Bit8u value)
 {
   Bit32u offset;
-  Bit8u new_val[8] = {0,0,0,0,0,0,0,0};
   unsigned start_addr;
-  Bit8u write_mode, sequ_map_mask;
 
   switch (BX_CIRRUS_THIS s.graphics_ctrl.memory_mapping) {
     case 1: // 0xA0000 .. 0xAFFFF
@@ -968,6 +950,51 @@ void bx_svga_cirrus_c::vga_mem_write(bx_phy_address addr, Bit8u value)
   }
   offset &= BX_CIRRUS_THIS s.vgamem_mask;
 
+  if (!BX_CIRRUS_THIS planar_mem_write(offset, value))
+    return;
+
+  start_addr = BX_CIRRUS_THIS s.CRTC.start_addr;
+
+  if (BX_CIRRUS_THIS s.graphics_ctrl.graphics_alpha) {
+    unsigned x_tileno, y_tileno;
+    if (BX_CIRRUS_THIS s.line_offset > 0) {
+      if (BX_CIRRUS_THIS s.line_compare < BX_CIRRUS_THIS s.vertical_display_end) {
+        if (BX_CIRRUS_THIS s.x_dotclockdiv2) {
+          x_tileno = (offset % BX_CIRRUS_THIS s.line_offset) / (X_TILESIZE / 16);
+        } else {
+          x_tileno = (offset % BX_CIRRUS_THIS s.line_offset) / (X_TILESIZE / 8);
+        }
+        if (BX_CIRRUS_THIS s.y_doublescan) {
+          y_tileno = ((offset / BX_CIRRUS_THIS s.line_offset) * 2 + BX_CIRRUS_THIS s.line_compare + 1) / Y_TILESIZE;
+        } else {
+          y_tileno = ((offset / BX_CIRRUS_THIS s.line_offset) + BX_CIRRUS_THIS s.line_compare + 1) / Y_TILESIZE;
+        }
+        SET_TILE_UPDATED(BX_CIRRUS_THIS, x_tileno, y_tileno, 1);
+      }
+      if (offset >= start_addr) {
+        offset -= start_addr;
+        if (BX_CIRRUS_THIS s.x_dotclockdiv2) {
+          x_tileno = (offset % BX_CIRRUS_THIS s.line_offset) / (X_TILESIZE / 16);
+        } else {
+          x_tileno = (offset % BX_CIRRUS_THIS s.line_offset) / (X_TILESIZE / 8);
+        }
+        if (BX_CIRRUS_THIS s.y_doublescan) {
+          y_tileno = (offset / BX_CIRRUS_THIS s.line_offset) / (Y_TILESIZE / 2);
+        } else {
+          y_tileno = (offset / BX_CIRRUS_THIS s.line_offset) / Y_TILESIZE;
+        }
+        SET_TILE_UPDATED(BX_CIRRUS_THIS, x_tileno, y_tileno, 1);
+      }
+    }
+  }
+}
+
+// returns true if at least one plane was written
+bool bx_svga_cirrus_c::planar_mem_write(Bit32u plane_offset, Bit8u value)
+{
+  Bit8u new_val[8] = {0,0,0,0,0,0,0,0};
+  Bit8u write_mode, sequ_map_mask;
+
   if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x04) == 0x04) {
     write_mode = BX_CIRRUS_THIS control.reg[0x05] & 0x07;
     sequ_map_mask = BX_CIRRUS_THIS sequencer.reg[0x02];
@@ -975,8 +1002,6 @@ void bx_svga_cirrus_c::vga_mem_write(bx_phy_address addr, Bit8u value)
     write_mode = BX_CIRRUS_THIS s.graphics_ctrl.write_mode;
     sequ_map_mask = BX_CIRRUS_THIS s.sequencer.map_mask & 0x0f;
   }
-
-  start_addr = BX_CIRRUS_THIS s.CRTC.start_addr;
 
   switch (write_mode) {
     unsigned i;
@@ -1231,15 +1256,15 @@ void bx_svga_cirrus_c::vga_mem_write(bx_phy_address addr, Bit8u value)
     BX_CIRRUS_THIS s.vga_mem_updated |= (sequ_map_mask & 0x0f);
     if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x04) == 0x04) {
       if (sequ_map_mask & 0x80)
-        BX_CIRRUS_THIS s.memory[offset << 2] = new_val[0];
+        BX_CIRRUS_THIS s.memory[plane_offset << 2] = new_val[0];
       if (sequ_map_mask & 0x40)
-        BX_CIRRUS_THIS s.memory[(offset << 2) + 1] = new_val[1];
+        BX_CIRRUS_THIS s.memory[(plane_offset << 2) + 1] = new_val[1];
       if (sequ_map_mask & 0x20)
-        BX_CIRRUS_THIS s.memory[(offset << 2) + 2] = new_val[2];
+        BX_CIRRUS_THIS s.memory[(plane_offset << 2) + 2] = new_val[2];
       if (sequ_map_mask & 0x10)
-        BX_CIRRUS_THIS s.memory[(offset << 2) + 3] = new_val[3];
+        BX_CIRRUS_THIS s.memory[(plane_offset << 2) + 3] = new_val[3];
       if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x08) == 0x08) {
-        Bit32u ext_addr = ((offset + 1) & BX_CIRRUS_THIS s.vgamem_mask) << 2;
+        Bit32u ext_addr = ((plane_offset + 1) & BX_CIRRUS_THIS s.vgamem_mask) << 2;
         if (sequ_map_mask & 0x08)
           BX_CIRRUS_THIS s.memory[ext_addr] = new_val[4];
         if (sequ_map_mask & 0x04)
@@ -1251,48 +1276,17 @@ void bx_svga_cirrus_c::vga_mem_write(bx_phy_address addr, Bit8u value)
       }
     } else {
       if (sequ_map_mask & 0x01)
-        BX_CIRRUS_THIS s.memory[offset << 2] = new_val[0];
+        BX_CIRRUS_THIS s.memory[plane_offset << 2] = new_val[0];
       if (sequ_map_mask & 0x02)
-        BX_CIRRUS_THIS s.memory[(offset << 2) + 1] = new_val[1];
+        BX_CIRRUS_THIS s.memory[(plane_offset << 2) + 1] = new_val[1];
       if (sequ_map_mask & 0x04)
-        BX_CIRRUS_THIS s.memory[(offset << 2) + 2] = new_val[2];
+        BX_CIRRUS_THIS s.memory[(plane_offset << 2) + 2] = new_val[2];
       if (sequ_map_mask & 0x08)
-        BX_CIRRUS_THIS s.memory[(offset << 2) + 3] = new_val[3];
+        BX_CIRRUS_THIS s.memory[(plane_offset << 2) + 3] = new_val[3];
     }
-
-    if (BX_CIRRUS_THIS s.graphics_ctrl.graphics_alpha) {
-      unsigned x_tileno, y_tileno;
-      if (BX_CIRRUS_THIS s.line_offset > 0) {
-        if (BX_CIRRUS_THIS s.line_compare < BX_CIRRUS_THIS s.vertical_display_end) {
-          if (BX_CIRRUS_THIS s.x_dotclockdiv2) {
-            x_tileno = (offset % BX_CIRRUS_THIS s.line_offset) / (X_TILESIZE / 16);
-          } else {
-            x_tileno = (offset % BX_CIRRUS_THIS s.line_offset) / (X_TILESIZE / 8);
-          }
-          if (BX_CIRRUS_THIS s.y_doublescan) {
-            y_tileno = ((offset / BX_CIRRUS_THIS s.line_offset) * 2 + BX_CIRRUS_THIS s.line_compare + 1) / Y_TILESIZE;
-          } else {
-            y_tileno = ((offset / BX_CIRRUS_THIS s.line_offset) + BX_CIRRUS_THIS s.line_compare + 1) / Y_TILESIZE;
-          }
-          SET_TILE_UPDATED(BX_CIRRUS_THIS, x_tileno, y_tileno, 1);
-        }
-        if (offset >= start_addr) {
-          offset -= start_addr;
-          if (BX_CIRRUS_THIS s.x_dotclockdiv2) {
-            x_tileno = (offset % BX_CIRRUS_THIS s.line_offset) / (X_TILESIZE / 16);
-          } else {
-            x_tileno = (offset % BX_CIRRUS_THIS s.line_offset) / (X_TILESIZE / 8);
-          }
-          if (BX_CIRRUS_THIS s.y_doublescan) {
-            y_tileno = (offset / BX_CIRRUS_THIS s.line_offset) / (Y_TILESIZE / 2);
-          } else {
-            y_tileno = (offset / BX_CIRRUS_THIS s.line_offset) / Y_TILESIZE;
-          }
-          SET_TILE_UPDATED(BX_CIRRUS_THIS, x_tileno, y_tileno, 1);
-        }
-      }
-    }
+    return true;
   }
+  return false;
 }
 
 void bx_svga_cirrus_c::get_text_snapshot(Bit8u **text_snapshot,
