@@ -127,6 +127,9 @@ private:
   BX_CIRRUS_SMF bool  is_blt_source_write(bx_phy_address addr);
   BX_CIRRUS_SMF void  svga_reset_bitblt(void);
   BX_CIRRUS_SMF void  svga_bitblt();
+  BX_CIRRUS_SMF void  svga_restore_bitblt_cputovideo(void);
+  static Bit64s param_save_handler(void *devptr, bx_param_c *param);
+  static void param_restore_handler(void *devptr, bx_param_c *param, Bit64s val);
 
   BX_CIRRUS_SMF void  svga_colorexpand(Bit8u *dst,const Bit8u *src,int count,int pixelwidth);
 

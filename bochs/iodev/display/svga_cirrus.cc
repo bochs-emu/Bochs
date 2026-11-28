@@ -416,11 +416,52 @@ void bx_svga_cirrus_c::register_state(void)
   new bx_shadow_num_c(cursor, "x", &BX_CIRRUS_THIS hw_cursor.x, BASE_HEX);
   new bx_shadow_num_c(cursor, "y", &BX_CIRRUS_THIS hw_cursor.y, BASE_HEX);
   new bx_shadow_num_c(cursor, "size", &BX_CIRRUS_THIS hw_cursor.size, BASE_HEX);
+  // state of an unfinished CPU-to-video BLT
+  bx_list_c *blt = new bx_list_c(list, "bitblt");
+  new bx_shadow_num_c(blt, "pixelwidth", &BX_CIRRUS_THIS bitblt.pixelwidth);
+  new bx_shadow_num_c(blt, "bltwidth", &BX_CIRRUS_THIS bitblt.bltwidth);
+  new bx_shadow_num_c(blt, "bltheight", &BX_CIRRUS_THIS bitblt.bltheight);
+  new bx_shadow_num_c(blt, "dstpitch", &BX_CIRRUS_THIS bitblt.dstpitch);
+  new bx_shadow_num_c(blt, "srcpitch", &BX_CIRRUS_THIS bitblt.srcpitch);
+  new bx_shadow_num_c(blt, "bltmode", &BX_CIRRUS_THIS bitblt.bltmode, BASE_HEX);
+  new bx_shadow_num_c(blt, "bltmodeext", &BX_CIRRUS_THIS bitblt.bltmodeext, BASE_HEX);
+  new bx_shadow_num_c(blt, "bltrop", &BX_CIRRUS_THIS bitblt.bltrop, BASE_HEX);
+  new bx_shadow_num_c(blt, "dstaddr", &BX_CIRRUS_THIS bitblt.dstaddr, BASE_HEX);
+  new bx_shadow_num_c(blt, "srcaddr", &BX_CIRRUS_THIS bitblt.srcaddr, BASE_HEX);
+  new bx_shadow_num_c(blt, "memsrc_needed", &BX_CIRRUS_THIS bitblt.memsrc_needed);
+  bx_param_num_c *param = new bx_param_num_c(blt, "memsrc_count", "", "", 0, BX_MAX_BIT32U, 0);
+  param->set_base(BASE_HEX);
+  param->set_sr_handlers(this, param_save_handler, param_restore_handler);
+  new bx_shadow_data_c(blt, "memsrc", BX_CIRRUS_THIS bitblt.memsrc, CIRRUS_BLT_CACHESIZE);
+  bx_list_c *redraw = new bx_list_c(list, "redraw");
+  new bx_shadow_num_c(redraw, "x", &BX_CIRRUS_THIS redraw.x);
+  new bx_shadow_num_c(redraw, "y", &BX_CIRRUS_THIS redraw.y);
+  new bx_shadow_num_c(redraw, "w", &BX_CIRRUS_THIS redraw.w);
+  new bx_shadow_num_c(redraw, "h", &BX_CIRRUS_THIS redraw.h);
 #if BX_SUPPORT_PCI
   if (BX_CIRRUS_THIS pci_enabled) {
     register_pci_state(list);
   }
 #endif
+}
+
+// number of bytes in the CPU-to-video BLT buffer (pointer in the device)
+Bit64s bx_svga_cirrus_c::param_save_handler(void *devptr, bx_param_c *param)
+{
+  bx_svga_cirrus_c *class_ptr = (bx_svga_cirrus_c *) devptr;
+
+  if (class_ptr->bitblt.memsrc_ptr == NULL)
+    return 0;
+  return (Bit64s)(class_ptr->bitblt.memsrc_ptr - &class_ptr->bitblt.memsrc[0]);
+}
+
+void bx_svga_cirrus_c::param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
+{
+  bx_svga_cirrus_c *class_ptr = (bx_svga_cirrus_c *) devptr;
+
+  if ((val < 0) || (val >= CIRRUS_BLT_CACHESIZE))
+    val = 0;
+  class_ptr->bitblt.memsrc_ptr = &class_ptr->bitblt.memsrc[val];
 }
 
 void bx_svga_cirrus_c::after_restore_state(void)
@@ -430,6 +471,7 @@ void bx_svga_cirrus_c::after_restore_state(void)
     bx_pci_device_c::after_restore_pci_state();
   }
 #endif
+  svga_restore_bitblt_cputovideo();
   if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
     BX_CIRRUS_THIS bx_vgacore_c::after_restore_state();
   } else {
@@ -841,16 +883,17 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
         (addr < (BX_CIRRUS_THIS pci_bar[0].addr + BX_CIRRUS_THIS pci_bar[0].size))) {
 
       Bit32u offset = addr & BX_CIRRUS_THIS memsize_mask;
-      if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
-        if (offset >= 0x100000) {
-          return;
-        }
-      }
-
+      // same order as mem_read(): MMIO at the end of the LFB first
       if ((offset >= (BX_CIRRUS_THIS s.memsize - 256)) &&
           ((BX_CIRRUS_THIS sequencer.reg[0x17] & 0x44) == 0x44)) {
         svga_mmio_blt_write(addr & 0xff, value);
         return;
+      }
+
+      if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
+        if (offset >= 0x100000) {
+          return;
+        }
       }
 
       // BX_DEBUG(("write offset 0x%08x,value 0x%02x",offset,value));
@@ -1749,7 +1792,12 @@ void bx_svga_cirrus_c::update(void)
       return;
     } else {
       BX_CIRRUS_THIS svga_dispbpp = 4;
-      BX_CIRRUS_THIS svga_needs_update_tile = 1;
+      // tile pass only after the VGA core marked tiles (memory writes,
+      // redraw requests incl. cursor moves)
+      if (BX_CIRRUS_THIS s.vga_mem_updated) {
+        BX_CIRRUS_THIS s.vga_mem_updated = 0;
+        BX_CIRRUS_THIS svga_needs_update_tile = 1;
+      }
     }
   } else {
     if (BX_CIRRUS_THIS svga_needs_update_mode) {
@@ -3471,6 +3519,37 @@ void bx_svga_cirrus_c::svga_setup_bitblt_cputovideo(Bit32u dstaddr,Bit32u srcadd
   if (BX_CIRRUS_THIS bitblt.memsrc_needed <= 0) {
     // color expansion narrower than one pixel: no source data, BLT done
     svga_reset_bitblt();
+  }
+}
+
+// rebuild the pointers of an unfinished CPU-to-video BLT after restore
+// (see svga_setup_bitblt_cputovideo), terminate any other BLT
+void bx_svga_cirrus_c::svga_restore_bitblt_cputovideo(void)
+{
+  Bit8u mode = BX_CIRRUS_THIS bitblt.bltmode;
+  int count = (int)(BX_CIRRUS_THIS bitblt.memsrc_ptr - &BX_CIRRUS_THIS bitblt.memsrc[0]);
+
+  if ((BX_CIRRUS_THIS bitblt.memsrc_needed <= 0) || (BX_CIRRUS_THIS bitblt.srcpitch <= 0) ||
+      (BX_CIRRUS_THIS bitblt.srcpitch > CIRRUS_BLT_CACHESIZE) ||
+      (count > BX_CIRRUS_THIS bitblt.srcpitch)) {
+    svga_reset_bitblt();
+    return;
+  }
+  BX_CIRRUS_THIS bitblt.dst = BX_CIRRUS_THIS s.memory + BX_CIRRUS_THIS bitblt.dstaddr;
+  BX_CIRRUS_THIS bitblt.src = NULL;
+  BX_CIRRUS_THIS bitblt.memsrc_endptr = &BX_CIRRUS_THIS bitblt.memsrc[BX_CIRRUS_THIS bitblt.srcpitch];
+  BX_CIRRUS_THIS bitblt.memdst_needed = 0;
+  if (mode & CIRRUS_BLTMODE_BACKWARDS) {
+    BX_CIRRUS_THIS bitblt.rop_handler = svga_get_bkwd_rop_handler(BX_CIRRUS_THIS bitblt.bltrop);
+  } else {
+    BX_CIRRUS_THIS bitblt.rop_handler = svga_get_fwd_rop_handler(BX_CIRRUS_THIS bitblt.bltrop);
+  }
+  if (mode & CIRRUS_BLTMODE_PATTERNCOPY) {
+    BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_patterncopy_memsrc_static;
+  } else if ((mode & CIRRUS_BLTMODE_COLOREXPAND) && (mode & CIRRUS_BLTMODE_TRANSPARENTCOMP)) {
+    BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_colorexpand_transp_memsrc_static;
+  } else {
+    BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_simplebitblt_memsrc_static;
   }
 }
 
