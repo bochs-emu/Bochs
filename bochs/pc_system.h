@@ -175,6 +175,8 @@ public:
   void raise_INTR(void);
   void clear_INTR(void);
 
+  void raise_SMI(void);  // assert the SMI# pin
+
   bool get_IGNNE() { return IGNNE; }
   void set_IGNNE(bool val) { IGNNE = val; }
 

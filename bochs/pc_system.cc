@@ -93,6 +93,11 @@ void bx_pc_system_c::raise_INTR(void)
   BX_CPU(BX_BOOTSTRAP_PROCESSOR)->raise_INTR();
 }
 
+void bx_pc_system_c::raise_SMI(void)
+{
+  BX_CPU(BX_BOOTSTRAP_PROCESSOR)->deliver_SMI();
+}
+
 void bx_pc_system_c::clear_INTR(void)
 {
   if (bx_dbg.interrupts)

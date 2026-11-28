@@ -65,8 +65,6 @@ const Bit8u acpi_sm_iomask[16] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 2, 0, 0, 0
 #define ACPI_ENABLE 0xf1
 #define ACPI_DISABLE 0xf0
 
-extern void apic_bus_deliver_smi(void);
-
 PLUGIN_ENTRY_FOR_MODULE(acpi)
 {
   if (mode == PLUGIN_INIT) {
@@ -338,7 +336,6 @@ void bx_acpi_ctrl_c::pm_update_sci(void)
   }
 }
 
-#if BX_SUPPORT_APIC
 void bx_acpi_ctrl_c::generate_smi(Bit8u value)
 {
   /* ACPI specs 3.0, 4.7.2.5 */
@@ -349,10 +346,9 @@ void bx_acpi_ctrl_c::generate_smi(Bit8u value)
   }
 
   if (BX_ACPI_THIS pci_conf[0x5b] & 0x02) {
-    apic_bus_deliver_smi();
+    bx_pc_system.raise_SMI();
   }
 }
-#endif
 
 // static IO port read callback handler
 // redirects to non-static class handler to avoid virtual functions

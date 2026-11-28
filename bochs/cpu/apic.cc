@@ -156,22 +156,6 @@ static void apic_bus_broadcast_eoi(Bit8u vector)
   DEV_ioapic_receive_eoi(vector);
 }
 
-#endif
-
-// available even if APIC is not compiled in
-BOCHSAPI void apic_bus_deliver_smi(void)
-{
-  BX_CPU(0)->deliver_SMI();
-}
-
-void apic_bus_broadcast_smi(void)
-{
-  for (unsigned i=0; i<BX_SMP_PROCESSORS; i++)
-    BX_CPU(i)->deliver_SMI();
-}
-
-#if BX_SUPPORT_APIC
-
 ////////////////////////////////////
 
 bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu, unsigned id)
