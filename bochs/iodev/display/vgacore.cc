@@ -2262,42 +2262,60 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
       } else if (BX_VGA_THIS s.graphics_ctrl.shift_reg == 2) {
         if (BX_VGA_THIS s.line_offset == 0) // CRTC offset register 0x13 programmed to 0
           return;
-        offset -= start_addr;
         x_tileno = (offset % BX_VGA_THIS s.line_offset) * 4 / (X_TILESIZE / 2);
-        if (BX_VGA_THIS s.y_doublescan) {
-          y_tileno = (offset / BX_VGA_THIS s.line_offset) / (Y_TILESIZE / 2);
-        } else {
-          y_tileno = (offset / BX_VGA_THIS s.line_offset) / Y_TILESIZE;
+        if (BX_VGA_THIS s.line_compare < BX_VGA_THIS s.vertical_display_end) {
+          // the lower screen starts at scanline line_compare + 1
+          if (BX_VGA_THIS s.y_doublescan) {
+            y_tileno = ((offset / BX_VGA_THIS s.line_offset) * 2 + BX_VGA_THIS s.line_compare + 1) / Y_TILESIZE;
+          } else {
+            y_tileno = ((offset / BX_VGA_THIS s.line_offset) + BX_VGA_THIS s.line_compare + 1) / Y_TILESIZE;
+          }
+          SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
         }
-        SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
+        if (offset >= start_addr) {
+          offset -= start_addr;
+          x_tileno = (offset % BX_VGA_THIS s.line_offset) * 4 / (X_TILESIZE / 2);
+          if (BX_VGA_THIS s.y_doublescan) {
+            y_tileno = (offset / BX_VGA_THIS s.line_offset) / (Y_TILESIZE / 2);
+          } else {
+            y_tileno = (offset / BX_VGA_THIS s.line_offset) / Y_TILESIZE;
+          }
+          SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
+        }
       } else {
         if (BX_VGA_THIS s.line_offset > 0) {
+          // a byte holds 8 (16 with dot clock / 2) pixels, horizontal pel
+          // panning moves them left (into the previous tile)
+          int pxwidth = BX_VGA_THIS s.x_dotclockdiv2 ? 16 : 8;
+          int pan = (BX_VGA_THIS s.attribute_ctrl.horiz_pel_panning & 0x0f) * (pxwidth / 8);
+          int xs;
           if (BX_VGA_THIS s.line_compare < BX_VGA_THIS s.vertical_display_end) {
-            if (BX_VGA_THIS s.x_dotclockdiv2) {
-              x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 16);
-            } else {
-              x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 8);
+            xs = (offset % BX_VGA_THIS s.line_offset) * pxwidth;
+            if (!BX_VGA_THIS s.attribute_ctrl.mode_ctrl.pixel_panning_compat) {
+              xs -= pan;
             }
             if (BX_VGA_THIS s.y_doublescan) {
               y_tileno = ((offset / BX_VGA_THIS s.line_offset) * 2 + BX_VGA_THIS s.line_compare + 1) / Y_TILESIZE;
             } else {
               y_tileno = ((offset / BX_VGA_THIS s.line_offset) + BX_VGA_THIS s.line_compare + 1) / Y_TILESIZE;
             }
-            SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
+            if ((xs + pxwidth) > 0) {
+              SET_TILE_UPDATED(BX_VGA_THIS, (xs < 0) ? 0 : ((unsigned)xs / X_TILESIZE), y_tileno, 1);
+              SET_TILE_UPDATED(BX_VGA_THIS, (unsigned)(xs + pxwidth - 1) / X_TILESIZE, y_tileno, 1);
+            }
           }
           if (offset >= start_addr) {
             offset -= start_addr;
-            if (BX_VGA_THIS s.x_dotclockdiv2) {
-              x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 16);
-            } else {
-              x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 8);
-            }
+            xs = (offset % BX_VGA_THIS s.line_offset) * pxwidth - pan;
             if (BX_VGA_THIS s.y_doublescan) {
               y_tileno = (offset / BX_VGA_THIS s.line_offset) / (Y_TILESIZE / 2);
             } else {
               y_tileno = (offset / BX_VGA_THIS s.line_offset) / Y_TILESIZE;
             }
-            SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
+            if ((xs + pxwidth) > 0) {
+              SET_TILE_UPDATED(BX_VGA_THIS, (xs < 0) ? 0 : ((unsigned)xs / X_TILESIZE), y_tileno, 1);
+              SET_TILE_UPDATED(BX_VGA_THIS, (unsigned)(xs + pxwidth - 1) / X_TILESIZE, y_tileno, 1);
+            }
           }
         }
       }
