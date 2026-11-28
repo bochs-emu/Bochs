@@ -304,8 +304,8 @@ void BX_CPU_C::init_SMRAM(void)
   smram_map[SMRAM_FIELD_CR3] = SMRAM_TRANSLATE(0x7f50);
   smram_map[SMRAM_FIELD_CR4_HI32] = SMRAM_TRANSLATE(0x7f4c);
   smram_map[SMRAM_FIELD_CR4] = SMRAM_TRANSLATE(0x7f48);
-  smram_map[SMRAM_FIELD_SSP_HI32] = SMRAM_TRANSLATE(0x7f44);
-  smram_map[SMRAM_FIELD_SSP] = SMRAM_TRANSLATE(0x7f40);
+  smram_map[SMRAM_FIELD_SSP_HI32] = SMRAM_TRANSLATE(0x7f1c);
+  smram_map[SMRAM_FIELD_SSP] = SMRAM_TRANSLATE(0x7f18);
   smram_map[SMRAM_FIELD_EFER_HI32] = SMRAM_TRANSLATE(0x7ed4);   // always zero
   smram_map[SMRAM_FIELD_EFER] = SMRAM_TRANSLATE(0x7ed0);
   smram_map[SMRAM_FIELD_IO_INSTRUCTION_RESTART] = SMRAM_TRANSLATE(0x7ec8);
@@ -817,7 +817,8 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
 
   RIP = BX_CPU_THIS_PTR prev_rip = smm_state->rip;
 #if BX_SUPPORT_CET
-  SSP = smm_state->ssp;
+  // the SSP value is made canonical by sign-extension before loading it
+  SSP = CpuidCanonicalizeAddress(smm_state->ssp);
 #endif
 
   BX_CPU_THIS_PTR dr6.set32(smm_state->dr6);
