@@ -1134,6 +1134,14 @@ unsigned bx_keyb_c::periodic(Bit32u usec_delta)
       BX_DEBUG(("service_keyboard(): no keys waiting"));
     }
   }
+
+  // the 8042 asserts IRQ1/IRQ12 as soon as a byte is loaded into the output buffer,
+  // do not leave a byte loaded in this tick without its IRQ until the next tick
+  retval |= (Bit8u)BX_KEY_THIS s.kbd_controller.irq1_requested |
+            (BX_KEY_THIS s.kbd_controller.irq12_requested << 1);
+  BX_KEY_THIS s.kbd_controller.irq1_requested = 0;
+  BX_KEY_THIS s.kbd_controller.irq12_requested = 0;
+
   return(retval);
 }
 
