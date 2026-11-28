@@ -758,22 +758,28 @@ bool bx_svga_cirrus_c::cirrus_mem_write_handler(bx_phy_address addr, unsigned le
                                          void *data, void *param)
 {
   bx_svga_cirrus_c *class_ptr = (bx_svga_cirrus_c *) param;
-  Bit8u *data_ptr;
-  if ((addr & ~(CIRRUS_PNPMEM_SIZE - 1)) == class_ptr->pci_bar[0].addr) {
-    Bit8u swap = (Bit8u)(addr >> 22);
-    if (swap == 1) {
-      Bit32u val32 = bx_bswap16((*(Bit32u*)data) & 0xffff);
-      val32 |= (bx_bswap16((*(Bit32u*)data) >> 16) << 16);
-      *((Bit32u*)data) = val32;
-    } else if (swap == 2) {
-      Bit32u val32 = bx_bswap32(*(Bit32u*)data);
-      *((Bit32u*)data) = val32;
+  Bit8u *data_ptr = (Bit8u *) data;
+  Bit32u swapped[16];
+  if (((addr & ~(CIRRUS_PNPMEM_SIZE - 1)) == class_ptr->pci_bar[0].addr) &&
+      (len <= sizeof(swapped))) {
+    // byte swapping apertures at 4 MB (16-bit) and 8 MB (32-bit) inside BAR0,
+    // swap a copy of the data (the caller's buffer may be smaller than 4 bytes)
+    Bit8u swap = (Bit8u)(((addr - class_ptr->pci_bar[0].addr) >> 22) & 3);
+    if ((swap == 1) && ((len & 1) == 0)) {
+      Bit16u *swapped16 = (Bit16u*)swapped;
+      memcpy(swapped, data, len);
+      for (unsigned i = 0; i < (len >> 1); i++)
+        swapped16[i] = bx_bswap16(swapped16[i]);
+      data_ptr = (Bit8u *) swapped;
+    } else if ((swap == 2) && ((len & 3) == 0)) {
+      memcpy(swapped, data, len);
+      for (unsigned i = 0; i < (len >> 2); i++)
+        swapped[i] = bx_bswap32(swapped[i]);
+      data_ptr = (Bit8u *) swapped;
     }
   }
-#ifdef BX_LITTLE_ENDIAN
-  data_ptr = (Bit8u *) data;
-#else // BX_BIG_ENDIAN
-  data_ptr = (Bit8u *) data + (len - 1);
+#ifdef BX_BIG_ENDIAN
+  data_ptr += (len - 1);
 #endif
   if (class_ptr->bitblt.memsrc_needed > 0) {
     // cpu-to-video BLT
@@ -1422,7 +1428,9 @@ void bx_svga_cirrus_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
       break;
     case 0x03b5: /* VGA: CRTC Registers (monochrome emulation modes) */
     case 0x03d5: /* VGA: CRTC Registers (color emulation modes) */
-      if (BX_CIRRUS_THIS is_unlocked()) {
+      // standard VGA registers also update the copy used by the SVGA
+      // mode setup while the extensions are locked
+      if (BX_CIRRUS_THIS is_unlocked() || (BX_CIRRUS_THIS crtc.index <= VGA_CRTC_MAX)) {
         BX_CIRRUS_THIS svga_write_crtc(address,BX_CIRRUS_THIS crtc.index,value);
         return;
       }
@@ -1433,6 +1441,7 @@ void bx_svga_cirrus_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
       break;
     case 0x03c5: /* VGA: Sequencer Registers */
       if ((BX_CIRRUS_THIS sequencer.index == 0x06) ||
+          (BX_CIRRUS_THIS sequencer.index <= VGA_SEQENCER_MAX) ||
           (BX_CIRRUS_THIS is_unlocked())) {
         BX_CIRRUS_THIS svga_write_sequencer(address,BX_CIRRUS_THIS sequencer.index,value);
         return;
@@ -1468,7 +1477,7 @@ void bx_svga_cirrus_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
       BX_CIRRUS_THIS control.index = value;
       break;
     case 0x03cf: /* VGA: Graphics Controller Registers */
-      if (BX_CIRRUS_THIS is_unlocked()) {
+      if (BX_CIRRUS_THIS is_unlocked() || (BX_CIRRUS_THIS control.index <= VGA_CONTROL_MAX)) {
         BX_CIRRUS_THIS svga_write_control(address,BX_CIRRUS_THIS control.index,value);
         return;
       }
@@ -2343,11 +2352,12 @@ void bx_svga_cirrus_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u val
       return;
   }
 
-  if (index <= CIRRUS_CRTC_MAX) {
-    BX_CIRRUS_THIS crtc.reg[index] = value;
-  }
   if (index <= VGA_CRTC_MAX) {
     VGA_WRITE(address,value,1);
+    // CR00-CR07 keep their value while write protected (CR11 bit 7)
+    BX_CIRRUS_THIS crtc.reg[index] = BX_CIRRUS_THIS s.CRTC.reg[index];
+  } else if (index <= CIRRUS_CRTC_MAX) {
+    BX_CIRRUS_THIS crtc.reg[index] = value;
   }
 
   if (update_pitch) {
