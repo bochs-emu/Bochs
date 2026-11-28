@@ -124,6 +124,7 @@ private:
   BX_CIRRUS_SMF Bit8u svga_mmio_blt_read(Bit32u address);
   BX_CIRRUS_SMF void  svga_mmio_blt_write(Bit32u address,Bit8u value);
 
+  BX_CIRRUS_SMF bool  is_blt_source_write(bx_phy_address addr);
   BX_CIRRUS_SMF void  svga_reset_bitblt(void);
   BX_CIRRUS_SMF void  svga_bitblt();
 

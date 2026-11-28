@@ -695,10 +695,11 @@ Bit8u bx_svga_cirrus_c::vga_mem_read(bx_phy_address addr)
   }
 
   offset = (offset & 0x7fff) + BX_CIRRUS_THIS bank_base[(offset >> 15) & 1];
-  if (BX_CIRRUS_THIS control.reg[0x0b] & 0x02) {
-    offset <<= 1;
-  } else if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x14) == 0x14) {
+  // BY16 has priority over BY8 (same as the LFB and bank paths)
+  if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x14) == 0x14) {
     offset <<= 2;
+  } else if (BX_CIRRUS_THIS control.reg[0x0b] & 0x02) {
+    offset <<= 1;
   }
   offset &= BX_CIRRUS_THIS s.vgamem_mask;
 
@@ -781,7 +782,7 @@ bool bx_svga_cirrus_c::cirrus_mem_write_handler(bx_phy_address addr, unsigned le
 #ifdef BX_BIG_ENDIAN
   data_ptr += (len - 1);
 #endif
-  if (class_ptr->bitblt.memsrc_needed > 0) {
+  if ((class_ptr->bitblt.memsrc_needed > 0) && class_ptr->is_blt_source_write(addr)) {
     // cpu-to-video BLT
     for (unsigned i = 0; i < len; i++) {
       if (class_ptr->bitblt.memsrc_needed > 0) {
@@ -808,6 +809,22 @@ bool bx_svga_cirrus_c::cirrus_mem_write_handler(bx_phy_address addr, unsigned le
     }
   }
   return 1;
+}
+#endif
+
+#if BX_SUPPORT_PCI
+// CPU writes taken as CPU-to-video BLT source data: the BAR0 frame buffer
+// aperture without the MMIO registers at its end (BAR1 is MMIO only)
+bool bx_svga_cirrus_c::is_blt_source_write(bx_phy_address addr)
+{
+  if ((BX_CIRRUS_THIS pci_bar[0].addr != 0) &&
+      (addr >= BX_CIRRUS_THIS pci_bar[0].addr) &&
+      (addr < (BX_CIRRUS_THIS pci_bar[0].addr + BX_CIRRUS_THIS pci_bar[0].size))) {
+    Bit32u offset = addr & BX_CIRRUS_THIS memsize_mask;
+    return !((offset >= (BX_CIRRUS_THIS s.memsize - 256)) &&
+             ((BX_CIRRUS_THIS sequencer.reg[0x17] & 0x44) == 0x44));
+  }
+  return false;
 }
 #endif
 
@@ -949,10 +966,11 @@ void bx_svga_cirrus_c::vga_mem_write(bx_phy_address addr, Bit8u value)
   }
 
   offset = (offset & 0x7fff) + BX_CIRRUS_THIS bank_base[(offset >> 15) & 1];
-  if (BX_CIRRUS_THIS control.reg[0x0b] & 0x02) {
-    offset <<= 1;
-  } else if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x14) == 0x14) {
+  // BY16 has priority over BY8 (same as the LFB and bank paths)
+  if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x14) == 0x14) {
     offset <<= 2;
+  } else if (BX_CIRRUS_THIS control.reg[0x0b] & 0x02) {
+    offset <<= 1;
   }
   offset &= BX_CIRRUS_THIS s.vgamem_mask;
 
@@ -2334,12 +2352,12 @@ void bx_svga_cirrus_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u val
     case 0x0d: // VGA (display offset 0x0000ff)
     case 0x12: // VGA
     case 0x1A: // 0x01: interlaced video mode
-    case 0x1D: // 0x80: offset 0x080000 (>=CLGD5434)
       BX_CIRRUS_THIS svga_needs_update_mode = 1;
       break;
 
     case 0x13: // VGA
     case 0x1B: // 0x01: offset 0x010000, 0x0c: offset 0x060000
+    case 0x1D: // 0x80: offset 0x080000 (>=CLGD5434)
       update_pitch = 1;
       break;
 
@@ -2364,8 +2382,10 @@ void bx_svga_cirrus_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u val
     if ((BX_CIRRUS_THIS crtc.reg[0x1b] & 0x02) != 0) {
       // CR1B bit 1: the VGA modes address all of the video memory
       BX_CIRRUS_THIS s.vgamem_mask = (CIRRUS_VIDEO_MEMORY_BYTES >> 2) - 1;
+      // same start address bits as the SVGA modes (svga_modeupdate)
       BX_CIRRUS_THIS s.ext_start_addr = ((BX_CIRRUS_THIS crtc.reg[0x1b] & 0x01) << 16) |
-                                        ((BX_CIRRUS_THIS crtc.reg[0x1b] & 0x04) << 15);
+                                        ((BX_CIRRUS_THIS crtc.reg[0x1b] & 0x0c) << 15) |
+                                        ((BX_CIRRUS_THIS crtc.reg[0x1d] & 0x80) << 12);
       BX_CIRRUS_THIS s.ext_offset = BX_CIRRUS_THIS bank_base[0];
     } else {
       BX_CIRRUS_THIS s.vgamem_mask = 0x3ffff;
