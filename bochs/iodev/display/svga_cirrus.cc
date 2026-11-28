@@ -568,8 +568,11 @@ Bit8u bx_svga_cirrus_c::mem_read(bx_phy_address addr)
   }
 
   if (BX_CIRRUS_THIS pci_enabled) {
-    if ((addr >= BX_CIRRUS_THIS pci_bar[0].addr) &&
-        (addr < (BX_CIRRUS_THIS pci_bar[0].addr + CIRRUS_PNPMEM_SIZE))) {
+    // BAR0 / BAR1 address 0 = not assigned (would hide the VGA window),
+    // the whole 32 MB of BAR0 are decoded
+    if ((BX_CIRRUS_THIS pci_bar[0].addr != 0) &&
+        (addr >= BX_CIRRUS_THIS pci_bar[0].addr) &&
+        (addr < (BX_CIRRUS_THIS pci_bar[0].addr + BX_CIRRUS_THIS pci_bar[0].size))) {
       Bit8u *ptr;
 
       Bit32u offset = addr & BX_CIRRUS_THIS memsize_mask;
@@ -599,7 +602,8 @@ Bit8u bx_svga_cirrus_c::mem_read(bx_phy_address addr)
       }
 
       return BX_CIRRUS_THIS svga_mem_read(offset);
-    } else if ((addr >= BX_CIRRUS_THIS pci_bar[1].addr) &&
+    } else if ((BX_CIRRUS_THIS pci_bar[1].addr != 0) &&
+      (addr >= BX_CIRRUS_THIS pci_bar[1].addr) &&
       (addr < (BX_CIRRUS_THIS pci_bar[1].addr + CIRRUS_PNPMMIO_SIZE))) {
 
       Bit32u offset = addr & (CIRRUS_PNPMMIO_SIZE - 1);
@@ -832,8 +836,9 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
 {
 #if BX_SUPPORT_PCI
   if (BX_CIRRUS_THIS pci_enabled) {
-    if ((addr >= BX_CIRRUS_THIS pci_bar[0].addr) &&
-        (addr < (BX_CIRRUS_THIS pci_bar[0].addr + CIRRUS_PNPMEM_SIZE))) {
+    if ((BX_CIRRUS_THIS pci_bar[0].addr != 0) &&
+        (addr >= BX_CIRRUS_THIS pci_bar[0].addr) &&
+        (addr < (BX_CIRRUS_THIS pci_bar[0].addr + BX_CIRRUS_THIS pci_bar[0].size))) {
 
       Bit32u offset = addr & BX_CIRRUS_THIS memsize_mask;
       if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
@@ -851,7 +856,8 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
       // BX_DEBUG(("write offset 0x%08x,value 0x%02x",offset,value));
       BX_CIRRUS_THIS svga_mem_write(offset, value);
       return;
-    } else if ((addr >= BX_CIRRUS_THIS pci_bar[1].addr) &&
+    } else if ((BX_CIRRUS_THIS pci_bar[1].addr != 0) &&
+               (addr >= BX_CIRRUS_THIS pci_bar[1].addr) &&
                (addr < (BX_CIRRUS_THIS pci_bar[1].addr + CIRRUS_PNPMMIO_SIZE))) {
       // memory-mapped I/O.
 
@@ -2485,12 +2491,10 @@ void bx_svga_cirrus_c::svga_write_sequencer(Bit32u address, unsigned index, Bit8
         BX_CIRRUS_THIS sequencer.reg[0x6] = 0x12;
       } else {
 #if BX_SUPPORT_PCI
-        BX_CIRRUS_THIS svga_unlock_special = 0;
-#else
-        if (!BX_CIRRUS_THIS pci_enabled) {
-          BX_CIRRUS_THIS svga_unlock_special = 0;
-        }
+        // the extensions of the PCI version are always enabled
+        if (!BX_CIRRUS_THIS pci_enabled)
 #endif
+          BX_CIRRUS_THIS svga_unlock_special = 0;
         BX_CIRRUS_THIS sequencer.reg[0x6] = 0x0f;
       }
       return;
@@ -2765,13 +2769,15 @@ void bx_svga_cirrus_c::svga_write_control(Bit32u address, unsigned index, Bit8u 
     case 0x30: // BLT MODE
       break;
     case 0x31: // BLT STATUS/START
-      BX_CIRRUS_THIS control.reg[0x31] = value;
+      // BUSY is read-only, no BLT is started while RESET is set
+      BX_CIRRUS_THIS control.reg[0x31] = (value & ~CIRRUS_BLT_BUSY) | (old_value & CIRRUS_BLT_BUSY);
       if (((old_value & CIRRUS_BLT_RESET) != 0) &&
           ((value & CIRRUS_BLT_RESET) == 0)) {
         svga_reset_bitblt();
       }
       if (((old_value & CIRRUS_BLT_START) == 0) &&
-          ((value & CIRRUS_BLT_START) != 0)) {
+          ((value & CIRRUS_BLT_START) != 0) &&
+          ((value & CIRRUS_BLT_RESET) == 0)) {
         BX_CIRRUS_THIS control.reg[0x31] |= CIRRUS_BLT_BUSY;
         svga_bitblt();
       }
