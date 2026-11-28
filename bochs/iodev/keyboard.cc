@@ -872,6 +872,17 @@ bool bx_keyb_c::mouse_enQ_packet(Bit8u b1, Bit8u b2, Bit8u b3, Bit8u b4)
   return(1);
 }
 
+// drop movement data not yet sent to the controller and clear the movement counters,
+// a real mouse does not send movement data collected before Reset/Disable/Set Defaults
+void bx_keyb_c::mouse_discard_pending_data(void)
+{
+  BX_KEY_THIS s.mouse_internal_buffer.num_elements = 0;
+  BX_KEY_THIS s.mouse_internal_buffer.head = 0;
+  BX_KEY_THIS s.mouse.delayed_dx = 0;
+  BX_KEY_THIS s.mouse.delayed_dy = 0;
+  BX_KEY_THIS s.mouse.delayed_dz = 0;
+}
+
 void bx_keyb_c::mouse_enQ(Bit8u mouse_data)
 {
   int tail;
@@ -1325,6 +1336,7 @@ void bx_keyb_c::kbd_ctrl_to_mouse(Bit8u value)
 
       case 0xf5: // Disable (in stream mode)
         BX_KEY_THIS s.mouse.enable = 0;
+        mouse_discard_pending_data();
         controller_enQ(0xFA, 1); // ACK
         BX_DEBUG(("mouse disabled (stream mode)"));
         break;
@@ -1335,6 +1347,7 @@ void bx_keyb_c::kbd_ctrl_to_mouse(Bit8u value)
         BX_KEY_THIS s.mouse.scaling         = 1;   /* 1:1 (default) */
         BX_KEY_THIS s.mouse.enable          = 0;
         BX_KEY_THIS s.mouse.mode            = MOUSE_MODE_STREAM;
+        mouse_discard_pending_data();
         controller_enQ(0xFA, 1); // ACK
         BX_DEBUG(("mouse: set defaults"));
         break;
@@ -1350,6 +1363,7 @@ void bx_keyb_c::kbd_ctrl_to_mouse(Bit8u value)
           if (BX_KEY_THIS s.mouse.im_mode)
             BX_INFO(("wheel mouse mode disabled"));
           BX_KEY_THIS s.mouse.im_mode         = 0;
+          mouse_discard_pending_data();
           /* (mch) NT expects an ack here */
           controller_enQ(0xFA, 1); // ACK
           controller_enQ(0xAA, 1); // completion code

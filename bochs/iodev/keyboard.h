@@ -188,6 +188,7 @@ private:
   BX_KEY_SMF void controller_deQ(void);
   BX_KEY_SMF bool mouse_enQ_packet(Bit8u b1, Bit8u b2, Bit8u b3, Bit8u b4);
   BX_KEY_SMF void mouse_enQ(Bit8u mouse_data);
+  BX_KEY_SMF void mouse_discard_pending_data(void);
 
   static void mouse_enabled_changed_static(void *dev, bool enabled);
   void mouse_enabled_changed(bool enabled);
